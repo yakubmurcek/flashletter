@@ -48,9 +48,9 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
-      <header className="border-b border-border bg-card">
+      <header className="border-b border-border bg-card flex-shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" onClick={onBack} className="gap-2">
@@ -63,6 +63,10 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" className="gap-2 bg-transparent" onClick={() => setShowChat(!showChat)}>
+              <MessageSquare className="w-4 h-4" />
+              <span className="hidden sm:inline">AI Assistant</span>
+            </Button>
             <Button variant="outline" size="sm" className="gap-2 bg-transparent">
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
@@ -76,10 +80,10 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden h-0">
         {/* Email List Sidebar */}
-        <aside className="w-80 border-r border-border bg-card overflow-y-auto">
-          <div className="p-4 border-b border-border">
+        <aside className="w-80 border-r border-border bg-card flex flex-col">
+          <div className="p-4 border-b border-border flex-shrink-0">
             <div className="flex items-center gap-2 mb-2">
               <Mail className="w-5 h-5 text-primary" />
               <h2 className="font-semibold">Campaign Emails</h2>
@@ -88,7 +92,9 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
               {emails.length} emails • {config.campaignType}
             </p>
           </div>
-          <EmailList emails={emails} selectedId={selectedEmailId} onSelect={setSelectedEmailId} />
+          <div className="flex-1 overflow-y-auto">
+            <EmailList emails={emails} selectedId={selectedEmailId} onSelect={setSelectedEmailId} />
+          </div>
         </aside>
 
         {/* Email Preview */}
@@ -101,7 +107,7 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
         {/* AI Chat Assistant */}
         <aside
           className={cn(
-            "border-l border-border bg-card transition-all duration-300",
+            "border-l border-border bg-card transition-all duration-300 shadow-lg flex-shrink-0",
             showChat ? "w-96" : "w-0 overflow-hidden",
           )}
         >
@@ -113,7 +119,7 @@ export function EmailEditor({ landingUrl, config, onBack }: EmailEditorProps) {
       {!showChat && (
         <Button
           size="lg"
-          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg"
+          className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-2xl hover:scale-110 transition-transform animate-pulse"
           onClick={() => setShowChat(true)}
         >
           <MessageSquare className="w-6 h-6" />
