@@ -1,47 +1,68 @@
-"use client"
+'use client'
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Sparkles, Mail, Zap } from "lucide-react"
-import { URLInputStep } from "./url-input-step"
-import { ConfigurationStep } from "./configuration-step"
-import { EmailEditor } from "./email-editor"
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
+import { ArrowRight, Sparkles, Mail, Zap } from 'lucide-react'
+import { URLInputStep } from './url-input-step'
+import { ConfigurationStep } from './configuration-step'
+import { EmailEditor } from './email-editor'
+import type { Email, CampaignConfig, LandingPageData } from '@/lib/types'
 
 export function LandingPage() {
-  const [currentStep, setCurrentStep] = useState<"landing" | "url" | "config" | "editor">("landing")
-  const [landingUrl, setLandingUrl] = useState("")
-  const [config, setConfig] = useState<{
-    tone: string
-    campaignType: string
-    days: number
-  } | null>(null)
+  const [currentStep, setCurrentStep] = useState<
+    'landing' | 'url' | 'config' | 'editor'
+  >('landing')
+  const [landingPageData, setLandingPageData] =
+    useState<LandingPageData | null>(null)
+  const [config, setConfig] = useState<CampaignConfig | null>(null)
+  const [generatedEmails, setGeneratedEmails] = useState<Email[]>([])
 
   const handleStart = () => {
-    setCurrentStep("url")
+    setCurrentStep('url')
   }
 
-  const handleUrlSubmit = (url: string) => {
-    setLandingUrl(url)
-    setCurrentStep("config")
+  const handleUrlSubmit = (data: LandingPageData) => {
+    setLandingPageData(data)
+    setCurrentStep('config')
   }
 
-  const handleConfigSubmit = (configuration: { tone: string; campaignType: string; days: number }) => {
+  const handleConfigSubmit = (
+    configuration: CampaignConfig,
+    emails: Email[]
+  ) => {
     setConfig(configuration)
-    setCurrentStep("editor")
+    setGeneratedEmails(emails)
+    setCurrentStep('editor')
   }
 
-  if (currentStep === "url") {
-    return <URLInputStep onSubmit={handleUrlSubmit} onBack={() => setCurrentStep("landing")} />
-  }
-
-  if (currentStep === "config") {
+  if (currentStep === 'url') {
     return (
-      <ConfigurationStep landingUrl={landingUrl} onSubmit={handleConfigSubmit} onBack={() => setCurrentStep("url")} />
+      <URLInputStep
+        onSubmit={handleUrlSubmit}
+        onBack={() => setCurrentStep('landing')}
+      />
     )
   }
 
-  if (currentStep === "editor" && config) {
-    return <EmailEditor landingUrl={landingUrl} config={config} onBack={() => setCurrentStep("config")} />
+  if (currentStep === 'config' && landingPageData) {
+    return (
+      <ConfigurationStep
+        landingPageData={landingPageData}
+        onSubmit={handleConfigSubmit}
+        onBack={() => setCurrentStep('url')}
+      />
+    )
+  }
+
+  if (currentStep === 'editor' && config && landingPageData) {
+    return (
+      <EmailEditor
+        landingUrl={landingPageData.url}
+        config={config}
+        initialEmails={generatedEmails}
+        onBack={() => setCurrentStep('config')}
+      />
+    )
   }
 
   return (
@@ -56,13 +77,22 @@ export function LandingPage() {
             <span className="text-xl font-semibold">CampaignAI</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a
+              href="#features"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Features
             </a>
-            <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a
+              href="#pricing"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Pricing
             </a>
-            <a href="#docs" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <a
+              href="#docs"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
               Docs
             </a>
           </nav>
@@ -81,12 +111,14 @@ export function LandingPage() {
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
-            Generate email campaigns in <span className="text-primary">seconds</span>
+            Generate email campaigns in{' '}
+            <span className="text-primary">seconds</span>
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
-            Transform your landing page into a complete email campaign. AI analyzes your content and creates
-            personalized email sequences that convert.
+            Transform your landing page into a complete email campaign. AI
+            analyzes your content and creates personalized email sequences that
+            convert.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -94,7 +126,11 @@ export function LandingPage() {
               Start Creating
               <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button size="lg" variant="outline" className="gap-2 text-base bg-transparent">
+            <Button
+              size="lg"
+              variant="outline"
+              className="gap-2 text-base bg-transparent"
+            >
               Watch Demo
             </Button>
           </div>
@@ -108,7 +144,8 @@ export function LandingPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Lightning Fast</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Generate complete email campaigns in seconds. No more hours spent writing copy.
+              Generate complete email campaigns in seconds. No more hours spent
+              writing copy.
             </p>
           </div>
 
@@ -118,7 +155,8 @@ export function LandingPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">AI-Powered</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Advanced AI analyzes your landing page and creates contextually relevant emails.
+              Advanced AI analyzes your landing page and creates contextually
+              relevant emails.
             </p>
           </div>
 
@@ -128,7 +166,8 @@ export function LandingPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">Fully Editable</h3>
             <p className="text-muted-foreground leading-relaxed">
-              Customize every aspect of your emails with our intuitive editor and AI assistant.
+              Customize every aspect of your emails with our intuitive editor
+              and AI assistant.
             </p>
           </div>
         </div>
