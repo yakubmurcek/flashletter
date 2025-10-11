@@ -2,7 +2,7 @@
 
 import type React from 'react'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
@@ -114,12 +114,89 @@ export function AIChatAssistant({
     }
   }
 
-  const quickActions = [
-    'Improve subject line',
-    'Make it more engaging',
-    'Add a CTA',
-    'Shorten the content',
-  ]
+  const quickActions = useMemo(() => {
+    const basicActions = [
+      'Improve subject line',
+      'Make it more engaging',
+      'Add a strong CTA',
+      'Shorten the content',
+    ]
+
+    if (!emailContext) {
+      return basicActions
+    }
+
+    const discussedTopics = new Set(
+      messages
+        .filter((m) => m.role === 'user')
+        .map((m) => m.content.toLowerCase())
+    )
+
+    const dynamicActions: string[] = []
+    const { subject = '', content = '', campaignType = '' } = emailContext
+    const contentLength = content.length
+    const hasCtaKeywords =
+      /click|buy|shop|get|download|sign up|register|join|try|start|learn more/i.test(
+        content
+      )
+    const hasUrgency = /now|today|limited|hurry|don't miss/i.test(content)
+    const hasPersonalization = /\{name\}|\{first_name\}/i.test(content)
+    const subjectLength = subject.length
+
+    if (
+      subjectLength > 60 &&
+      !discussedTopics.has('subject') &&
+      !discussedTopics.has('shorten')
+    ) {
+      dynamicActions.push('Subject line is too long')
+    }
+
+    if (
+      !hasCtaKeywords &&
+      !discussedTopics.has('cta') &&
+      !discussedTopics.has('call to action')
+    ) {
+      dynamicActions.push('Missing clear call-to-action')
+    }
+
+    if (contentLength > 1000 && !discussedTopics.has('shorten')) {
+      dynamicActions.push('Content is too long')
+    } else if (contentLength < 200 && !discussedTopics.has('expand')) {
+      dynamicActions.push('Add more value')
+    }
+
+    if (!hasUrgency && campaignType?.toLowerCase().includes('promo')) {
+      dynamicActions.push('Add urgency for promo')
+    }
+
+    if (!hasPersonalization && !discussedTopics.has('personalization')) {
+      dynamicActions.push('Make it more personal')
+    }
+
+    if (
+      campaignType?.toLowerCase().includes('welcome') &&
+      !discussedTopics.has('onboard')
+    ) {
+      dynamicActions.push('Improve onboarding flow')
+    }
+
+    if (
+      campaignType?.toLowerCase().includes('nurture') &&
+      !discussedTopics.has('value')
+    ) {
+      dynamicActions.push('Add educational content')
+    }
+
+    if (!discussedTopics.has('tone') && !discussedTopics.has('voice')) {
+      dynamicActions.push('Adjust tone')
+    }
+
+    const combined = [...dynamicActions.slice(0, 2), ...basicActions]
+
+    return combined
+      .filter((action, index, self) => self.indexOf(action) === index)
+      .slice(0, 4)
+  }, [messages, emailContext])
 
   const handleQuickAction = (action: string) => {
     setInput(action)
@@ -204,9 +281,11 @@ export function AIChatAssistant({
       </div>
 
       {/* Quick Actions */}
-      {messages.length <= 2 && (
+      {!isLoading && quickActions.length > 0 && (
         <div className="px-4 pb-3">
-          <p className="text-xs text-muted-foreground mb-2">Quick actions:</p>
+          <p className="text-xs text-muted-foreground mb-2">
+            Suggested actions:
+          </p>
           <div className="flex flex-wrap gap-2">
             {quickActions.map((action) => (
               <Button
