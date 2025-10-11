@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { MarkdownRenderer } from './markdown-renderer'
 
 interface Message {
   id: number
@@ -266,9 +267,13 @@ export function AIChatAssistant({
                   </span>
                 </div>
               )}
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {message.content}
-              </p>
+              {message.role === 'assistant' ? (
+                <MarkdownRenderer content={message.content} />
+              ) : (
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                  {message.content}
+                </p>
+              )}
               <p
                 className={cn(
                   'text-xs mt-2',
