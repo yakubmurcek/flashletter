@@ -149,6 +149,11 @@ export function EmailEditor({
                     }
                   : undefined
               }
+              onApplyEdits={(edits) => {
+                if (selectedEmail) {
+                  handleUpdateEmail(selectedEmail.id, edits)
+                }
+              }}
             />
           )}
         </aside>

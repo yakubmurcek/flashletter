@@ -18,6 +18,11 @@ const requestSchema = z.object({
     .optional(),
 })
 
+const emailEditSchema = z.object({
+  subject: z.string().optional(),
+  content: z.string().optional(),
+})
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -25,11 +30,7 @@ export async function POST(req: NextRequest) {
 
     const instructions = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns. ${
       emailContext
-        ? `The current email context:\n- Subject: ${
-            emailContext.subject
-          }\n- Campaign Type: ${
-            emailContext.campaignType
-          }\n- Content: ${emailContext.content?.substring(0, 200)}...`
+        ? `\n\nCURRENT EMAIL CONTEXT:\n- Subject: ${emailContext.subject}\n- Campaign Type: ${emailContext.campaignType}\n- Content:\n${emailContext.content}`
         : ''
     }
     
@@ -40,7 +41,38 @@ Your role is to:
 - Answer questions about email marketing best practices
 - Be concise, practical, and friendly
 
-Keep responses helpful and to-the-point.`
+IMPORTANT: You have the ability to DIRECTLY EDIT the email content. You must intelligently decide:
+1. If the user is just ASKING for ideas/suggestions → respond with advice only (no edits)
+2. If the user wants to MAKE CHANGES to the email → respond AND apply the edits
+
+Examples:
+- "Can you give me ideas for the subject line?" → Advice only, no edits
+- "Make the subject line more engaging" → Apply edits
+- "Improve this email" → Apply edits
+- "What do you think about..." → Advice only
+- "Change the tone to be more casual" → Apply edits
+- "Add a stronger CTA" → Apply edits
+- "Shorten the content" → Apply edits
+
+CRITICAL: Return ONLY valid JSON (no markdown, no code blocks). Use this EXACT format:
+
+When you decide to apply edits:
+{
+  "shouldEdit": true,
+  "message": "Your explanation of what you changed",
+  "edits": {
+    "subject": "new subject line if changed",
+    "content": "new content if changed"
+  }
+}
+
+When just providing advice without edits:
+{
+  "shouldEdit": false,
+  "message": "Your advice or response"
+}
+
+Only include the fields in "edits" that you're actually changing. Be smart about detecting user intent. ALWAYS return valid JSON.`
 
     const userInput = messages[messages.length - 1]?.content || ''
 
@@ -49,15 +81,19 @@ Keep responses helpful and to-the-point.`
       instructions,
       input: userInput,
       temperature: 0.7,
-      max_output_tokens: 500,
+      max_output_tokens: 2000,
     })
 
     if (!response.output_text) {
       throw new Error('No response from OpenAI')
     }
 
+    const parsedResponse = JSON.parse(response.output_text)
+
     return NextResponse.json({
-      message: response.output_text,
+      message: parsedResponse.message,
+      shouldEdit: parsedResponse.shouldEdit || false,
+      edits: parsedResponse.shouldEdit ? parsedResponse.edits : undefined,
       usage: response.usage,
     })
   } catch (error) {

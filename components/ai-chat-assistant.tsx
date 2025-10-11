@@ -14,6 +14,12 @@ interface Message {
   role: 'user' | 'assistant'
   content: string
   timestamp: Date
+  appliedEdit?: boolean
+}
+
+interface EmailEdits {
+  subject?: string
+  content?: string
 }
 
 interface AIChatAssistantProps {
@@ -23,11 +29,13 @@ interface AIChatAssistantProps {
     content?: string
     campaignType?: string
   }
+  onApplyEdits?: (edits: EmailEdits) => void
 }
 
 export function AIChatAssistant({
   onClose,
   emailContext,
+  onApplyEdits,
 }: AIChatAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -89,11 +97,16 @@ export function AIChatAssistant({
 
       const data = await response.json()
 
+      if (data.shouldEdit && data.edits && onApplyEdits) {
+        onApplyEdits(data.edits)
+      }
+
       const aiMessage: Message = {
         id: messages.length + 2,
         role: 'assistant',
         content: data.message,
         timestamp: new Date(),
+        appliedEdit: data.shouldEdit || false,
       }
 
       setMessages((prev) => [...prev, aiMessage])
@@ -240,9 +253,19 @@ export function AIChatAssistant({
                 'p-3 max-w-[85%]',
                 message.role === 'user'
                   ? 'bg-primary text-primary-foreground'
+                  : message.appliedEdit
+                  ? 'bg-green-500/10 border border-green-500/20'
                   : 'bg-muted'
               )}
             >
+              {message.appliedEdit && (
+                <div className="flex items-center gap-2 mb-2 pb-2 border-b border-green-500/20">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                    Email Updated
+                  </span>
+                </div>
+              )}
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {message.content}
               </p>
