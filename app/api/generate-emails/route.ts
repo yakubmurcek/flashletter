@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const { landingUrl, landingContent, config } =
       generateEmailsSchema.parse(body)
 
-    const systemPrompt = `You are an expert email marketing copywriter. Generate a ${
+    const instructions = `You are an expert email marketing copywriter. Generate a ${
       config.days
     }-day ${config.campaignType} email campaign with a ${config.tone} tone.
 
@@ -42,43 +42,39 @@ ${getCampaignStructure(config.campaignType, config.days)}
 Tone guidelines for ${config.tone}:
 ${getToneGuidelines(config.tone)}
 
-Return the response as a JSON array of emails with this structure:
-[
-  {
-    "day": 1,
-    "subject": "...",
-    "preview": "...",
-    "content": "..."
-  }
-]
+IMPORTANT: Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
+{
+  "emails": [
+    {
+      "day": 1,
+      "subject": "...",
+      "preview": "...",
+      "content": "..."
+    }
+  ]
+}
 
 Make sure the content is engaging, actionable, and aligned with best email marketing practices.`
 
-    const completion = await openai.chat.completions.create({
+    const userInput = `Generate ${config.days} emails for this ${config.campaignType} campaign. Return only valid JSON.`
+
+    const response = await openai.responses.create({
       model: 'gpt-4o',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: `Generate ${config.days} emails for this ${config.campaignType} campaign.`,
-        },
-      ],
+      instructions,
+      input: userInput,
       temperature: 0.8,
-      response_format: { type: 'json_object' },
     })
 
-    const responseContent = completion.choices[0]?.message?.content
-
-    if (!responseContent) {
+    if (!response.output_text) {
       throw new Error('No response from OpenAI')
     }
 
-    const parsedResponse = JSON.parse(responseContent)
+    const parsedResponse = JSON.parse(response.output_text)
     const emails = parsedResponse.emails || parsedResponse
 
     return NextResponse.json({
       emails: Array.isArray(emails) ? emails : Object.values(emails),
-      usage: completion.usage,
+      usage: response.usage,
     })
   } catch (error) {
     console.error('Generate Emails API Error:', error)

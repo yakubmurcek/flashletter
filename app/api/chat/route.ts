@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { messages, emailContext } = requestSchema.parse(body)
 
-    const systemPrompt = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns. ${
+    const instructions = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns. ${
       emailContext
         ? `The current email context:\n- Subject: ${
             emailContext.subject
@@ -42,22 +42,23 @@ Your role is to:
 
 Keep responses helpful and to-the-point.`
 
-    const completion = await openai.chat.completions.create({
+    const userInput = messages[messages.length - 1]?.content || ''
+
+    const response = await openai.responses.create({
       model: 'gpt-4o',
-      messages: [{ role: 'system', content: systemPrompt }, ...messages],
+      instructions,
+      input: userInput,
       temperature: 0.7,
-      max_tokens: 500,
+      max_output_tokens: 500,
     })
 
-    const assistantMessage = completion.choices[0]?.message?.content
-
-    if (!assistantMessage) {
+    if (!response.output_text) {
       throw new Error('No response from OpenAI')
     }
 
     return NextResponse.json({
-      message: assistantMessage,
-      usage: completion.usage,
+      message: response.output_text,
+      usage: response.usage,
     })
   } catch (error) {
     console.error('Chat API Error:', error)
