@@ -18,12 +18,15 @@ import {
   Heading2,
   Heading3,
   Palette,
+  PanelLeftClose,
+  PanelLeftOpen,
 } from 'lucide-react'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import { cn } from '@/lib/utils'
 
 interface Email {
   id: number
@@ -45,6 +48,7 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
     'markdown'
   )
+  const [showEditor, setShowEditor] = useState(true)
   const editorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -227,172 +231,204 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
           <div>
             <h2 className="text-xl font-semibold">Day {email.day}</h2>
             <p className="text-sm text-muted-foreground">
-              Edit content on the left, see preview on the right
+              {showEditor
+                ? 'Edit content on the left, see preview on the right'
+                : 'Preview mode - click to show editor'}
             </p>
           </div>
-          <Button onClick={handleSave} disabled={!hasChanges} className="gap-2">
-            <Save className="w-4 h-4" />
-            {hasChanges ? 'Save Changes' : 'Saved'}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowEditor(!showEditor)}
+              className="gap-2"
+            >
+              {showEditor ? (
+                <>
+                  <PanelLeftClose className="w-4 h-4" />
+                  <span className="hidden sm:inline">Hide Editor</span>
+                </>
+              ) : (
+                <>
+                  <PanelLeftOpen className="w-4 h-4" />
+                  <span className="hidden sm:inline">Show Editor</span>
+                </>
+              )}
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!hasChanges}
+              className="gap-2"
+            >
+              <Save className="w-4 h-4" />
+              {hasChanges ? 'Save Changes' : 'Saved'}
+            </Button>
+          </div>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 border-r border-border overflow-y-auto">
-          <div className="p-6 space-y-6">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 mb-2">
-                <Type className="w-4 h-4 text-muted-foreground" />
-                <Label htmlFor="subject" className="text-sm font-medium">
-                  Subject Line
-                </Label>
-              </div>
-              <Input
-                id="subject"
-                value={editedSubject}
-                onChange={(e) => setEditedSubject(e.target.value)}
-                className="text-base bg-card border-border"
-                placeholder="Enter email subject..."
-              />
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <AlignLeft className="w-4 h-4 text-muted-foreground" />
-                  <Label htmlFor="content" className="text-sm font-medium">
-                    Email Content
+        <div
+          className={cn(
+            'border-r border-border overflow-y-auto transition-all duration-300',
+            showEditor ? 'flex-1' : 'w-0 border-r-0 overflow-hidden'
+          )}
+        >
+          {showEditor && (
+            <div className="p-6 space-y-6">
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Type className="w-4 h-4 text-muted-foreground" />
+                  <Label htmlFor="subject" className="text-sm font-medium">
+                    Subject Line
                   </Label>
                 </div>
-                <div className="relative">
-                  <Tabs
-                    value={editorMode}
-                    onValueChange={(v) =>
-                      setEditorMode(v as 'markdown' | 'richtext')
-                    }
-                  >
-                    <TabsList className="h-8">
-                      <TabsTrigger value="markdown" className="text-xs">
-                        Markdown
-                      </TabsTrigger>
-                      <TabsTrigger
-                        value="richtext"
-                        className="text-xs"
-                        disabled
-                      >
-                        Rich Text
-                      </TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-medium bg-primary/90 text-white rounded-sm rotate-12 pointer-events-none shadow-sm">
-                    Soon
-                  </span>
-                </div>
+                <Input
+                  id="subject"
+                  value={editedSubject}
+                  onChange={(e) => setEditedSubject(e.target.value)}
+                  className="text-base bg-card border-border"
+                  placeholder="Enter email subject..."
+                />
               </div>
 
-              {editorMode === 'richtext' && (
-                <div className="flex flex-wrap items-center gap-1 p-2 border border-border rounded-md bg-muted/30">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyFormat('bold')}
-                    title="Bold"
-                  >
-                    <Bold className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyFormat('italic')}
-                    title="Italic"
-                  >
-                    <Italic className="w-4 h-4" />
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyHeading(1)}
-                    title="Heading 1"
-                  >
-                    <Heading1 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyHeading(2)}
-                    title="Heading 2"
-                  >
-                    <Heading2 className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyHeading(3)}
-                    title="Heading 3"
-                  >
-                    <Heading3 className="w-4 h-4" />
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => applyFormat('insertUnorderedList')}
-                    title="Bullet List"
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                  <div className="w-px h-6 bg-border mx-1" />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        title="Text Color"
-                      >
-                        <Palette className="w-4 h-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2">
-                      <div className="grid grid-cols-3 gap-2">
-                        {colors.map((color) => (
-                          <button
-                            key={color.value}
-                            type="button"
-                            className="h-8 rounded border border-border hover:scale-110 transition-transform"
-                            style={{ backgroundColor: color.value }}
-                            onClick={() => applyColor(color.value)}
-                            title={color.name}
-                          />
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <AlignLeft className="w-4 h-4 text-muted-foreground" />
+                    <Label htmlFor="content" className="text-sm font-medium">
+                      Email Content
+                    </Label>
+                  </div>
+                  <div className="relative">
+                    <Tabs
+                      value={editorMode}
+                      onValueChange={(v) =>
+                        setEditorMode(v as 'markdown' | 'richtext')
+                      }
+                    >
+                      <TabsList className="h-8">
+                        <TabsTrigger value="markdown" className="text-xs">
+                          Markdown
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="richtext"
+                          className="text-xs"
+                          disabled
+                        >
+                          Rich Text
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
+                    <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-medium bg-primary/90 text-white rounded-sm rotate-12 pointer-events-none shadow-sm">
+                      Soon
+                    </span>
+                  </div>
                 </div>
-              )}
 
-              {editorMode === 'markdown' ? (
-                <>
-                  <Textarea
-                    id="content"
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="min-h-[600px] font-mono text-sm leading-relaxed resize-none bg-card border-border"
-                    placeholder="Write your email content here using markdown...
+                {editorMode === 'richtext' && (
+                  <div className="flex flex-wrap items-center gap-1 p-2 border border-border rounded-md bg-muted/30">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyFormat('bold')}
+                      title="Bold"
+                    >
+                      <Bold className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyFormat('italic')}
+                      title="Italic"
+                    >
+                      <Italic className="w-4 h-4" />
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyHeading(1)}
+                      title="Heading 1"
+                    >
+                      <Heading1 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyHeading(2)}
+                      title="Heading 2"
+                    >
+                      <Heading2 className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyHeading(3)}
+                      title="Heading 3"
+                    >
+                      <Heading3 className="w-4 h-4" />
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => applyFormat('insertUnorderedList')}
+                      title="Bullet List"
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                    <div className="w-px h-6 bg-border mx-1" />
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          title="Text Color"
+                        >
+                          <Palette className="w-4 h-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2">
+                        <div className="grid grid-cols-3 gap-2">
+                          {colors.map((color) => (
+                            <button
+                              key={color.value}
+                              type="button"
+                              className="h-8 rounded border border-border hover:scale-110 transition-transform"
+                              style={{ backgroundColor: color.value }}
+                              onClick={() => applyColor(color.value)}
+                              title={color.name}
+                            />
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                )}
+
+                {editorMode === 'markdown' ? (
+                  <>
+                    <Textarea
+                      id="content"
+                      value={editedContent}
+                      onChange={(e) => setEditedContent(e.target.value)}
+                      className="min-h-[600px] font-mono text-sm leading-relaxed resize-none bg-card border-border"
+                      placeholder="Write your email content here using markdown...
 
 # Heading 1
 ## Heading 2
@@ -404,30 +440,31 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
 • Bullet point 2
 
 Regular paragraph text..."
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Tip: Use **bold**, # for headings, and • for bullet points
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div
-                    ref={editorRef}
-                    contentEditable
-                    className="min-h-[600px] p-4 border border-border rounded-md bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
-                    onInput={(e) => {
-                      const html = e.currentTarget.innerHTML
-                      setEditedContent(htmlToMarkdown(html))
-                    }}
-                    style={{ whiteSpace: 'pre-wrap' }}
-                  />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Use the toolbar above to format your text visually
-                  </p>
-                </>
-              )}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Tip: Use **bold**, # for headings, and • for bullet points
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <div
+                      ref={editorRef}
+                      contentEditable
+                      className="min-h-[600px] p-4 border border-border rounded-md bg-background text-sm leading-relaxed focus:outline-none focus:ring-2 focus:ring-ring"
+                      onInput={(e) => {
+                        const html = e.currentTarget.innerHTML
+                        setEditedContent(htmlToMarkdown(html))
+                      }}
+                      style={{ whiteSpace: 'pre-wrap' }}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Use the toolbar above to format your text visually
+                    </p>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="flex-1 overflow-y-auto bg-muted/30">
