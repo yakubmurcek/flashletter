@@ -63,6 +63,7 @@ export function AIChatAssistant({
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -71,6 +72,11 @@ export function AIChatAssistant({
   useEffect(() => {
     scrollToBottom()
   }, [messages])
+
+  // Auto-focus input when panel opens
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
 
   // Auto-submit when autoSubmitMessage is provided
   useEffect(() => {
@@ -414,6 +420,7 @@ export function AIChatAssistant({
         )}
         <div className="flex gap-2">
           <Input
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask me anything..."
