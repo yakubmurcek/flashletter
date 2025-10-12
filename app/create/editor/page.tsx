@@ -29,6 +29,9 @@ export default function EditorPage() {
   const [emails, setEmails] = useState<Email[]>([])
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
+  const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
+    null
+  )
 
   const emailIdFromUrl = getParam('email')
   const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
@@ -89,15 +92,26 @@ export default function EditorPage() {
     if (!showChat) {
       setParam('chat', 'open')
     }
+
+    // For command actions (not "Ask AI about this"), auto-submit the action
+    const isCommandAction = action !== 'Ask AI about this'
+    if (isCommandAction) {
+      setAutoSubmitMessage(action)
+    }
   }
 
   const handleClearContext = () => {
     setSelectedContext(null)
   }
 
+  const handleAutoSubmitComplete = () => {
+    setAutoSubmitMessage(null)
+  }
+
   // Clear context when switching emails
   useEffect(() => {
     setSelectedContext(null)
+    setAutoSubmitMessage(null)
   }, [selectedEmailId])
 
   return (
@@ -192,6 +206,8 @@ export default function EditorPage() {
               }}
               selectedContext={selectedContext}
               onClearContext={handleClearContext}
+              autoSubmitMessage={autoSubmitMessage}
+              onAutoSubmitComplete={handleAutoSubmitComplete}
             />
           )}
         </aside>

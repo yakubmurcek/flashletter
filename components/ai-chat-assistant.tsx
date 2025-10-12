@@ -34,6 +34,8 @@ interface AIChatAssistantProps {
   onApplyEdits?: (edits: EmailEdits) => void
   selectedContext?: SelectedContext | null
   onClearContext?: () => void
+  autoSubmitMessage?: string | null
+  onAutoSubmitComplete?: () => void
 }
 
 export function AIChatAssistant({
@@ -42,6 +44,8 @@ export function AIChatAssistant({
   onApplyEdits,
   selectedContext,
   onClearContext,
+  autoSubmitMessage,
+  onAutoSubmitComplete,
 }: AIChatAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -64,6 +68,23 @@ export function AIChatAssistant({
     scrollToBottom()
   }, [messages])
 
+  // Auto-submit when autoSubmitMessage is provided
+  useEffect(() => {
+    if (autoSubmitMessage && !isLoading) {
+      setInput(autoSubmitMessage)
+      // Trigger submit after setting input
+      setTimeout(() => {
+        const form = document.querySelector(
+          '[data-chat-form]'
+        ) as HTMLFormElement
+        if (form) {
+          form.requestSubmit()
+        }
+        onAutoSubmitComplete?.()
+      }, 50)
+    }
+  }, [autoSubmitMessage, isLoading, onAutoSubmitComplete])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
@@ -78,6 +99,12 @@ export function AIChatAssistant({
     setMessages((prev) => [...prev, userMessage])
     setInput('')
     setIsLoading(true)
+
+    // Capture the selected context for this request, then clear it
+    const contextForThisRequest = selectedContext
+    if (selectedContext && onClearContext) {
+      onClearContext()
+    }
 
     try {
       const response = await fetch('/api/chat', {
@@ -94,7 +121,7 @@ export function AIChatAssistant({
             }))
             .concat([{ role: 'user', content: input }]),
           emailContext,
-          selectedContext,
+          selectedContext: contextForThisRequest,
         }),
       })
 
@@ -337,7 +364,11 @@ export function AIChatAssistant({
       )}
 
       {/* Input */}
-      <form onSubmit={handleSubmit} className="p-4 border-t border-border">
+      <form
+        onSubmit={handleSubmit}
+        className="p-4 border-t border-border"
+        data-chat-form
+      >
         {selectedContext && (
           <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded-md">
             <div className="flex items-start justify-between gap-2 mb-2">
@@ -370,6 +401,7 @@ export function AIChatAssistant({
             placeholder="Ask me anything..."
             className="flex-1"
             disabled={isLoading}
+            data-ai-chat-input
           />
           <Button
             type="submit"
