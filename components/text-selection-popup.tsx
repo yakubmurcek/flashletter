@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
   Sparkles,
@@ -71,28 +70,28 @@ export function TextSelectionPopup({
   return (
     <Card
       ref={popupRef}
-      className="fixed z-50 shadow-2xl border-2 border-primary/20 bg-card/95 backdrop-blur-sm"
+      className="fixed z-50 shadow-2xl border border-border bg-card/98 backdrop-blur-sm p-1"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
-        transform: 'translate(-50%, -100%) translateY(-8px)',
+        transform: 'translate(-50%, -100%) translateY(-12px)',
       }}
     >
-      <div className="p-2 flex items-center gap-1">
+      <div className="flex items-center gap-1">
         {ACTIONS.map((action) => {
           const Icon = action.icon
           return (
-            <Button
+            <button
               key={action.label}
-              variant="ghost"
-              size="sm"
               onClick={() => handleActionClick(action.label)}
-              className="gap-2 hover:bg-primary/10 transition-colors"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-foreground hover:text-foreground cursor-pointer"
               title={action.label}
             >
-              <Icon className={cn('w-4 h-4', action.color)} />
-              <span className="text-xs font-medium">{action.label}</span>
-            </Button>
+              <Icon className={cn('w-3.5 h-3.5 flex-shrink-0', action.color)} />
+              <span className="text-xs font-medium whitespace-nowrap">
+                {action.label}
+              </span>
+            </button>
           )
         })}
       </div>
