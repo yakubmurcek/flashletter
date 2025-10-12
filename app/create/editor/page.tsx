@@ -275,13 +275,7 @@ function EditorPageContent() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="gap-2">
-              <Link
-                href={
-                  campaignIdFromUrl
-                    ? `/campaigns/${campaignIdFromUrl}`
-                    : '/campaigns'
-                }
-              >
+              <Link href="/campaigns">
                 <ArrowLeft className="w-4 h-4" />
                 Back to Campaigns
               </Link>
