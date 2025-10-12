@@ -16,7 +16,7 @@ import {
   getPreviewForDay,
   getContentForDay,
 } from '@/lib/utils/email-helpers'
-import type { Email } from '@/lib/types'
+import type { Email, SelectedContext } from '@/lib/types'
 
 export default function EditorPage() {
   const router = useRouter()
@@ -27,6 +27,8 @@ export default function EditorPage() {
   } = useCampaign()
   const { getParam, setParam, toggleParam } = useUrlState()
   const [emails, setEmails] = useState<Email[]>([])
+  const [selectedContext, setSelectedContext] =
+    useState<SelectedContext | null>(null)
 
   const emailIdFromUrl = getParam('email')
   const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
@@ -80,6 +82,23 @@ export default function EditorPage() {
   const handleToggleChat = () => {
     toggleParam('chat', 'open')
   }
+
+  const handleTextSelected = (text: string, action: string) => {
+    setSelectedContext({ text, action })
+    // Auto-open chat when text is selected
+    if (!showChat) {
+      setParam('chat', 'open')
+    }
+  }
+
+  const handleClearContext = () => {
+    setSelectedContext(null)
+  }
+
+  // Clear context when switching emails
+  useEffect(() => {
+    setSelectedContext(null)
+  }, [selectedEmailId])
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -143,6 +162,7 @@ export default function EditorPage() {
               onUpdate={(updates) =>
                 handleUpdateEmail(selectedEmail.id, updates)
               }
+              onTextSelected={handleTextSelected}
             />
           )}
         </main>
@@ -170,6 +190,8 @@ export default function EditorPage() {
                   handleUpdateEmail(selectedEmail.id, edits)
                 }
               }}
+              selectedContext={selectedContext}
+              onClearContext={handleClearContext}
             />
           )}
         </aside>

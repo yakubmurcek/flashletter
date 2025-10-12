@@ -27,6 +27,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
+import { TextSelectionPopup } from './text-selection-popup'
 
 interface Email {
   id: number
@@ -39,9 +40,14 @@ interface Email {
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
+  onTextSelected?: (text: string, action: string) => void
 }
 
-export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
+export function EmailPreview({
+  email,
+  onUpdate,
+  onTextSelected,
+}: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject)
   const [editedContent, setEditedContent] = useState(email.content)
   const [hasChanges, setHasChanges] = useState(false)
@@ -50,6 +56,11 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
   )
   const [showEditor, setShowEditor] = useState(true)
   const editorRef = useRef<HTMLDivElement>(null)
+  const [selectedText, setSelectedText] = useState<string>('')
+  const [popupPosition, setPopupPosition] = useState<{
+    x: number
+    y: number
+  } | null>(null)
 
   useEffect(() => {
     const changed =
@@ -97,7 +108,7 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
       '<li style="margin-left: 1.5rem;">$1</li>'
     )
     html = html.replace(
-      /(<li.*<\/li>)/s,
+      /(<li[\s\S]*<\/li>)/,
       '<ul style="list-style-type: disc; margin-bottom: 1rem;">$1</ul>'
     )
     html = html.replace(
@@ -159,6 +170,40 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
     { name: 'Red', value: '#dc2626' },
     { name: 'Blue', value: '#2563eb' },
   ]
+
+  const handleTextSelection = () => {
+    const selection = window.getSelection()
+    const text = selection?.toString().trim()
+
+    if (text && text.length > 0) {
+      const range = selection?.getRangeAt(0)
+      const rect = range?.getBoundingClientRect()
+
+      if (rect) {
+        setSelectedText(text)
+        setPopupPosition({
+          x: rect.left + rect.width / 2,
+          y: rect.top + window.scrollY,
+        })
+      }
+    } else {
+      setSelectedText('')
+      setPopupPosition(null)
+    }
+  }
+
+  const handleActionSelected = (action: string, text: string) => {
+    if (onTextSelected) {
+      onTextSelected(text, action)
+    }
+    setSelectedText('')
+    setPopupPosition(null)
+  }
+
+  const handleClosePopup = () => {
+    setSelectedText('')
+    setPopupPosition(null)
+  }
 
   const renderMarkdown = (text: string) => {
     return text.split('\n\n').map((paragraph, i) => {
@@ -509,7 +554,7 @@ Regular paragraph text..."
         </div>
 
         <div className="flex-1 overflow-y-auto bg-muted/30">
-          <div className="p-6">
+          <div className="p-6" onMouseUp={handleTextSelection}>
             <div className="max-w-2xl mx-auto">
               <Card className="p-8 bg-card shadow-sm">
                 <div className="space-y-6">
@@ -533,6 +578,15 @@ Regular paragraph text..."
           </div>
         </div>
       </div>
+
+      {selectedText && popupPosition && (
+        <TextSelectionPopup
+          selectedText={selectedText}
+          position={popupPosition}
+          onAction={handleActionSelected}
+          onClose={handleClosePopup}
+        />
+      )}
     </div>
   )
 }

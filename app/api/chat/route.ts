@@ -16,6 +16,13 @@ const requestSchema = z.object({
       campaignType: z.string().optional(),
     })
     .optional(),
+  selectedContext: z
+    .object({
+      text: z.string(),
+      action: z.string(),
+    })
+    .optional()
+    .nullable(),
 })
 
 const emailEditSchema = z.object({
@@ -26,13 +33,18 @@ const emailEditSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { messages, emailContext } = requestSchema.parse(body)
+    const { messages, emailContext, selectedContext } =
+      requestSchema.parse(body)
+
+    const selectedTextContext = selectedContext
+      ? `\n\n🎯 SELECTED TEXT FOCUS:\nThe user has specifically selected this text to focus on: "${selectedContext.text}"\nRequested action: ${selectedContext.action}\n\nIMPORTANT: While you should focus on this specific text selection, keep in mind the full email context below. Your response should address the selected text but maintain coherence with the entire email.`
+      : ''
 
     const instructions = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns. ${
       emailContext
         ? `\n\nCURRENT EMAIL CONTEXT:\n- Subject: ${emailContext.subject}\n- Campaign Type: ${emailContext.campaignType}\n- Content:\n${emailContext.content}`
         : ''
-    }
+    }${selectedTextContext}
     
 Your role is to:
 - Provide actionable advice on email copywriting, subject lines, and CTAs
@@ -52,6 +64,13 @@ FORMATTING GUIDELINES:
 
 IMPORTANT: You have the ability to DIRECTLY EDIT the email content. You must intelligently decide based on the user's intent.
 
+DECISION TREE FOR EDIT vs ADVICE:
+1. Does the message start with a question word (what/how/should/can/would/could/which/is/do)? → NO EDIT (give advice)
+2. Does it contain "?" at the end? → Likely NO EDIT (unless clearly rhetorical)
+3. Does it start with an imperative verb or direct command? → EDIT
+4. Is the tone instructional/commanding? → EDIT
+5. Is the tone curious/seeking suggestions? → NO EDIT
+
 ONLY EDIT when the user gives a DIRECT COMMAND/REQUEST to change the email:
 ✅ EDIT: "Make the subject line more engaging"
 ✅ EDIT: "Change the tone to casual"
@@ -59,6 +78,13 @@ ONLY EDIT when the user gives a DIRECT COMMAND/REQUEST to change the email:
 ✅ EDIT: "Shorten this"
 ✅ EDIT: "Remove the second paragraph"
 ✅ EDIT: "Rewrite this to be more professional"
+✅ EDIT: "use other word for this"
+✅ EDIT: "find a better word"
+✅ EDIT: "replace this with something else"
+✅ EDIT: "use a synonym"
+✅ EDIT: "change this word/phrase"
+✅ EDIT: "make it more casual"
+✅ EDIT: "improve the CTA"
 
 DO NOT EDIT when the user is ASKING QUESTIONS or seeking advice:
 ❌ NO EDIT: "What should I change to make it more GenZ friendly?"
@@ -68,8 +94,16 @@ DO NOT EDIT when the user is ASKING QUESTIONS or seeking advice:
 ❌ NO EDIT: "Should I add more urgency?"
 ❌ NO EDIT: "Any suggestions?"
 ❌ NO EDIT: "How would you make this better?"
+❌ NO EDIT: "what other word could I use for this?"
+❌ NO EDIT: "can you suggest other words?"
+❌ NO EDIT: "which word would be better?"
+❌ NO EDIT: "is there a better way to phrase this?"
+❌ NO EDIT: "do you have ideas for improving this?"
 
-Key distinction: Questions with "what/how/should/can/would/could" = advice only. Direct imperatives = apply edits.
+Key distinction: 
+- COMMANDS start with imperative verbs (use, change, make, add, remove, rewrite, replace, improve, shorten) = EDIT
+- QUESTIONS start with question words or contain "?" = NO EDIT (advice only)
+- Even if text is selected, only edit when given a command, not when asked a question
 
 CRITICAL: Return ONLY valid JSON (no markdown, no code blocks). Use this EXACT format:
 

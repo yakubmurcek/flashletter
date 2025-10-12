@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/card'
 import { X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from './markdown-renderer'
+import type { SelectedContext } from '@/lib/types'
 
 interface Message {
   id: number
@@ -31,12 +32,16 @@ interface AIChatAssistantProps {
     campaignType?: string
   }
   onApplyEdits?: (edits: EmailEdits) => void
+  selectedContext?: SelectedContext | null
+  onClearContext?: () => void
 }
 
 export function AIChatAssistant({
   onClose,
   emailContext,
   onApplyEdits,
+  selectedContext,
+  onClearContext,
 }: AIChatAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -89,6 +94,7 @@ export function AIChatAssistant({
             }))
             .concat([{ role: 'user', content: input }]),
           emailContext,
+          selectedContext,
         }),
       })
 
@@ -332,6 +338,31 @@ export function AIChatAssistant({
 
       {/* Input */}
       <form onSubmit={handleSubmit} className="p-4 border-t border-border">
+        {selectedContext && (
+          <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded-md">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+                <span className="text-xs font-semibold text-primary">
+                  {selectedContext.action}
+                </span>
+              </div>
+              {onClearContext && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClearContext}
+                  className="h-5 w-5 p-0 hover:bg-primary/20"
+                >
+                  <X className="w-3 h-3" />
+                </Button>
+              )}
+            </div>
+            <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-border/50 max-h-24 overflow-y-auto">
+              "{selectedContext.text}"
+            </div>
+          </div>
+        )}
         <div className="flex gap-2">
           <Input
             value={input}

@@ -22,3 +22,8 @@ export interface LandingPageData {
     ogDescription?: string
   }
 }
+
+export interface SelectedContext {
+  text: string
+  action: string
+}
