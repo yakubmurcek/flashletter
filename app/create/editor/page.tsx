@@ -25,6 +25,8 @@ import {
 } from '@/lib/utils/email-helpers'
 import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email, SelectedContext } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
+import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 
 function EditorPageContent() {
   const router = useRouter()
@@ -33,6 +35,8 @@ function EditorPageContent() {
     config,
     generatedEmails: initialEmails,
     isLoading,
+    currentCampaignId,
+    loadCampaign,
   } = useCampaign()
   const { getParam, setParam, toggleParam } = useUrlState()
   const [emails, setEmails] = useState<Email[]>([])
@@ -42,15 +46,32 @@ function EditorPageContent() {
     null
   )
   const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
+  const [campaignLoaded, setCampaignLoaded] = useState(false)
 
   const emailIdFromUrl = getParam('email')
   const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
   const showChat = getParam('chat') === 'open'
   const restoreParam = getParam('restore')
+  const campaignIdFromUrl = getParam('campaign')
+
+  // Load campaign from database if campaignId is in URL
+  useEffect(() => {
+    if (campaignIdFromUrl && !campaignLoaded && !isLoading) {
+      loadCampaign(campaignIdFromUrl)
+        .then(() => setCampaignLoaded(true))
+        .catch((error) => {
+          console.error('Failed to load campaign:', error)
+          router.push('/campaigns')
+        })
+    }
+  }, [campaignIdFromUrl, campaignLoaded, isLoading, loadCampaign, router])
 
   useEffect(() => {
-    // Don't redirect while still loading from storage
+    // Don't redirect while still loading from storage or loading a campaign
     if (isLoading) return
+
+    // If we're loading a campaign from URL, wait for it to complete
+    if (campaignIdFromUrl && !campaignLoaded) return
 
     if (!landingPageData || !config) {
       router.push('/create')
@@ -72,13 +93,25 @@ function EditorPageContent() {
       }))
       setEmails(fallbackEmails)
     }
-  }, [landingPageData, config, initialEmails, router, isLoading])
+  }, [
+    landingPageData,
+    config,
+    initialEmails,
+    router,
+    isLoading,
+    campaignIdFromUrl,
+    campaignLoaded,
+  ])
 
   useEffect(() => {
     if (emails.length > 0 && !emailIdFromUrl) {
-      router.replace('/create/editor?email=1')
+      const baseUrl = '/create/editor?email=1'
+      const urlWithCampaign = campaignIdFromUrl
+        ? `${baseUrl}&campaign=${campaignIdFromUrl}`
+        : baseUrl
+      router.replace(urlWithCampaign)
     }
-  }, [emails.length, emailIdFromUrl, router])
+  }, [emails.length, emailIdFromUrl, router, campaignIdFromUrl])
 
   // Clear context when switching emails
   useEffect(() => {
@@ -131,8 +164,11 @@ function EditorPageContent() {
             ),
           }))
 
-          // Clear the restore param from URL
-          router.replace(`/create/editor?email=${restoreData.emailId}`)
+          // Clear the restore param from URL, preserve campaign ID
+          const url = campaignIdFromUrl
+            ? `/create/editor?email=${restoreData.emailId}&campaign=${campaignIdFromUrl}`
+            : `/create/editor?email=${restoreData.emailId}`
+          router.replace(url)
         } else {
           console.error('Invalid restore data:', restoreData)
         }
@@ -150,6 +186,10 @@ function EditorPageContent() {
 
   const handleSelectEmail = (id: number) => {
     setParam('email', id.toString())
+    // Preserve campaign ID in URL when switching emails
+    if (campaignIdFromUrl && !getParam('campaign')) {
+      setParam('campaign', campaignIdFromUrl)
+    }
   }
 
   const handleUpdateEmail = (
@@ -158,6 +198,7 @@ function EditorPageContent() {
     skipVersioning = false
   ) => {
     // Save current version before updating (unless explicitly skipped)
+    // TODO: Version storage needs to be updated to use Supabase email UUIDs
     if (!skipVersioning) {
       const currentEmail = emails.find((e) => e.id === id)
       if (currentEmail) {
@@ -185,6 +226,21 @@ function EditorPageContent() {
     setEmails((prev) =>
       prev.map((email) => (email.id === id ? { ...email, ...updates } : email))
     )
+
+    // Save to Supabase if we have a campaign ID
+    if (currentCampaignId) {
+      const supabase = createClient()
+      const campaignService = new CampaignStorageService(supabase)
+
+      // Debounce the save operation
+      setTimeout(() => {
+        campaignService
+          .updateEmail(currentCampaignId, id, updates)
+          .catch((error) =>
+            console.error('Failed to save email to database:', error)
+          )
+      }, 1000)
+    }
   }
 
   const handleToggleChat = () => {
@@ -219,9 +275,15 @@ function EditorPageContent() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="gap-2">
-              <Link href="/create/configure">
+              <Link
+                href={
+                  campaignIdFromUrl
+                    ? `/campaigns/${campaignIdFromUrl}`
+                    : '/campaigns'
+                }
+              >
                 <ArrowLeft className="w-4 h-4" />
-                Back
+                Back to Campaigns
               </Link>
             </Button>
             <div className="hidden md:block">
@@ -238,7 +300,13 @@ function EditorPageContent() {
               className="gap-2 bg-transparent relative"
               asChild
             >
-              <Link href={`/create/history?emailId=${selectedEmailId}`}>
+              <Link
+                href={
+                  campaignIdFromUrl
+                    ? `/create/history?emailId=${selectedEmailId}&campaign=${campaignIdFromUrl}`
+                    : `/create/history?emailId=${selectedEmailId}`
+                }
+              >
                 <History className="w-4 h-4" />
                 <span className="hidden sm:inline">History</span>
                 {versionCounts[selectedEmailId] > 0 && (

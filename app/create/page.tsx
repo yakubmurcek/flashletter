@@ -16,7 +16,12 @@ import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 
 export default function CreatePage() {
   const router = useRouter()
-  const { setLandingPageData } = useCampaign()
+  const {
+    setLandingPageData,
+    createNewCampaign,
+    currentCampaignId,
+    saveCampaign,
+  } = useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
 
@@ -27,7 +32,24 @@ export default function CreatePage() {
     const data = await analyzeLandingPage(url)
     if (data) {
       setLandingPageData(data)
-      router.push('/create/configure')
+      // Create a new campaign in the database only if we don't have one
+      try {
+        let campaignId = currentCampaignId
+
+        // Only create new campaign if we don't have one already
+        if (!campaignId) {
+          campaignId = await createNewCampaign()
+        } else {
+          // Update existing campaign with new landing page data
+          await saveCampaign()
+        }
+
+        router.push(`/create/configure?campaign=${campaignId}`)
+      } catch (error) {
+        console.error('Failed to create/update campaign:', error)
+        // Still proceed to configure if campaign creation fails
+        router.push('/create/configure')
+      }
     }
   }
 

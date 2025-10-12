@@ -23,7 +23,8 @@ export class CampaignService {
   static async generateEmails(
     landingUrl: string,
     landingContent: string,
-    config: CampaignConfig
+    config: CampaignConfig,
+    campaignId?: string
   ): Promise<Email[]> {
     const response = await fetch('/api/generate-emails', {
       method: 'POST',
@@ -32,6 +33,7 @@ export class CampaignService {
         landingUrl,
         landingContent,
         config,
+        campaignId,
       }),
     })
 

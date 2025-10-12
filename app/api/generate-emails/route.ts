@@ -1,6 +1,8 @@
 import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { createClient } from '@/lib/supabase/server'
+import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 
 const generateEmailsSchema = z.object({
   landingUrl: z.string().url(),
@@ -10,6 +12,7 @@ const generateEmailsSchema = z.object({
     campaignType: z.string(),
     days: z.number().min(1).max(30),
   }),
+  campaignId: z.string().uuid().optional(),
 })
 
 export type GenerateEmailsRequest = z.infer<typeof generateEmailsSchema>
@@ -17,7 +20,7 @@ export type GenerateEmailsRequest = z.infer<typeof generateEmailsSchema>
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { landingUrl, landingContent, config } =
+    const { landingUrl, landingContent, config, campaignId } =
       generateEmailsSchema.parse(body)
 
     const instructions = `You are an expert email marketing copywriter. Generate a ${
@@ -71,9 +74,27 @@ Make sure the content is engaging, actionable, and aligned with best email marke
 
     const parsedResponse = JSON.parse(response.output_text)
     const emails = parsedResponse.emails || parsedResponse
+    const emailsArray = Array.isArray(emails) ? emails : Object.values(emails)
+
+    // If campaignId is provided, save emails to database
+    if (campaignId) {
+      const supabase = await createClient()
+      const campaignService = new CampaignStorageService(supabase)
+
+      // Transform emails to match our Email type
+      const emailsToSave = emailsArray.map((email: any, index: number) => ({
+        id: email.day || index + 1,
+        day: email.day || index + 1,
+        subject: email.subject || '',
+        preview: email.preview || '',
+        content: email.content || '',
+      }))
+
+      await campaignService.saveEmails(campaignId, emailsToSave)
+    }
 
     return NextResponse.json({
-      emails: Array.isArray(emails) ? emails : Object.values(emails),
+      emails: emailsArray,
       usage: response.usage,
     })
   } catch (error) {

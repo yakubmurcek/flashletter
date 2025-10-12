@@ -8,7 +8,8 @@ interface UseEmailGenerationReturn {
   generateEmails: (
     landingUrl: string,
     landingContent: string,
-    config: CampaignConfig
+    config: CampaignConfig,
+    campaignId?: string
   ) => Promise<Email[] | null>
   clearError: () => void
 }
@@ -20,7 +21,8 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
   const generateEmails = async (
     landingUrl: string,
     landingContent: string,
-    config: CampaignConfig
+    config: CampaignConfig,
+    campaignId?: string
   ): Promise<Email[] | null> => {
     setIsGenerating(true)
     setError(null)
@@ -29,7 +31,8 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
       const emails = await CampaignService.generateEmails(
         landingUrl,
         landingContent,
-        config
+        config,
+        campaignId
       )
       return emails
     } catch (err) {

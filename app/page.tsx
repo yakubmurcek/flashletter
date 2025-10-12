@@ -1,10 +1,14 @@
-'use client'
-
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles, Mail, Zap } from 'lucide-react'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
+import { UserMenu } from '@/components/auth/user-menu'
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
   return (
     <div className="h-screen overflow-y-auto bg-background">
       <header className="border-b border-border">
@@ -35,9 +39,25 @@ export default function Home() {
               Docs
             </a>
           </nav>
-          <Button variant="outline" size="sm">
-            Sign In
-          </Button>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/campaigns">My Campaigns</Link>
+                </Button>
+                <UserMenu user={user} />
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/login">Sign In</Link>
+                </Button>
+                <Button size="sm" asChild>
+                  <Link href="/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </header>
 

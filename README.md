@@ -10,12 +10,17 @@ An AI-powered newsletter campaign generator that analyzes your landing page and 
 - ✏️ **Full Editor** - Edit and customize every aspect of your generated emails
 - 🎨 **Modern UI** - Beautiful, responsive interface built with Next.js and Tailwind CSS
 - ⚙️ **Flexible Configuration** - Customize tone, campaign type, and duration
+- 🔐 **User Authentication** - Secure sign up and login with Supabase Auth
+- 💾 **Database Storage** - All campaigns and emails persisted in Supabase
+- 📝 **Version History** - Track changes to your emails over time
+- 🔄 **Auto-save** - Your work is automatically saved as you edit
 
 ## Tech Stack
 
 - **Next.js 15** (App Router)
 - **React 19**
 - **TypeScript**
+- **Supabase** (Database & Authentication)
 - **OpenAI API** (GPT-4)
 - **Tailwind CSS**
 - **shadcn/ui**
@@ -27,6 +32,7 @@ An AI-powered newsletter campaign generator that analyzes your landing page and 
 - Node.js 20+ or Bun 1.0+
 - pnpm (recommended) or npm
 - OpenAI API key
+- Supabase account and project
 
 ## Setup Instructions
 
@@ -43,7 +49,13 @@ cd v0-newsletter-generator
 pnpm install
 ```
 
-### 3. Configure environment variables
+### 3. Set up Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. The database schema will be automatically created when you first start the app
+3. Get your project URL and anon key from the Supabase dashboard
+
+### 4. Configure environment variables
 
 Create a `.env.local` file in the root directory:
 
@@ -51,15 +63,17 @@ Create a `.env.local` file in the root directory:
 cp .env.local.example .env.local
 ```
 
-Add your OpenAI API key to `.env.local`:
+Add your keys to `.env.local`:
 
 ```
 OPENAI_API_KEY=sk-your-openai-api-key-here
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 ```
 
-> **Get your API key:** Visit [OpenAI Platform](https://platform.openai.com/api-keys) to create an API key.
+> **Get your OpenAI API key:** Visit [OpenAI Platform](https://platform.openai.com/api-keys) > **Get your Supabase keys:** Visit your [Supabase project settings](https://app.supabase.com) → API
 
-### 4. Run the development server
+### 5. Run the development server
 
 ```bash
 pnpm dev
@@ -67,25 +81,44 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+### 6. First-time setup
+
+1. Sign up for a new account at `/signup`
+2. Check your email for confirmation (if email confirmation is enabled)
+3. Sign in and start creating campaigns!
+
 ## Usage
 
-### 1. Enter Landing Page URL
+### 1. Sign Up / Sign In
 
-- Start by entering the URL of your landing page
+- Create an account or sign in to access your campaigns
+- All your campaigns are saved and accessible from any device
+
+### 2. Create a New Campaign
+
+- Click "New Campaign" or "Start Creating"
+- Enter the URL of your landing page
 - The app will automatically scrape and analyze the content
 
-### 2. Configure Campaign
+### 3. Configure Campaign
 
 - **Tone**: Choose from Professional, Friendly, Casual, Formal, or Enthusiastic
 - **Campaign Type**: Select Nurture, Onboarding, Promotional, Educational, or Re-engagement
 - **Duration**: Set the number of days (3-30 emails)
 
-### 3. Generate & Edit
+### 4. Generate & Edit
 
 - Click "Generate Campaign" to create AI-powered emails
 - Edit any email using the built-in editor
+- Changes are automatically saved to the database
 - Use the AI Assistant for suggestions and improvements
-- Export or deploy your campaign
+
+### 5. Manage Campaigns
+
+- View all your campaigns from the "My Campaigns" page
+- Edit existing campaigns
+- Track version history of your emails
+- Export or deploy your campaigns
 
 ## API Routes
 
@@ -219,9 +252,11 @@ v0-newsletter-generator/
 
 ## Environment Variables
 
-| Variable         | Description         | Required |
-| ---------------- | ------------------- | -------- |
-| `OPENAI_API_KEY` | Your OpenAI API key | Yes      |
+| Variable                        | Description               | Required |
+| ------------------------------- | ------------------------- | -------- |
+| `OPENAI_API_KEY`                | Your OpenAI API key       | Yes      |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL | Yes      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key    | Yes      |
 
 ## Cost Considerations
 
@@ -255,9 +290,9 @@ pnpm lint
 
 ## Troubleshooting
 
-### "Missing OPENAI_API_KEY environment variable"
+### "Missing environment variable"
 
-- Make sure you've created `.env.local` and added your API key
+- Make sure you've created `.env.local` and added all required keys
 - Restart the development server after adding environment variables
 
 ### "Failed to generate emails"
@@ -266,11 +301,23 @@ pnpm lint
 - Check you have sufficient credits in your OpenAI account
 - Review the console for detailed error messages
 
+### "Authentication error"
+
+- Make sure your Supabase URL and anon key are correct
+- Check that your Supabase project is active
+- Verify email confirmation settings in Supabase dashboard
+
 ### Landing page scraping fails
 
 - Some websites block scraping or require authentication
 - Try with a publicly accessible URL
 - CORS issues won't affect server-side scraping
+
+### Database errors
+
+- Ensure your Supabase project has the correct schema
+- Check Row Level Security (RLS) policies are enabled
+- Review Supabase logs for detailed error messages
 
 ## License
 

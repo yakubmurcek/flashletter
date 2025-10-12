@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Card } from '@/components/ui/card'
@@ -29,8 +29,17 @@ import {
 
 export default function ConfigurePage() {
   const router = useRouter()
-  const { landingPageData, setConfig, setGeneratedEmails, isLoading } =
-    useCampaign()
+  const searchParams = useSearchParams()
+  const campaignId = searchParams.get('campaign')
+  const {
+    landingPageData,
+    setConfig,
+    setGeneratedEmails,
+    isLoading,
+    currentCampaignId,
+    updateCampaignConfig,
+    generatedEmails,
+  } = useCampaign()
   const { isGenerating, error, generateEmails } = useEmailGeneration()
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
   const [campaignType, setCampaignType] = useState<string>(
@@ -44,8 +53,15 @@ export default function ConfigurePage() {
 
     if (!landingPageData) {
       router.push('/create')
+      return
     }
-  }, [landingPageData, router, isLoading])
+
+    // If campaign already has generated emails, redirect to editor
+    // User shouldn't be able to reconfigure once emails are generated
+    if (generatedEmails.length > 0 && currentCampaignId) {
+      router.push(`/create/editor?campaign=${currentCampaignId}&email=1`)
+    }
+  }, [landingPageData, router, isLoading, generatedEmails, currentCampaignId])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,16 +69,24 @@ export default function ConfigurePage() {
     if (!landingPageData) return
 
     const config = { tone, campaignType, days: days[0] }
+
+    // Update campaign config in database
+    await updateCampaignConfig(config)
+
     const emails = await generateEmails(
       landingPageData.url,
       landingPageData.content || '',
-      config
+      config,
+      currentCampaignId || undefined
     )
 
     if (emails) {
       setConfig(config)
       setGeneratedEmails(emails)
-      router.push('/create/editor')
+      const editorUrl = currentCampaignId
+        ? `/create/editor?campaign=${currentCampaignId}`
+        : '/create/editor'
+      router.push(editorUrl)
     }
   }
 

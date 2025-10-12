@@ -19,6 +19,7 @@ function HistoryPageContent() {
 
   const emailIdParam = searchParams.get('emailId')
   const emailId = emailIdParam ? parseInt(emailIdParam, 10) : null
+  const campaignId = searchParams.get('campaign')
 
   const [versions, setVersions] = useState<EmailVersion[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
@@ -54,9 +55,12 @@ function HistoryPageContent() {
   // Route guard
   useEffect(() => {
     if (!isLoading && (!emailId || isNaN(emailId))) {
-      router.push('/create/editor')
+      const editorUrl = campaignId
+        ? `/create/editor?campaign=${campaignId}`
+        : '/create/editor'
+      router.push(editorUrl)
     }
-  }, [emailId, isLoading, router])
+  }, [emailId, isLoading, router, campaignId])
 
   if (isLoading) {
     return null
@@ -123,7 +127,10 @@ function HistoryPageContent() {
       })
     )
 
-    router.push(`/create/editor?email=${emailId}&restore=${restoreData}`)
+    const editorUrl = campaignId
+      ? `/create/editor?email=${emailId}&campaign=${campaignId}&restore=${restoreData}`
+      : `/create/editor?email=${emailId}&restore=${restoreData}`
+    router.push(editorUrl)
   }
 
   return (
