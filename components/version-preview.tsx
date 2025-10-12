@@ -25,6 +25,81 @@ function formatTimestamp(timestamp: number): string {
 }
 
 /**
+ * Process inline formatting (bold, links, etc.)
+ */
+function processInlineFormatting(text: string) {
+  const parts: (string | React.ReactElement)[] = []
+  let lastIndex = 0
+
+  const patterns: Array<{
+    type: string
+    index: number
+    length: number
+    text: string
+    url?: string
+  }> = []
+
+  const boldRegex = /\*\*(.*?)\*\*/g
+  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+
+  let match
+  while ((match = boldRegex.exec(text)) !== null) {
+    patterns.push({
+      type: 'bold',
+      index: match.index,
+      length: match[0].length,
+      text: match[1],
+    })
+  }
+
+  while ((match = linkRegex.exec(text)) !== null) {
+    patterns.push({
+      type: 'link',
+      index: match.index,
+      length: match[0].length,
+      text: match[1],
+      url: match[2],
+    })
+  }
+
+  patterns.sort((a, b) => a.index - b.index)
+
+  patterns.forEach((pattern, idx) => {
+    if (pattern.index > lastIndex) {
+      parts.push(text.slice(lastIndex, pattern.index))
+    }
+
+    if (pattern.type === 'bold') {
+      parts.push(
+        <strong key={`bold-${idx}`} className="font-semibold">
+          {pattern.text}
+        </strong>
+      )
+    } else if (pattern.type === 'link') {
+      parts.push(
+        <a
+          key={`link-${idx}`}
+          href={pattern.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary underline hover:text-primary/80 transition-colors"
+        >
+          {pattern.text}
+        </a>
+      )
+    }
+
+    lastIndex = pattern.index + pattern.length
+  })
+
+  if (lastIndex < text.length) {
+    parts.push(text.slice(lastIndex))
+  }
+
+  return parts.length > 0 ? parts : text
+}
+
+/**
  * Render markdown-formatted text
  */
 function renderMarkdown(text: string) {
@@ -51,82 +126,48 @@ function renderMarkdown(text: string) {
       )
     }
 
-    if (paragraph.includes('\n• ') || paragraph.startsWith('• ')) {
-      const items = paragraph.split('\n').filter((line) => line.trim())
+    // Check for bullet lists (with • or - or *)
+    if (
+      paragraph.includes('\n• ') ||
+      paragraph.startsWith('• ') ||
+      paragraph.includes('\n- ') ||
+      paragraph.startsWith('- ') ||
+      paragraph.includes('\n* ') ||
+      paragraph.startsWith('* ')
+    ) {
+      const lines = paragraph.split('\n')
+      const listItems: React.ReactElement[] = []
+      const nonListLines: React.ReactElement[] = []
+
+      lines.forEach((line, idx) => {
+        const trimmedLine = line.trim()
+        if (trimmedLine.match(/^[-•*]\s/)) {
+          // It's a list item
+          const itemText = trimmedLine.substring(2).trim()
+          listItems.push(<li key={idx}>{processInlineFormatting(itemText)}</li>)
+        } else if (trimmedLine) {
+          // It's a non-list line (like a heading before the list)
+          nonListLines.push(
+            <div key={idx} className="mb-2">
+              {processInlineFormatting(trimmedLine)}
+            </div>
+          )
+        }
+      })
+
       return (
-        <ul key={i} className="list-disc list-inside space-y-1 mb-4">
-          {items.map((item, j) => (
-            <li key={j}>{item.replace('• ', '')}</li>
-          ))}
-        </ul>
+        <div key={i} className="mb-4">
+          {nonListLines}
+          {listItems.length > 0 && (
+            <ul className="list-disc list-inside space-y-1">{listItems}</ul>
+          )}
+        </div>
       )
-    }
-
-    const content = paragraph
-    const parts = []
-    let lastIndex = 0
-
-    const patterns = []
-    const boldRegex = /\*\*(.*?)\*\*/g
-    const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
-
-    let match
-    while ((match = boldRegex.exec(content)) !== null) {
-      patterns.push({
-        type: 'bold',
-        index: match.index,
-        length: match[0].length,
-        text: match[1],
-      })
-    }
-
-    while ((match = linkRegex.exec(content)) !== null) {
-      patterns.push({
-        type: 'link',
-        index: match.index,
-        length: match[0].length,
-        text: match[1],
-        url: match[2],
-      })
-    }
-
-    patterns.sort((a, b) => a.index - b.index)
-
-    patterns.forEach((pattern, idx) => {
-      if (pattern.index > lastIndex) {
-        parts.push(content.slice(lastIndex, pattern.index))
-      }
-
-      if (pattern.type === 'bold') {
-        parts.push(
-          <strong key={`${i}-${idx}`} className="font-semibold">
-            {pattern.text}
-          </strong>
-        )
-      } else if (pattern.type === 'link') {
-        parts.push(
-          <a
-            key={`${i}-${idx}`}
-            href={pattern.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-primary underline hover:text-primary/80 transition-colors"
-          >
-            {pattern.text}
-          </a>
-        )
-      }
-
-      lastIndex = pattern.index + pattern.length
-    })
-
-    if (lastIndex < content.length) {
-      parts.push(content.slice(lastIndex))
     }
 
     return (
       <p key={i} className="mb-4 leading-relaxed">
-        {parts.length > 0 ? parts : paragraph}
+        {processInlineFormatting(paragraph)}
       </p>
     )
   })
