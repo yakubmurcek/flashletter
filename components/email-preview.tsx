@@ -196,22 +196,63 @@ export function EmailPreview({ email, onUpdate }: EmailPreviewProps) {
       }
 
       const content = paragraph
-      const boldRegex = /\*\*(.*?)\*\*/g
       const parts = []
       let lastIndex = 0
-      let match
 
+      const patterns = []
+      const boldRegex = /\*\*(.*?)\*\*/g
+      const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+
+      let match
       while ((match = boldRegex.exec(content)) !== null) {
-        if (match.index > lastIndex) {
-          parts.push(content.slice(lastIndex, match.index))
-        }
-        parts.push(
-          <strong key={match.index} className="font-semibold">
-            {match[1]}
-          </strong>
-        )
-        lastIndex = match.index + match[0].length
+        patterns.push({
+          type: 'bold',
+          index: match.index,
+          length: match[0].length,
+          text: match[1],
+        })
       }
+
+      while ((match = linkRegex.exec(content)) !== null) {
+        patterns.push({
+          type: 'link',
+          index: match.index,
+          length: match[0].length,
+          text: match[1],
+          url: match[2],
+        })
+      }
+
+      patterns.sort((a, b) => a.index - b.index)
+
+      patterns.forEach((pattern, idx) => {
+        if (pattern.index > lastIndex) {
+          parts.push(content.slice(lastIndex, pattern.index))
+        }
+
+        if (pattern.type === 'bold') {
+          parts.push(
+            <strong key={`${i}-${idx}`} className="font-semibold">
+              {pattern.text}
+            </strong>
+          )
+        } else if (pattern.type === 'link') {
+          parts.push(
+            <a
+              key={`${i}-${idx}`}
+              href={pattern.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline hover:text-primary/80 transition-colors"
+            >
+              {pattern.text}
+            </a>
+          )
+        }
+
+        lastIndex = pattern.index + pattern.length
+      })
+
       if (lastIndex < content.length) {
         parts.push(content.slice(lastIndex))
       }
@@ -485,10 +526,6 @@ Regular paragraph text..."
                     <div className="text-foreground">
                       {renderMarkdown(editedContent)}
                     </div>
-                  </div>
-
-                  <div className="pt-6 border-t border-border">
-                    <Button className="w-full sm:w-auto">Call to Action</Button>
                   </div>
                 </div>
               </Card>
