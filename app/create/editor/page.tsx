@@ -66,6 +66,12 @@ export default function EditorPage() {
     }
   }, [emails.length, emailIdFromUrl, router])
 
+  // Clear context when switching emails
+  useEffect(() => {
+    setSelectedContext(null)
+    setAutoSubmitMessage(null)
+  }, [selectedEmailId])
+
   if (!landingPageData || !config) {
     return null
   }
@@ -107,12 +113,6 @@ export default function EditorPage() {
   const handleAutoSubmitComplete = () => {
     setAutoSubmitMessage(null)
   }
-
-  // Clear context when switching emails
-  useEffect(() => {
-    setSelectedContext(null)
-    setAutoSubmitMessage(null)
-  }, [selectedEmailId])
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
