@@ -17,6 +17,10 @@ interface Message {
   content: string
   timestamp: Date
   appliedEdit?: boolean
+  context?: {
+    text: string
+    action: string
+  }
 }
 
 interface EmailEdits {
@@ -89,22 +93,23 @@ export function AIChatAssistant({
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
-    const userMessage: Message = {
-      id: messages.length + 1,
-      role: 'user',
-      content: input,
-      timestamp: new Date(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
-    setInput('')
-    setIsLoading(true)
-
     // Capture the selected context for this request, then clear it
     const contextForThisRequest = selectedContext
     if (selectedContext && onClearContext) {
       onClearContext()
     }
+
+    const userMessage: Message = {
+      id: messages.length + 1,
+      role: 'user',
+      content: input,
+      timestamp: new Date(),
+      context: contextForThisRequest || undefined,
+    }
+
+    setMessages((prev) => [...prev, userMessage])
+    setInput('')
+    setIsLoading(true)
 
     try {
       const response = await fetch('/api/chat', {
@@ -298,6 +303,19 @@ export function AIChatAssistant({
                   <span className="text-xs font-medium text-green-600 dark:text-green-400">
                     Email Updated
                   </span>
+                </div>
+              )}
+              {message.context && (
+                <div className="mb-2 pb-2 border-b border-primary-foreground/20">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Sparkles className="w-3 h-3 opacity-70" />
+                    <span className="text-[10px] font-semibold uppercase tracking-wide opacity-70">
+                      {message.context.action}
+                    </span>
+                  </div>
+                  <div className="text-[11px] opacity-80 bg-black/10 dark:bg-white/10 px-2 py-1 rounded">
+                    "{message.context.text}"
+                  </div>
                 </div>
               )}
               {message.role === 'assistant' ? (
