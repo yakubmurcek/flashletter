@@ -404,6 +404,7 @@ export function AIChatAssistant({
               </div>
               {onClearContext && (
                 <Button
+                  type="button"
                   variant="ghost"
                   size="sm"
                   onClick={onClearContext}
