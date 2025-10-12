@@ -27,3 +27,12 @@ export interface SelectedContext {
   text: string
   action: string
 }
+
+export interface EmailVersion {
+  id: string // timestamp-based unique identifier
+  emailId: number // reference to parent email
+  subject: string
+  content: string
+  timestamp: number // Unix timestamp
+  changesSummary: string // e.g., "Subject and 3 lines changed"
+}

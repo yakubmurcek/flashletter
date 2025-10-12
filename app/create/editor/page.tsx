@@ -1,9 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Mail, MessageSquare, Download, Send } from 'lucide-react'
+import {
+  ArrowLeft,
+  Mail,
+  MessageSquare,
+  Download,
+  Send,
+  History,
+} from 'lucide-react'
 import { EmailList } from '@/components/email-list'
 import { EmailPreview } from '@/components/email-preview'
 import { AIChatAssistant } from '@/components/ai-chat-assistant'
@@ -16,9 +23,10 @@ import {
   getPreviewForDay,
   getContentForDay,
 } from '@/lib/utils/email-helpers'
+import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email, SelectedContext } from '@/lib/types'
 
-export default function EditorPage() {
+function EditorPageContent() {
   const router = useRouter()
   const {
     landingPageData,
@@ -33,10 +41,12 @@ export default function EditorPage() {
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
+  const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
 
   const emailIdFromUrl = getParam('email')
   const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
   const showChat = getParam('chat') === 'open'
+  const restoreParam = getParam('restore')
 
   useEffect(() => {
     // Don't redirect while still loading from storage
@@ -76,6 +86,62 @@ export default function EditorPage() {
     setAutoSubmitMessage(null)
   }, [selectedEmailId])
 
+  // Load version counts for all emails
+  useEffect(() => {
+    if (emails.length > 0) {
+      const counts: Record<number, number> = {}
+      emails.forEach((email) => {
+        counts[email.id] = versionStorage.getVersionCount(email.id)
+      })
+      setVersionCounts(counts)
+    }
+  }, [emails])
+
+  // Handle restoration from history page
+  useEffect(() => {
+    if (restoreParam) {
+      try {
+        const restoreData = JSON.parse(decodeURIComponent(restoreParam))
+
+        // Validate restore data
+        if (
+          restoreData &&
+          typeof restoreData.emailId === 'number' &&
+          typeof restoreData.subject === 'string' &&
+          typeof restoreData.content === 'string'
+        ) {
+          // Update the email directly (versioning already handled by history page)
+          setEmails((prev) =>
+            prev.map((email) =>
+              email.id === restoreData.emailId
+                ? {
+                    ...email,
+                    subject: restoreData.subject,
+                    content: restoreData.content,
+                  }
+                : email
+            )
+          )
+
+          // Update version count for this email
+          setVersionCounts((prev) => ({
+            ...prev,
+            [restoreData.emailId]: versionStorage.getVersionCount(
+              restoreData.emailId
+            ),
+          }))
+
+          // Clear the restore param from URL
+          router.replace(`/create/editor?email=${restoreData.emailId}`)
+        } else {
+          console.error('Invalid restore data:', restoreData)
+        }
+      } catch (error) {
+        console.error('Failed to restore version:', error)
+      }
+    }
+  }, [restoreParam, router])
+
   if (isLoading || !landingPageData || !config) {
     return null
   }
@@ -86,7 +152,36 @@ export default function EditorPage() {
     setParam('email', id.toString())
   }
 
-  const handleUpdateEmail = (id: number, updates: Partial<Email>) => {
+  const handleUpdateEmail = (
+    id: number,
+    updates: Partial<Email>,
+    skipVersioning = false
+  ) => {
+    // Save current version before updating (unless explicitly skipped)
+    if (!skipVersioning) {
+      const currentEmail = emails.find((e) => e.id === id)
+      if (currentEmail) {
+        console.log('[HANDLE UPDATE] Before save:', {
+          emailId: id,
+          currentSubject: currentEmail.subject.substring(0, 50),
+          currentContentPreview: currentEmail.content.substring(0, 100),
+          newSubject: updates.subject?.substring(0, 50),
+          newContentPreview: updates.content?.substring(0, 100),
+        })
+        try {
+          versionStorage.saveVersion(id, currentEmail)
+        } catch (error) {
+          console.error('Failed to save version:', error)
+          // Continue with update even if versioning fails
+        }
+      } else {
+        console.error('[HANDLE UPDATE] Email not found:', id)
+      }
+    } else {
+      console.log('[HANDLE UPDATE] Skipping versioning (restore flow)')
+    }
+
+    // Update the email
     setEmails((prev) =>
       prev.map((email) => (email.id === id ? { ...email, ...updates } : email))
     )
@@ -137,6 +232,22 @@ export default function EditorPage() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 bg-transparent relative"
+              asChild
+            >
+              <Link href={`/create/history?emailId=${selectedEmailId}`}>
+                <History className="w-4 h-4" />
+                <span className="hidden sm:inline">History</span>
+                {versionCounts[selectedEmailId] > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {versionCounts[selectedEmailId]}
+                  </span>
+                )}
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -227,5 +338,19 @@ export default function EditorPage() {
         </Button>
       )}
     </div>
+  )
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <EditorPageContent />
+    </Suspense>
   )
 }
