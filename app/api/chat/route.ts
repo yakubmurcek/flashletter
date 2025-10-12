@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         }"\nRequested action: ${selectedContext.action}\n\n${
           isContextOnlyAction
             ? 'IMPORTANT: The user wants to DISCUSS this text with you. DO NOT automatically edit - wait for their specific question or command. Just acknowledge the selection and ask how you can help with this specific part.'
-            : 'IMPORTANT: This is a DIRECT COMMAND to edit. You MUST:\n1. Set shouldEdit: true\n2. Apply the requested change to the selected text\n3. Return the COMPLETE email content with the change applied\n4. Explain what you changed in the message field\n\nThe action is clear and REQUIRES an immediate edit with full content returned.'
+            : "IMPORTANT: This is a DIRECT COMMAND to edit. You MUST:\n1. Set shouldEdit: true\n2. Find the selected text within the FULL email content\n3. Replace ONLY that specific part with your improvement\n4. Return the COMPLETE, ENTIRE email content (not just the changed snippet!)\n5. Explain what you changed in the message field\n\n⚠️ CRITICAL: NEVER return just the edited snippet. ALWAYS return the FULL email with the change applied. If you only return the snippet, you will DELETE the rest of the user's email!"
         }\n\nWhile you should focus on this specific text selection, keep in mind the full email context below. Your response should address the selected text but maintain coherence with the entire email.`
       : ''
 
@@ -133,16 +133,18 @@ If user says "a", "b", "c", "option a", "the second one", "first", etc. after yo
 CRITICAL: You MUST return the FULL updated content/subject with the change applied, not just acknowledge it.
 
 Example:
-User previously selected "revolutionary" and you offered: a) innovative b) game-changing c) industry-leading
+Current email: "Welcome! Our revolutionary product will change your life. Get started today..."
+User selected "revolutionary" and you offered: a) innovative b) game-changing c) industry-leading
 User says: "b"
 You MUST return:
 {
   "shouldEdit": true,
   "message": "Applied! I've changed 'revolutionary' to 'game-changing'.",
   "edits": {
-    "content": "[THE FULL EMAIL CONTENT WITH 'revolutionary' REPLACED BY 'game-changing']"
+    "content": "Welcome! Our game-changing product will change your life. Get started today..."
   }
 }
+Note: The ENTIRE email is returned with just the word "revolutionary" changed to "game-changing".
 
 CRITICAL: You MUST respond with valid JSON only (no markdown, no code blocks, no extra text). Use this EXACT JSON format:
 
@@ -156,7 +158,24 @@ When you decide to apply edits:
   }
 }
 
-IMPORTANT: The "content" and "subject" fields in edits MUST contain the FULL, COMPLETE text with your changes applied, NOT just the changed part. Replace the entire field with the updated version.
+CRITICAL - PREVENT DATA LOSS:
+The "content" and "subject" fields in edits MUST contain the FULL, COMPLETE text with your changes applied, NOT just the changed part.
+
+WRONG (WILL DELETE USER'S CONTENT):
+User selects "We're thrilled to have you there" and asks to improve it
+You return: { "content": "We're excited to welcome you" }  ❌ THIS DELETES THE REST OF THE EMAIL!
+
+CORRECT:
+You return: { "content": "[ENTIRE EMAIL WITH 'We're thrilled to have you there' REPLACED BY 'We're excited to welcome you']" } ✅
+
+When editing selected text:
+1. Take the FULL current email content
+2. Find the selected text within it
+3. Replace ONLY that specific part
+4. Return the COMPLETE email with the change applied
+5. NEVER return just the snippet - ALWAYS return the full content
+
+If the full email has 500 words and you change 3 words, you MUST return all 500 words with those 3 changed.
 
 When just providing advice without edits:
 {
