@@ -39,6 +39,7 @@ export default function ConfigurePage() {
     currentCampaignId,
     updateCampaignConfig,
     generatedEmails,
+    loadCampaign,
   } = useCampaign()
   const { isGenerating, error, generateEmails } = useEmailGeneration()
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
@@ -46,10 +47,26 @@ export default function ConfigurePage() {
     CAMPAIGN_TYPES[0].value
   )
   const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
+  const [campaignLoaded, setCampaignLoaded] = useState(false)
+
+  // Load campaign from database if campaignId is in URL
+  useEffect(() => {
+    if (campaignId && !campaignLoaded && !isLoading) {
+      loadCampaign(campaignId)
+        .then(() => setCampaignLoaded(true))
+        .catch((error) => {
+          console.error('Failed to load campaign:', error)
+          router.push('/campaigns')
+        })
+    }
+  }, [campaignId, campaignLoaded, isLoading, loadCampaign, router])
 
   useEffect(() => {
     // Don't redirect while still loading from storage
     if (isLoading) return
+
+    // If we're loading a campaign from URL, wait for it to complete
+    if (campaignId && !campaignLoaded) return
 
     if (!landingPageData) {
       router.push('/create')
@@ -61,7 +78,15 @@ export default function ConfigurePage() {
     if (generatedEmails.length > 0 && currentCampaignId) {
       router.push(`/create/editor?campaign=${currentCampaignId}&email=1`)
     }
-  }, [landingPageData, router, isLoading, generatedEmails, currentCampaignId])
+  }, [
+    landingPageData,
+    router,
+    isLoading,
+    generatedEmails,
+    currentCampaignId,
+    campaignId,
+    campaignLoaded,
+  ])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,7 +115,7 @@ export default function ConfigurePage() {
     }
   }
 
-  if (isLoading || !landingPageData) {
+  if (isLoading || (campaignId && !campaignLoaded) || !landingPageData) {
     return null
   }
 
