@@ -54,7 +54,7 @@ export function EmailPreview({
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
     'markdown'
   )
-  const [showEditor, setShowEditor] = useState(true)
+  const [showEditor, setShowEditor] = useState(false)
   const editorRef = useRef<HTMLDivElement>(null)
   const [selectedText, setSelectedText] = useState<string>('')
   const [popupPosition, setPopupPosition] = useState<{
