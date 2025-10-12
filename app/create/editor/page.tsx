@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Mail, MessageSquare, Download, Send } from 'lucide-react'
 import { EmailList } from '@/components/email-list'
@@ -10,21 +10,27 @@ import { AIChatAssistant } from '@/components/ai-chat-assistant'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { useCampaign } from '@/lib/campaign-context'
+import { useUrlState } from '@/lib/hooks/use-url-state'
+import {
+  getSubjectForDay,
+  getPreviewForDay,
+  getContentForDay,
+} from '@/lib/utils/email-helpers'
 import type { Email } from '@/lib/types'
 
 export default function EditorPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const {
     landingPageData,
     config,
     generatedEmails: initialEmails,
   } = useCampaign()
-  const [showChat, setShowChat] = useState(false)
+  const { getParam, setParam, toggleParam } = useUrlState()
   const [emails, setEmails] = useState<Email[]>([])
 
-  const emailIdFromUrl = searchParams.get('email')
+  const emailIdFromUrl = getParam('email')
   const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
+  const showChat = getParam('chat') === 'open'
 
   useEffect(() => {
     if (!landingPageData || !config) {
@@ -50,11 +56,6 @@ export default function EditorPage() {
   }, [landingPageData, config, initialEmails, router])
 
   useEffect(() => {
-    const chatParam = searchParams.get('chat')
-    setShowChat(chatParam === 'open')
-  }, [searchParams])
-
-  useEffect(() => {
     if (emails.length > 0 && !emailIdFromUrl) {
       router.replace('/create/editor?email=1')
     }
@@ -67,9 +68,7 @@ export default function EditorPage() {
   const selectedEmail = emails.find((e) => e.id === selectedEmailId)
 
   const handleSelectEmail = (id: number) => {
-    const params = new URLSearchParams(searchParams.toString())
-    params.set('email', id.toString())
-    router.push(`/create/editor?${params.toString()}`)
+    setParam('email', id.toString())
   }
 
   const handleUpdateEmail = (id: number, updates: Partial<Email>) => {
@@ -79,20 +78,7 @@ export default function EditorPage() {
   }
 
   const handleToggleChat = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (showChat) {
-      params.delete('chat')
-    } else {
-      params.set('chat', 'open')
-    }
-    const emailParam = params.get('email')
-    const url = emailParam
-      ? `/create/editor?${params.toString()}`
-      : params.has('chat')
-      ? `/create/editor?chat=open`
-      : '/create/editor'
-    router.replace(url)
-    setShowChat(!showChat)
+    toggleParam('chat', 'open')
   }
 
   return (
@@ -178,7 +164,7 @@ export default function EditorPage() {
         >
           {showChat && (
             <AIChatAssistant
-              onClose={() => setShowChat(false)}
+              onClose={handleToggleChat}
               emailContext={
                 selectedEmail
                   ? {
@@ -209,69 +195,4 @@ export default function EditorPage() {
       )}
     </div>
   )
-}
-
-function getSubjectForDay(day: number, type: string): string {
-  const subjects: Record<string, string[]> = {
-    nurture: [
-      'Welcome to our community',
-      "Here's what you need to know",
-      'Success stories from our users',
-      'Tips to get the most value',
-      'Your progress so far',
-      'Advanced features unlocked',
-      'Join our upcoming webinar',
-    ],
-    onboarding: [
-      'Welcome aboard!',
-      'Getting started guide',
-      'Your first steps',
-      'Pro tips for success',
-      'Meet your dashboard',
-      'Advanced features',
-      "You're all set!",
-    ],
-    promotional: [
-      'Special offer inside',
-      'Limited time discount',
-      'Exclusive deal for you',
-      'Last chance to save',
-      'New features released',
-      'Premium upgrade available',
-      'Final reminder',
-    ],
-  }
-
-  const typeSubjects = subjects[type] || subjects.nurture
-  return typeSubjects[Math.min(day - 1, typeSubjects.length - 1)]
-}
-
-function getPreviewForDay(day: number, type: string): string {
-  return `This is email ${day} of your ${type} campaign. Click to edit and customize the content.`
-}
-
-function getContentForDay(day: number, type: string, tone: string): string {
-  return `# Welcome to Day ${day}
-
-Hi there,
-
-This is **Day ${day}** of your ${type} campaign with a ${tone} tone.
-
-## What's Inside
-
-Your personalized content will appear here based on your landing page analysis. This email is designed to engage your audience and drive action.
-
-### Key Points
-
-• Engaging introduction that captures attention
-• Clear value proposition that resonates
-• Compelling call-to-action that converts
-• Social proof and testimonials for credibility
-
-## Next Steps
-
-We're excited to help you achieve your goals. Click the button below to get started.
-
-Best regards,  
-**Your Team**`
 }

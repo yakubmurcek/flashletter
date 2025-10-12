@@ -7,6 +7,7 @@ import {
   useEffect,
   type ReactNode,
 } from 'react'
+import { storage } from './utils/storage'
 import type { CampaignConfig, LandingPageData, Email } from './types'
 
 interface CampaignContextType {
@@ -30,67 +31,32 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [generatedEmails, setGeneratedEmailsState] = useState<Email[]>([])
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const stored = sessionStorage.getItem('campaign-data')
-      if (stored) {
-        try {
-          const data = JSON.parse(stored)
-          setLandingPageDataState(data.landingPageData || null)
-          setConfigState(data.config || null)
-          setGeneratedEmailsState(data.generatedEmails || [])
-        } catch (e) {
-          console.error('Failed to parse stored campaign data', e)
-        }
-      }
-    }
+    const stored = storage.get()
+    if (stored.landingPageData) setLandingPageDataState(stored.landingPageData)
+    if (stored.config) setConfigState(stored.config)
+    if (stored.generatedEmails) setGeneratedEmailsState(stored.generatedEmails)
   }, [])
 
   const setLandingPageData = (data: LandingPageData | null) => {
     setLandingPageDataState(data)
-    if (typeof window !== 'undefined') {
-      const current = JSON.parse(
-        sessionStorage.getItem('campaign-data') || '{}'
-      )
-      sessionStorage.setItem(
-        'campaign-data',
-        JSON.stringify({ ...current, landingPageData: data })
-      )
-    }
+    storage.set({ landingPageData: data })
   }
 
   const setConfig = (cfg: CampaignConfig | null) => {
     setConfigState(cfg)
-    if (typeof window !== 'undefined') {
-      const current = JSON.parse(
-        sessionStorage.getItem('campaign-data') || '{}'
-      )
-      sessionStorage.setItem(
-        'campaign-data',
-        JSON.stringify({ ...current, config: cfg })
-      )
-    }
+    storage.set({ config: cfg })
   }
 
   const setGeneratedEmails = (emails: Email[]) => {
     setGeneratedEmailsState(emails)
-    if (typeof window !== 'undefined') {
-      const current = JSON.parse(
-        sessionStorage.getItem('campaign-data') || '{}'
-      )
-      sessionStorage.setItem(
-        'campaign-data',
-        JSON.stringify({ ...current, generatedEmails: emails })
-      )
-    }
+    storage.set({ generatedEmails: emails })
   }
 
   const clearAll = () => {
     setLandingPageDataState(null)
     setConfigState(null)
     setGeneratedEmailsState([])
-    if (typeof window !== 'undefined') {
-      sessionStorage.removeItem('campaign-data')
-    }
+    storage.clear()
   }
 
   return (
