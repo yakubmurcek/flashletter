@@ -24,6 +24,7 @@ export default function EditorPage() {
     landingPageData,
     config,
     generatedEmails: initialEmails,
+    isLoading,
   } = useCampaign()
   const { getParam, setParam, toggleParam } = useUrlState()
   const [emails, setEmails] = useState<Email[]>([])
@@ -38,6 +39,9 @@ export default function EditorPage() {
   const showChat = getParam('chat') === 'open'
 
   useEffect(() => {
+    // Don't redirect while still loading from storage
+    if (isLoading) return
+
     if (!landingPageData || !config) {
       router.push('/create')
       return
@@ -58,7 +62,7 @@ export default function EditorPage() {
       }))
       setEmails(fallbackEmails)
     }
-  }, [landingPageData, config, initialEmails, router])
+  }, [landingPageData, config, initialEmails, router, isLoading])
 
   useEffect(() => {
     if (emails.length > 0 && !emailIdFromUrl) {
@@ -72,7 +76,7 @@ export default function EditorPage() {
     setAutoSubmitMessage(null)
   }, [selectedEmailId])
 
-  if (!landingPageData || !config) {
+  if (isLoading || !landingPageData || !config) {
     return null
   }
 

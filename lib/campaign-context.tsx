@@ -18,6 +18,7 @@ interface CampaignContextType {
   generatedEmails: Email[]
   setGeneratedEmails: (emails: Email[]) => void
   clearAll: () => void
+  isLoading: boolean
 }
 
 const CampaignContext = createContext<CampaignContextType | undefined>(
@@ -29,12 +30,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     useState<LandingPageData | null>(null)
   const [config, setConfigState] = useState<CampaignConfig | null>(null)
   const [generatedEmails, setGeneratedEmailsState] = useState<Email[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const stored = storage.get()
     if (stored.landingPageData) setLandingPageDataState(stored.landingPageData)
     if (stored.config) setConfigState(stored.config)
     if (stored.generatedEmails) setGeneratedEmailsState(stored.generatedEmails)
+    setIsLoading(false)
   }, [])
 
   const setLandingPageData = (data: LandingPageData | null) => {
@@ -69,6 +72,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         generatedEmails,
         setGeneratedEmails,
         clearAll,
+        isLoading,
       }}
     >
       {children}

@@ -29,7 +29,8 @@ import {
 
 export default function ConfigurePage() {
   const router = useRouter()
-  const { landingPageData, setConfig, setGeneratedEmails } = useCampaign()
+  const { landingPageData, setConfig, setGeneratedEmails, isLoading } =
+    useCampaign()
   const { isGenerating, error, generateEmails } = useEmailGeneration()
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
   const [campaignType, setCampaignType] = useState<string>(
@@ -38,10 +39,13 @@ export default function ConfigurePage() {
   const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
 
   useEffect(() => {
+    // Don't redirect while still loading from storage
+    if (isLoading) return
+
     if (!landingPageData) {
       router.push('/create')
     }
-  }, [landingPageData, router])
+  }, [landingPageData, router, isLoading])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,7 +66,7 @@ export default function ConfigurePage() {
     }
   }
 
-  if (!landingPageData) {
+  if (isLoading || !landingPageData) {
     return null
   }
 
