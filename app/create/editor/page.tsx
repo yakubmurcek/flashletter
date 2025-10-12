@@ -104,15 +104,6 @@ export default function EditorPage() {
               variant="outline"
               size="sm"
               className="gap-2 bg-transparent"
-              onClick={handleToggleChat}
-            >
-              <MessageSquare className="w-4 h-4" />
-              <span className="hidden sm:inline">AI Assistant</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-transparent"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>
