@@ -8,7 +8,7 @@ import { Plus, Mail } from 'lucide-react'
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
 export const metadata = {
-  title: 'My Campaigns - Newsletter Generator',
+  title: 'My Campaigns - Flashletter',
   description: 'Manage your email campaigns',
 }
 
@@ -33,7 +33,7 @@ export default async function CampaignsPage() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Mail className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold">CampaignAI</span>
+            <span className="text-xl font-semibold">Flashletter</span>
           </Link>
         </div>
       </header>

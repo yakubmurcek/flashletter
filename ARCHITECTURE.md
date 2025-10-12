@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-v0-newsletter-generator/
+flashletter/
 ├── app/                          # Next.js App Router pages
 │   ├── create/                   # Campaign creation flow
 │   │   ├── page.tsx             # Step 1: URL input

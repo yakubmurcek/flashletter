@@ -1,6 +1,6 @@
-# AI Newsletter Generator
+# Flashletter
 
-An AI-powered newsletter campaign generator that analyzes your landing page and creates complete email sequences using OpenAI.
+Flashletter - Lightning-fast AI email campaigns. Generate complete email sequences in seconds by analyzing your landing page with OpenAI.
 
 ## Features
 
@@ -40,7 +40,7 @@ An AI-powered newsletter campaign generator that analyzes your landing page and 
 
 ```bash
 git clone <repository-url>
-cd v0-newsletter-generator
+cd flashletter
 ```
 
 ### 2. Install dependencies
@@ -225,7 +225,7 @@ AI chat assistant for email optimization.
 ## Project Structure
 
 ```
-v0-newsletter-generator/
+flashletter/
 ├── app/
 │   ├── api/
 │   │   ├── chat/route.ts          # AI chat endpoint

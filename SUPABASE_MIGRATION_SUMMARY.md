@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully migrated the v0-newsletter-generator from client-side storage (localStorage/sessionStorage) to Supabase with full authentication and database persistence.
+Successfully migrated Flashletter from client-side storage (localStorage/sessionStorage) to Supabase with full authentication and database persistence.
 
 ## Completed Implementation
 

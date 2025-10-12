@@ -17,7 +17,7 @@ export default async function Home() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Mail className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-xl font-semibold">CampaignAI</span>
+            <span className="text-xl font-semibold">Flashletter</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <a
@@ -65,12 +65,12 @@ export default async function Home() {
         <div className="max-w-4xl mx-auto text-center py-20 md:py-32">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm mb-6">
             <Sparkles className="w-4 h-4" />
-            <span>AI-Powered Email Campaigns</span>
+            <span>Lightning-fast AI Email Campaigns</span>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
-            Generate email campaigns in{' '}
-            <span className="text-primary">seconds</span>
+            Create email campaigns in{' '}
+            <span className="text-primary">seconds</span> with Flashletter
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
