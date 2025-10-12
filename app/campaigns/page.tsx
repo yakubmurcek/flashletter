@@ -3,16 +3,9 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { Button } from '@/components/ui/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import { Plus, Mail, Calendar, ArrowRight } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { Card, CardContent } from '@/components/ui/card'
+import { Plus, Mail } from 'lucide-react'
+import { CampaignCard } from '@/components/campaign/campaign-card'
 
 export const metadata = {
   title: 'My Campaigns - Newsletter Generator',
@@ -80,64 +73,7 @@ export default async function CampaignsPage() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => (
-                <Card key={campaign.id} className="flex flex-col">
-                  <CardHeader>
-                    <CardTitle className="line-clamp-1">
-                      {campaign.name || 'Untitled Campaign'}
-                    </CardTitle>
-                    <CardDescription className="line-clamp-1">
-                      {campaign.landing_page_url || 'No URL'}
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="flex-1">
-                    <div className="space-y-2 text-sm">
-                      {campaign.campaign_type && (
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">Type:</span>
-                          <span className="capitalize">
-                            {campaign.campaign_type}
-                          </span>
-                        </div>
-                      )}
-                      {campaign.days && (
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>{campaign.days} days</span>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2">
-                        <span className="text-muted-foreground">Status:</span>
-                        <span
-                          className={`capitalize px-2 py-0.5 rounded-full text-xs ${
-                            campaign.status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : campaign.status === 'completed'
-                              ? 'bg-blue-100 text-blue-700'
-                              : 'bg-gray-100 text-gray-700'
-                          }`}
-                        >
-                          {campaign.status}
-                        </span>
-                      </div>
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex items-center justify-between border-t pt-4">
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(campaign.updated_at), {
-                        addSuffix: true,
-                      })}
-                    </span>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link
-                        href={`/campaigns/${campaign.id}`}
-                        className="gap-1"
-                      >
-                        View
-                        <ArrowRight className="w-3 h-3" />
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
+                <CampaignCard key={campaign.id} campaign={campaign} />
               ))}
             </div>
           )}
