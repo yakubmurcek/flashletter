@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
-import { useCampaign } from '@/lib/campaign-context'
+import { useCampaignData, useCampaignActions } from '@/lib/campaign-context'
 import { useEmailGeneration } from '@/lib/hooks/use-email-generation'
 import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
@@ -34,16 +34,10 @@ function ConfigurePageContent() {
   const campaignId = searchParams.get('campaign')
   const validCampaignId =
     campaignId && isValidCampaignId(campaignId) ? campaignId : null
-  const {
-    landingPageData,
-    setConfig,
-    setGeneratedEmails,
-    isLoading,
-    currentCampaignId,
-    updateCampaignConfig,
-    generatedEmails,
-    loadCampaign,
-  } = useCampaign()
+  const { landingPageData, isLoading, currentCampaignId, generatedEmails } =
+    useCampaignData()
+  const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } =
+    useCampaignActions()
   const { isGenerating, error, generateEmails } = useEmailGeneration()
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
   const [campaignType, setCampaignType] = useState<string>(

@@ -10,6 +10,7 @@ import { X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from './markdown-renderer'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
+import { useCampaignData } from '@/lib/campaign-context'
 import { MESSAGE_HISTORY_LIMIT } from '@/lib/constants/app'
 import { logError, getUserFriendlyMessage } from '@/lib/utils/error-handling'
 

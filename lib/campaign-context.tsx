@@ -6,6 +6,8 @@ import {
   useState,
   useEffect,
   useRef,
+  useMemo,
+  useCallback,
   type ReactNode,
 } from 'react'
 import { createClient } from './supabase/client'
@@ -14,13 +16,19 @@ import type { CampaignConfig, LandingPageData, Email } from './types'
 import { debounce } from './utils/debounce'
 import { logError, getUserFriendlyMessage } from './utils/error-handling'
 
-interface CampaignContextType {
+// Campaign Data Context - Read-only data that rarely changes
+interface CampaignDataContextType {
   currentCampaignId: string | null
   landingPageData: LandingPageData | null
-  setLandingPageData: (data: LandingPageData | null) => void
   config: CampaignConfig | null
-  setConfig: (config: CampaignConfig | null) => void
   generatedEmails: Email[]
+  isLoading: boolean
+}
+
+// Campaign Actions Context - Stable action handlers
+interface CampaignActionsContextType {
+  setLandingPageData: (data: LandingPageData | null) => void
+  setConfig: (config: CampaignConfig | null) => void
   setGeneratedEmails: (emails: Email[]) => Promise<void>
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
@@ -29,12 +37,15 @@ interface CampaignContextType {
   ) => Promise<string>
   updateCampaignConfig: (config: CampaignConfig) => Promise<void>
   clearAll: () => void
-  isLoading: boolean
 }
 
-const CampaignContext = createContext<CampaignContextType | undefined>(
+const CampaignDataContext = createContext<CampaignDataContextType | undefined>(
   undefined
 )
+
+const CampaignActionsContext = createContext<
+  CampaignActionsContextType | undefined
+>(undefined)
 
 export function CampaignProvider({ children }: { children: ReactNode }) {
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
@@ -280,7 +291,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const clearAll = () => {
+  const clearAll = useCallback(() => {
     // Cancel any pending debounced saves
     debouncedSaveLandingPage.cancel()
     debouncedSaveConfig.cancel()
@@ -289,35 +300,78 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     setLandingPageDataState(null)
     setConfigState(null)
     setGeneratedEmailsState([])
-  }
+  }, [debouncedSaveLandingPage, debouncedSaveConfig])
+
+  // Memoize data context value to prevent unnecessary re-renders
+  const dataContextValue = useMemo(
+    () => ({
+      currentCampaignId,
+      landingPageData,
+      config,
+      generatedEmails,
+      isLoading,
+    }),
+    [currentCampaignId, landingPageData, config, generatedEmails, isLoading]
+  )
+
+  // Memoize actions context value to prevent unnecessary re-renders
+  const actionsContextValue = useMemo(
+    () => ({
+      setLandingPageData,
+      setConfig,
+      setGeneratedEmails,
+      loadCampaign,
+      saveCampaign,
+      createNewCampaign,
+      updateCampaignConfig,
+      clearAll,
+    }),
+    [
+      setLandingPageData,
+      setConfig,
+      setGeneratedEmails,
+      loadCampaign,
+      saveCampaign,
+      createNewCampaign,
+      updateCampaignConfig,
+      clearAll,
+    ]
+  )
 
   return (
-    <CampaignContext.Provider
-      value={{
-        currentCampaignId,
-        landingPageData,
-        setLandingPageData,
-        config,
-        setConfig,
-        generatedEmails,
-        setGeneratedEmails,
-        loadCampaign,
-        saveCampaign,
-        createNewCampaign,
-        updateCampaignConfig,
-        clearAll,
-        isLoading,
-      }}
-    >
-      {children}
-    </CampaignContext.Provider>
+    <CampaignDataContext.Provider value={dataContextValue}>
+      <CampaignActionsContext.Provider value={actionsContextValue}>
+        {children}
+      </CampaignActionsContext.Provider>
+    </CampaignDataContext.Provider>
   )
 }
 
-export function useCampaign() {
-  const context = useContext(CampaignContext)
+// Hook to access campaign data (read-only)
+export function useCampaignData() {
+  const context = useContext(CampaignDataContext)
   if (context === undefined) {
-    throw new Error('useCampaign must be used within a CampaignProvider')
+    throw new Error('useCampaignData must be used within a CampaignProvider')
   }
   return context
+}
+
+// Hook to access campaign actions
+export function useCampaignActions() {
+  const context = useContext(CampaignActionsContext)
+  if (context === undefined) {
+    throw new Error('useCampaignActions must be used within a CampaignProvider')
+  }
+  return context
+}
+
+// Legacy hook for backward compatibility - combines both contexts
+export function useCampaign() {
+  const data = useCampaignData()
+  const actions = useCampaignActions()
+
+  return {
+    ...data,
+    ...actions,
+  }
 }

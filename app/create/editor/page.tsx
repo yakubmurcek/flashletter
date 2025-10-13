@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -16,176 +16,46 @@ import { EmailPreview } from '@/components/email-preview'
 import { AIChatAssistant } from '@/components/ai-chat-assistant'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
-import { useCampaign } from '@/lib/campaign-context'
+import { useCampaignData, useCampaignActions } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
+import { useCampaignLoader } from '@/lib/hooks/use-campaign-loader'
+import { useEmailState } from '@/lib/hooks/use-email-state'
+import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
+import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import {
   getSubjectForDay,
   getPreviewForDay,
   getContentForDay,
 } from '@/lib/utils/email-helpers'
 import type { Email, SelectedContext } from '@/lib/types'
-import { createClient } from '@/lib/supabase/client'
-import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
-import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
-import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 
 function EditorPageContent() {
   const router = useRouter()
-  const {
-    landingPageData,
-    config,
-    generatedEmails: initialEmails,
-    isLoading,
-    currentCampaignId,
-    loadCampaign,
-  } = useCampaign()
-  const {
-    getParam,
-    setParam,
-    toggleParam,
-    getCampaignId,
-    getEmailId,
-    getEmailIdWithFallback,
-    setMultipleParams,
-    cleanupParams,
-    isValidCampaignId,
-    isValidEmailId,
-  } = useUrlState()
-  const [emails, setEmails] = useState<Email[]>([])
+
+  // Use new focused hooks
+  const { loadingState, campaignData, error } = useCampaignLoader()
+  const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } =
+    useEmailState()
+  const { versionCounts, restoreVersion } = useVersionTracking(emails)
+  const { currentCampaignId } = useCampaignData()
+  const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+
+  const { getParam, setParam, toggleParam, getCampaignId } = useUrlState()
+
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
-  const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
-  const [campaignLoaded, setCampaignLoaded] = useState(false)
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-
-  // Initialize version storage service
-  const supabase = createClient()
-  const versionStorageService = new EmailVersionStorageService(supabase)
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
-  const emailIdFromUrl = getEmailId()
-  const selectedEmailId = getEmailIdWithFallback(1)
   const showChat = getParam('chat') === 'open'
   const restoreParam = getParam('restore')
 
-  // Load campaign from database if campaignId is in URL
-  useEffect(() => {
-    if (campaignIdFromUrl && !campaignLoaded && !isLoading) {
-      console.log('Loading campaign:', campaignIdFromUrl)
-      loadCampaign(campaignIdFromUrl)
-        .then(() => {
-          console.log('Campaign loaded successfully')
-          setCampaignLoaded(true)
-        })
-        .catch((error) => {
-          console.error('Failed to load campaign:', error)
-          // Clean up all params when redirecting due to invalid campaign
-          cleanupParams([])
-          router.push('/campaigns')
-        })
-    }
-  }, [
-    campaignIdFromUrl,
-    campaignLoaded,
-    isLoading,
-    loadCampaign,
-    router,
-    cleanupParams,
-  ])
-
-  useEffect(() => {
-    // Don't redirect while still loading from storage or loading a campaign
-    if (isLoading) return
-
-    // If we're loading a campaign from URL, wait for it to complete
-    if (campaignIdFromUrl && !campaignLoaded) return
-
-    console.log('Editor data check:', {
-      landingPageData: !!landingPageData,
-      config: !!config,
-      initialEmails: initialEmails.length,
-      campaignIdFromUrl,
-      campaignLoaded,
-    })
-
-    // Only redirect if we have no essential data AND we're not in the middle of loading a campaign
-    // This prevents redirecting when we have a valid campaign ID in the URL but data hasn't loaded yet
-    if ((!landingPageData || !config) && !campaignIdFromUrl) {
-      console.log('Redirecting to /create - no data and no campaign ID')
-      router.push('/create')
-      return
-    }
-
-    // Set up emails only if we have config data
-    if (config && initialEmails.length > 0) {
-      console.log('Setting up emails:', initialEmails.length)
-      setEmails(initialEmails)
-    }
-  }, [
-    landingPageData,
-    config,
-    initialEmails,
-    router,
-    isLoading,
-    campaignIdFromUrl,
-    campaignLoaded,
-  ])
-
-  // Ensure default email is always present when emails are loaded
-  useEffect(() => {
-    if (emails.length > 0) {
-      // Only set default email if there's no valid email ID in URL
-      if (!emailIdFromUrl) {
-        const defaultEmailId = 1
-        const params: Record<string, string> = {
-          email: defaultEmailId.toString(),
-        }
-        if (campaignIdFromUrl) {
-          params.campaign = campaignIdFromUrl
-        }
-        setMultipleParams(params)
-      }
-    }
-  }, [emails.length, emailIdFromUrl, campaignIdFromUrl, setMultipleParams])
-
-  // Clear context when switching emails
-  useEffect(() => {
-    setSelectedContext(null)
-    setAutoSubmitMessage(null)
-  }, [selectedEmailId])
-
-  // Load version counts for all emails
-  useEffect(() => {
-    if (emails.length > 0) {
-      const loadVersionCounts = async () => {
-        const counts: Record<number, number> = {}
-        for (const email of emails) {
-          if (email.uuid) {
-            try {
-              const count = await versionStorageService.getVersionCount(
-                email.uuid
-              )
-              counts[email.id] = count
-            } catch (error) {
-              console.error(
-                `Failed to load version count for email ${email.id}:`,
-                error
-              )
-              counts[email.id] = 0
-            }
-          } else {
-            counts[email.id] = 0
-          }
-        }
-        setVersionCounts(counts)
-      }
-      loadVersionCounts()
-    }
-  }, [emails])
+  // Extract data from campaign data
+  const landingPageData = campaignData?.landingPageData
+  const config = campaignData?.config
 
   // Handle restoration from history page
   useEffect(() => {
@@ -202,47 +72,13 @@ function EditorPageContent() {
             typeof restoreData.content === 'string'
           ) {
             // Update the email directly (versioning already handled by history page)
-            setEmails((prev) =>
-              prev.map((email) =>
-                email.id === restoreData.emailId
-                  ? {
-                      ...email,
-                      subject: restoreData.subject,
-                      content: restoreData.content,
-                    }
-                  : email
-              )
-            )
+            updateEmail(restoreData.emailId, {
+              subject: restoreData.subject,
+              content: restoreData.content,
+            })
 
             // Update version count for this email
-            const restoredEmail = emails.find(
-              (e) => e.id === restoreData.emailId
-            )
-            if (restoredEmail?.uuid) {
-              try {
-                const count = await versionStorageService.getVersionCount(
-                  restoredEmail.uuid
-                )
-                setVersionCounts((prev) => ({
-                  ...prev,
-                  [restoreData.emailId]: count,
-                }))
-              } catch (error) {
-                console.error(
-                  'Failed to load version count after restore:',
-                  error
-                )
-              }
-            }
-
-            // Clear the restore param from URL, preserve campaign ID atomically
-            const params: Record<string, string> = {
-              email: restoreData.emailId.toString(),
-            }
-            if (campaignIdFromUrl) {
-              params.campaign = campaignIdFromUrl
-            }
-            setMultipleParams(params)
+            await restoreVersion(restoreData)
           } else {
             console.error('Invalid restore data:', restoreData)
           }
@@ -252,19 +88,10 @@ function EditorPageContent() {
       }
       handleRestore()
     }
-  }, [restoreParam, router, campaignIdFromUrl, setMultipleParams])
+  }, [restoreParam, updateEmail, restoreVersion])
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  // Show loading state while loading or when we have a campaign ID but haven't loaded the campaign yet
-  if (isLoading || (campaignIdFromUrl && !campaignLoaded)) {
+  // Show loading state
+  if (loadingState === 'loading') {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center">
@@ -275,17 +102,42 @@ function EditorPageContent() {
     )
   }
 
-  // Show error state if we have no essential data after loading is complete
-  // Allow rendering if we have config OR emails (for campaigns that might not have landing page data)
-  if (!config && emails.length === 0) {
-    console.log('Rendering error state - missing essential data:', {
-      landingPageData: !!landingPageData,
-      config: !!config,
-      emailsCount: emails.length,
-      campaignIdFromUrl,
-      campaignLoaded,
-    })
+  // Show error state
+  if (loadingState === 'error') {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-4">Error Loading Campaign</h2>
+          <p className="text-muted-foreground mb-4">
+            {error || 'Failed to load campaign data'}
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/campaigns">Back to Campaigns</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
+  // Show error state if no campaign ID is provided
+  if (!campaignIdFromUrl) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-4">No Campaign Selected</h2>
+          <p className="text-muted-foreground mb-4">
+            Please select a campaign to edit from the campaigns page.
+          </p>
+          <Button asChild className="mt-4">
+            <Link href="/campaigns">Back to Campaigns</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if we have no essential data after loading is complete
+  if (loadingState === 'loaded' && !config && emails.length === 0) {
     return (
       <div className="h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
@@ -308,22 +160,8 @@ function EditorPageContent() {
     )
   }
 
-  const selectedEmail = emails.find((e) => e.id === selectedEmailId)
-
   const handleSelectEmail = (id: number) => {
-    // Basic validation before setting
-    if (!isValidEmailId(id.toString())) {
-      console.warn(`Invalid email ID: ${id}`)
-      return
-    }
-
-    // Set email ID and preserve campaign ID
-    const params: Record<string, string> = { email: id.toString() }
-    if (campaignIdFromUrl) {
-      params.campaign = campaignIdFromUrl
-    }
-
-    setMultipleParams(params)
+    selectEmail(id)
   }
 
   const handleUpdateEmail = async (
@@ -331,52 +169,7 @@ function EditorPageContent() {
     updates: Partial<Email>,
     skipVersioning = false
   ) => {
-    // Save current version before updating (unless explicitly skipped)
-    if (!skipVersioning) {
-      const currentEmail = emails.find((e) => e.id === id)
-      if (currentEmail && currentEmail.uuid) {
-        try {
-          await versionStorageService.saveVersion(
-            currentEmail.uuid,
-            currentEmail.day,
-            {
-              subject: currentEmail.subject,
-              content: currentEmail.content,
-            }
-          )
-        } catch (error) {
-          console.error('Failed to save version:', error)
-          // Continue with update even if versioning fails
-        }
-      } else {
-        console.error('Email not found or missing UUID for versioning:', id)
-      }
-    }
-
-    // Update the email
-    setEmails((prev) =>
-      prev.map((email) => (email.id === id ? { ...email, ...updates } : email))
-    )
-
-    // Save to Supabase if we have a campaign ID
-    if (currentCampaignId) {
-      const supabase = createClient()
-      const campaignService = new CampaignStorageService(supabase)
-
-      // Clear any existing timeout
-      if (saveTimeoutRef.current) {
-        clearTimeout(saveTimeoutRef.current)
-      }
-
-      // Debounce the save operation
-      saveTimeoutRef.current = setTimeout(() => {
-        campaignService
-          .updateEmail(currentCampaignId, id, updates)
-          .catch((error) =>
-            console.error('Failed to save email to database:', error)
-          )
-      }, EMAIL_SAVE_DEBOUNCE_MS)
-    }
+    await saveEmail(id, updates, skipVersioning)
   }
 
   const handleToggleChat = () => {

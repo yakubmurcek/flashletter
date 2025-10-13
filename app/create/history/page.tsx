@@ -109,7 +109,15 @@ function HistoryPageContent() {
             The email you're looking for doesn't exist.
           </p>
           <Button asChild>
-            <Link href="/create/editor">Back to Editor</Link>
+            <Link
+              href={
+                validCampaignId
+                  ? `/create/editor?email=${validEmailId}&campaign=${validCampaignId}`
+                  : `/create/editor?email=${validEmailId}`
+              }
+            >
+              Back to Editor
+            </Link>
           </Button>
         </div>
       </div>
@@ -180,7 +188,13 @@ function HistoryPageContent() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm" asChild className="gap-2">
-              <Link href={`/create/editor?email=${emailId}`}>
+              <Link
+                href={
+                  validCampaignId
+                    ? `/create/editor?email=${emailId}&campaign=${validCampaignId}`
+                    : `/create/editor?email=${emailId}`
+                }
+              >
                 <ArrowLeft className="w-4 h-4" />
                 Back to Editor
               </Link>
