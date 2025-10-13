@@ -75,14 +75,16 @@ export class CampaignStorageService {
       throw error
     }
 
-    // Transform the data to match our Email type
-    const emails: Email[] = (campaign.emails || []).map((email: any) => ({
-      id: email.day, // Use day as numeric id for backwards compatibility
-      day: email.day,
-      subject: email.subject,
-      preview: email.preview || '',
-      content: email.content,
-    }))
+    // Transform the data to match our Email type and sort by day
+    const emails: Email[] = (campaign.emails || [])
+      .map((email: any) => ({
+        id: email.day, // Use day as numeric id for backwards compatibility
+        day: email.day,
+        subject: email.subject,
+        preview: email.preview || '',
+        content: email.content,
+      }))
+      .sort((a, b) => a.day - b.day) // Sort by day in ascending order
 
     return {
       ...campaign,
