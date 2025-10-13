@@ -18,7 +18,7 @@ interface CampaignContextType {
   config: CampaignConfig | null
   setConfig: (config: CampaignConfig | null) => void
   generatedEmails: Email[]
-  setGeneratedEmails: (emails: Email[]) => void
+  setGeneratedEmails: (emails: Email[]) => Promise<void>
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
   createNewCampaign: () => Promise<string>
@@ -115,7 +115,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
     // Save emails if they exist
     if (generatedEmails.length > 0) {
-      await campaignService.saveEmails(currentCampaignId, generatedEmails)
+      const savedEmails = await campaignService.saveEmails(
+        currentCampaignId,
+        generatedEmails
+      )
+      // Update the emails with UUIDs from database
+      setGeneratedEmailsState(savedEmails)
     }
   }
 
@@ -156,11 +161,16 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const setGeneratedEmails = (emails: Email[]) => {
+  const setGeneratedEmails = async (emails: Email[]) => {
     setGeneratedEmailsState(emails)
     // Auto-save if we have a campaign
     if (currentCampaignId && emails.length > 0) {
-      campaignService.saveEmails(currentCampaignId, emails)
+      const savedEmails = await campaignService.saveEmails(
+        currentCampaignId,
+        emails
+      )
+      // Update with emails that have UUIDs from database
+      setGeneratedEmailsState(savedEmails)
     }
   }
 

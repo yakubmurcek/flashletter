@@ -100,7 +100,7 @@ function ConfigurePageContent() {
 
       if (emails) {
         setConfig(config)
-        setGeneratedEmails(emails)
+        await setGeneratedEmails(emails)
         const editorUrl = currentCampaignId
           ? `/create/editor?campaign=${currentCampaignId}`
           : '/create/editor'

@@ -79,12 +79,13 @@ export class CampaignStorageService {
     const emails: Email[] = (campaign.emails || [])
       .map((email: any) => ({
         id: email.day, // Use day as numeric id for backwards compatibility
+        uuid: email.id, // Include the actual UUID from database
         day: email.day,
         subject: email.subject,
         preview: email.preview || '',
         content: email.content,
       }))
-      .sort((a, b) => a.day - b.day) // Sort by day in ascending order
+      .sort((a: any, b: any) => a.day - b.day) // Sort by day in ascending order
 
     return {
       ...campaign,
@@ -151,7 +152,7 @@ export class CampaignStorageService {
     if (error) throw error
   }
 
-  async saveEmails(campaignId: string, emails: Email[]): Promise<void> {
+  async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
     // Delete existing emails for this campaign
     await this.supabase.from('emails').delete().eq('campaign_id', campaignId)
 
@@ -164,9 +165,22 @@ export class CampaignStorageService {
       content: email.content,
     }))
 
-    const { error } = await this.supabase.from('emails').insert(emailsToInsert)
+    const { data, error } = await this.supabase
+      .from('emails')
+      .insert(emailsToInsert)
+      .select()
 
     if (error) throw error
+
+    // Transform the returned data to match our Email type with UUIDs
+    return (data || []).map((email: any) => ({
+      id: email.day, // Use day as numeric id for backwards compatibility
+      uuid: email.id, // Include the actual UUID from database
+      day: email.day,
+      subject: email.subject,
+      preview: email.preview || '',
+      content: email.content,
+    }))
   }
 
   async updateEmail(
@@ -198,6 +212,7 @@ export class CampaignStorageService {
 
     return {
       id: data.day,
+      uuid: data.id,
       day: data.day,
       subject: data.subject,
       preview: data.preview || '',

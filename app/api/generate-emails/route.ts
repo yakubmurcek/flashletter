@@ -90,7 +90,17 @@ Make sure the content is engaging, actionable, and aligned with best email marke
         content: email.content || '',
       }))
 
-      await campaignService.saveEmails(campaignId, emailsToSave)
+      // Save emails and get them back with UUIDs
+      const savedEmails = await campaignService.saveEmails(
+        campaignId,
+        emailsToSave
+      )
+
+      // Return emails with real UUIDs from database
+      return NextResponse.json({
+        emails: savedEmails,
+        usage: response.usage,
+      })
     }
 
     return NextResponse.json({

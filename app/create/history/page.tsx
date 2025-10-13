@@ -6,12 +6,13 @@ import { Button } from '@/components/ui/button'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useCampaign } from '@/lib/campaign-context'
-import { versionStorage } from '@/lib/utils/version-storage'
 import { VersionList } from '@/components/version-list'
 import { DiffViewer } from '@/components/diff-viewer'
 import { VersionPreview } from '@/components/version-preview'
 import type { EmailVersion } from '@/lib/types'
 import { isValidCampaignId, isValidEmailId } from '@/lib/utils/validation'
+import { createClient } from '@/lib/supabase/client'
+import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 
 function HistoryPageContent() {
   const router = useRouter()
@@ -35,27 +36,48 @@ function HistoryPageContent() {
     null
   )
 
+  // Initialize version storage service
+  const supabase = createClient()
+  const versionStorageService = new EmailVersionStorageService(supabase)
+
   // Load versions when email ID changes
   useEffect(() => {
     if (validEmailId) {
-      const loadedVersions = versionStorage.getVersions(validEmailId)
-      console.log('[HISTORY PAGE] Loaded versions:', {
-        emailId: validEmailId,
-        count: loadedVersions.length,
-        versions: loadedVersions.map((v) => ({
-          id: v.id,
-          subject: v.subject.substring(0, 30),
-          contentPreview: v.content.substring(0, 50),
-        })),
-      })
-      setVersions(loadedVersions)
+      const loadVersions = async () => {
+        const currentEmail = generatedEmails.find((e) => e.id === validEmailId)
+        if (currentEmail?.uuid) {
+          try {
+            const loadedVersions = await versionStorageService.getVersions(
+              currentEmail.uuid
+            )
+            console.log('[HISTORY PAGE] Loaded versions:', {
+              emailId: validEmailId,
+              emailUuid: currentEmail.uuid,
+              count: loadedVersions.length,
+              versions: loadedVersions.map((v) => ({
+                id: v.id,
+                subject: v.subject.substring(0, 30),
+                contentPreview: v.content.substring(0, 50),
+              })),
+            })
+            setVersions(loadedVersions)
 
-      // Auto-select the latest version
-      if (loadedVersions.length > 0 && !selectedVersionId) {
-        setSelectedVersionId(loadedVersions[loadedVersions.length - 1].id)
+            // Auto-select the latest version
+            if (loadedVersions.length > 0 && !selectedVersionId) {
+              setSelectedVersionId(loadedVersions[loadedVersions.length - 1].id)
+            }
+          } catch (error) {
+            console.error('Failed to load versions:', error)
+            setVersions([])
+          }
+        } else {
+          console.error('Email not found or missing UUID:', validEmailId)
+          setVersions([])
+        }
       }
+      loadVersions()
     }
-  }, [validEmailId])
+  }, [validEmailId, generatedEmails])
 
   // Route guard
   useEffect(() => {
@@ -109,7 +131,7 @@ function HistoryPageContent() {
     setShowRestoreConfirm(true)
   }
 
-  const confirmRestore = () => {
+  const confirmRestore = async () => {
     if (!versionToRestore) return
 
     // Save the restored version as a new version (non-destructive)
@@ -120,7 +142,20 @@ function HistoryPageContent() {
     }
 
     // Save current state as a version before restoring
-    versionStorage.saveVersion(validEmailId, currentEmail)
+    if (currentEmail.uuid) {
+      try {
+        await versionStorageService.saveVersion(
+          currentEmail.uuid,
+          currentEmail.day,
+          {
+            subject: currentEmail.subject,
+            content: currentEmail.content,
+          }
+        )
+      } catch (error) {
+        console.error('Failed to save current version before restore:', error)
+      }
+    }
 
     // Navigate back to editor with the restored content
     // We'll pass the restore data via URL params

@@ -23,10 +23,10 @@ import {
   getPreviewForDay,
   getContentForDay,
 } from '@/lib/utils/email-helpers'
-import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email, SelectedContext } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
+import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 
 function EditorPageContent() {
   const router = useRouter()
@@ -58,6 +58,10 @@ function EditorPageContent() {
   )
   const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
   const [campaignLoaded, setCampaignLoaded] = useState(false)
+
+  // Initialize version storage service
+  const supabase = createClient()
+  const versionStorageService = new EmailVersionStorageService(supabase)
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
@@ -102,22 +106,8 @@ function EditorPageContent() {
     }
 
     // Set up emails only if we have config data
-    if (config) {
-      if (initialEmails.length > 0) {
-        setEmails(initialEmails)
-      } else {
-        const fallbackEmails = Array.from({ length: config.days }, (_, i) => ({
-          id: i + 1,
-          day: i + 1,
-          subject: `Day ${i + 1}: ${getSubjectForDay(
-            i + 1,
-            config.campaignType
-          )}`,
-          preview: getPreviewForDay(i + 1, config.campaignType),
-          content: getContentForDay(i + 1, config.campaignType, config.tone),
-        }))
-        setEmails(fallbackEmails)
-      }
+    if (config && initialEmails.length > 0) {
+      setEmails(initialEmails)
     }
   }, [
     landingPageData,
@@ -155,62 +145,96 @@ function EditorPageContent() {
   // Load version counts for all emails
   useEffect(() => {
     if (emails.length > 0) {
-      const counts: Record<number, number> = {}
-      emails.forEach((email) => {
-        counts[email.id] = versionStorage.getVersionCount(email.id)
-      })
-      setVersionCounts(counts)
+      const loadVersionCounts = async () => {
+        const counts: Record<number, number> = {}
+        for (const email of emails) {
+          if (email.uuid) {
+            try {
+              const count = await versionStorageService.getVersionCount(
+                email.uuid
+              )
+              counts[email.id] = count
+            } catch (error) {
+              console.error(
+                `Failed to load version count for email ${email.id}:`,
+                error
+              )
+              counts[email.id] = 0
+            }
+          } else {
+            counts[email.id] = 0
+          }
+        }
+        setVersionCounts(counts)
+      }
+      loadVersionCounts()
     }
   }, [emails])
 
   // Handle restoration from history page
   useEffect(() => {
     if (restoreParam) {
-      try {
-        const restoreData = JSON.parse(decodeURIComponent(restoreParam))
+      const handleRestore = async () => {
+        try {
+          const restoreData = JSON.parse(decodeURIComponent(restoreParam))
 
-        // Validate restore data
-        if (
-          restoreData &&
-          typeof restoreData.emailId === 'number' &&
-          typeof restoreData.subject === 'string' &&
-          typeof restoreData.content === 'string'
-        ) {
-          // Update the email directly (versioning already handled by history page)
-          setEmails((prev) =>
-            prev.map((email) =>
-              email.id === restoreData.emailId
-                ? {
-                    ...email,
-                    subject: restoreData.subject,
-                    content: restoreData.content,
-                  }
-                : email
+          // Validate restore data
+          if (
+            restoreData &&
+            typeof restoreData.emailId === 'number' &&
+            typeof restoreData.subject === 'string' &&
+            typeof restoreData.content === 'string'
+          ) {
+            // Update the email directly (versioning already handled by history page)
+            setEmails((prev) =>
+              prev.map((email) =>
+                email.id === restoreData.emailId
+                  ? {
+                      ...email,
+                      subject: restoreData.subject,
+                      content: restoreData.content,
+                    }
+                  : email
+              )
             )
-          )
 
-          // Update version count for this email
-          setVersionCounts((prev) => ({
-            ...prev,
-            [restoreData.emailId]: versionStorage.getVersionCount(
-              restoreData.emailId
-            ),
-          }))
+            // Update version count for this email
+            const restoredEmail = emails.find(
+              (e) => e.id === restoreData.emailId
+            )
+            if (restoredEmail?.uuid) {
+              try {
+                const count = await versionStorageService.getVersionCount(
+                  restoredEmail.uuid
+                )
+                setVersionCounts((prev) => ({
+                  ...prev,
+                  [restoreData.emailId]: count,
+                }))
+              } catch (error) {
+                console.error(
+                  'Failed to load version count after restore:',
+                  error
+                )
+              }
+            }
 
-          // Clear the restore param from URL, preserve campaign ID atomically
-          const params: Record<string, string> = {
-            email: restoreData.emailId.toString(),
+            // Clear the restore param from URL, preserve campaign ID atomically
+            const params: Record<string, string> = {
+              email: restoreData.emailId.toString(),
+            }
+            if (campaignIdFromUrl) {
+              params.campaign = campaignIdFromUrl
+            }
+            setMultipleParams(params)
+          } else {
+            console.error('Invalid restore data:', restoreData)
           }
-          if (campaignIdFromUrl) {
-            params.campaign = campaignIdFromUrl
-          }
-          setMultipleParams(params)
-        } else {
-          console.error('Invalid restore data:', restoreData)
+        } catch (error) {
+          console.error('Failed to restore version:', error)
         }
-      } catch (error) {
-        console.error('Failed to restore version:', error)
       }
+      handleRestore()
     }
   }, [restoreParam, router, campaignIdFromUrl, setMultipleParams])
 
@@ -249,31 +273,38 @@ function EditorPageContent() {
     setMultipleParams(params)
   }
 
-  const handleUpdateEmail = (
+  const handleUpdateEmail = async (
     id: number,
     updates: Partial<Email>,
     skipVersioning = false
   ) => {
     // Save current version before updating (unless explicitly skipped)
-    // TODO: Version storage needs to be updated to use Supabase email UUIDs
     if (!skipVersioning) {
       const currentEmail = emails.find((e) => e.id === id)
-      if (currentEmail) {
+      if (currentEmail && currentEmail.uuid) {
         console.log('[HANDLE UPDATE] Before save:', {
           emailId: id,
+          emailUuid: currentEmail.uuid,
           currentSubject: currentEmail.subject.substring(0, 50),
           currentContentPreview: currentEmail.content.substring(0, 100),
           newSubject: updates.subject?.substring(0, 50),
           newContentPreview: updates.content?.substring(0, 100),
         })
         try {
-          versionStorage.saveVersion(id, currentEmail)
+          await versionStorageService.saveVersion(
+            currentEmail.uuid,
+            currentEmail.day,
+            {
+              subject: currentEmail.subject,
+              content: currentEmail.content,
+            }
+          )
         } catch (error) {
           console.error('Failed to save version:', error)
           // Continue with update even if versioning fails
         }
       } else {
-        console.error('[HANDLE UPDATE] Email not found:', id)
+        console.error('[HANDLE UPDATE] Email not found or missing UUID:', id)
       }
     } else {
       console.log('[HANDLE UPDATE] Skipping versioning (restore flow)')

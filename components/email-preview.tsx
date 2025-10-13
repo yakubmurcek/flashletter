@@ -31,6 +31,7 @@ import { TextSelectionPopup } from './text-selection-popup'
 
 interface Email {
   id: number
+  uuid?: string
   day: number
   subject: string
   preview: string
