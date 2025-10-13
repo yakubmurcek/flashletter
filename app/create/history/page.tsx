@@ -11,6 +11,7 @@ import { VersionList } from '@/components/version-list'
 import { DiffViewer } from '@/components/diff-viewer'
 import { VersionPreview } from '@/components/version-preview'
 import type { EmailVersion } from '@/lib/types'
+import { isValidCampaignId, isValidEmailId } from '@/lib/utils/validation'
 
 function HistoryPageContent() {
   const router = useRouter()
@@ -20,6 +21,10 @@ function HistoryPageContent() {
   const emailIdParam = searchParams.get('emailId')
   const emailId = emailIdParam ? parseInt(emailIdParam, 10) : null
   const campaignId = searchParams.get('campaign')
+
+  const validCampaignId =
+    campaignId && isValidCampaignId(campaignId) ? campaignId : null
+  const validEmailId = emailId && isValidEmailId(emailId) ? emailId : null
 
   const [versions, setVersions] = useState<EmailVersion[]>([])
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
@@ -32,10 +37,10 @@ function HistoryPageContent() {
 
   // Load versions when email ID changes
   useEffect(() => {
-    if (emailId) {
-      const loadedVersions = versionStorage.getVersions(emailId)
+    if (validEmailId) {
+      const loadedVersions = versionStorage.getVersions(validEmailId)
       console.log('[HISTORY PAGE] Loaded versions:', {
-        emailId,
+        emailId: validEmailId,
         count: loadedVersions.length,
         versions: loadedVersions.map((v) => ({
           id: v.id,
@@ -50,27 +55,27 @@ function HistoryPageContent() {
         setSelectedVersionId(loadedVersions[loadedVersions.length - 1].id)
       }
     }
-  }, [emailId])
+  }, [validEmailId])
 
   // Route guard
   useEffect(() => {
-    if (!isLoading && (!emailId || isNaN(emailId))) {
-      const editorUrl = campaignId
-        ? `/create/editor?campaign=${campaignId}`
+    if (!isLoading && !validEmailId) {
+      const editorUrl = validCampaignId
+        ? `/create/editor?campaign=${validCampaignId}`
         : '/create/editor'
       router.push(editorUrl)
     }
-  }, [emailId, isLoading, router, campaignId])
+  }, [isLoading, validEmailId, validCampaignId, router])
 
   if (isLoading) {
     return null
   }
 
-  if (!emailId || isNaN(emailId)) {
+  if (!validEmailId) {
     return null
   }
 
-  const currentEmail = generatedEmails.find((e) => e.id === emailId)
+  const currentEmail = generatedEmails.find((e) => e.id === validEmailId)
 
   if (!currentEmail) {
     return (
@@ -115,13 +120,13 @@ function HistoryPageContent() {
     }
 
     // Save current state as a version before restoring
-    versionStorage.saveVersion(emailId, currentEmail)
+    versionStorage.saveVersion(validEmailId, currentEmail)
 
     // Navigate back to editor with the restored content
     // We'll pass the restore data via URL params
     const restoreData = encodeURIComponent(
       JSON.stringify({
-        emailId,
+        emailId: validEmailId,
         subject: versionToRestore.subject,
         content: versionToRestore.content,
       })
@@ -164,7 +169,7 @@ function HistoryPageContent() {
             selectedVersionId={selectedVersionId}
             onSelectVersion={setSelectedVersionId}
             onRestoreVersion={handleRestoreVersion}
-            currentEmailId={emailId}
+            currentEmailId={validEmailId}
           />
         </aside>
 

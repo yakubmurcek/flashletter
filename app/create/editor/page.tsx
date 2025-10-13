@@ -38,7 +38,18 @@ function EditorPageContent() {
     currentCampaignId,
     loadCampaign,
   } = useCampaign()
-  const { getParam, setParam, toggleParam } = useUrlState()
+  const {
+    getParam,
+    setParam,
+    toggleParam,
+    getCampaignId,
+    getEmailId,
+    getEmailIdWithFallback,
+    setMultipleParams,
+    cleanupParams,
+    isValidCampaignId,
+    isValidEmailId,
+  } = useUrlState()
   const [emails, setEmails] = useState<Email[]>([])
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
@@ -48,11 +59,12 @@ function EditorPageContent() {
   const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
   const [campaignLoaded, setCampaignLoaded] = useState(false)
 
-  const emailIdFromUrl = getParam('email')
-  const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
+  // Use validated getters
+  const campaignIdFromUrl = getCampaignId()
+  const emailIdFromUrl = getEmailId()
+  const selectedEmailId = getEmailIdWithFallback(1)
   const showChat = getParam('chat') === 'open'
   const restoreParam = getParam('restore')
-  const campaignIdFromUrl = getParam('campaign')
 
   // Load campaign from database if campaignId is in URL
   useEffect(() => {
@@ -61,10 +73,19 @@ function EditorPageContent() {
         .then(() => setCampaignLoaded(true))
         .catch((error) => {
           console.error('Failed to load campaign:', error)
+          // Clean up all params when redirecting due to invalid campaign
+          cleanupParams([])
           router.push('/campaigns')
         })
     }
-  }, [campaignIdFromUrl, campaignLoaded, isLoading, loadCampaign, router])
+  }, [
+    campaignIdFromUrl,
+    campaignLoaded,
+    isLoading,
+    loadCampaign,
+    router,
+    cleanupParams,
+  ])
 
   useEffect(() => {
     // Don't redirect while still loading from storage or loading a campaign
@@ -103,15 +124,32 @@ function EditorPageContent() {
     campaignLoaded,
   ])
 
+  // Ensure default email is always present when emails are loaded
   useEffect(() => {
-    if (emails.length > 0 && !emailIdFromUrl) {
-      const baseUrl = '/create/editor?email=1'
-      const urlWithCampaign = campaignIdFromUrl
-        ? `${baseUrl}&campaign=${campaignIdFromUrl}`
-        : baseUrl
-      router.replace(urlWithCampaign)
+    if (emails.length > 0) {
+      // Only set default email if there's no valid email ID in URL
+      if (!emailIdFromUrl) {
+        const defaultEmailId = 1
+        const params: Record<string, string> = {
+          email: defaultEmailId.toString(),
+        }
+        if (campaignIdFromUrl) {
+          params.campaign = campaignIdFromUrl
+        }
+        setMultipleParams(params, {
+          email: isValidEmailId,
+          campaign: isValidCampaignId,
+        })
+      }
     }
-  }, [emails.length, emailIdFromUrl, router, campaignIdFromUrl])
+  }, [
+    emails.length,
+    emailIdFromUrl,
+    campaignIdFromUrl,
+    setMultipleParams,
+    isValidEmailId,
+    isValidCampaignId,
+  ])
 
   // Clear context when switching emails
   useEffect(() => {
@@ -164,11 +202,21 @@ function EditorPageContent() {
             ),
           }))
 
-          // Clear the restore param from URL, preserve campaign ID
-          const url = campaignIdFromUrl
-            ? `/create/editor?email=${restoreData.emailId}&campaign=${campaignIdFromUrl}`
-            : `/create/editor?email=${restoreData.emailId}`
-          router.replace(url)
+          // Clear the restore param from URL, preserve campaign ID atomically
+          const params: Record<string, string> = {
+            email: restoreData.emailId.toString(),
+          }
+          if (campaignIdFromUrl) {
+            params.campaign = campaignIdFromUrl
+          }
+          setMultipleParams(
+            params,
+            {
+              email: isValidEmailId,
+              campaign: isValidCampaignId,
+            },
+            ['email', 'campaign'] // Keep these params, remove restore param
+          )
         } else {
           console.error('Invalid restore data:', restoreData)
         }
@@ -176,7 +224,14 @@ function EditorPageContent() {
         console.error('Failed to restore version:', error)
       }
     }
-  }, [restoreParam, router])
+  }, [
+    restoreParam,
+    router,
+    campaignIdFromUrl,
+    setMultipleParams,
+    isValidEmailId,
+    isValidCampaignId,
+  ])
 
   if (isLoading || !landingPageData || !config) {
     return null
@@ -185,11 +240,26 @@ function EditorPageContent() {
   const selectedEmail = emails.find((e) => e.id === selectedEmailId)
 
   const handleSelectEmail = (id: number) => {
-    setParam('email', id.toString())
-    // Preserve campaign ID in URL when switching emails
-    if (campaignIdFromUrl && !getParam('campaign')) {
-      setParam('campaign', campaignIdFromUrl)
+    // Validate email ID before setting
+    if (!isValidEmailId(id.toString())) {
+      console.warn(`Invalid email ID: ${id}`)
+      return
     }
+
+    // Set email ID and preserve campaign ID, clean up other params atomically
+    const params: Record<string, string> = { email: id.toString() }
+    if (campaignIdFromUrl) {
+      params.campaign = campaignIdFromUrl
+    }
+
+    setMultipleParams(
+      params,
+      {
+        email: isValidEmailId,
+        campaign: isValidCampaignId,
+      },
+      ['email', 'campaign'] // Keep these params, remove all others (restore, chat, etc.)
+    )
   }
 
   const handleUpdateEmail = (
@@ -367,6 +437,16 @@ function EditorPageContent() {
           {showChat && (
             <AIChatAssistant
               onClose={handleToggleChat}
+              campaignContext={
+                landingPageData && config && selectedEmail
+                  ? {
+                      landingPageData,
+                      config,
+                      allEmails: emails,
+                      currentEmailId: selectedEmail.id,
+                    }
+                  : undefined
+              }
               emailContext={
                 selectedEmail
                   ? {

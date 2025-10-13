@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
@@ -26,11 +26,14 @@ import {
   CAMPAIGN_TYPES,
   CAMPAIGN_DURATION,
 } from '@/lib/constants/campaign'
+import { isValidCampaignId } from '@/lib/utils/validation'
 
-export default function ConfigurePage() {
+function ConfigurePageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const campaignId = searchParams.get('campaign')
+  const validCampaignId =
+    campaignId && isValidCampaignId(campaignId) ? campaignId : null
   const {
     landingPageData,
     setConfig,
@@ -51,22 +54,22 @@ export default function ConfigurePage() {
 
   // Load campaign from database if campaignId is in URL
   useEffect(() => {
-    if (campaignId && !campaignLoaded && !isLoading) {
-      loadCampaign(campaignId)
+    if (validCampaignId && !campaignLoaded && !isLoading) {
+      loadCampaign(validCampaignId)
         .then(() => setCampaignLoaded(true))
         .catch((error) => {
           console.error('Failed to load campaign:', error)
           router.push('/campaigns')
         })
     }
-  }, [campaignId, campaignLoaded, isLoading, loadCampaign, router])
+  }, [validCampaignId, campaignLoaded, isLoading, loadCampaign, router])
 
   useEffect(() => {
     // Don't redirect while still loading from storage
     if (isLoading) return
 
     // If we're loading a campaign from URL, wait for it to complete
-    if (campaignId && !campaignLoaded) return
+    if (validCampaignId && !campaignLoaded) return
 
     if (!landingPageData) {
       router.push('/create')
@@ -76,7 +79,7 @@ export default function ConfigurePage() {
     // If campaign already has generated emails, redirect to editor
     // User shouldn't be able to reconfigure once emails are generated
     if (generatedEmails.length > 0 && currentCampaignId) {
-      router.push(`/create/editor?campaign=${currentCampaignId}&email=1`)
+      router.push(`/create/editor?campaign=${currentCampaignId}`)
     }
   }, [
     landingPageData,
@@ -84,7 +87,7 @@ export default function ConfigurePage() {
     isLoading,
     generatedEmails,
     currentCampaignId,
-    campaignId,
+    validCampaignId,
     campaignLoaded,
   ])
 
@@ -115,7 +118,7 @@ export default function ConfigurePage() {
     }
   }
 
-  if (isLoading || (campaignId && !campaignLoaded) || !landingPageData) {
+  if (isLoading || (validCampaignId && !campaignLoaded) || !landingPageData) {
     return null
   }
 
@@ -251,5 +254,19 @@ export default function ConfigurePage() {
         </FormCard>
       </div>
     </CampaignLayout>
+  )
+}
+
+export default function ConfigurePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <ConfigurePageContent />
+    </Suspense>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,9 +21,40 @@ export default function CreatePage() {
     createNewCampaign,
     currentCampaignId,
     saveCampaign,
+    generatedEmails,
+    config,
+    landingPageData,
+    isLoading,
   } = useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
+
+  // Add useEffect to handle redirects based on campaign state
+  useEffect(() => {
+    // Don't redirect while loading
+    if (isLoading) return
+
+    // If we have generated emails, go to editor
+    if (generatedEmails.length > 0 && currentCampaignId) {
+      router.push(`/create/editor?campaign=${currentCampaignId}`)
+      return
+    }
+
+    // If we have config but no emails, go to configure
+    if (config && landingPageData && currentCampaignId) {
+      router.push(`/create/configure?campaign=${currentCampaignId}`)
+      return
+    }
+
+    // Otherwise, stay on this page (allow entering/re-entering URL)
+  }, [
+    isLoading,
+    generatedEmails,
+    currentCampaignId,
+    config,
+    landingPageData,
+    router,
+  ])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -51,6 +82,10 @@ export default function CreatePage() {
         router.push('/create/configure')
       }
     }
+  }
+
+  if (isLoading) {
+    return null
   }
 
   return (

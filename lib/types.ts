@@ -36,3 +36,10 @@ export interface EmailVersion {
   timestamp: number // Unix timestamp
   changesSummary: string // e.g., "Subject and 3 lines changed"
 }
+
+export interface FullCampaignContext {
+  landingPageData: LandingPageData
+  config: CampaignConfig
+  allEmails: Email[]
+  currentEmailId: number
+}

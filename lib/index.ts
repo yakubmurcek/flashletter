@@ -6,6 +6,7 @@ export * from './hooks'
 
 // Utils
 export * from './utils/email-helpers'
+export * from './utils/validation'
 export { storage } from './utils/storage'
 
 // Constants

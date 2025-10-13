@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card'
 import { X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from './markdown-renderer'
-import type { SelectedContext } from '@/lib/types'
+import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 
 interface Message {
   id: number
@@ -30,6 +30,7 @@ interface EmailEdits {
 
 interface AIChatAssistantProps {
   onClose: () => void
+  campaignContext?: FullCampaignContext
   emailContext?: {
     subject?: string
     content?: string
@@ -44,6 +45,7 @@ interface AIChatAssistantProps {
 
 export function AIChatAssistant({
   onClose,
+  campaignContext,
   emailContext,
   onApplyEdits,
   selectedContext,
@@ -131,6 +133,7 @@ export function AIChatAssistant({
               content: m.content,
             }))
             .concat([{ role: 'user', content: input }]),
+          campaignContext,
           emailContext,
           selectedContext: contextForThisRequest,
         }),
@@ -270,7 +273,16 @@ export function AIChatAssistant({
           </div>
           <div>
             <h3 className="font-semibold text-sm">AI Assistant</h3>
-            <p className="text-xs text-muted-foreground">Always here to help</p>
+            <p className="text-xs text-muted-foreground">
+              {campaignContext ? (
+                <span className="flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
+                  Full campaign context
+                </span>
+              ) : (
+                'Always here to help'
+              )}
+            </p>
           </div>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose}>

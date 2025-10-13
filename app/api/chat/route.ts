@@ -9,6 +9,30 @@ const messageSchema = z.object({
 
 const requestSchema = z.object({
   messages: z.array(messageSchema),
+  campaignContext: z
+    .object({
+      landingPageData: z.object({
+        url: z.string(),
+        content: z.string().optional(),
+        metadata: z.any().optional(),
+      }),
+      config: z.object({
+        tone: z.string(),
+        campaignType: z.string(),
+        days: z.number(),
+      }),
+      allEmails: z.array(
+        z.object({
+          id: z.number(),
+          day: z.number(),
+          subject: z.string(),
+          preview: z.string(),
+          content: z.string(),
+        })
+      ),
+      currentEmailId: z.number(),
+    })
+    .optional(),
   emailContext: z
     .object({
       subject: z.string().optional(),
@@ -33,7 +57,7 @@ const emailEditSchema = z.object({
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { messages, emailContext, selectedContext } =
+    const { messages, campaignContext, emailContext, selectedContext } =
       requestSchema.parse(body)
 
     const isContextOnlyAction = selectedContext?.action === 'Ask AI about this'
@@ -47,11 +71,86 @@ export async function POST(req: NextRequest) {
         }\n\nWhile you should focus on this specific text selection, keep in mind the full email context below. Your response should address the selected text but maintain coherence with the entire email.`
       : ''
 
-    const instructions = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns. ${
-      emailContext
+    const campaignContextSection = campaignContext
+      ? `
+
+CAMPAIGN CONTEXT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 PRODUCT/LANDING PAGE INFORMATION:
+URL: ${campaignContext.landingPageData.url}
+${
+  campaignContext.landingPageData.metadata?.title
+    ? `Title: ${campaignContext.landingPageData.metadata.title}`
+    : ''
+}
+${
+  campaignContext.landingPageData.metadata?.description
+    ? `Description: ${campaignContext.landingPageData.metadata.description}`
+    : ''
+}
+
+Landing Page Content (first 1500 chars):
+${
+  campaignContext.landingPageData.content?.substring(0, 1500) || 'Not available'
+}
+
+📋 CAMPAIGN CONFIGURATION:
+- Type: ${campaignContext.config.campaignType}
+- Tone: ${campaignContext.config.tone}
+- Duration: ${campaignContext.config.days} days
+
+📧 ALL EMAILS IN THIS CAMPAIGN SEQUENCE:
+${campaignContext.allEmails
+  .map(
+    (email) => `
+Email ${email.day}${
+      email.id === campaignContext.currentEmailId ? ' ⬅️ CURRENT EMAIL' : ''
+    }:
+Subject: ${email.subject}
+Preview: ${email.preview}
+Content (first 200 chars): ${email.content.substring(0, 200)}...
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
+  )
+  .join('\n')}
+
+🎨 HOW TO USE THIS CONTEXT:
+1. Reference the landing page content for accurate product/service details
+2. Maintain brand voice and messaging consistency across all emails
+3. Ensure current email fits within the campaign sequence narrative
+4. Check that CTAs align with the product/service offering
+5. Verify tone matches the campaign configuration
+6. Look for opportunities to create coherent storytelling across days
+7. Use landing page metadata for accurate product names, features, benefits
+
+IMPORTANT: When making suggestions or edits, consider:
+- Does this align with what's on the landing page?
+- Is this consistent with previous emails in the sequence?
+- Does this fit the overall campaign narrative?
+- Is the tone appropriate for the campaign type?
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CURRENT EMAIL BEING EDITED:
+- Day: ${campaignContext.currentEmailId}
+- Subject: ${
+          campaignContext.allEmails.find(
+            (e) => e.id === campaignContext.currentEmailId
+          )?.subject
+        }
+- Content:
+${
+  campaignContext.allEmails.find((e) => e.id === campaignContext.currentEmailId)
+    ?.content
+}
+
+`
+      : ''
+
+    const legacyEmailContext =
+      !campaignContext && emailContext
         ? `\n\nCURRENT EMAIL CONTEXT:\n- Subject: ${emailContext.subject}\n- Campaign Type: ${emailContext.campaignType}\n- Content:\n${emailContext.content}`
         : ''
-    }${selectedTextContext}
+
+    const instructions = `You are an expert email marketing assistant helping users create and optimize newsletter campaigns.${campaignContextSection}${legacyEmailContext}${selectedTextContext}
     
 Your role is to:
 - Be a DIRECT, ACTION-ORIENTED email optimization partner
