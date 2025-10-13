@@ -1,6 +1,10 @@
 import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import {
+  CAMPAIGN_CONTEXT_LANDING_PAGE_LIMIT,
+  EMAIL_CONTENT_PREVIEW_LIMIT,
+} from '@/lib/constants/app'
 
 const messageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
@@ -89,9 +93,17 @@ ${
     : ''
 }
 
-Landing Page Content (first 1500 chars):
+Landing Page Content (first ${CAMPAIGN_CONTEXT_LANDING_PAGE_LIMIT} chars):
 ${
-  campaignContext.landingPageData.content?.substring(0, 1500) || 'Not available'
+  campaignContext.landingPageData.content
+    ? campaignContext.landingPageData.content.length >
+      CAMPAIGN_CONTEXT_LANDING_PAGE_LIMIT
+      ? campaignContext.landingPageData.content.substring(
+          0,
+          CAMPAIGN_CONTEXT_LANDING_PAGE_LIMIT
+        ) + '...'
+      : campaignContext.landingPageData.content
+    : 'Not available'
 }
 
 📋 CAMPAIGN CONFIGURATION:
@@ -108,7 +120,11 @@ Email ${email.day}${
     }:
 Subject: ${email.subject}
 Preview: ${email.preview}
-Content (first 200 chars): ${email.content.substring(0, 200)}...
+Content (first ${EMAIL_CONTENT_PREVIEW_LIMIT} chars): ${
+      email.content.length > EMAIL_CONTENT_PREVIEW_LIMIT
+        ? email.content.substring(0, EMAIL_CONTENT_PREVIEW_LIMIT) + '...'
+        : email.content
+    }
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
   )
   .join('\n')}
@@ -298,7 +314,10 @@ Only include the fields in "edits" that you're actually changing. Be smart about
       throw new Error('No response from OpenAI')
     }
 
-    console.log('OpenAI Response:', response.output_text)
+    // Log response for debugging (remove in production)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('OpenAI Response:', response.output_text)
+    }
 
     let parsedResponse
     try {

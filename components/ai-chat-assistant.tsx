@@ -10,6 +10,8 @@ import { X, Send, Sparkles, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from './markdown-renderer'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
+import { MESSAGE_HISTORY_LIMIT } from '@/lib/constants/app'
+import { logError, getUserFriendlyMessage } from '@/lib/utils/error-handling'
 
 interface Message {
   id: number
@@ -66,6 +68,7 @@ export function AIChatAssistant({
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -78,6 +81,15 @@ export function AIChatAssistant({
   // Auto-focus input when panel opens
   useEffect(() => {
     inputRef.current?.focus()
+  }, [])
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort()
+      }
+    }
   }, [])
 
   // Auto-submit when autoSubmitMessage is provided
@@ -119,6 +131,9 @@ export function AIChatAssistant({
     setInput('')
     setIsLoading(true)
 
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController()
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -127,7 +142,7 @@ export function AIChatAssistant({
         },
         body: JSON.stringify({
           messages: messages
-            .slice(-5)
+            .slice(-MESSAGE_HISTORY_LIMIT)
             .map((m) => ({
               role: m.role,
               content: m.content,
@@ -137,6 +152,7 @@ export function AIChatAssistant({
           emailContext,
           selectedContext: contextForThisRequest,
         }),
+        signal: abortControllerRef.current.signal,
       })
 
       if (!response.ok) {
@@ -159,19 +175,33 @@ export function AIChatAssistant({
 
       setMessages((prev) => [...prev, aiMessage])
     } catch (error) {
-      console.error('Chat error:', error)
+      // Don't show error if request was aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        return
+      }
+
+      // Log error with standardized format
+      logError(error, {
+        operation: 'chat request',
+        component: 'AIChatAssistant',
+        additionalData: {
+          messageCount: messages.length,
+          hasCampaignContext: !!campaignContext,
+          hasEmailContext: !!emailContext,
+        },
+      })
 
       const errorMessage: Message = {
         id: messages.length + 2,
         role: 'assistant',
-        content:
-          "I apologize, but I'm having trouble connecting right now. Please make sure your OpenAI API key is configured in .env.local and try again.",
+        content: getUserFriendlyMessage(error, 'process your request'),
         timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, errorMessage])
     } finally {
       setIsLoading(false)
+      abortControllerRef.current = null
     }
   }
 

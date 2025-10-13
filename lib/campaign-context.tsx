@@ -5,11 +5,14 @@ import {
   useContext,
   useState,
   useEffect,
+  useRef,
   type ReactNode,
 } from 'react'
 import { createClient } from './supabase/client'
 import { CampaignStorageService } from './services/campaign-storage.service'
 import type { CampaignConfig, LandingPageData, Email } from './types'
+import { debounce } from './utils/debounce'
+import { logError, getUserFriendlyMessage } from './utils/error-handling'
 
 interface CampaignContextType {
   currentCampaignId: string | null
@@ -21,7 +24,9 @@ interface CampaignContextType {
   setGeneratedEmails: (emails: Email[]) => Promise<void>
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
-  createNewCampaign: () => Promise<string>
+  createNewCampaign: (
+    providedLandingPageData?: LandingPageData | null
+  ) => Promise<string>
   updateCampaignConfig: (config: CampaignConfig) => Promise<void>
   clearAll: () => void
   isLoading: boolean
@@ -44,18 +49,74 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
   const campaignService = new CampaignStorageService(supabase)
 
+  // Create debounced auto-save functions
+  const debouncedSaveLandingPage = useRef(
+    debounce(async (campaignId: string, data: LandingPageData) => {
+      try {
+        await campaignService.updateCampaign(campaignId, {
+          landingPageUrl: data.url,
+          landingPageContent: data.content,
+          landingPageMetadata: data.metadata,
+        })
+      } catch (error) {
+        logError(error, {
+          operation: 'auto-save landing page data',
+          component: 'CampaignContext',
+          campaignId,
+          additionalData: { url: data.url },
+        })
+      }
+    }, 1000)
+  ).current
+
+  const debouncedSaveConfig = useRef(
+    debounce(async (campaignId: string, config: CampaignConfig) => {
+      try {
+        await campaignService.updateCampaign(campaignId, {
+          tone: config.tone,
+          campaignType: config.campaignType,
+          days: config.days,
+        })
+      } catch (error) {
+        logError(error, {
+          operation: 'auto-save campaign config',
+          component: 'CampaignContext',
+          campaignId,
+          additionalData: {
+            tone: config.tone,
+            campaignType: config.campaignType,
+            days: config.days,
+          },
+        })
+      }
+    }, 1000)
+  ).current
+
   // Create a new campaign in the database
-  const createNewCampaign = async (): Promise<string> => {
+  const createNewCampaign = async (
+    providedLandingPageData?: LandingPageData | null
+  ): Promise<string> => {
     const {
       data: { user },
     } = await supabase.auth.getUser()
     if (!user) throw new Error('User not authenticated')
 
+    // Use provided landing page data or fall back to context state
+    const dataToUse = providedLandingPageData || landingPageData
+
+    console.log('Creating campaign with landing page data:', {
+      hasProvidedData: !!providedLandingPageData,
+      hasContextData: !!landingPageData,
+      url: dataToUse?.url,
+      hasContent: !!dataToUse?.content,
+      hasMetadata: !!dataToUse?.metadata,
+    })
+
     const campaign = await campaignService.createCampaign(user.id, {
       name: 'New Campaign',
-      landingPageUrl: landingPageData?.url,
-      landingPageContent: landingPageData?.content,
-      landingPageMetadata: landingPageData?.metadata,
+      landingPageUrl: dataToUse?.url,
+      landingPageContent: dataToUse?.content,
+      landingPageMetadata: dataToUse?.metadata,
     })
 
     setCurrentCampaignId(campaign.id)
@@ -66,10 +127,21 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const loadCampaign = async (campaignId: string) => {
     setIsLoading(true)
     try {
+      console.log('Loading campaign from database:', campaignId)
       const campaign = await campaignService.getCampaign(campaignId)
       if (!campaign) {
         throw new Error('Campaign not found')
       }
+
+      console.log('Campaign loaded from database:', {
+        id: campaign.id,
+        hasLandingPageUrl: !!campaign.landing_page_url,
+        hasLandingPageContent: !!campaign.landing_page_content,
+        hasTone: !!campaign.tone,
+        hasCampaignType: !!campaign.campaign_type,
+        hasDays: !!campaign.days,
+        emailCount: campaign.emails?.length || 0,
+      })
 
       setCurrentCampaignId(campaign.id)
 
@@ -80,6 +152,18 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           content: campaign.landing_page_content || undefined,
           metadata: campaign.landing_page_metadata,
         })
+        console.log('Landing page data set')
+      } else {
+        console.warn('Campaign has no landing page URL')
+        // Set minimal landing page data to prevent blank screen
+        setLandingPageDataState({
+          url: 'https://example.com',
+          content: 'Landing page content not available',
+          metadata: {
+            title: 'Campaign Landing Page',
+            description: 'Landing page data not available',
+          },
+        })
       }
 
       // Set config
@@ -89,12 +173,42 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           campaignType: campaign.campaign_type,
           days: campaign.days,
         })
+        console.log('Campaign config set')
+      } else {
+        console.warn('Campaign missing required config fields:', {
+          tone: campaign.tone,
+          campaignType: campaign.campaign_type,
+          days: campaign.days,
+        })
+        // Set default config to prevent blank screen
+        setConfigState({
+          tone: campaign.tone || 'professional',
+          campaignType: campaign.campaign_type || 'welcome',
+          days: campaign.days || 7,
+        })
       }
 
       // Set emails
       if (campaign.emails && campaign.emails.length > 0) {
         setGeneratedEmailsState(campaign.emails)
+        console.log('Emails set:', campaign.emails.length)
+      } else {
+        console.warn('Campaign has no emails')
+        // Set a default email to prevent blank screen
+        const defaultEmail = {
+          id: 1,
+          day: 1,
+          subject: 'Welcome to our newsletter',
+          preview: 'Thank you for subscribing!',
+          content:
+            "Welcome to our newsletter. We're excited to have you on board!",
+        }
+        setGeneratedEmailsState([defaultEmail])
+        console.log('Default email set')
       }
+    } catch (error) {
+      console.error('Error loading campaign:', error)
+      throw error
     } finally {
       setIsLoading(false)
     }
@@ -139,25 +253,17 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
   const setLandingPageData = (data: LandingPageData | null) => {
     setLandingPageDataState(data)
-    // Auto-save if we have a campaign
+    // Auto-save if we have a campaign (debounced)
     if (currentCampaignId && data) {
-      campaignService.updateCampaign(currentCampaignId, {
-        landingPageUrl: data.url,
-        landingPageContent: data.content,
-        landingPageMetadata: data.metadata,
-      })
+      debouncedSaveLandingPage(currentCampaignId, data)
     }
   }
 
   const setConfig = (cfg: CampaignConfig | null) => {
     setConfigState(cfg)
-    // Auto-save if we have a campaign
+    // Auto-save if we have a campaign (debounced)
     if (currentCampaignId && cfg) {
-      campaignService.updateCampaign(currentCampaignId, {
-        tone: cfg.tone,
-        campaignType: cfg.campaignType,
-        days: cfg.days,
-      })
+      debouncedSaveConfig(currentCampaignId, cfg)
     }
   }
 
@@ -175,6 +281,10 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   }
 
   const clearAll = () => {
+    // Cancel any pending debounced saves
+    debouncedSaveLandingPage.cancel()
+    debouncedSaveConfig.cancel()
+
     setCurrentCampaignId(null)
     setLandingPageDataState(null)
     setConfigState(null)

@@ -38,7 +38,8 @@ export default function CreatePage() {
         setLandingPageData(data)
         // Create a new campaign and proceed to configure
         try {
-          const campaignId = await createNewCampaign()
+          // Pass the landing page data directly to ensure it's saved
+          const campaignId = await createNewCampaign(data)
           router.push(`/create/configure?campaign=${campaignId}`)
         } catch (error) {
           console.error('Failed to create campaign:', error)

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -27,6 +27,7 @@ import type { Email, SelectedContext } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
+import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 
 function EditorPageContent() {
   const router = useRouter()
@@ -58,6 +59,7 @@ function EditorPageContent() {
   )
   const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
   const [campaignLoaded, setCampaignLoaded] = useState(false)
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize version storage service
   const supabase = createClient()
@@ -73,8 +75,12 @@ function EditorPageContent() {
   // Load campaign from database if campaignId is in URL
   useEffect(() => {
     if (campaignIdFromUrl && !campaignLoaded && !isLoading) {
+      console.log('Loading campaign:', campaignIdFromUrl)
       loadCampaign(campaignIdFromUrl)
-        .then(() => setCampaignLoaded(true))
+        .then(() => {
+          console.log('Campaign loaded successfully')
+          setCampaignLoaded(true)
+        })
         .catch((error) => {
           console.error('Failed to load campaign:', error)
           // Clean up all params when redirecting due to invalid campaign
@@ -98,15 +104,25 @@ function EditorPageContent() {
     // If we're loading a campaign from URL, wait for it to complete
     if (campaignIdFromUrl && !campaignLoaded) return
 
+    console.log('Editor data check:', {
+      landingPageData: !!landingPageData,
+      config: !!config,
+      initialEmails: initialEmails.length,
+      campaignIdFromUrl,
+      campaignLoaded,
+    })
+
     // Only redirect if we have no essential data AND we're not in the middle of loading a campaign
     // This prevents redirecting when we have a valid campaign ID in the URL but data hasn't loaded yet
     if ((!landingPageData || !config) && !campaignIdFromUrl) {
+      console.log('Redirecting to /create - no data and no campaign ID')
       router.push('/create')
       return
     }
 
     // Set up emails only if we have config data
     if (config && initialEmails.length > 0) {
+      console.log('Setting up emails:', initialEmails.length)
       setEmails(initialEmails)
     }
   }, [
@@ -238,6 +254,15 @@ function EditorPageContent() {
     }
   }, [restoreParam, router, campaignIdFromUrl, setMultipleParams])
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+    }
+  }, [])
+
   // Show loading state while loading or when we have a campaign ID but haven't loaded the campaign yet
   if (isLoading || (campaignIdFromUrl && !campaignLoaded)) {
     return (
@@ -250,9 +275,37 @@ function EditorPageContent() {
     )
   }
 
-  // Only redirect to create page if we have no data and no campaign ID to load
-  if (!landingPageData || !config) {
-    return null
+  // Show error state if we have no essential data after loading is complete
+  // Allow rendering if we have config OR emails (for campaigns that might not have landing page data)
+  if (!config && emails.length === 0) {
+    console.log('Rendering error state - missing essential data:', {
+      landingPageData: !!landingPageData,
+      config: !!config,
+      emailsCount: emails.length,
+      campaignIdFromUrl,
+      campaignLoaded,
+    })
+
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold mb-4">Campaign Data Missing</h2>
+          <p className="text-muted-foreground mb-4">
+            This campaign appears to be incomplete. It's missing both
+            configuration and email data.
+          </p>
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>Landing Page Data: {landingPageData ? '✓' : '✗'}</p>
+            <p>Campaign Config: {config ? '✓' : '✗'}</p>
+            <p>Emails: {emails.length}</p>
+            <p>Campaign ID: {campaignIdFromUrl || 'None'}</p>
+          </div>
+          <Button asChild className="mt-4">
+            <Link href="/campaigns">Back to Campaigns</Link>
+          </Button>
+        </div>
+      </div>
+    )
   }
 
   const selectedEmail = emails.find((e) => e.id === selectedEmailId)
@@ -282,14 +335,6 @@ function EditorPageContent() {
     if (!skipVersioning) {
       const currentEmail = emails.find((e) => e.id === id)
       if (currentEmail && currentEmail.uuid) {
-        console.log('[HANDLE UPDATE] Before save:', {
-          emailId: id,
-          emailUuid: currentEmail.uuid,
-          currentSubject: currentEmail.subject.substring(0, 50),
-          currentContentPreview: currentEmail.content.substring(0, 100),
-          newSubject: updates.subject?.substring(0, 50),
-          newContentPreview: updates.content?.substring(0, 100),
-        })
         try {
           await versionStorageService.saveVersion(
             currentEmail.uuid,
@@ -304,10 +349,8 @@ function EditorPageContent() {
           // Continue with update even if versioning fails
         }
       } else {
-        console.error('[HANDLE UPDATE] Email not found or missing UUID:', id)
+        console.error('Email not found or missing UUID for versioning:', id)
       }
-    } else {
-      console.log('[HANDLE UPDATE] Skipping versioning (restore flow)')
     }
 
     // Update the email
@@ -320,14 +363,19 @@ function EditorPageContent() {
       const supabase = createClient()
       const campaignService = new CampaignStorageService(supabase)
 
+      // Clear any existing timeout
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current)
+      }
+
       // Debounce the save operation
-      setTimeout(() => {
+      saveTimeoutRef.current = setTimeout(() => {
         campaignService
           .updateEmail(currentCampaignId, id, updates)
           .catch((error) =>
             console.error('Failed to save email to database:', error)
           )
-      }, 1000)
+      }, EMAIL_SAVE_DEBOUNCE_MS)
     }
   }
 
@@ -371,7 +419,7 @@ function EditorPageContent() {
             <div className="hidden md:block">
               <div className="text-sm font-medium">Email Campaign Editor</div>
               <div className="text-xs text-muted-foreground truncate max-w-md">
-                {landingPageData.url}
+                {landingPageData?.url || 'No URL available'}
               </div>
             </div>
           </div>
@@ -422,7 +470,7 @@ function EditorPageContent() {
               <h2 className="font-semibold">Campaign Emails</h2>
             </div>
             <p className="text-sm text-muted-foreground">
-              {emails.length} emails • {config.campaignType}
+              {emails.length} emails • {config?.campaignType || 'Unknown'}
             </p>
           </div>
           <div className="flex-1 overflow-y-auto">
@@ -470,7 +518,7 @@ function EditorPageContent() {
                   ? {
                       subject: selectedEmail.subject,
                       content: selectedEmail.content,
-                      campaignType: config.campaignType,
+                      campaignType: config?.campaignType || 'Unknown',
                     }
                   : undefined
               }

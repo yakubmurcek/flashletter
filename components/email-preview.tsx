@@ -28,15 +28,7 @@ import {
 } from '@/components/ui/popover'
 import { cn } from '@/lib/utils'
 import { TextSelectionPopup } from './text-selection-popup'
-
-interface Email {
-  id: number
-  uuid?: string
-  day: number
-  subject: string
-  preview: string
-  content: string
-}
+import type { Email } from '@/lib/types'
 
 interface EmailPreviewProps {
   email: Email

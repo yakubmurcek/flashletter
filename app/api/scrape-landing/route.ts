@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 const scrapeLandingSchema = z.object({
   url: z.string().url(),
@@ -55,7 +56,7 @@ function extractTextFromHTML(html: string): string {
     .replace(/\s+/g, ' ')
     .trim()
 
-  return text.substring(0, 5000)
+  return text.substring(0, LANDING_PAGE_CONTENT_LIMIT)
 }
 
 function extractMetadata(html: string): Record<string, string> {

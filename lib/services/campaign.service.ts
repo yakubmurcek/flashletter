@@ -24,7 +24,8 @@ export class CampaignService {
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
-    campaignId?: string
+    campaignId?: string,
+    signal?: AbortSignal
   ): Promise<Email[]> {
     const response = await fetch('/api/generate-emails', {
       method: 'POST',
@@ -35,6 +36,7 @@ export class CampaignService {
         config,
         campaignId,
       }),
+      signal,
     })
 
     if (!response.ok) {
