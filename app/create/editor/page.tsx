@@ -94,27 +94,30 @@ function EditorPageContent() {
     // If we're loading a campaign from URL, wait for it to complete
     if (campaignIdFromUrl && !campaignLoaded) return
 
-    // Only redirect if we have no essential data
-    if (!landingPageData || !config) {
+    // Only redirect if we have no essential data AND we're not in the middle of loading a campaign
+    // This prevents redirecting when we have a valid campaign ID in the URL but data hasn't loaded yet
+    if ((!landingPageData || !config) && !campaignIdFromUrl) {
       router.push('/create')
       return
     }
 
-    // Set up emails
-    if (initialEmails.length > 0) {
-      setEmails(initialEmails)
-    } else {
-      const fallbackEmails = Array.from({ length: config.days }, (_, i) => ({
-        id: i + 1,
-        day: i + 1,
-        subject: `Day ${i + 1}: ${getSubjectForDay(
-          i + 1,
-          config.campaignType
-        )}`,
-        preview: getPreviewForDay(i + 1, config.campaignType),
-        content: getContentForDay(i + 1, config.campaignType, config.tone),
-      }))
-      setEmails(fallbackEmails)
+    // Set up emails only if we have config data
+    if (config) {
+      if (initialEmails.length > 0) {
+        setEmails(initialEmails)
+      } else {
+        const fallbackEmails = Array.from({ length: config.days }, (_, i) => ({
+          id: i + 1,
+          day: i + 1,
+          subject: `Day ${i + 1}: ${getSubjectForDay(
+            i + 1,
+            config.campaignType
+          )}`,
+          preview: getPreviewForDay(i + 1, config.campaignType),
+          content: getContentForDay(i + 1, config.campaignType, config.tone),
+        }))
+        setEmails(fallbackEmails)
+      }
     }
   }, [
     landingPageData,
@@ -211,7 +214,20 @@ function EditorPageContent() {
     }
   }, [restoreParam, router, campaignIdFromUrl, setMultipleParams])
 
-  if (isLoading || !landingPageData || !config) {
+  // Show loading state while loading or when we have a campaign ID but haven't loaded the campaign yet
+  if (isLoading || (campaignIdFromUrl && !campaignLoaded)) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading campaign...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Only redirect to create page if we have no data and no campaign ID to load
+  if (!landingPageData || !config) {
     return null
   }
 

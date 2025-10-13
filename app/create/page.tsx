@@ -20,6 +20,7 @@ export default function CreatePage() {
     useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Clear any existing campaign data when starting fresh
   useEffect(() => {
@@ -30,18 +31,24 @@ export default function CreatePage() {
     e.preventDefault()
     if (!url) return
 
-    const data = await analyzeLandingPage(url)
-    if (data) {
-      setLandingPageData(data)
-      // Create a new campaign and proceed to configure
-      try {
-        const campaignId = await createNewCampaign()
-        router.push(`/create/configure?campaign=${campaignId}`)
-      } catch (error) {
-        console.error('Failed to create campaign:', error)
-        // Still proceed to configure if campaign creation fails
-        router.push('/create/configure')
+    setIsSubmitting(true) // Start local loading
+    try {
+      const data = await analyzeLandingPage(url)
+      if (data) {
+        setLandingPageData(data)
+        // Create a new campaign and proceed to configure
+        try {
+          const campaignId = await createNewCampaign()
+          router.push(`/create/configure?campaign=${campaignId}`)
+        } catch (error) {
+          console.error('Failed to create campaign:', error)
+          // Still proceed to configure if campaign creation fails
+          router.push('/create/configure')
+        }
       }
+    } finally {
+      // Don't set false here - let navigation complete
+      // setIsSubmitting(false) is omitted intentionally
     }
   }
 
@@ -82,9 +89,9 @@ export default function CreatePage() {
               type="submit"
               size="lg"
               className="w-full gap-2"
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isSubmitting}
             >
-              {isAnalyzing ? (
+              {isAnalyzing || isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Analyzing Page...

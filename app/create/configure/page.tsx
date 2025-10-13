@@ -51,6 +51,7 @@ function ConfigurePageContent() {
   )
   const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
   const [campaignLoaded, setCampaignLoaded] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   // Load campaign from database if campaignId is in URL
   useEffect(() => {
@@ -83,25 +84,30 @@ function ConfigurePageContent() {
 
     if (!landingPageData) return
 
-    const config = { tone, campaignType, days: days[0] }
+    setIsSubmitting(true) // Start local loading
+    try {
+      const config = { tone, campaignType, days: days[0] }
 
-    // Update campaign config in database
-    await updateCampaignConfig(config)
+      // Update campaign config in database
+      await updateCampaignConfig(config)
 
-    const emails = await generateEmails(
-      landingPageData.url,
-      landingPageData.content || '',
-      config,
-      currentCampaignId || undefined
-    )
+      const emails = await generateEmails(
+        landingPageData.url,
+        landingPageData.content || '',
+        config,
+        currentCampaignId || undefined
+      )
 
-    if (emails) {
-      setConfig(config)
-      setGeneratedEmails(emails)
-      const editorUrl = currentCampaignId
-        ? `/create/editor?campaign=${currentCampaignId}`
-        : '/create/editor'
-      router.push(editorUrl)
+      if (emails) {
+        setConfig(config)
+        setGeneratedEmails(emails)
+        const editorUrl = currentCampaignId
+          ? `/create/editor?campaign=${currentCampaignId}`
+          : '/create/editor'
+        router.push(editorUrl)
+      }
+    } finally {
+      // Don't set false here - let navigation complete
     }
   }
 
@@ -223,9 +229,9 @@ function ConfigurePageContent() {
               type="submit"
               size="lg"
               className="w-full gap-2"
-              disabled={isGenerating}
+              disabled={isGenerating || isSubmitting}
             >
-              {isGenerating ? (
+              {isGenerating || isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Generating Campaign with AI...
