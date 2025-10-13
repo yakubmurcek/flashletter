@@ -1,10 +1,26 @@
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useCallback } from 'react'
-import { isValidCampaignId, isValidEmailId } from '@/lib/utils/validation'
+
+// Simple validation helpers
+const isValidCampaignId = (id: string): boolean => {
+  return typeof id === 'string' && id.length > 0 && /^[a-zA-Z0-9-_]+$/.test(id)
+}
+
+const isValidEmailId = (id: string): boolean => {
+  const num = parseInt(id, 10)
+  return !isNaN(num) && num > 0 && num <= 100 // Reasonable email count limit
+}
 
 export function useUrlState() {
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  const getParam = useCallback(
+    (key: string): string | null => {
+      return searchParams.get(key)
+    },
+    [searchParams]
+  )
 
   const setParam = useCallback(
     (key: string, value: string) => {
@@ -39,56 +55,44 @@ export function useUrlState() {
     [router, searchParams]
   )
 
-  const getParam = useCallback(
-    (key: string): string | null => {
-      return searchParams.get(key)
+  // Campaign ID getter with basic validation
+  const getCampaignId = useCallback((): string | null => {
+    const id = getParam('campaign')
+    return id && isValidCampaignId(id) ? id : null
+  }, [getParam])
+
+  // Email ID getter with basic validation
+  const getEmailId = useCallback((): number | null => {
+    const id = getParam('email')
+    if (!id || !isValidEmailId(id)) return null
+    return parseInt(id, 10)
+  }, [getParam])
+
+  // Email ID with fallback
+  const getEmailIdWithFallback = useCallback(
+    (fallbackId: number = 1): number => {
+      const currentEmailId = getEmailId()
+      return currentEmailId || fallbackId
     },
-    [searchParams]
+    [getEmailId]
   )
 
-  // Enhanced methods with validation and cleanup
-  const setParamWithValidation = useCallback(
-    (key: string, value: string, validator?: (val: string) => boolean) => {
-      if (validator && !validator(value)) {
-        console.warn(`Invalid value for ${key}: ${value}`)
-        return false
-      }
-      setParam(key, value)
-      return true
-    },
-    [setParam]
-  )
-
+  // Set multiple params with optional validation
   const setMultipleParams = useCallback(
-    (
-      params: Record<string, string>,
-      validators?: Record<string, (val: string) => boolean>,
-      keysToKeep?: string[]
-    ) => {
+    (params: Record<string, string>, validate = true) => {
       const urlParams = new URLSearchParams(searchParams.toString())
 
-      // If keysToKeep is provided, clean up all params except those being set and those to keep
-      if (keysToKeep) {
-        const allKeysToKeep = [
-          ...new Set([...Object.keys(params), ...keysToKeep]),
-        ]
-        const keysToDelete: string[] = []
-
-        for (const [key] of urlParams.entries()) {
-          if (!allKeysToKeep.includes(key)) {
-            keysToDelete.push(key)
-          }
-        }
-
-        keysToDelete.forEach((key) => urlParams.delete(key))
-      }
-
-      // Set the new params
       for (const [key, value] of Object.entries(params)) {
-        const validator = validators?.[key]
-        if (validator && !validator(value)) {
-          console.warn(`Invalid value for ${key}: ${value}`)
-          continue
+        // Basic validation for known params
+        if (validate) {
+          if (key === 'campaign' && !isValidCampaignId(value)) {
+            console.warn(`Invalid campaign ID: ${value}`)
+            continue
+          }
+          if (key === 'email' && !isValidEmailId(value)) {
+            console.warn(`Invalid email ID: ${value}`)
+            continue
+          }
         }
         urlParams.set(key, value)
       }
@@ -98,56 +102,33 @@ export function useUrlState() {
     [router, searchParams]
   )
 
+  // Simple cleanup - remove all params except specified ones
   const cleanupParams = useCallback(
     (keysToKeep: string[] = []) => {
       const params = new URLSearchParams(searchParams.toString())
-      const keysToDelete: string[] = []
 
       for (const [key] of params.entries()) {
         if (!keysToKeep.includes(key)) {
-          keysToDelete.push(key)
+          params.delete(key)
         }
       }
 
-      keysToDelete.forEach((key) => params.delete(key))
       const query = params.toString()
       router.replace(query ? `?${query}` : window.location.pathname)
     },
     [router, searchParams]
   )
 
-  // Specialized getters with validation
-  const getCampaignId = useCallback((): string | null => {
-    const id = getParam('campaign')
-    return id && isValidCampaignId(id) ? id : null
-  }, [getParam])
-
-  const getEmailId = useCallback((): number | null => {
-    const id = getParam('email')
-    if (!id || !isValidEmailId(id)) return null
-    return parseInt(id, 10)
-  }, [getParam])
-
-  // Non-side-effect version for just getting the current email ID with fallback
-  const getEmailIdWithFallback = useCallback(
-    (fallbackId: number = 1): number => {
-      const currentEmailId = getEmailId()
-      return currentEmailId || fallbackId
-    },
-    [getEmailId]
-  )
-
   return {
+    getParam,
     setParam,
     deleteParam,
     toggleParam,
-    getParam,
-    setParamWithValidation,
-    setMultipleParams,
-    cleanupParams,
     getCampaignId,
     getEmailId,
     getEmailIdWithFallback,
+    setMultipleParams,
+    cleanupParams,
     // Export validators for external use
     isValidCampaignId,
     isValidEmailId,

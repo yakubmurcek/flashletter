@@ -94,11 +94,13 @@ function EditorPageContent() {
     // If we're loading a campaign from URL, wait for it to complete
     if (campaignIdFromUrl && !campaignLoaded) return
 
+    // Only redirect if we have no essential data
     if (!landingPageData || !config) {
       router.push('/create')
       return
     }
 
+    // Set up emails
     if (initialEmails.length > 0) {
       setEmails(initialEmails)
     } else {
@@ -136,20 +138,10 @@ function EditorPageContent() {
         if (campaignIdFromUrl) {
           params.campaign = campaignIdFromUrl
         }
-        setMultipleParams(params, {
-          email: isValidEmailId,
-          campaign: isValidCampaignId,
-        })
+        setMultipleParams(params)
       }
     }
-  }, [
-    emails.length,
-    emailIdFromUrl,
-    campaignIdFromUrl,
-    setMultipleParams,
-    isValidEmailId,
-    isValidCampaignId,
-  ])
+  }, [emails.length, emailIdFromUrl, campaignIdFromUrl, setMultipleParams])
 
   // Clear context when switching emails
   useEffect(() => {
@@ -209,14 +201,7 @@ function EditorPageContent() {
           if (campaignIdFromUrl) {
             params.campaign = campaignIdFromUrl
           }
-          setMultipleParams(
-            params,
-            {
-              email: isValidEmailId,
-              campaign: isValidCampaignId,
-            },
-            ['email', 'campaign'] // Keep these params, remove restore param
-          )
+          setMultipleParams(params)
         } else {
           console.error('Invalid restore data:', restoreData)
         }
@@ -224,14 +209,7 @@ function EditorPageContent() {
         console.error('Failed to restore version:', error)
       }
     }
-  }, [
-    restoreParam,
-    router,
-    campaignIdFromUrl,
-    setMultipleParams,
-    isValidEmailId,
-    isValidCampaignId,
-  ])
+  }, [restoreParam, router, campaignIdFromUrl, setMultipleParams])
 
   if (isLoading || !landingPageData || !config) {
     return null
@@ -240,26 +218,19 @@ function EditorPageContent() {
   const selectedEmail = emails.find((e) => e.id === selectedEmailId)
 
   const handleSelectEmail = (id: number) => {
-    // Validate email ID before setting
+    // Basic validation before setting
     if (!isValidEmailId(id.toString())) {
       console.warn(`Invalid email ID: ${id}`)
       return
     }
 
-    // Set email ID and preserve campaign ID, clean up other params atomically
+    // Set email ID and preserve campaign ID
     const params: Record<string, string> = { email: id.toString() }
     if (campaignIdFromUrl) {
       params.campaign = campaignIdFromUrl
     }
 
-    setMultipleParams(
-      params,
-      {
-        email: isValidEmailId,
-        campaign: isValidCampaignId,
-      },
-      ['email', 'campaign'] // Keep these params, remove all others (restore, chat, etc.)
-    )
+    setMultipleParams(params)
   }
 
   const handleUpdateEmail = (

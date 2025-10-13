@@ -71,25 +71,12 @@ function ConfigurePageContent() {
     // If we're loading a campaign from URL, wait for it to complete
     if (validCampaignId && !campaignLoaded) return
 
+    // Only redirect if we have no landing page data at all
     if (!landingPageData) {
       router.push('/create')
       return
     }
-
-    // If campaign already has generated emails, redirect to editor
-    // User shouldn't be able to reconfigure once emails are generated
-    if (generatedEmails.length > 0 && currentCampaignId) {
-      router.push(`/create/editor?campaign=${currentCampaignId}`)
-    }
-  }, [
-    landingPageData,
-    router,
-    isLoading,
-    generatedEmails,
-    currentCampaignId,
-    validCampaignId,
-    campaignLoaded,
-  ])
+  }, [landingPageData, router, isLoading, validCampaignId, campaignLoaded])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

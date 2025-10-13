@@ -16,45 +16,15 @@ import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 
 export default function CreatePage() {
   const router = useRouter()
-  const {
-    setLandingPageData,
-    createNewCampaign,
-    currentCampaignId,
-    saveCampaign,
-    generatedEmails,
-    config,
-    landingPageData,
-    isLoading,
-  } = useCampaign()
+  const { setLandingPageData, createNewCampaign, isLoading, clearAll } =
+    useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
 
-  // Add useEffect to handle redirects based on campaign state
+  // Clear any existing campaign data when starting fresh
   useEffect(() => {
-    // Don't redirect while loading
-    if (isLoading) return
-
-    // If we have generated emails, go to editor
-    if (generatedEmails.length > 0 && currentCampaignId) {
-      router.push(`/create/editor?campaign=${currentCampaignId}`)
-      return
-    }
-
-    // If we have config but no emails, go to configure
-    if (config && landingPageData && currentCampaignId) {
-      router.push(`/create/configure?campaign=${currentCampaignId}`)
-      return
-    }
-
-    // Otherwise, stay on this page (allow entering/re-entering URL)
-  }, [
-    isLoading,
-    generatedEmails,
-    currentCampaignId,
-    config,
-    landingPageData,
-    router,
-  ])
+    clearAll()
+  }, []) // Empty dependency array - only run once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -63,21 +33,12 @@ export default function CreatePage() {
     const data = await analyzeLandingPage(url)
     if (data) {
       setLandingPageData(data)
-      // Create a new campaign in the database only if we don't have one
+      // Create a new campaign and proceed to configure
       try {
-        let campaignId = currentCampaignId
-
-        // Only create new campaign if we don't have one already
-        if (!campaignId) {
-          campaignId = await createNewCampaign()
-        } else {
-          // Update existing campaign with new landing page data
-          await saveCampaign()
-        }
-
+        const campaignId = await createNewCampaign()
         router.push(`/create/configure?campaign=${campaignId}`)
       } catch (error) {
-        console.error('Failed to create/update campaign:', error)
+        console.error('Failed to create campaign:', error)
         // Still proceed to configure if campaign creation fails
         router.push('/create/configure')
       }
