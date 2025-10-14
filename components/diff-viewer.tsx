@@ -9,6 +9,7 @@ import {
   generateDiff,
   collapseUnchangedLines,
   formatDiffStats,
+  type DiffLine,
 } from '@/lib/utils/diff'
 import type { EmailVersion } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -136,7 +137,7 @@ export function DiffViewer({
                     )
                   }
 
-                  const line = item
+                  const line = item as DiffLine
                   const bgColor =
                     line.type === 'added'
                       ? 'bg-green-500/10'
@@ -203,7 +204,7 @@ export function DiffViewer({
                       (item) => !('type' in item && item.type === 'collapsed')
                     )
                     .map((item, index) => {
-                      const line = item
+                      const line = item as DiffLine
                       if (line.type === 'added') return null
 
                       const bgColor =
@@ -238,7 +239,7 @@ export function DiffViewer({
                       (item) => !('type' in item && item.type === 'collapsed')
                     )
                     .map((item, index) => {
-                      const line = item
+                      const line = item as DiffLine
                       if (line.type === 'removed') return null
 
                       const bgColor =

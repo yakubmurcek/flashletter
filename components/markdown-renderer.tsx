@@ -1,3 +1,4 @@
+import React, { ReactElement } from 'react'
 import { cn } from '@/lib/utils'
 
 interface MarkdownRendererProps {
@@ -11,7 +12,7 @@ export function MarkdownRenderer({
 }: MarkdownRendererProps) {
   const renderContent = (text: string) => {
     const lines = text.split('\n')
-    const elements: JSX.Element[] = []
+    const elements: ReactElement[] = []
     let key = 0
 
     for (let i = 0; i < lines.length; i++) {
@@ -53,7 +54,7 @@ export function MarkdownRenderer({
   }
 
   const processInlineFormatting = (text: string) => {
-    const parts: (string | JSX.Element)[] = []
+    const parts: (string | ReactElement)[] = []
     let currentIndex = 0
     let key = 0
 
