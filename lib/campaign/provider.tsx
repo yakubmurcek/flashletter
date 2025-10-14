@@ -12,6 +12,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
     null
   )
+  const [campaignName, setCampaignName] = useState<string | null>(null)
   const [landingPageData, setLandingPageDataState] =
     useState<LandingPageData | null>(null)
   const [config, setConfigState] = useState<CampaignConfig | null>(null)
@@ -100,6 +101,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         }
 
         setCurrentCampaignId(campaign.id)
+        setCampaignName(campaign.name)
 
         if (campaign.landing_page_url) {
           setLandingPageDataState({
@@ -256,12 +258,20 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const dataContextValue = useMemo(
     () => ({
       currentCampaignId,
+      campaignName,
       landingPageData,
       config,
       generatedEmails,
       isLoading,
     }),
-    [currentCampaignId, landingPageData, config, generatedEmails, isLoading]
+    [
+      currentCampaignId,
+      campaignName,
+      landingPageData,
+      config,
+      generatedEmails,
+      isLoading,
+    ]
   )
 
   const actionsContextValue = useMemo(

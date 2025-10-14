@@ -12,6 +12,7 @@ import type { LandingPageData, CampaignConfig, Email } from '@/lib/types'
 interface CampaignLoaderReturn {
   loadingState: LoadingState
   campaignData: {
+    name: string | null
     landingPageData: LandingPageData | null
     config: CampaignConfig | null
     emails: Email[]
@@ -23,6 +24,7 @@ interface CampaignLoaderReturn {
 export function useCampaignLoader(): CampaignLoaderReturn {
   const router = useRouter()
   const {
+    campaignName,
     landingPageData,
     config,
     generatedEmails,
@@ -85,6 +87,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
     campaignIdFromUrl,
     campaignLoaded,
     error,
+    campaignName,
     landingPageData,
     config,
     generatedEmails.length,
@@ -93,6 +96,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
   const campaignData =
     loadingState === 'loaded'
       ? {
+          name: campaignName,
           landingPageData,
           config,
           emails: generatedEmails,

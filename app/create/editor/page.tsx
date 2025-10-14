@@ -57,6 +57,7 @@ function EditorPageContent() {
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
   const config = campaignData?.config
+  const campaignName = campaignData?.name
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Define all callbacks before any early returns
@@ -210,6 +211,7 @@ function EditorPageContent() {
             : `/create/history?emailId=${selectedEmailId}`
         }
         versionCount={versionCounts[selectedEmailId] || 0}
+        campaignName={campaignName || undefined}
         className={cn(
           'transition-all duration-300',
           showChat ? 'mr-96 pr-4' : 'mr-0'
@@ -237,6 +239,7 @@ function EditorPageContent() {
                 handleUpdateEmail(selectedEmail.id, updates)
               }
               onTextSelected={handleTextSelected}
+              showChat={showChat}
             />
           )}
         </main>

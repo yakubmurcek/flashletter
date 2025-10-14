@@ -6,18 +6,21 @@ import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
 import { EmailEditorSidebar } from './email-editor-sidebar'
 import { EmailPreviewContent } from './email-preview-content'
+import { cn } from '@/lib/utils'
 import type { Email } from '@/lib/types'
 
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
   onTextSelected?: (text: string, action: string) => void
+  showChat?: boolean
 }
 
 function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
+  showChat = false,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject)
   const [editedContent, setEditedContent] = useState(email.content)
@@ -93,10 +96,15 @@ function EmailPreviewComponent({
             <p className="text-sm text-muted-foreground truncate">
               {showEditor
                 ? 'Edit content on the left, see preview on the right'
-                : 'Preview mode - click to show editor'}
+                : 'Preview mode'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              showChat ? 'mr-4' : 'mr-0'
+            )}
+          >
             <Button
               variant="outline"
               size="sm"
