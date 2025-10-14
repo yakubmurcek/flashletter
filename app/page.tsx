@@ -179,12 +179,15 @@ export default async function Home() {
               </Button>
             </div>
 
-            <div className="bg-card border border-border rounded-lg p-6 flex flex-col">
-              <h3 className="text-xl font-semibold">Pro</h3>
+            <div className="relative bg-primary/5 border border-primary/40 rounded-lg p-7 md:p-8 flex flex-col shadow-md md:shadow-lg md:scale-[1.04] md:-translate-y-1 z-[1]">
+              <span className="absolute -top-3 right-4 px-2.5 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground shadow">
+                Most Popular
+              </span>
+              <h3 className="text-2xl font-semibold">Pro</h3>
               <p className="text-muted-foreground text-sm mb-4">
                 For growing teams
               </p>
-              <div className="text-3xl font-bold mb-4">
+              <div className="text-4xl font-bold mb-4">
                 $19<span className="text-base font-normal">/mo</span>
               </div>
               <ul className="space-y-2 text-sm text-muted-foreground mb-6">
@@ -201,7 +204,7 @@ export default async function Home() {
                   Version history
                 </li>
               </ul>
-              <Button className="mt-auto" asChild>
+              <Button size="lg" className="mt-auto" asChild>
                 <Link href="/signup">Start Pro</Link>
               </Button>
             </div>
