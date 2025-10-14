@@ -29,6 +29,33 @@ function InputFormBase({
     inputRef.current?.focus()
   }, [])
 
+  useEffect(() => {
+    if (selectedContext && inputRef.current && !isLoading) {
+      // Use multiple timing strategies for maximum reliability
+      const focusInput = () => {
+        if (inputRef.current && !inputRef.current.disabled) {
+          inputRef.current.focus()
+          // Ensure cursor is at the end
+          inputRef.current.setSelectionRange(
+            inputRef.current.value.length,
+            inputRef.current.value.length
+          )
+        }
+      }
+
+      // Try immediately
+      focusInput()
+
+      // Also try with requestAnimationFrame
+      requestAnimationFrame(focusInput)
+
+      // And with a small timeout as backup
+      const timeoutId = setTimeout(focusInput, 50)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [selectedContext, isLoading])
+
   return (
     <form
       onSubmit={onSubmit}
