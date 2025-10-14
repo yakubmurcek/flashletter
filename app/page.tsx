@@ -124,8 +124,8 @@ export default async function Home() {
             </div>
 
             <div className="bg-card border border-border rounded-lg p-6">
-              <div className="w-12 h-12 bg-accent/10 rounded-lg flex items-center justify-center mb-4">
-                <Sparkles className="w-6 h-6 text-accent" />
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-4">
+                <Sparkles className="w-6 h-6 text-primary" />
               </div>
               <h3 className="text-xl font-semibold mb-2">AI-Powered</h3>
               <p className="text-muted-foreground leading-relaxed">
