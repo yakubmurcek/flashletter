@@ -1,34 +1,20 @@
-export interface Email {
-  id: number
-  uuid?: string
-  day: number
-  subject: string
-  preview: string
-  content: string
-}
+/**
+ * Core types for the application
+ * Most types are now generated from Zod schemas for type safety
+ */
 
-export interface CampaignConfig {
-  tone: string
-  campaignType: string
-  days: number
-}
+// Re-export types from schemas (schema-generated for validation)
+export type {
+  Email,
+  CampaignConfig,
+  LandingPageData,
+  SelectedContext,
+  Campaign,
+  CampaignWithEmails,
+  CampaignContext,
+} from './schemas'
 
-export interface LandingPageData {
-  url: string
-  content?: string
-  metadata?: {
-    title?: string
-    description?: string
-    ogTitle?: string
-    ogDescription?: string
-  }
-}
-
-export interface SelectedContext {
-  text: string
-  action: string
-}
-
+// Types without schemas (UI-specific, not validated)
 export interface EmailVersion {
   id: string // timestamp-based unique identifier
   emailId: number // reference to parent email
@@ -44,3 +30,7 @@ export interface FullCampaignContext {
   allEmails: Email[]
   currentEmailId: number
 }
+
+// Re-export for convenience (FullCampaignContext is same as CampaignContext)
+// Note: FullCampaignContext is kept for backwards compatibility
+import type { Email, CampaignConfig, LandingPageData } from './schemas'

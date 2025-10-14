@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'

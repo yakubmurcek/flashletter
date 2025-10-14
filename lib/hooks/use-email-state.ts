@@ -1,3 +1,5 @@
+'use client'
+
 import { useEffect, useCallback } from 'react'
 import { useCampaign } from '@/lib/campaign-context'
 import { useUrlState } from './use-url-state'

@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useRef } from 'react'
 import { CampaignService } from '../services/campaign.service'
 import type { CampaignConfig, Email } from '../types'

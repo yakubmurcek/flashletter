@@ -1,24 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { CampaignConfig, LandingPageData, Email } from '../types'
+import type { Campaign, CampaignWithEmails, Email } from '../schemas'
 
-export interface Campaign {
-  id: string
-  user_id: string
-  name: string | null
-  landing_page_url: string | null
-  landing_page_content: string | null
-  landing_page_metadata: any
-  tone: string | null
-  campaign_type: string | null
-  days: number | null
-  status: 'draft' | 'active' | 'completed'
-  created_at: string
-  updated_at: string
-}
-
-export interface CampaignWithEmails extends Campaign {
-  emails: Email[]
-}
+// Re-export for backwards compatibility
+export type { Campaign, CampaignWithEmails }
 
 export class CampaignStorageService {
   constructor(private supabase: SupabaseClient) {}

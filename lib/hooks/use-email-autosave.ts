@@ -1,3 +1,5 @@
+'use client'
+
 import { useRef, useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'

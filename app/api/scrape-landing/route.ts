@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
-
-const scrapeLandingSchema = z.object({
-  url: z.string().url(),
-})
+import { scrapeLandingRequestSchema } from '@/lib'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { url } = scrapeLandingSchema.parse(body)
+    const { url } = scrapeLandingRequestSchema.parse(body)
 
     const response = await fetch(url, {
       headers: {

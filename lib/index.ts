@@ -15,5 +15,9 @@ export * from './constants/campaign'
 // Context
 export { useCampaign, CampaignProvider } from './campaign-context'
 
-// Types
+// Types (keeping for backwards compatibility)
 export * from './types'
+
+// Schemas
+export * from './schemas'
+export * from './schemas/api'
