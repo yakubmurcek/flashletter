@@ -105,6 +105,7 @@ export class EmailVersionStorageService {
 
     if (error) throw error
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((version: any) => ({
       id: version.id,
       emailId: version.emails.day, // Use day for backwards compatibility

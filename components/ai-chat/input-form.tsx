@@ -84,7 +84,7 @@ function InputFormBase({
             )}
           </div>
           <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-border/50 max-h-24 overflow-y-auto">
-            "{selectedContext.text}"
+            &quot;{selectedContext.text}&quot;
           </div>
         </div>
       )}

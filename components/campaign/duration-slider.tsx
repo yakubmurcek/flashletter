@@ -32,7 +32,7 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
         <span>{CAMPAIGN_DURATION.MAX} days</span>
       </div>
       <p className="text-sm text-muted-foreground">
-        We'll generate {days} emails, one for each day of your campaign
+        We&apos;ll generate {days} emails, one for each day of your campaign
       </p>
     </div>
   )

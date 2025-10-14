@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { TextSelectionPopup } from './text-selection-popup'
 import { EmailEditorSidebar } from './email-editor-sidebar'
 import { EmailPreviewContent } from './email-preview-content'

@@ -61,7 +61,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
                   </span>
                 </div>
                 <div className="text-[11px] opacity-80 bg-black/10 dark:bg-white/10 px-2 py-1 rounded">
-                  "{message.context.text}"
+                  &quot;{message.context.text}&quot;
                 </div>
               </div>
             )}

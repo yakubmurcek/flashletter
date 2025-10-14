@@ -63,7 +63,7 @@ export function AIChatAssistant({
         onAutoSubmitComplete?.()
       }, 50)
     }
-  }, [autoSubmitMessage, isLoading, onAutoSubmitComplete])
+  }, [autoSubmitMessage, isLoading, onAutoSubmitComplete, setInput])
   const handleQuickAction = (action: string) => {
     setInput(action)
   }

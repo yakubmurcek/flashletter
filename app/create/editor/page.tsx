@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { Button } from '@/components/ui/button'
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
@@ -26,8 +25,7 @@ function EditorPageContent() {
   const { currentCampaignId } = useCampaignData()
   const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
 
-  const { getParam, setParam, toggleParam, getCampaignId, deleteParam } =
-    useUrlState()
+  const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
 
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
@@ -85,7 +83,7 @@ function EditorPageContent() {
       }
       handleRestore()
     }
-  }, [restoreParam, updateEmail, restoreVersion])
+  }, [restoreParam, updateEmail, restoreVersion, deleteParam])
 
   // Show loading state
   if (loadingState === 'loading') {

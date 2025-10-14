@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
 }
 
 function extractTextFromHTML(html: string): string {
-  let text = html
+  const text = html
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
     .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
     .replace(/<[^>]+>/g, ' ')

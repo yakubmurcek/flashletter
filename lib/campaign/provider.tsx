@@ -19,7 +19,10 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
 
   const supabase = createClient()
-  const campaignService = new CampaignStorageService(supabase)
+  const campaignService = useMemo(
+    () => new CampaignStorageService(supabase),
+    [supabase]
+  )
 
   const debouncedSaveLandingPage = useRef(
     debounce(async (campaignId: string, data: LandingPageData) => {

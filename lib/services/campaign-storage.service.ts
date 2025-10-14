@@ -13,6 +13,7 @@ export class CampaignStorageService {
       name?: string
       landingPageUrl?: string
       landingPageContent?: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       landingPageMetadata?: any
     }
   ): Promise<Campaign> {
@@ -61,6 +62,7 @@ export class CampaignStorageService {
 
     // Transform the data to match our Email type and sort by day
     const emails: Email[] = (campaign.emails || [])
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((email: any) => ({
         id: email.day, // Use day as numeric id for backwards compatibility
         uuid: email.id, // Include the actual UUID from database
@@ -69,7 +71,7 @@ export class CampaignStorageService {
         preview: email.preview || '',
         content: email.content,
       }))
-      .sort((a: any, b: any) => a.day - b.day) // Sort by day in ascending order
+      .sort((a: Email, b: Email) => a.day - b.day) // Sort by day in ascending order
 
     return {
       ...campaign,
@@ -83,6 +85,7 @@ export class CampaignStorageService {
       name?: string
       landingPageUrl?: string
       landingPageContent?: string
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       landingPageMetadata?: any
       tone?: string
       campaignType?: string
@@ -90,6 +93,7 @@ export class CampaignStorageService {
       status?: 'draft' | 'active' | 'completed'
     }
   ): Promise<Campaign> {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updateData: any = {}
 
     if (data.name !== undefined) updateData.name = data.name
@@ -157,6 +161,7 @@ export class CampaignStorageService {
     if (error) throw error
 
     // Transform the returned data to match our Email type with UUIDs
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((email: any) => ({
       id: email.day, // Use day as numeric id for backwards compatibility
       uuid: email.id, // Include the actual UUID from database

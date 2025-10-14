@@ -35,7 +35,6 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
   }
 
   // Simple diff using longest common subsequence approach
-  const maxLen = Math.max(oldLines.length, newLines.length)
   let oldIdx = 0
   let newIdx = 0
 

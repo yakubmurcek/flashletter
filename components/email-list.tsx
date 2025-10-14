@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils'
 
 interface Email {
   id: number
-  uuid?: string
+  uuid?: string | null
   day: number
   subject: string
   preview: string

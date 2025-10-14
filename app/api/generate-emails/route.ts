@@ -4,11 +4,7 @@ import { z } from 'zod'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
-import {
-  emailsResponseSchema,
-  generateEmailsRequestSchema,
-  type GenerateEmailsRequest,
-} from '@/lib'
+import { emailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
 
 export async function POST(req: NextRequest) {
   try {
@@ -78,6 +74,7 @@ Make sure the content is engaging, actionable, and aligned with best email marke
       const supabase = await createClient()
       const campaignService = new CampaignStorageService(supabase)
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const emailsToSave = emailsArray.map((email: any, index: number) => ({
         id: email.day || index + 1,
         uuid: email.uuid || null,

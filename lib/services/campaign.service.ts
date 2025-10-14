@@ -44,6 +44,7 @@ export class CampaignService {
     }
 
     const data = await response.json()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return data.emails.map((email: any, index: number) => ({
       id: index + 1,
       day: email.day || index + 1,

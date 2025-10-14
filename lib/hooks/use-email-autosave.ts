@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useCallback, useEffect, useState } from 'react'
+import { useRef, useCallback, useEffect, useState, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
@@ -34,8 +34,14 @@ export function useEmailAutosave(
   }, [emails])
 
   const supabase = createClient()
-  const campaignService = new CampaignStorageService(supabase)
-  const versionStorageService = new EmailVersionStorageService(supabase)
+  const campaignService = useMemo(
+    () => new CampaignStorageService(supabase),
+    [supabase]
+  )
+  const versionStorageService = useMemo(
+    () => new EmailVersionStorageService(supabase),
+    [supabase]
+  )
 
   const saveEmail = useCallback(
     async (id: number, updates: Partial<Email>, skipVersioning = false) => {
@@ -101,7 +107,13 @@ export function useEmailAutosave(
         }, EMAIL_SAVE_DEBOUNCE_MS)
       }
     },
-    [emails, currentCampaignId, updateEmail]
+    [
+      emails,
+      currentCampaignId,
+      updateEmail,
+      campaignService,
+      versionStorageService,
+    ]
   )
 
   // Cleanup timeout on unmount

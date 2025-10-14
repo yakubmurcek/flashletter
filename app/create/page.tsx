@@ -25,6 +25,7 @@ export default function CreatePage() {
   // Clear any existing campaign data when starting fresh
   useEffect(() => {
     clearAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty dependency array - only run once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {

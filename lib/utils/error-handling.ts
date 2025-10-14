@@ -8,6 +8,7 @@ export interface ErrorContext {
   userId?: string
   campaignId?: string
   timestamp?: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalData?: Record<string, any>
 }
 
@@ -105,6 +106,7 @@ export function handleComponentError(
   error: unknown,
   component: string,
   operation: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   additionalData?: Record<string, any>
 ): string {
   logError(error, {

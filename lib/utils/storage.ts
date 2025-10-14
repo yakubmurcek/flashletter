@@ -1,9 +1,11 @@
+import type { LandingPageData, CampaignConfig, Email } from '../types'
+
 const STORAGE_KEY = 'campaign-data'
 
 export interface StorageData {
-  landingPageData?: any
-  config?: any
-  generatedEmails?: any[]
+  landingPageData?: LandingPageData
+  config?: CampaignConfig
+  generatedEmails?: Email[]
 }
 
 export const storage = {

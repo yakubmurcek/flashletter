@@ -21,7 +21,6 @@ function generateChangesSummary(
 
   const oldLines = oldEmail.content.split('\n')
   const newLines = newEmail.content.split('\n')
-  const changedLines = Math.abs(oldLines.length - newLines.length)
 
   // Count actual line differences
   let diffCount = 0

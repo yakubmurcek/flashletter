@@ -7,12 +7,14 @@ import { useUrlState } from './use-url-state'
 
 type LoadingState = 'idle' | 'loading' | 'loaded' | 'error'
 
+import type { LandingPageData, CampaignConfig, Email } from '@/lib/types'
+
 interface CampaignLoaderReturn {
   loadingState: LoadingState
   campaignData: {
-    landingPageData: any
-    config: any
-    emails: any[]
+    landingPageData: LandingPageData | null
+    config: CampaignConfig | null
+    emails: Email[]
   } | null
   error: string | null
   loadCampaign: (campaignId: string) => Promise<void>
