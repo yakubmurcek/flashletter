@@ -88,11 +88,11 @@ export function EmailPreview({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b border-border bg-card p-4">
+      <div className="border-b border-border bg-card p-4 h-20">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold">Day {email.day}</h2>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground truncate">
               {showEditor
                 ? 'Edit content on the left, see preview on the right'
                 : 'Preview mode - click to show editor'}
