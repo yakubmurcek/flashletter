@@ -15,6 +15,7 @@ import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatSidebar } from '@/components/editor/chat-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
+import { cn } from '@/lib/utils'
 
 function EditorPageContent() {
   // Use new focused hooks
@@ -188,9 +189,18 @@ function EditorPageContent() {
             : `/create/history?emailId=${selectedEmailId}`
         }
         versionCount={versionCounts[selectedEmailId] || 0}
+        className={cn(
+          'transition-all duration-300',
+          showChat ? 'mr-96 pr-4' : 'mr-0'
+        )}
       />
 
-      <div className="flex-1 flex overflow-hidden h-0">
+      <div
+        className={cn(
+          'flex-1 flex overflow-hidden h-0 transition-all duration-300',
+          showChat ? 'mr-96' : 'mr-0'
+        )}
+      >
         <EmailSidebar
           emails={emails}
           selectedId={selectedEmailId}

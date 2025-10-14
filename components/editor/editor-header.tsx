@@ -3,20 +3,28 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Download, Send, History } from 'lucide-react'
+import { cn } from '@/lib/utils'
 
 interface EditorHeaderProps {
   landingPageUrl?: string
   historyHref: string
   versionCount: number
+  className?: string
 }
 
 export function EditorHeader({
   landingPageUrl,
   historyHref,
   versionCount,
+  className,
 }: EditorHeaderProps) {
   return (
-    <header className="border-b border-border bg-card flex-shrink-0">
+    <header
+      className={cn(
+        'border-b border-border bg-card flex-shrink-0 relative z-50',
+        className
+      )}
+    >
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="sm" asChild className="gap-2">
