@@ -129,7 +129,7 @@ const GradientText = ({
   className?: string
 }) => (
   <span
-    className={`bg-gradient-to-r from-primary via-purple-500 to-pink-500 bg-clip-text text-transparent animate-gradient ${className}`}
+    className={`bg-gradient-to-r from-primary via-indigo-500 to-purple-600 bg-clip-text text-transparent animate-gradient ${className}`}
   >
     {children}
   </span>
@@ -221,7 +221,7 @@ export default function Home() {
                   <Button
                     size="sm"
                     asChild
-                    className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                    className="bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60"
                   >
                     <Link href="/signup">Get Started</Link>
                   </Button>
@@ -278,7 +278,7 @@ export default function Home() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link href="/create" prefetch={true}>
                   Start Creating
@@ -471,7 +471,7 @@ export default function Home() {
               </div>
 
               <div className="relative bg-gradient-to-br from-primary to-purple-600 text-primary-foreground border border-primary rounded-xl p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
-                <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 text-sm font-medium rounded-full bg-primary-foreground text-primary shadow-lg animate-pulse">
+                <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 text-sm font-medium rounded-full bg-primary-foreground text-primary shadow-lg">
                   Most Popular
                 </span>
                 <div className="text-center mb-6">
@@ -571,7 +571,8 @@ export default function Home() {
 
             {/* Pricing note */}
             <div className="max-w-2xl mx-auto text-center mt-12 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl">
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <strong className="text-foreground">
                   30-day money-back guarantee
                 </strong>{' '}
@@ -820,7 +821,7 @@ export default function Home() {
                   <Button
                     size="lg"
                     asChild
-                    className="gap-2 text-base bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300"
+                    className="gap-2 text-base bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 shadow-lg hover:shadow-xl transition-all duration-300"
                   >
                     <Link href="/signup">
                       Start Free Trial
@@ -891,7 +892,7 @@ export default function Home() {
                 <Button
                   size="sm"
                   asChild
-                  className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90"
+                  className="bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60"
                 >
                   <Link href="/signup">Get Started</Link>
                 </Button>
