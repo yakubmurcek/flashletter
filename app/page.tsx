@@ -100,12 +100,26 @@ const PulseButton = ({
 }: {
   children: React.ReactNode
   className?: string
-}) => (
-  <div className={`relative ${className}`}>
-    <div className="absolute inset-0 bg-primary/20 rounded-lg animate-ping opacity-75"></div>
-    <div className="relative">{children}</div>
-  </div>
-)
+}) => {
+  return (
+    <div className="relative">
+      <div
+        className="absolute -inset-1 bg-primary/30 rounded-lg blur-sm"
+        style={{
+          animation: 'pulseButton 3s ease-in-out infinite',
+        }}
+      ></div>
+      <div
+        className="relative"
+        style={{
+          animation: 'scaleButton 4s ease-in-out infinite',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  )
+}
 
 const GradientText = ({
   children,
@@ -145,7 +159,7 @@ export default function Home() {
       </div>
 
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
               <Mail className="w-5 h-5 text-primary-foreground" />
@@ -218,10 +232,10 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 relative z-10">
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <AnimatedSection
           delay={0}
-          className="max-w-4xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28"
+          className="max-w-3xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28"
         >
           {/* Floating elements around hero */}
           <FloatingElement delay={0}>
@@ -245,7 +259,6 @@ export default function Home() {
             <span className="font-medium">
               Lightning-fast AI Email Campaigns
             </span>
-            <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
           </div>
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight animate-fade-in-up delay-200">
@@ -265,7 +278,7 @@ export default function Home() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 text-base bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link href="/create" prefetch={true}>
                   Start Creating
@@ -276,7 +289,7 @@ export default function Home() {
             <Button
               size="lg"
               variant="outline"
-              className="gap-2 text-base bg-transparent hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group"
+              className="gap-2 text-base px-6 py-3 bg-transparent hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group"
             >
               <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
               Watch Demo
@@ -312,7 +325,7 @@ export default function Home() {
             aria-label="Features"
             className="py-16 md:py-24"
           >
-            <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Powerful Features</GradientText>
               </h2>
@@ -321,7 +334,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
               <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Zap className="w-8 h-8 text-primary" />
@@ -375,7 +388,7 @@ export default function Home() {
             </div>
 
             {/* Additional features grid */}
-            <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
               <div className="group bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -409,7 +422,7 @@ export default function Home() {
 
         <AnimatedSection delay={1500}>
           <section id="pricing" aria-label="Pricing" className="py-16 md:py-24">
-            <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Simple Pricing</GradientText>
               </h2>
@@ -418,7 +431,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
               <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
                 <div className="text-center mb-6">
                   <h3 className="text-2xl font-semibold mb-2">Free</h3>
@@ -574,7 +587,7 @@ export default function Home() {
             aria-label="Testimonials"
             className="py-16 md:py-24"
           >
-            <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Loved by teams worldwide</GradientText>
               </h2>
@@ -584,7 +597,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
               <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
@@ -695,7 +708,7 @@ export default function Home() {
             </div>
 
             {/* Additional testimonial row */}
-            <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
               <div className="group bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1">
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
@@ -775,7 +788,7 @@ export default function Home() {
 
         <AnimatedSection delay={2500}>
           <section id="faq" aria-label="FAQ" className="py-16 md:py-24">
-            <div className="max-w-3xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Frequently Asked Questions</GradientText>
               </h2>
@@ -783,7 +796,7 @@ export default function Home() {
                 Everything you need to know about Flashletter.
               </p>
             </div>
-            <div className="max-w-3xl mx-auto">
+            <div className="max-w-2xl mx-auto">
               <FAQ items={FAQ_ITEMS} />
             </div>
           </section>
@@ -793,8 +806,8 @@ export default function Home() {
       {/* Final CTA Section */}
       <AnimatedSection delay={3000}>
         <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-purple-500/5 border-y border-primary/10 w-full">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto text-center">
+          <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
                 Ready to transform your email marketing?
               </h2>
@@ -830,7 +843,7 @@ export default function Home() {
       </AnimatedSection>
 
       <footer className="border-t border-border bg-background/80 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-12">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
