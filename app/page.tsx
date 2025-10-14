@@ -71,8 +71,8 @@ export default async function Home() {
 
       <main className="flex-1 container mx-auto px-4">
         <div className="max-w-4xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm mb-6">
-            <Sparkles className="w-4 h-4" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-gray-800 text-sm mb-4">
+            <Sparkles className="w-4 h-4 animate-pulse text-yellow-500 fill-yellow-500 drop-shadow-lg" />
             <span>Lightning-fast AI Email Campaigns</span>
           </div>
 
@@ -254,63 +254,173 @@ export default async function Home() {
           aria-label="Testimonials"
           className="py-16 md:py-24"
         >
-          <div className="max-w-3xl mx-auto text-center mb-10">
+          <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-3">
-              Loved by teams
+              Loved by teams worldwide
             </h2>
-            <p className="text-muted-foreground">
-              What our users say about Flashletter.
+            <p className="text-muted-foreground text-lg">
+              See how Flashletter is transforming email marketing for companies
+              of all sizes.
             </p>
           </div>
-          <div className="max-w-6xl mx-auto grid md:grid-cols-3 gap-6">
-            <div className="bg-card border border-border rounded-lg p-6">
-              <p className="leading-relaxed mb-4">
-                “We created a full campaign in minutes. CTR up by 28%.”
-              </p>
-              <div className="flex items-center gap-3">
-                <img
-                  src="/placeholder-user.jpg"
-                  alt="User avatar"
-                  className="w-10 h-10 rounded-full border border-border"
-                />
+          <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-8">
+            <div className="bg-card border border-border rounded-xl p-8 hover:shadow-lg transition-all duration-300 hover:border-primary/20 group">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-lg leading-relaxed mb-6 text-foreground">
+                "Flashletter cut our email campaign creation time from 3 days to
+                30 minutes. Our open rates jumped 45% and we're finally hitting
+                our quarterly targets consistently."
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  AT
+                </div>
                 <div>
-                  <div className="font-medium">Ava Thompson</div>
-                  <div className="text-xs text-muted-foreground">
-                    Growth Lead
+                  <div className="font-semibold text-foreground">
+                    Ava Thompson
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Growth Lead at TechFlow
                   </div>
                 </div>
               </div>
             </div>
-            <div className="bg-card border border-border rounded-lg p-6">
-              <p className="leading-relaxed mb-4">
-                “The AI nailed our tone and saved us hours every week.”
-              </p>
-              <div className="flex items-center gap-3">
-                <img
-                  src="/placeholder-user.jpg"
-                  alt="User avatar"
-                  className="w-10 h-10 rounded-full border border-border"
-                />
+
+            <div className="bg-card border border-border rounded-xl p-8 hover:shadow-lg transition-all duration-300 hover:border-primary/20 group">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-lg leading-relaxed mb-6 text-foreground">
+                "The AI perfectly captures our brand voice across all campaigns.
+                What used to take our entire marketing team a week now happens
+                in hours. ROI increased by 67% in just two months."
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  DM
+                </div>
                 <div>
-                  <div className="font-medium">Diego Martinez</div>
-                  <div className="text-xs text-muted-foreground">Marketing</div>
+                  <div className="font-semibold text-foreground">
+                    Diego Martinez
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    CMO at GrowthCo
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="bg-card border border-border rounded-lg p-6">
-              <p className="leading-relaxed mb-4">
-                “Super intuitive editor. Our team collaborates seamlessly.”
-              </p>
-              <div className="flex items-center gap-3">
-                <img
-                  src="/placeholder-user.jpg"
-                  alt="User avatar"
-                  className="w-10 h-10 rounded-full border border-border"
-                />
+
+            <div className="bg-card border border-border rounded-xl p-8 hover:shadow-lg transition-all duration-300 hover:border-primary/20 group">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-lg leading-relaxed mb-6 text-foreground">
+                "The collaborative features are game-changing. Our distributed
+                team can now work on campaigns in real-time. Customer engagement
+                is up 52% since we started using Flashletter."
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  MC
+                </div>
                 <div>
-                  <div className="font-medium">Mia Chen</div>
-                  <div className="text-xs text-muted-foreground">
-                    Product Ops
+                  <div className="font-semibold text-foreground">Mia Chen</div>
+                  <div className="text-sm text-muted-foreground">
+                    Product Ops at InnovateLab
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional testimonial row */}
+          <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-8 mt-8">
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-lg leading-relaxed mb-6 text-foreground">
+                "As a startup, we needed to move fast without sacrificing
+                quality. Flashletter delivers professional campaigns that look
+                like they came from a Fortune 500 company. Our conversion rate
+                tripled."
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  JS
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground">
+                    James Sullivan
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Founder at StartupXYZ
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-8 hover:shadow-lg transition-all duration-300 group">
+              <div className="flex items-center gap-1 mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-4 h-4 text-yellow-400 fill-current"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
+              <blockquote className="text-lg leading-relaxed mb-6 text-foreground">
+                "The A/B testing features helped us discover what resonates with
+                our audience. We've seen a 78% improvement in click-through
+                rates and our unsubscribe rate dropped to almost zero."
+              </blockquote>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
+                  RK
+                </div>
+                <div>
+                  <div className="font-semibold text-foreground">
+                    Rachel Kim
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Email Marketing Manager at DataCorp
                   </div>
                 </div>
               </div>
