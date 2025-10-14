@@ -3,6 +3,7 @@ import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
 import { CampaignProvider } from '@/lib/campaign-context'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -88,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <script
           type="application/ld+json"
@@ -111,8 +112,10 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <CampaignProvider>{children}</CampaignProvider>
-        <Analytics />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <CampaignProvider>{children}</CampaignProvider>
+          <Analytics />
+        </ThemeProvider>
       </body>
     </html>
   )
