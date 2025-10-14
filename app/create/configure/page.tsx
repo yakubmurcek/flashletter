@@ -1,111 +1,38 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { Card } from '@/components/ui/card'
-import { ArrowRight, Settings, Loader2 } from 'lucide-react'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
-import { Slider } from '@/components/ui/slider'
-import { useCampaignData, useCampaignActions } from '@/lib/campaign-context'
-import { useEmailGeneration } from '@/lib/hooks/use-email-generation'
+import { Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { Settings } from 'lucide-react'
 import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
-import { ErrorMessage } from '@/components/campaign/error-message'
-import {
-  CAMPAIGN_STEPS,
-  CAMPAIGN_TONES,
-  CAMPAIGN_TYPES,
-  CAMPAIGN_DURATION,
-} from '@/lib/constants/campaign'
+import { CampaignConfigForm } from '@/components/campaign/campaign-config-form'
+import { useCampaignConfig } from '@/lib/hooks/use-campaign-config'
+import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { isValidCampaignId } from '@/lib/utils/validation'
 
 function ConfigurePageContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const campaignId = searchParams.get('campaign')
   const validCampaignId =
     campaignId && isValidCampaignId(campaignId) ? campaignId : null
-  const { landingPageData, isLoading, currentCampaignId, generatedEmails } =
-    useCampaignData()
-  const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } =
-    useCampaignActions()
-  const { isGenerating, error, generateEmails } = useEmailGeneration()
-  const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
-  const [campaignType, setCampaignType] = useState<string>(
-    CAMPAIGN_TYPES[0].value
-  )
-  const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
-  const [campaignLoaded, setCampaignLoaded] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  // Load campaign from database if campaignId is in URL
-  useEffect(() => {
-    if (validCampaignId && !campaignLoaded && !isLoading) {
-      loadCampaign(validCampaignId)
-        .then(() => setCampaignLoaded(true))
-        .catch((error) => {
-          console.error('Failed to load campaign:', error)
-          router.push('/campaigns')
-        })
-    }
-  }, [validCampaignId, campaignLoaded, isLoading, loadCampaign, router])
+  const {
+    tone,
+    setTone,
+    campaignType,
+    setCampaignType,
+    days,
+    setDays,
+    landingPageData,
+    isGenerating,
+    isSubmitting,
+    isReady,
+    error,
+    handleSubmit,
+  } = useCampaignConfig(validCampaignId)
 
-  useEffect(() => {
-    // Don't redirect while still loading from storage
-    if (isLoading) return
-
-    // If we're loading a campaign from URL, wait for it to complete
-    if (validCampaignId && !campaignLoaded) return
-
-    // Only redirect if we have no landing page data at all
-    if (!landingPageData) {
-      router.push('/create')
-      return
-    }
-  }, [landingPageData, router, isLoading, validCampaignId, campaignLoaded])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!landingPageData) return
-
-    setIsSubmitting(true) // Start local loading
-    try {
-      const config = { tone, campaignType, days: days[0] }
-
-      // Update campaign config in database
-      await updateCampaignConfig(config)
-
-      const emails = await generateEmails(
-        landingPageData.url,
-        landingPageData.content || '',
-        config,
-        currentCampaignId || undefined
-      )
-
-      if (emails) {
-        setConfig(config)
-        await setGeneratedEmails(emails)
-        const editorUrl = currentCampaignId
-          ? `/create/editor?campaign=${currentCampaignId}`
-          : '/create/editor'
-        router.push(editorUrl)
-      }
-    } finally {
-      // Don't set false here - let navigation complete
-    }
-  }
-
-  if (isLoading || (validCampaignId && !campaignLoaded) || !landingPageData) {
+  if (!isReady) {
     return null
   }
 
@@ -114,7 +41,7 @@ function ConfigurePageContent() {
       backHref="/create"
       headerContent={
         <div className="text-sm text-muted-foreground truncate max-w-md">
-          {landingPageData.url}
+          {landingPageData?.url}
         </div>
       }
     >
@@ -126,118 +53,18 @@ function ConfigurePageContent() {
           title="Configure your campaign"
           description="Customize the tone, type, and duration of your email campaign to match your goals."
         >
-          <form onSubmit={handleSubmit} className="space-y-8">
-            <div className="space-y-3">
-              <Label htmlFor="tone" className="text-base">
-                Campaign Tone
-              </Label>
-              <Select value={tone} onValueChange={setTone}>
-                <SelectTrigger id="tone" className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CAMPAIGN_TONES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                Choose the tone that best fits your brand voice
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Label htmlFor="campaign-type" className="text-base">
-                Campaign Type
-              </Label>
-              <Select value={campaignType} onValueChange={setCampaignType}>
-                <SelectTrigger id="campaign-type" className="h-12">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CAMPAIGN_TYPES.map((t) => (
-                    <SelectItem key={t.value} value={t.value}>
-                      {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                Select the goal of your email campaign
-              </p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="days" className="text-base">
-                  Campaign Duration
-                </Label>
-                <span className="text-2xl font-bold text-primary">
-                  {days[0]} days
-                </span>
-              </div>
-              <Slider
-                id="days"
-                min={CAMPAIGN_DURATION.MIN}
-                max={CAMPAIGN_DURATION.MAX}
-                step={1}
-                value={days}
-                onValueChange={setDays}
-                className="py-4"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{CAMPAIGN_DURATION.MIN} days</span>
-                <span>{CAMPAIGN_DURATION.MAX} days</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                We'll generate {days[0]} emails, one for each day of your
-                campaign
-              </p>
-            </div>
-
-            <Card className="bg-muted/50 p-6 border-border">
-              <h3 className="font-semibold mb-3">Campaign Preview</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Tone:</span>
-                  <span className="font-medium capitalize">{tone}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Type:</span>
-                  <span className="font-medium capitalize">
-                    {campaignType.replace('-', ' ')}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Emails:</span>
-                  <span className="font-medium">{days[0]} emails</span>
-                </div>
-              </div>
-            </Card>
-
-            {error && <ErrorMessage message={error} />}
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full gap-2"
-              disabled={isGenerating || isSubmitting}
-            >
-              {isGenerating || isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Generating Campaign with AI...
-                </>
-              ) : (
-                <>
-                  Generate Campaign
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          </form>
+          <CampaignConfigForm
+            tone={tone}
+            onToneChange={setTone}
+            campaignType={campaignType}
+            onCampaignTypeChange={setCampaignType}
+            days={days}
+            onDaysChange={setDays}
+            isGenerating={isGenerating}
+            isSubmitting={isSubmitting}
+            error={error}
+            onSubmit={handleSubmit}
+          />
         </FormCard>
       </div>
     </CampaignLayout>
