@@ -69,10 +69,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
     <>
       <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle className="line-clamp-1">
+          <CardTitle className="line-clamp-2 leading-tight">
             {campaign.name || 'Untitled Campaign'}
           </CardTitle>
-          <CardDescription className="line-clamp-1">
+          <CardDescription className="line-clamp-1 leading-tight">
             {campaign.landing_page_url || 'No URL'}
           </CardDescription>
         </CardHeader>
