@@ -214,7 +214,8 @@ const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
 // URL state hook
 const { setParam, getParam, toggleParam } = useUrlState()
 
-// URLs like: /create/editor?email=3&chat=open
+// URLs like: /create/editor?email=3 (chat panel open by default)
+// URLs like: /create/editor?email=3&chat=closed (chat panel closed)
 // Shareable, bookmarkable, refresh-safe
 ```
 

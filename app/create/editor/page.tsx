@@ -37,7 +37,7 @@ function EditorPageContent() {
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
-  const showChat = getParam('chat') === 'open'
+  const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
   const restoreParam = getParam('restore')
 
   // Extract data from campaign data
@@ -154,14 +154,14 @@ function EditorPageContent() {
   }
 
   const handleToggleChat = () => {
-    toggleParam('chat', 'open')
+    toggleParam('chat', 'closed')
   }
 
   const handleTextSelected = (text: string, action: string) => {
     setSelectedContext({ text, action })
     // Auto-open chat when text is selected
     if (!showChat) {
-      setParam('chat', 'open')
+      deleteParam('chat') // Remove 'closed' parameter to open chat
     }
 
     // For command actions (not "Ask AI about this"), auto-submit the action
