@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 import { useUrlState } from './use-url-state'
@@ -17,7 +17,10 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
   const { getParam, setMultipleParams, getCampaignId } = useUrlState()
 
   const supabase = createClient()
-  const versionStorageService = new EmailVersionStorageService(supabase)
+  const versionStorageService = useMemo(
+    () => new EmailVersionStorageService(supabase),
+    [supabase]
+  )
   const restoreParam = getParam('restore')
   const campaignIdFromUrl = getCampaignId()
 
@@ -53,42 +56,9 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
 
       loadVersionCounts()
     }
-  }, [emails])
+  }, [emails, versionStorageService])
 
-  // Handle restoration from history page
-  useEffect(() => {
-    if (restoreParam) {
-      const handleRestore = async () => {
-        try {
-          const restoreData = JSON.parse(decodeURIComponent(restoreParam))
-
-          // Validate restore data
-          if (
-            restoreData &&
-            typeof restoreData.emailId === 'number' &&
-            typeof restoreData.subject === 'string' &&
-            typeof restoreData.content === 'string'
-          ) {
-            await restoreVersion(restoreData)
-
-            // Clear the restore param from URL, preserve campaign ID atomically
-            const params: Record<string, string> = {
-              email: restoreData.emailId.toString(),
-            }
-            if (campaignIdFromUrl) {
-              params.campaign = campaignIdFromUrl
-            }
-            setMultipleParams(params)
-          } else {
-            console.error('Invalid restore data:', restoreData)
-          }
-        } catch (error) {
-          console.error('Failed to restore version:', error)
-        }
-      }
-      handleRestore()
-    }
-  }, [restoreParam, campaignIdFromUrl, setMultipleParams])
+  // Note: Restore handling is now done in the editor page to avoid duplicate processing
 
   const restoreVersion = useCallback(
     async (restoreData: any) => {

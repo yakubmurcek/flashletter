@@ -26,6 +26,11 @@ export default async function CampaignDetailPage({
     notFound()
   }
 
+  // Verify the campaign belongs to the current user
+  if (campaign.user_id !== user.id) {
+    notFound()
+  }
+
   // Redirect directly to the editor
   redirect(`/create/editor?campaign=${id}`)
 }

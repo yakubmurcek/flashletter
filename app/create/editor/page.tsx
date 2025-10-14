@@ -40,7 +40,8 @@ function EditorPageContent() {
   const { currentCampaignId } = useCampaignData()
   const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
 
-  const { getParam, setParam, toggleParam, getCampaignId } = useUrlState()
+  const { getParam, setParam, toggleParam, getCampaignId, deleteParam } =
+    useUrlState()
 
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
@@ -62,9 +63,16 @@ function EditorPageContent() {
     if (restoreParam) {
       const handleRestore = async () => {
         try {
-          const restoreData = JSON.parse(decodeURIComponent(restoreParam))
+          // Safe JSON parsing with validation
+          let restoreData
+          try {
+            restoreData = JSON.parse(decodeURIComponent(restoreParam))
+          } catch (parseError) {
+            console.error('Failed to parse restore data:', parseError)
+            return
+          }
 
-          // Validate restore data
+          // Validate restore data structure
           if (
             restoreData &&
             typeof restoreData.emailId === 'number' &&
@@ -79,8 +87,11 @@ function EditorPageContent() {
 
             // Update version count for this email
             await restoreVersion(restoreData)
+
+            // Clean up restore param to prevent re-processing on refresh
+            deleteParam('restore')
           } else {
-            console.error('Invalid restore data:', restoreData)
+            console.error('Invalid restore data structure:', restoreData)
           }
         } catch (error) {
           console.error('Failed to restore version:', error)

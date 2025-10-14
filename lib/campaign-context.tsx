@@ -30,6 +30,7 @@ interface CampaignActionsContextType {
   setLandingPageData: (data: LandingPageData | null) => void
   setConfig: (config: CampaignConfig | null) => void
   setGeneratedEmails: (emails: Email[]) => Promise<void>
+  updateEmail: (id: number, updates: Partial<Email>) => void
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
   createNewCampaign: (
@@ -104,129 +105,135 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   ).current
 
   // Create a new campaign in the database
-  const createNewCampaign = async (
-    providedLandingPageData?: LandingPageData | null
-  ): Promise<string> => {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not authenticated')
+  const createNewCampaign = useCallback(
+    async (
+      providedLandingPageData?: LandingPageData | null
+    ): Promise<string> => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
 
-    // Use provided landing page data or fall back to context state
-    const dataToUse = providedLandingPageData || landingPageData
+      // Use provided landing page data or fall back to context state
+      const dataToUse = providedLandingPageData || landingPageData
 
-    console.log('Creating campaign with landing page data:', {
-      hasProvidedData: !!providedLandingPageData,
-      hasContextData: !!landingPageData,
-      url: dataToUse?.url,
-      hasContent: !!dataToUse?.content,
-      hasMetadata: !!dataToUse?.metadata,
-    })
+      console.log('Creating campaign with landing page data:', {
+        hasProvidedData: !!providedLandingPageData,
+        hasContextData: !!landingPageData,
+        url: dataToUse?.url,
+        hasContent: !!dataToUse?.content,
+        hasMetadata: !!dataToUse?.metadata,
+      })
 
-    const campaign = await campaignService.createCampaign(user.id, {
-      name: 'New Campaign',
-      landingPageUrl: dataToUse?.url,
-      landingPageContent: dataToUse?.content,
-      landingPageMetadata: dataToUse?.metadata,
-    })
-
-    setCurrentCampaignId(campaign.id)
-    return campaign.id
-  }
-
-  // Load a campaign from the database
-  const loadCampaign = async (campaignId: string) => {
-    setIsLoading(true)
-    try {
-      console.log('Loading campaign from database:', campaignId)
-      const campaign = await campaignService.getCampaign(campaignId)
-      if (!campaign) {
-        throw new Error('Campaign not found')
-      }
-
-      console.log('Campaign loaded from database:', {
-        id: campaign.id,
-        hasLandingPageUrl: !!campaign.landing_page_url,
-        hasLandingPageContent: !!campaign.landing_page_content,
-        hasTone: !!campaign.tone,
-        hasCampaignType: !!campaign.campaign_type,
-        hasDays: !!campaign.days,
-        emailCount: campaign.emails?.length || 0,
+      const campaign = await campaignService.createCampaign(user.id, {
+        name: 'New Campaign',
+        landingPageUrl: dataToUse?.url,
+        landingPageContent: dataToUse?.content,
+        landingPageMetadata: dataToUse?.metadata,
       })
 
       setCurrentCampaignId(campaign.id)
+      return campaign.id
+    },
+    [supabase, campaignService, landingPageData]
+  )
 
-      // Set landing page data
-      if (campaign.landing_page_url) {
-        setLandingPageDataState({
-          url: campaign.landing_page_url,
-          content: campaign.landing_page_content || undefined,
-          metadata: campaign.landing_page_metadata,
-        })
-        console.log('Landing page data set')
-      } else {
-        console.warn('Campaign has no landing page URL')
-        // Set minimal landing page data to prevent blank screen
-        setLandingPageDataState({
-          url: 'https://example.com',
-          content: 'Landing page content not available',
-          metadata: {
-            title: 'Campaign Landing Page',
-            description: 'Landing page data not available',
-          },
-        })
-      }
-
-      // Set config
-      if (campaign.tone && campaign.campaign_type && campaign.days) {
-        setConfigState({
-          tone: campaign.tone,
-          campaignType: campaign.campaign_type,
-          days: campaign.days,
-        })
-        console.log('Campaign config set')
-      } else {
-        console.warn('Campaign missing required config fields:', {
-          tone: campaign.tone,
-          campaignType: campaign.campaign_type,
-          days: campaign.days,
-        })
-        // Set default config to prevent blank screen
-        setConfigState({
-          tone: campaign.tone || 'professional',
-          campaignType: campaign.campaign_type || 'welcome',
-          days: campaign.days || 7,
-        })
-      }
-
-      // Set emails
-      if (campaign.emails && campaign.emails.length > 0) {
-        setGeneratedEmailsState(campaign.emails)
-        console.log('Emails set:', campaign.emails.length)
-      } else {
-        console.warn('Campaign has no emails')
-        // Set a default email to prevent blank screen
-        const defaultEmail = {
-          id: 1,
-          day: 1,
-          subject: 'Welcome to our newsletter',
-          preview: 'Thank you for subscribing!',
-          content:
-            "Welcome to our newsletter. We're excited to have you on board!",
+  // Load a campaign from the database
+  const loadCampaign = useCallback(
+    async (campaignId: string) => {
+      setIsLoading(true)
+      try {
+        console.log('Loading campaign from database:', campaignId)
+        const campaign = await campaignService.getCampaign(campaignId)
+        if (!campaign) {
+          throw new Error('Campaign not found')
         }
-        setGeneratedEmailsState([defaultEmail])
-        console.log('Default email set')
+
+        console.log('Campaign loaded from database:', {
+          id: campaign.id,
+          hasLandingPageUrl: !!campaign.landing_page_url,
+          hasLandingPageContent: !!campaign.landing_page_content,
+          hasTone: !!campaign.tone,
+          hasCampaignType: !!campaign.campaign_type,
+          hasDays: !!campaign.days,
+          emailCount: campaign.emails?.length || 0,
+        })
+
+        setCurrentCampaignId(campaign.id)
+
+        // Set landing page data
+        if (campaign.landing_page_url) {
+          setLandingPageDataState({
+            url: campaign.landing_page_url,
+            content: campaign.landing_page_content || undefined,
+            metadata: campaign.landing_page_metadata,
+          })
+          console.log('Landing page data set')
+        } else {
+          console.warn('Campaign has no landing page URL')
+          // Set minimal landing page data to prevent blank screen
+          setLandingPageDataState({
+            url: 'https://example.com',
+            content: 'Landing page content not available',
+            metadata: {
+              title: 'Campaign Landing Page',
+              description: 'Landing page data not available',
+            },
+          })
+        }
+
+        // Set config
+        if (campaign.tone && campaign.campaign_type && campaign.days) {
+          setConfigState({
+            tone: campaign.tone,
+            campaignType: campaign.campaign_type,
+            days: campaign.days,
+          })
+          console.log('Campaign config set')
+        } else {
+          console.warn('Campaign missing required config fields:', {
+            tone: campaign.tone,
+            campaignType: campaign.campaign_type,
+            days: campaign.days,
+          })
+          // Set default config to prevent blank screen
+          setConfigState({
+            tone: campaign.tone || 'professional',
+            campaignType: campaign.campaign_type || 'welcome',
+            days: campaign.days || 7,
+          })
+        }
+
+        // Set emails
+        if (campaign.emails && campaign.emails.length > 0) {
+          setGeneratedEmailsState(campaign.emails)
+          console.log('Emails set:', campaign.emails.length)
+        } else {
+          console.warn('Campaign has no emails')
+          // Set a default email to prevent blank screen
+          const defaultEmail = {
+            id: 1,
+            day: 1,
+            subject: 'Welcome to our newsletter',
+            preview: 'Thank you for subscribing!',
+            content:
+              "Welcome to our newsletter. We're excited to have you on board!",
+          }
+          setGeneratedEmailsState([defaultEmail])
+          console.log('Default email set')
+        }
+      } catch (error) {
+        console.error('Error loading campaign:', error)
+        throw error
+      } finally {
+        setIsLoading(false)
       }
-    } catch (error) {
-      console.error('Error loading campaign:', error)
-      throw error
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    },
+    [campaignService]
+  )
 
   // Save current campaign state to database
-  const saveCampaign = async () => {
+  const saveCampaign = useCallback(async () => {
     if (!currentCampaignId) return
 
     await campaignService.updateCampaign(currentCampaignId, {
@@ -247,49 +254,88 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       // Update the emails with UUIDs from database
       setGeneratedEmailsState(savedEmails)
     }
-  }
+  }, [
+    currentCampaignId,
+    campaignService,
+    landingPageData,
+    config,
+    generatedEmails,
+  ])
 
   // Update campaign configuration
-  const updateCampaignConfig = async (newConfig: CampaignConfig) => {
-    setConfigState(newConfig)
+  const updateCampaignConfig = useCallback(
+    async (newConfig: CampaignConfig) => {
+      setConfigState(newConfig)
 
-    if (currentCampaignId) {
-      await campaignService.updateCampaign(currentCampaignId, {
-        tone: newConfig.tone,
-        campaignType: newConfig.campaignType,
-        days: newConfig.days,
-      })
-    }
-  }
+      if (currentCampaignId) {
+        await campaignService.updateCampaign(currentCampaignId, {
+          tone: newConfig.tone,
+          campaignType: newConfig.campaignType,
+          days: newConfig.days,
+        })
+      }
+    },
+    [currentCampaignId, campaignService]
+  )
 
-  const setLandingPageData = (data: LandingPageData | null) => {
-    setLandingPageDataState(data)
-    // Auto-save if we have a campaign (debounced)
-    if (currentCampaignId && data) {
-      debouncedSaveLandingPage(currentCampaignId, data)
-    }
-  }
+  const setLandingPageData = useCallback(
+    (data: LandingPageData | null) => {
+      setLandingPageDataState(data)
+      // Auto-save if we have a campaign (debounced)
+      if (currentCampaignId && data) {
+        debouncedSaveLandingPage(currentCampaignId, data)
+      }
+    },
+    [currentCampaignId, debouncedSaveLandingPage]
+  )
 
-  const setConfig = (cfg: CampaignConfig | null) => {
-    setConfigState(cfg)
-    // Auto-save if we have a campaign (debounced)
-    if (currentCampaignId && cfg) {
-      debouncedSaveConfig(currentCampaignId, cfg)
-    }
-  }
+  const setConfig = useCallback(
+    (cfg: CampaignConfig | null) => {
+      setConfigState(cfg)
+      // Auto-save if we have a campaign (debounced)
+      if (currentCampaignId && cfg) {
+        debouncedSaveConfig(currentCampaignId, cfg)
+      }
+    },
+    [currentCampaignId, debouncedSaveConfig]
+  )
 
-  const setGeneratedEmails = async (emails: Email[]) => {
-    setGeneratedEmailsState(emails)
-    // Auto-save if we have a campaign
-    if (currentCampaignId && emails.length > 0) {
-      const savedEmails = await campaignService.saveEmails(
-        currentCampaignId,
-        emails
+  const setGeneratedEmails = useCallback(
+    async (emails: Email[]) => {
+      // Only update state once - don't mix state updates with database operations
+      setGeneratedEmailsState(emails)
+
+      // Auto-save if we have a campaign (separate from state update)
+      if (currentCampaignId && emails.length > 0) {
+        try {
+          const savedEmails = await campaignService.saveEmails(
+            currentCampaignId,
+            emails
+          )
+          // Update with emails that have UUIDs from database
+          setGeneratedEmailsState(savedEmails)
+        } catch (error) {
+          logError(error, {
+            operation: 'auto-save generated emails',
+            component: 'CampaignContext',
+            campaignId: currentCampaignId,
+            additionalData: { emailCount: emails.length },
+          })
+          // Don't update state on error - keep original emails
+        }
+      }
+    },
+    [currentCampaignId, campaignService]
+  )
+
+  const updateEmail = useCallback((id: number, updates: Partial<Email>) => {
+    // Update a single email in the state
+    setGeneratedEmailsState((prevEmails) =>
+      prevEmails.map((email) =>
+        email.id === id ? { ...email, ...updates } : email
       )
-      // Update with emails that have UUIDs from database
-      setGeneratedEmailsState(savedEmails)
-    }
-  }
+    )
+  }, [])
 
   const clearAll = useCallback(() => {
     // Cancel any pending debounced saves
@@ -320,6 +366,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setLandingPageData,
       setConfig,
       setGeneratedEmails,
+      updateEmail,
       loadCampaign,
       saveCampaign,
       createNewCampaign,
@@ -330,6 +377,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setLandingPageData,
       setConfig,
       setGeneratedEmails,
+      updateEmail,
       loadCampaign,
       saveCampaign,
       createNewCampaign,

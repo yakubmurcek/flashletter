@@ -1,4 +1,4 @@
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
@@ -22,8 +22,14 @@ export function useEmailAutosave(
   updateEmail: (id: number, updates: Partial<Email>) => void
 ): EmailAutosaveReturn {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isSavingRef = useRef(false)
-  const lastSavedRef = useRef<Date | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const [lastSaved, setLastSaved] = useState<Date | null>(null)
+
+  // Keep a ref to the latest emails array to avoid stale closures in setTimeout
+  const emailsRef = useRef(emails)
+  useEffect(() => {
+    emailsRef.current = emails
+  }, [emails])
 
   const supabase = createClient()
   const campaignService = new CampaignStorageService(supabase)
@@ -65,14 +71,30 @@ export function useEmailAutosave(
 
         // Debounce the save operation
         saveTimeoutRef.current = setTimeout(async () => {
-          isSavingRef.current = true
+          setIsSaving(true)
           try {
-            await campaignService.updateEmail(currentCampaignId, id, updates)
-            lastSavedRef.current = new Date()
+            // Get the complete current email state from the ref to avoid data loss
+            // This ensures we save ALL fields, not just the last partial update
+            const currentEmail = emailsRef.current.find((e) => e.id === id)
+            if (currentEmail) {
+              await campaignService.updateEmail(currentCampaignId, id, {
+                subject: currentEmail.subject,
+                content: currentEmail.content,
+                preview: currentEmail.preview,
+              })
+              setLastSaved(new Date())
+            } else {
+              console.error(
+                'Email not found for save operation:',
+                id,
+                'Available:',
+                emailsRef.current.map((e) => e.id)
+              )
+            }
           } catch (error) {
             console.error('Failed to save email to database:', error)
           } finally {
-            isSavingRef.current = false
+            setIsSaving(false)
           }
         }, EMAIL_SAVE_DEBOUNCE_MS)
       }
@@ -90,13 +112,19 @@ export function useEmailAutosave(
   const cleanup = useCallback(() => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current)
+      saveTimeoutRef.current = null
     }
   }, [])
 
+  // Automatic cleanup on unmount
+  useEffect(() => {
+    return cleanup
+  }, [cleanup])
+
   return {
     saveEmail,
-    isSaving: isSavingRef.current,
-    lastSaved: lastSavedRef.current,
+    isSaving,
+    lastSaved,
     cleanup,
   }
 }

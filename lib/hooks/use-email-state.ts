@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { useCampaign } from '@/lib/campaign-context'
 import { useUrlState } from './use-url-state'
 import type { Email } from '@/lib/types'
@@ -12,7 +12,11 @@ interface EmailStateReturn {
 }
 
 export function useEmailState(): EmailStateReturn {
-  const { generatedEmails, isLoading } = useCampaign()
+  const {
+    generatedEmails,
+    isLoading,
+    updateEmail: contextUpdateEmail,
+  } = useCampaign()
   const {
     getEmailId,
     getEmailIdWithFallback,
@@ -21,22 +25,12 @@ export function useEmailState(): EmailStateReturn {
     getCampaignId,
   } = useUrlState()
 
-  const [emails, setEmails] = useState<Email[]>([])
-  const [selectedContext, setSelectedContext] = useState<any>(null)
-  const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
-    null
-  )
-
   const emailIdFromUrl = getEmailId()
   const selectedEmailId = getEmailIdWithFallback(1)
   const campaignIdFromUrl = getCampaignId()
 
-  // Initialize emails from campaign context
-  useEffect(() => {
-    if (generatedEmails.length > 0) {
-      setEmails(generatedEmails)
-    }
-  }, [generatedEmails])
+  // Use emails directly from context - no local state
+  const emails = generatedEmails
 
   // Only set default email parameter when campaign is fully loaded and has emails
   useEffect(() => {
@@ -71,12 +65,6 @@ export function useEmailState(): EmailStateReturn {
     setMultipleParams,
   ])
 
-  // Clear context when switching emails
-  useEffect(() => {
-    setSelectedContext(null)
-    setAutoSubmitMessage(null)
-  }, [selectedEmailId])
-
   const selectEmail = useCallback(
     (id: number) => {
       // Basic validation before setting
@@ -96,11 +84,8 @@ export function useEmailState(): EmailStateReturn {
     [isValidEmailId, campaignIdFromUrl, setMultipleParams]
   )
 
-  const updateEmail = useCallback((id: number, updates: Partial<Email>) => {
-    setEmails((prev) =>
-      prev.map((email) => (email.id === id ? { ...email, ...updates } : email))
-    )
-  }, [])
+  // Simply pass through to context's updateEmail - no need to wrap
+  const updateEmail = contextUpdateEmail
 
   const selectedEmail = emails.find((e) => e.id === selectedEmailId) || null
 
