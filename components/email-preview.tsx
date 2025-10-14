@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
@@ -14,14 +14,13 @@ interface EmailPreviewProps {
   onTextSelected?: (text: string, action: string) => void
 }
 
-export function EmailPreview({
+function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject)
   const [editedContent, setEditedContent] = useState(email.content)
-  const [hasChanges, setHasChanges] = useState(false)
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
     'markdown'
   )
@@ -32,23 +31,23 @@ export function EmailPreview({
     y: number
   } | null>(null)
 
+  // Combine both effects into one - more efficient
   useEffect(() => {
-    const changed =
-      editedSubject !== email.subject || editedContent !== email.content
-    setHasChanges(changed)
-  }, [editedSubject, editedContent, email.subject, email.content])
-
-  useEffect(() => {
+    // Reset edited content when email changes
     setEditedSubject(email.subject)
     setEditedContent(email.content)
   }, [email.id, email.subject, email.content])
+
+  // Memoize hasChanges to avoid recalculation
+  const hasChanges = useMemo(() => {
+    return editedSubject !== email.subject || editedContent !== email.content
+  }, [editedSubject, editedContent, email.subject, email.content])
 
   const handleSave = () => {
     onUpdate({
       subject: editedSubject,
       content: editedContent,
     })
-    setHasChanges(false)
   }
 
   const handleTextSelection = () => {
@@ -160,3 +159,6 @@ export function EmailPreview({
     </div>
   )
 }
+
+// Memoize to prevent re-renders when parent re-renders
+export const EmailPreview = memo(EmailPreviewComponent)

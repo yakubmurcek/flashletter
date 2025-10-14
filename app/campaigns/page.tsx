@@ -48,7 +48,7 @@ export default async function CampaignsPage() {
               </p>
             </div>
             <Button asChild size="lg" className="gap-2">
-              <Link href="/create">
+              <Link href="/create" prefetch={true}>
                 <Plus className="w-4 h-4" />
                 New Campaign
               </Link>
@@ -66,7 +66,9 @@ export default async function CampaignsPage() {
                   Get started by creating your first email campaign
                 </p>
                 <Button asChild>
-                  <Link href="/create">Create Your First Campaign</Link>
+                  <Link href="/create" prefetch={true}>
+                    Create Your First Campaign
+                  </Link>
                 </Button>
               </CardContent>
             </Card>

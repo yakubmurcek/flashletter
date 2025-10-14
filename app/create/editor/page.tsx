@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
+import dynamic from 'next/dynamic'
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
@@ -11,10 +12,25 @@ import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import type { Email, SelectedContext } from '@/lib/types'
 import { EditorHeader } from '@/components/editor/editor-header'
 import { EmailSidebar } from '@/components/editor/email-sidebar'
-import { ChatSidebar } from '@/components/editor/chat-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { cn } from '@/lib/utils'
+
+// Dynamically import ChatSidebar to reduce initial bundle size
+const ChatSidebar = dynamic(
+  () =>
+    import('@/components/editor/chat-sidebar').then((mod) => ({
+      default: mod.ChatSidebar,
+    })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="fixed right-0 top-0 bottom-0 w-96 bg-card border-l border-border flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+      </div>
+    ),
+  }
+)
 
 function EditorPageContent() {
   // Use new focused hooks
@@ -41,6 +57,51 @@ function EditorPageContent() {
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
   const config = campaignData?.config
+
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // Define all callbacks before any early returns
+  const handleSelectEmail = useCallback(
+    (id: number) => {
+      selectEmail(id)
+    },
+    [selectEmail]
+  )
+
+  const handleUpdateEmail = useCallback(
+    async (id: number, updates: Partial<Email>, skipVersioning = false) => {
+      await saveEmail(id, updates, skipVersioning)
+    },
+    [saveEmail]
+  )
+
+  const handleToggleChat = useCallback(() => {
+    toggleParam('chat', 'closed')
+  }, [toggleParam])
+
+  const handleTextSelected = useCallback(
+    (text: string, action: string) => {
+      setSelectedContext({ text, action })
+      // Auto-open chat when text is selected
+      if (!showChat) {
+        deleteParam('chat') // Remove 'closed' parameter to open chat
+      }
+
+      // For command actions (not "Ask AI about this"), auto-submit the action
+      const isCommandAction = action !== 'Ask AI about this'
+      if (isCommandAction) {
+        setAutoSubmitMessage(action)
+      }
+    },
+    [showChat, deleteParam]
+  )
+
+  const handleClearContext = useCallback(() => {
+    setSelectedContext(null)
+  }, [])
+
+  const handleAutoSubmitComplete = useCallback(() => {
+    setAutoSubmitMessage(null)
+  }, [])
 
   // Handle restoration from history page
   useEffect(() => {
@@ -137,44 +198,6 @@ function EditorPageContent() {
         }}
       />
     )
-  }
-
-  const handleSelectEmail = (id: number) => {
-    selectEmail(id)
-  }
-
-  const handleUpdateEmail = async (
-    id: number,
-    updates: Partial<Email>,
-    skipVersioning = false
-  ) => {
-    await saveEmail(id, updates, skipVersioning)
-  }
-
-  const handleToggleChat = () => {
-    toggleParam('chat', 'closed')
-  }
-
-  const handleTextSelected = (text: string, action: string) => {
-    setSelectedContext({ text, action })
-    // Auto-open chat when text is selected
-    if (!showChat) {
-      deleteParam('chat') // Remove 'closed' parameter to open chat
-    }
-
-    // For command actions (not "Ask AI about this"), auto-submit the action
-    const isCommandAction = action !== 'Ask AI about this'
-    if (isCommandAction) {
-      setAutoSubmitMessage(action)
-    }
-  }
-
-  const handleClearContext = () => {
-    setSelectedContext(null)
-  }
-
-  const handleAutoSubmitComplete = () => {
-    setAutoSubmitMessage(null)
   }
 
   return (

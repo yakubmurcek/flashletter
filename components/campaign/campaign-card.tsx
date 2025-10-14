@@ -123,7 +123,11 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               <Trash2 className="w-3 h-3" />
             </Button>
             <Button variant="ghost" size="sm" asChild>
-              <Link href={`/campaigns/${campaign.id}`} className="gap-1">
+              <Link
+                href={`/campaigns/${campaign.id}`}
+                className="gap-1"
+                prefetch={true}
+              >
                 View
                 <ArrowRight className="w-3 h-3" />
               </Link>

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Mail } from 'lucide-react'
 import { EmailList } from '@/components/email-list'
 import type { Email } from '@/lib/types'
@@ -11,7 +12,7 @@ interface EmailSidebarProps {
   campaignType?: string
 }
 
-export function EmailSidebar({
+function EmailSidebarComponent({
   emails,
   selectedId,
   onSelect,
@@ -38,3 +39,6 @@ export function EmailSidebar({
     </aside>
   )
 }
+
+// Memoize to prevent re-renders when props don't change
+export const EmailSidebar = memo(EmailSidebarComponent)

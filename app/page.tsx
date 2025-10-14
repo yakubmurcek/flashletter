@@ -88,7 +88,7 @@ export default async function Home() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild className="gap-2 text-base">
-              <Link href="/create">
+              <Link href="/create" prefetch={true}>
                 Start Creating
                 <ArrowRight className="w-4 h-4" />
               </Link>

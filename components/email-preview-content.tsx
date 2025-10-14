@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Card } from '@/components/ui/card'
 import { renderMarkdown } from '@/lib/utils/markdown-renderer'
 
@@ -7,7 +8,7 @@ interface EmailPreviewContentProps {
   onMouseUp?: () => void
 }
 
-export function EmailPreviewContent({
+function EmailPreviewContentComponent({
   subject,
   content,
   onMouseUp,
@@ -37,3 +38,6 @@ export function EmailPreviewContent({
     </div>
   )
 }
+
+// Memoize to prevent re-renders when props don't change
+export const EmailPreviewContent = memo(EmailPreviewContentComponent)

@@ -1,4 +1,5 @@
 'use client'
+import { memo, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 
 interface Email {
@@ -15,9 +16,12 @@ interface EmailListProps {
   onSelect: (id: number) => void
 }
 
-export function EmailList({ emails, selectedId, onSelect }: EmailListProps) {
-  // Sort emails by day to ensure proper order
-  const sortedEmails = [...emails].sort((a, b) => a.day - b.day)
+function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
+  // Memoize sorted emails to avoid resorting on every render
+  const sortedEmails = useMemo(
+    () => [...emails].sort((a, b) => a.day - b.day),
+    [emails]
+  )
 
   return (
     <div className="p-2 space-y-1">
@@ -61,3 +65,6 @@ export function EmailList({ emails, selectedId, onSelect }: EmailListProps) {
     </div>
   )
 }
+
+// Memoize to prevent re-renders when props don't change
+export const EmailList = memo(EmailListComponent)
