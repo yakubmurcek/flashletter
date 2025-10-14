@@ -7,10 +7,7 @@ import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
-  ],
+  themeColor: '#ffffff',
 }
 
 export const metadata: Metadata = {
@@ -112,7 +109,12 @@ export default function RootLayout({
         />
       </head>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem={false}
+          themes={['light']}
+        >
           <CampaignProvider>{children}</CampaignProvider>
           <Analytics />
         </ThemeProvider>

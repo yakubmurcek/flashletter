@@ -76,7 +76,8 @@ export default async function Home() {
 
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
             Converting email campaigns in{' '}
-            <span className="text-primary">seconds</span> with Flashletter
+            <span className="text-primary cursor-behind">seconds</span> with
+            Flashletter
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
@@ -179,32 +180,40 @@ export default async function Home() {
               </Button>
             </div>
 
-            <div className="relative bg-primary/5 border border-primary/40 rounded-lg p-7 md:p-8 flex flex-col shadow-md md:shadow-lg md:scale-[1.04] md:-translate-y-1 z-[1]">
-              <span className="absolute -top-3 right-4 px-2.5 py-1 text-xs font-medium rounded-full bg-primary text-primary-foreground shadow">
+            <div className="relative bg-primary text-primary-foreground border border-primary rounded-lg p-7 md:p-8 flex flex-col shadow-md md:shadow-lg md:scale-[1.04] md:-translate-y-1 z-[1]">
+              <span className="absolute -top-3 right-4 px-2.5 py-1 text-xs font-medium rounded-full bg-primary-foreground text-primary shadow">
                 Most Popular
               </span>
               <h3 className="text-2xl font-semibold">Pro</h3>
-              <p className="text-muted-foreground text-sm mb-4">
+              <p className="text-primary-foreground/80 text-sm mb-4">
                 For growing teams
               </p>
               <div className="text-4xl font-bold mb-4">
-                $19<span className="text-base font-normal">/mo</span>
+                $19
+                <span className="text-base font-normal text-primary-foreground/80">
+                  /mo
+                </span>
               </div>
-              <ul className="space-y-2 text-sm text-muted-foreground mb-6">
+              <ul className="space-y-2 text-sm text-primary-foreground/90 mb-6">
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
+                  <Check className="w-4 h-4 text-primary-foreground" />
                   Unlimited campaigns
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
+                  <Check className="w-4 h-4 text-primary-foreground" />
                   Advanced AI features
                 </li>
                 <li className="flex items-center gap-2">
-                  <Check className="w-4 h-4 text-primary" />
+                  <Check className="w-4 h-4 text-primary-foreground" />
                   Version history
                 </li>
               </ul>
-              <Button size="lg" className="mt-auto" asChild>
+              <Button
+                size="lg"
+                variant="secondary"
+                className="mt-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                asChild
+              >
                 <Link href="/signup">Start Pro</Link>
               </Button>
             </div>

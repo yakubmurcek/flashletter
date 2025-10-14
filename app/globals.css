@@ -136,3 +136,34 @@
     scroll-behavior: auto;
   }
 }
+
+/* Blinking cursor behind highlighted word in hero title */
+@keyframes caretBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.cursor-behind {
+  position: relative;
+  display: inline-block;
+  z-index: 0;
+}
+
+.cursor-behind::after {
+  content: '';
+  position: absolute;
+  top: calc(0.06em + 4px);
+  right: -0.18ch;
+  width: 0.08em;
+  height: 0.95em;
+  background: currentColor;
+  opacity: 0.8;
+  border-radius: 1px;
+  animation: caretBlink 1.6s steps(1, end) infinite;
+  z-index: -1;
+  filter: drop-shadow(0 0 10px currentColor);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor-behind::after { animation: none; }
+}
