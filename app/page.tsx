@@ -20,7 +20,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { UserMenu } from '@/components/auth/user-menu'
 import { FAQ_ITEMS } from '@/lib/constants/faq'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, memo } from 'react'
 
 // Animated components
 const AnimatedSection = ({
@@ -32,30 +32,44 @@ const AnimatedSection = ({
   className?: string
   delay?: number
 }) => {
-  const [isVisible, setIsVisible] = useState(false)
+  const elementRef = useRef<HTMLDivElement>(null)
+  const [isInView, setIsInView] = useState(false)
 
   useEffect(() => {
+    const element = elementRef.current
+    if (!element) return
+
+    // Check if already visible (prevent re-animation)
+    if (element.classList.contains('animated')) return
+
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setIsVisible(true), delay)
-        }
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            // Mark as animated immediately
+            entry.target.classList.add('animated')
+            setIsInView(true)
+            observer.unobserve(entry.target)
+          }
+        })
       },
       { threshold: 0.1 }
     )
 
-    const element = document.getElementById(`section-${delay}`)
-    if (element) observer.observe(element)
+    observer.observe(element)
 
     return () => observer.disconnect()
-  }, [delay])
+  }, [])
 
   return (
     <div
-      id={`section-${delay}`}
-      className={`transition-all duration-1000 ease-out ${
-        isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      } ${className}`}
+      ref={elementRef}
+      style={{
+        animationDelay: `${delay}ms`,
+        opacity: isInView ? 1 : 0,
+        transform: isInView ? 'translateY(0)' : 'translateY(32px)',
+      }}
+      className={`transition-all duration-1000 ease-out ${className}`}
     >
       {children}
     </div>
@@ -109,7 +123,6 @@ const GradientText = ({
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const getUser = async () => {
@@ -118,18 +131,9 @@ export default function Home() {
         data: { user },
       } = await supabase.auth.getUser()
       setUser(user)
-      setIsLoading(false)
     }
     getUser()
   }, [])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
@@ -784,10 +788,12 @@ export default function Home() {
             </div>
           </section>
         </AnimatedSection>
+      </main>
 
-        {/* Final CTA Section */}
-        <AnimatedSection delay={3000}>
-          <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-purple-500/5 border-y border-primary/10">
+      {/* Final CTA Section */}
+      <AnimatedSection delay={3000}>
+        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-purple-500/5 border-y border-primary/10 w-full">
+          <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
                 Ready to transform your email marketing?
@@ -819,9 +825,9 @@ export default function Home() {
                 </Button>
               </div>
             </div>
-          </section>
-        </AnimatedSection>
-      </main>
+          </div>
+        </section>
+      </AnimatedSection>
 
       <footer className="border-t border-border bg-background/80 backdrop-blur-sm">
         <div className="container mx-auto px-4 py-12">
