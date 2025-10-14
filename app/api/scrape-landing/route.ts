@@ -1,14 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
-const scrapeLandingSchema = z.object({
-  url: z.string().url(),
-})
+import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
+import { scrapeLandingRequestSchema } from '@/lib'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { url } = scrapeLandingSchema.parse(body)
+    const { url } = scrapeLandingRequestSchema.parse(body)
 
     const response = await fetch(url, {
       headers: {
@@ -55,7 +53,7 @@ function extractTextFromHTML(html: string): string {
     .replace(/\s+/g, ' ')
     .trim()
 
-  return text.substring(0, 5000)
+  return text.substring(0, LANDING_PAGE_CONTENT_LIMIT)
 }
 
 function extractMetadata(html: string): Record<string, string> {

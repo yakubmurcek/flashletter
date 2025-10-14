@@ -3,7 +3,7 @@
 ## Project Structure
 
 ```
-v0-newsletter-generator/
+flashletter/
 ├── app/                          # Next.js App Router pages
 │   ├── create/                   # Campaign creation flow
 │   │   ├── page.tsx             # Step 1: URL input
@@ -129,7 +129,8 @@ User Input → Custom Hook → Service Layer → API Route → External Service
 - `/` - Landing page
 - `/create` - Step 1: URL input
 - `/create/configure` - Step 2: Configuration
-- `/create/editor?email=X&chat=open` - Step 3: Editor with URL state
+- `/create/editor?email=X` - Step 3: Editor with URL state (chat panel open by default)
+- `/create/editor?email=X&chat=closed` - Step 3: Editor with chat panel closed
 
 ### 6. **Error Handling**
 

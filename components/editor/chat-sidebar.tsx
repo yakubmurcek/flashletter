@@ -1,0 +1,76 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { cn } from '@/lib/utils'
+import { AIChatAssistant } from '@/components/ai-chat-assistant'
+import type { FullCampaignContext, SelectedContext, Email } from '@/lib/types'
+
+interface ChatSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+  campaignContext?: FullCampaignContext
+  email?: Email
+  campaignType?: string
+  onApplyEdits: (edits: Partial<Email>) => void
+  selectedContext: SelectedContext | null
+  onClearContext: () => void
+  autoSubmitMessage: string | null
+  onAutoSubmitComplete: () => void
+}
+
+export function ChatSidebar({
+  isOpen,
+  onClose,
+  campaignContext,
+  email,
+  campaignType,
+  onApplyEdits,
+  selectedContext,
+  onClearContext,
+  autoSubmitMessage,
+  onAutoSubmitComplete,
+}: ChatSidebarProps) {
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  if (!mounted) return null
+
+  return createPortal(
+    <aside
+      className={cn(
+        'fixed inset-y-0 right-0 border-l border-border bg-card transition-all duration-300 shadow-lg z-[60]',
+        isOpen ? 'w-96' : 'w-0 overflow-hidden'
+      )}
+      role="dialog"
+      aria-modal="true"
+    >
+      {isOpen && (
+        <div className="h-full">
+          <AIChatAssistant
+            onClose={onClose}
+            campaignContext={campaignContext}
+            emailContext={
+              email
+                ? {
+                    subject: email.subject,
+                    content: email.content,
+                    campaignType: campaignType || 'Unknown',
+                  }
+                : undefined
+            }
+            onApplyEdits={onApplyEdits}
+            selectedContext={selectedContext}
+            onClearContext={onClearContext}
+            autoSubmitMessage={autoSubmitMessage}
+            onAutoSubmitComplete={onAutoSubmitComplete}
+          />
+        </div>
+      )}
+    </aside>,
+    document.body
+  )
+}

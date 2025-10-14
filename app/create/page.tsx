@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -16,19 +16,45 @@ import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 
 export default function CreatePage() {
   const router = useRouter()
-  const { setLandingPageData } = useCampaign()
+  const { setLandingPageData, createNewCampaign, isLoading, clearAll } =
+    useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Clear any existing campaign data when starting fresh
+  useEffect(() => {
+    clearAll()
+  }, []) // Empty dependency array - only run once on mount
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!url) return
 
-    const data = await analyzeLandingPage(url)
-    if (data) {
-      setLandingPageData(data)
-      router.push('/create/configure')
+    setIsSubmitting(true) // Start local loading
+    try {
+      const data = await analyzeLandingPage(url)
+      if (data) {
+        setLandingPageData(data)
+        // Create a new campaign and proceed to configure
+        try {
+          // Pass the landing page data directly to ensure it's saved
+          const campaignId = await createNewCampaign(data)
+          router.push(`/create/configure?campaign=${campaignId}`)
+        } catch (error) {
+          console.error('Failed to create campaign:', error)
+          // Still proceed to configure if campaign creation fails
+          router.push('/create/configure')
+        }
+      }
+    } finally {
+      // Don't set false here - let navigation complete
+      // setIsSubmitting(false) is omitted intentionally
     }
+  }
+
+  if (isLoading) {
+    return null
   }
 
   return (
@@ -64,9 +90,9 @@ export default function CreatePage() {
               type="submit"
               size="lg"
               className="w-full gap-2"
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isSubmitting}
             >
-              {isAnalyzing ? (
+              {isAnalyzing || isSubmitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Analyzing Page...

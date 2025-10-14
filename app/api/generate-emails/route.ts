@@ -1,24 +1,20 @@
 import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-
-const generateEmailsSchema = z.object({
-  landingUrl: z.string().url(),
-  landingContent: z.string().optional(),
-  config: z.object({
-    tone: z.string(),
-    campaignType: z.string(),
-    days: z.number().min(1).max(30),
-  }),
-})
-
-export type GenerateEmailsRequest = z.infer<typeof generateEmailsSchema>
+import { zodTextFormat } from 'openai/helpers/zod'
+import { createClient } from '@/lib/supabase/server'
+import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
+import {
+  emailsResponseSchema,
+  generateEmailsRequestSchema,
+  type GenerateEmailsRequest,
+} from '@/lib'
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { landingUrl, landingContent, config } =
-      generateEmailsSchema.parse(body)
+    const { landingUrl, landingContent, config, campaignId } =
+      generateEmailsRequestSchema.parse(body)
 
     const instructions = `You are an expert email marketing copywriter. Generate a ${
       config.days
@@ -58,22 +54,61 @@ Make sure the content is engaging, actionable, and aligned with best email marke
 
     const userInput = `Generate ${config.days} emails for this ${config.campaignType} campaign. Return only valid JSON.`
 
-    const response = await openai.responses.create({
+    const response = await openai.responses.parse({
       model: 'gpt-4o',
-      instructions,
-      input: userInput,
-      temperature: 0.8,
+      input: [
+        { role: 'system', content: instructions },
+        { role: 'user', content: userInput },
+      ],
+      temperature: 0.75,
+      text: {
+        format: zodTextFormat(emailsResponseSchema, 'emails_response'),
+      },
     })
 
-    if (!response.output_text) {
+    const parsed = response.output_parsed
+    if (!parsed) {
       throw new Error('No response from OpenAI')
     }
 
-    const parsedResponse = JSON.parse(response.output_text)
-    const emails = parsedResponse.emails || parsedResponse
+    const emailsArray = parsed.emails
+
+    // If campaignId is provided, attempt to save emails to database
+    if (campaignId) {
+      const supabase = await createClient()
+      const campaignService = new CampaignStorageService(supabase)
+
+      const emailsToSave = emailsArray.map((email: any, index: number) => ({
+        id: email.day || index + 1,
+        uuid: email.uuid || null,
+        day: email.day || index + 1,
+        subject: email.subject || '',
+        preview: email.preview || '',
+        content: email.content || '',
+      }))
+
+      try {
+        const savedEmails = await campaignService.saveEmails(
+          campaignId,
+          emailsToSave
+        )
+        return NextResponse.json({
+          emails: savedEmails,
+          usage: response.usage,
+        })
+      } catch (saveError) {
+        console.error('Failed to save emails to Supabase:', saveError)
+        // Fall back to returning unsaved emails so the user can proceed
+        return NextResponse.json({
+          emails: emailsArray,
+          usage: response.usage,
+          warning: 'Could not save emails; returned without persistence',
+        })
+      }
+    }
 
     return NextResponse.json({
-      emails: Array.isArray(emails) ? emails : Object.values(emails),
+      emails: emailsArray,
       usage: response.usage,
     })
   } catch (error) {

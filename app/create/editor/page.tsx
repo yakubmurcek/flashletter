@@ -1,106 +1,167 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Mail, MessageSquare, Download, Send } from 'lucide-react'
-import { EmailList } from '@/components/email-list'
 import { EmailPreview } from '@/components/email-preview'
-import { AIChatAssistant } from '@/components/ai-chat-assistant'
-import { cn } from '@/lib/utils'
-import Link from 'next/link'
-import { useCampaign } from '@/lib/campaign-context'
+import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
-import {
-  getSubjectForDay,
-  getPreviewForDay,
-  getContentForDay,
-} from '@/lib/utils/email-helpers'
+import { useCampaignLoader } from '@/lib/hooks/use-campaign-loader'
+import { useEmailState } from '@/lib/hooks/use-email-state'
+import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
+import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import type { Email, SelectedContext } from '@/lib/types'
+import { EditorHeader } from '@/components/editor/editor-header'
+import { EmailSidebar } from '@/components/editor/email-sidebar'
+import { ChatSidebar } from '@/components/editor/chat-sidebar'
+import { ChatFab } from '@/components/editor/chat-fab'
+import { FullScreenState } from '@/components/editor/full-screen-state'
+import { cn } from '@/lib/utils'
 
-export default function EditorPage() {
-  const router = useRouter()
-  const {
-    landingPageData,
-    config,
-    generatedEmails: initialEmails,
-    isLoading,
-  } = useCampaign()
-  const { getParam, setParam, toggleParam } = useUrlState()
-  const [emails, setEmails] = useState<Email[]>([])
+function EditorPageContent() {
+  // Use new focused hooks
+  const { loadingState, campaignData, error } = useCampaignLoader()
+  const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } =
+    useEmailState()
+  const { versionCounts, restoreVersion } = useVersionTracking(emails)
+  const { currentCampaignId } = useCampaignData()
+  const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+
+  const { getParam, setParam, toggleParam, getCampaignId, deleteParam } =
+    useUrlState()
+
   const [selectedContext, setSelectedContext] =
     useState<SelectedContext | null>(null)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
 
-  const emailIdFromUrl = getParam('email')
-  const selectedEmailId = emailIdFromUrl ? parseInt(emailIdFromUrl, 10) : 1
-  const showChat = getParam('chat') === 'open'
+  // Use validated getters
+  const campaignIdFromUrl = getCampaignId()
+  const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
+  const restoreParam = getParam('restore')
 
+  // Extract data from campaign data
+  const landingPageData = campaignData?.landingPageData
+  const config = campaignData?.config
+
+  // Handle restoration from history page
   useEffect(() => {
-    // Don't redirect while still loading from storage
-    if (isLoading) return
+    if (restoreParam) {
+      const handleRestore = async () => {
+        try {
+          // Safe JSON parsing with validation
+          let restoreData
+          try {
+            restoreData = JSON.parse(decodeURIComponent(restoreParam))
+          } catch (parseError) {
+            console.error('Failed to parse restore data:', parseError)
+            return
+          }
 
-    if (!landingPageData || !config) {
-      router.push('/create')
-      return
+          // Validate restore data structure
+          if (
+            restoreData &&
+            typeof restoreData.emailId === 'number' &&
+            typeof restoreData.subject === 'string' &&
+            typeof restoreData.content === 'string'
+          ) {
+            // Update the email directly (versioning already handled by history page)
+            updateEmail(restoreData.emailId, {
+              subject: restoreData.subject,
+              content: restoreData.content,
+            })
+
+            // Update version count for this email
+            await restoreVersion(restoreData)
+
+            // Clean up restore param to prevent re-processing on refresh
+            deleteParam('restore')
+          } else {
+            console.error('Invalid restore data structure:', restoreData)
+          }
+        } catch (error) {
+          console.error('Failed to restore version:', error)
+        }
+      }
+      handleRestore()
     }
+  }, [restoreParam, updateEmail, restoreVersion])
 
-    if (initialEmails.length > 0) {
-      setEmails(initialEmails)
-    } else {
-      const fallbackEmails = Array.from({ length: config.days }, (_, i) => ({
-        id: i + 1,
-        day: i + 1,
-        subject: `Day ${i + 1}: ${getSubjectForDay(
-          i + 1,
-          config.campaignType
-        )}`,
-        preview: getPreviewForDay(i + 1, config.campaignType),
-        content: getContentForDay(i + 1, config.campaignType, config.tone),
-      }))
-      setEmails(fallbackEmails)
-    }
-  }, [landingPageData, config, initialEmails, router, isLoading])
-
-  useEffect(() => {
-    if (emails.length > 0 && !emailIdFromUrl) {
-      router.replace('/create/editor?email=1')
-    }
-  }, [emails.length, emailIdFromUrl, router])
-
-  // Clear context when switching emails
-  useEffect(() => {
-    setSelectedContext(null)
-    setAutoSubmitMessage(null)
-  }, [selectedEmailId])
-
-  if (isLoading || !landingPageData || !config) {
-    return null
-  }
-
-  const selectedEmail = emails.find((e) => e.id === selectedEmailId)
-
-  const handleSelectEmail = (id: number) => {
-    setParam('email', id.toString())
-  }
-
-  const handleUpdateEmail = (id: number, updates: Partial<Email>) => {
-    setEmails((prev) =>
-      prev.map((email) => (email.id === id ? { ...email, ...updates } : email))
+  // Show loading state
+  if (loadingState === 'loading') {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading campaign...</p>
+        </div>
+      </div>
     )
   }
 
+  // Show error state
+  if (loadingState === 'error') {
+    return (
+      <FullScreenState
+        title="Error Loading Campaign"
+        message={error || 'Failed to load campaign data'}
+        actionHref="/campaigns"
+        actionLabel="Back to Campaigns"
+      />
+    )
+  }
+
+  // Show error state if no campaign ID is provided
+  if (!campaignIdFromUrl) {
+    return (
+      <FullScreenState
+        title="No Campaign Selected"
+        message="Please select a campaign to edit from the campaigns page."
+        actionHref="/campaigns"
+        actionLabel="Back to Campaigns"
+      />
+    )
+  }
+
+  // Show error state if we have no essential data after loading is complete
+  if (loadingState === 'loaded' && !config && emails.length === 0) {
+    return (
+      <FullScreenState
+        title="Campaign Data Missing"
+        message="This campaign appears to be incomplete. It's missing both configuration and email data."
+        actionHref="/campaigns"
+        actionLabel="Back to Campaigns"
+        details={{
+          'Landing Page Data': !!landingPageData,
+          'Campaign Config': !!config,
+          Emails: emails.length,
+          'Campaign ID': campaignIdFromUrl || 'None',
+        }}
+      />
+    )
+  }
+
+  const handleSelectEmail = (id: number) => {
+    selectEmail(id)
+  }
+
+  const handleUpdateEmail = async (
+    id: number,
+    updates: Partial<Email>,
+    skipVersioning = false
+  ) => {
+    await saveEmail(id, updates, skipVersioning)
+  }
+
   const handleToggleChat = () => {
-    toggleParam('chat', 'open')
+    toggleParam('chat', 'closed')
   }
 
   const handleTextSelected = (text: string, action: string) => {
     setSelectedContext({ text, action })
     // Auto-open chat when text is selected
     if (!showChat) {
-      setParam('chat', 'open')
+      deleteParam('chat') // Remove 'closed' parameter to open chat
     }
 
     // For command actions (not "Ask AI about this"), auto-submit the action
@@ -120,58 +181,32 @@ export default function EditorPage() {
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
-      <header className="border-b border-border bg-card flex-shrink-0">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="gap-2">
-              <Link href="/create/configure">
-                <ArrowLeft className="w-4 h-4" />
-                Back
-              </Link>
-            </Button>
-            <div className="hidden md:block">
-              <div className="text-sm font-medium">Email Campaign Editor</div>
-              <div className="text-xs text-muted-foreground truncate max-w-md">
-                {landingPageData.url}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 bg-transparent"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
-            <Button size="sm" className="gap-2">
-              <Send className="w-4 h-4" />
-              <span className="hidden sm:inline">Deploy</span>
-            </Button>
-          </div>
-        </div>
-      </header>
+      <EditorHeader
+        landingPageUrl={landingPageData?.url}
+        historyHref={
+          campaignIdFromUrl
+            ? `/create/history?emailId=${selectedEmailId}&campaign=${campaignIdFromUrl}`
+            : `/create/history?emailId=${selectedEmailId}`
+        }
+        versionCount={versionCounts[selectedEmailId] || 0}
+        className={cn(
+          'transition-all duration-300',
+          showChat ? 'mr-96 pr-4' : 'mr-0'
+        )}
+      />
 
-      <div className="flex-1 flex overflow-hidden h-0">
-        <aside className="w-80 border-r border-border bg-card flex flex-col">
-          <div className="p-4 border-b border-border flex-shrink-0">
-            <div className="flex items-center gap-2 mb-2">
-              <Mail className="w-5 h-5 text-primary" />
-              <h2 className="font-semibold">Campaign Emails</h2>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {emails.length} emails • {config.campaignType}
-            </p>
-          </div>
-          <div className="flex-1 overflow-y-auto">
-            <EmailList
-              emails={emails}
-              selectedId={selectedEmailId}
-              onSelect={handleSelectEmail}
-            />
-          </div>
-        </aside>
+      <div
+        className={cn(
+          'flex-1 flex overflow-hidden h-0 transition-all duration-300',
+          showChat ? 'mr-96' : 'mr-0'
+        )}
+      >
+        <EmailSidebar
+          emails={emails}
+          selectedId={selectedEmailId}
+          onSelect={handleSelectEmail}
+          campaignType={config?.campaignType}
+        />
 
         <main className="flex-1 overflow-y-auto">
           {selectedEmail && (
@@ -185,47 +220,48 @@ export default function EditorPage() {
           )}
         </main>
 
-        <aside
-          className={cn(
-            'border-l border-border bg-card transition-all duration-300 shadow-lg flex-shrink-0',
-            showChat ? 'w-96' : 'w-0 overflow-hidden'
-          )}
-        >
-          {showChat && (
-            <AIChatAssistant
-              onClose={handleToggleChat}
-              emailContext={
-                selectedEmail
-                  ? {
-                      subject: selectedEmail.subject,
-                      content: selectedEmail.content,
-                      campaignType: config.campaignType,
-                    }
-                  : undefined
-              }
-              onApplyEdits={(edits) => {
-                if (selectedEmail) {
-                  handleUpdateEmail(selectedEmail.id, edits)
+        <ChatSidebar
+          isOpen={showChat}
+          onClose={handleToggleChat}
+          campaignContext={
+            landingPageData && config && selectedEmail
+              ? {
+                  landingPageData,
+                  config,
+                  allEmails: emails,
+                  currentEmailId: selectedEmail.id,
                 }
-              }}
-              selectedContext={selectedContext}
-              onClearContext={handleClearContext}
-              autoSubmitMessage={autoSubmitMessage}
-              onAutoSubmitComplete={handleAutoSubmitComplete}
-            />
-          )}
-        </aside>
+              : undefined
+          }
+          email={selectedEmail || undefined}
+          campaignType={config?.campaignType}
+          onApplyEdits={(edits) => {
+            if (selectedEmail) {
+              handleUpdateEmail(selectedEmail.id, edits)
+            }
+          }}
+          selectedContext={selectedContext}
+          onClearContext={handleClearContext}
+          autoSubmitMessage={autoSubmitMessage}
+          onAutoSubmitComplete={handleAutoSubmitComplete}
+        />
       </div>
 
-      {!showChat && (
-        <Button
-          size="lg"
-          className="fixed bottom-6 right-6 rounded-full w-16 h-16 shadow-2xl hover:scale-110 transition-transform animate-pulse"
-          onClick={handleToggleChat}
-        >
-          <MessageSquare className="w-6 h-6" />
-        </Button>
-      )}
+      {!showChat && <ChatFab onClick={handleToggleChat} />}
     </div>
+  )
+}
+
+export default function EditorPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <EditorPageContent />
+    </Suspense>
   )
 }

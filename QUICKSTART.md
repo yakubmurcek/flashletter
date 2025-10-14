@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Get your AI Newsletter Generator up and running in 3 minutes.
+Get Flashletter up and running in 3 minutes.
 
 ## Step 1: Install Dependencies
 
