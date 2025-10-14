@@ -99,13 +99,7 @@ export function useEmailAutosave(
         }, EMAIL_SAVE_DEBOUNCE_MS)
       }
     },
-    [
-      emails,
-      currentCampaignId,
-      updateEmail,
-      campaignService,
-      versionStorageService,
-    ]
+    [emails, currentCampaignId, updateEmail]
   )
 
   // Cleanup timeout on unmount

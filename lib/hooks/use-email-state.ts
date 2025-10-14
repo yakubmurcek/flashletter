@@ -84,8 +84,8 @@ export function useEmailState(): EmailStateReturn {
     [isValidEmailId, campaignIdFromUrl, setMultipleParams]
   )
 
-  // Simply pass through to context's updateEmail - no need to wrap
-  const updateEmail = contextUpdateEmail
+  // Wrap in useCallback to prevent unnecessary re-renders in child components
+  const updateEmail = useCallback(contextUpdateEmail, [contextUpdateEmail])
 
   const selectedEmail = emails.find((e) => e.id === selectedEmailId) || null
 

@@ -81,7 +81,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         }
       }
     },
-    [emails, versionStorageService]
+    [emails]
   )
 
   const refreshVersionCount = useCallback(
@@ -102,7 +102,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         }
       }
     },
-    [emails, versionStorageService]
+    [emails]
   )
 
   return {

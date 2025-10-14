@@ -302,9 +302,6 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
   const setGeneratedEmails = useCallback(
     async (emails: Email[]) => {
-      // Only update state once - don't mix state updates with database operations
-      setGeneratedEmailsState(emails)
-
       // Auto-save if we have a campaign (separate from state update)
       if (currentCampaignId && emails.length > 0) {
         try {
@@ -322,7 +319,11 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
             additionalData: { emailCount: emails.length },
           })
           // Don't update state on error - keep original emails
+          setGeneratedEmailsState(emails)
         }
+      } else {
+        // No campaign ID or no emails, just update state directly
+        setGeneratedEmailsState(emails)
       }
     },
     [currentCampaignId, campaignService]
