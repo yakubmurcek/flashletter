@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button'
+import { FAQ } from '@/components/ui/faq'
 import { ArrowRight, Sparkles, Mail, Zap, Check } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { UserMenu } from '@/components/auth/user-menu'
+import { FAQ_ITEMS } from '@/lib/constants/faq'
 
 export default async function Home() {
   const supabase = await createClient()
@@ -323,34 +325,8 @@ export default async function Home() {
               Answers to common questions.
             </p>
           </div>
-          <div className="max-w-3xl mx-auto space-y-4">
-            <details className="bg-card border border-border rounded-lg p-5">
-              <summary className="font-medium cursor-pointer">
-                How does Flashletter generate emails?
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
-                We analyze your landing page content and brand tone, then
-                generate tailored email sequences you can edit and approve.
-              </p>
-            </details>
-            <details className="bg-card border border-border rounded-lg p-5">
-              <summary className="font-medium cursor-pointer">
-                Can I edit the generated content?
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Yes. Our editor and AI assistant help you refine copy,
-                structure, and tone until it is perfect.
-              </p>
-            </details>
-            <details className="bg-card border border-border rounded-lg p-5">
-              <summary className="font-medium cursor-pointer">
-                Do you offer a free plan?
-              </summary>
-              <p className="mt-3 text-sm text-muted-foreground">
-                Start on our Free plan and upgrade anytime. No credit card
-                required.
-              </p>
-            </details>
+          <div className="max-w-3xl mx-auto">
+            <FAQ items={FAQ_ITEMS} />
           </div>
         </section>
       </main>
