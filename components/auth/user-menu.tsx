@@ -16,12 +16,21 @@ import { User, LogOut, FolderOpen } from 'lucide-react'
 interface UserMenuProps {
   user: {
     email?: string
+    user_metadata?: {
+      full_name?: string
+      name?: string
+    }
   }
 }
 
 export function UserMenu({ user }: UserMenuProps) {
   const router = useRouter()
   const supabase = createClient()
+  const rawName =
+    user.user_metadata?.full_name || user.user_metadata?.name || ''
+  const firstName =
+    rawName.trim().split(/\s+/)[0] ||
+    (user.email ? user.email.split('@')[0] : 'Account')
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -32,14 +41,15 @@ export function UserMenu({ user }: UserMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="sm" className="gap-2 px-2">
           <User className="h-5 w-5" />
+          <span className="max-w-[160px] truncate text-sm">{firstName}</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel>
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">My Account</p>
+            <p className="text-sm font-medium leading-none">{firstName}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
