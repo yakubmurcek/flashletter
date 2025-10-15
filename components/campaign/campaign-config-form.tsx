@@ -55,8 +55,8 @@ export function CampaignConfigForm({
       <Button
         type="submit"
         size="lg"
-        className="w-full gap-2"
         disabled={isLoading}
+        className="w-full gap-2 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 transition-all duration-300"
       >
         {isLoading ? (
           <>

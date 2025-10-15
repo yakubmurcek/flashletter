@@ -1,4 +1,7 @@
+'use client'
+
 import { Card } from '@/components/ui/card'
+import { AnimatedSection } from '@/components/ui/animations'
 import type { ReactNode } from 'react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -16,17 +19,19 @@ export function FormCard({
   children,
 }: FormCardProps) {
   return (
-    <Card className="p-8 md:p-12">
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Icon className="w-8 h-8 text-primary" />
+    <AnimatedSection delay={0} immediate>
+      <Card className="p-8 md:p-12 border-border/60 shadow-lg">
+        <div className="text-center mb-10">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary/10 to-primary/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Icon className="w-10 h-10 text-primary" />
+          </div>
+          <h2 className="text-4xl font-bold mb-4">{title}</h2>
+          <p className="text-muted-foreground text-lg text-balance leading-relaxed">
+            {description}
+          </p>
         </div>
-        <h2 className="text-3xl font-bold mb-3">{title}</h2>
-        <p className="text-muted-foreground text-balance leading-relaxed">
-          {description}
-        </p>
-      </div>
-      {children}
-    </Card>
+        {children}
+      </Card>
+    </AnimatedSection>
   )
 }

@@ -77,7 +77,7 @@ export default function CreatePage() {
                 placeholder="https://example.com/landing-page"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                className="h-12 text-base"
+                className="h-12 text-base border-border/60 focus:border-primary"
                 required
               />
               <p className="text-sm text-muted-foreground">
@@ -90,8 +90,8 @@ export default function CreatePage() {
             <Button
               type="submit"
               size="lg"
-              className="w-full gap-2"
               disabled={isAnalyzing || isSubmitting}
+              className="w-full gap-2 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 transition-all duration-300"
             >
               {isAnalyzing || isSubmitting ? (
                 <>

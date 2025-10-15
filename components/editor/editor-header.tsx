@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Download, Send, History, Mail } from 'lucide-react'
+import { ArrowLeft, Download, Send, History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EditorHeaderProps {
@@ -23,13 +24,18 @@ export function EditorHeader({
   return (
     <header
       className={cn(
-        'border-b border-border bg-card flex-shrink-0 relative z-50 flex',
+        'border-b border-border backdrop-blur-sm bg-card/80 flex-shrink-0 relative z-50 flex',
         className
       )}
     >
       {/* Left section - aligned with sidebar */}
       <div className="w-80 px-4 py-4 flex items-center gap-4 justify-end">
-        <Button variant="ghost" size="sm" asChild className="gap-2">
+        <Button
+          variant="ghost"
+          size="sm"
+          asChild
+          className="gap-2 hover:bg-primary/10 transition-colors"
+        >
           <Link href="/campaigns">
             <ArrowLeft className="w-4 h-4" />
             Back to Campaigns
@@ -39,11 +45,19 @@ export function EditorHeader({
 
       {/* Right section - main content area */}
       <div className="flex-1 px-4 py-4 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Mail className="w-5 h-5 text-primary-foreground" />
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
+            <Image
+              src="/icon-192.png"
+              alt="Flashletter"
+              width={32}
+              height={32}
+              className="w-full h-full"
+            />
           </div>
-          <span className="text-xl font-semibold">Flashletter</span>
+          <span className="text-xl font-semibold group-hover:text-primary transition-colors">
+            Flashletter
+          </span>
         </Link>
 
         <div className="hidden md:block">
@@ -59,7 +73,7 @@ export function EditorHeader({
           <Button
             variant="outline"
             size="sm"
-            className="gap-2 bg-transparent relative"
+            className="gap-2 bg-transparent hover:bg-primary/10 transition-colors relative"
             asChild
           >
             <Link href={historyHref}>
@@ -72,11 +86,18 @@ export function EditorHeader({
               )}
             </Link>
           </Button>
-          <Button variant="outline" size="sm" className="gap-2 bg-transparent">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 bg-transparent hover:bg-primary/10 transition-colors"
+          >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export</span>
           </Button>
-          <Button size="sm" className="gap-2">
+          <Button
+            size="sm"
+            className="gap-2 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 transition-all duration-300"
+          >
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Deploy</span>
           </Button>

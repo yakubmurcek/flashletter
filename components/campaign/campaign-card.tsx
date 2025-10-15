@@ -67,9 +67,9 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col">
+      <Card className="flex flex-col group border-border/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 hover:-translate-y-1">
         <CardHeader>
-          <CardTitle className="line-clamp-2 leading-tight">
+          <CardTitle className="line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {campaign.name || 'Untitled Campaign'}
           </CardTitle>
           <CardDescription className="line-clamp-1 leading-tight">
@@ -93,12 +93,12 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             <div className="flex items-center gap-2">
               <span className="text-muted-foreground">Status:</span>
               <span
-                className={`capitalize px-2 py-0.5 rounded-full text-xs ${
+                className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${
                   campaign.status === 'active'
                     ? 'bg-green-100 text-green-700'
                     : campaign.status === 'completed'
                     ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700'
+                    : 'bg-primary/10 text-primary'
                 }`}
               >
                 {campaign.status}
@@ -106,7 +106,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between border-t pt-4">
+        <CardFooter className="flex items-center justify-between border-t border-border/40 pt-4">
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(campaign.updated_at), {
               addSuffix: true,
@@ -118,18 +118,22 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               size="sm"
               onClick={() => setShowDeleteDialog(true)}
               disabled={isDeleting}
-              className="text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors"
             >
               <Trash2 className="w-3 h-3" />
             </Button>
-            <Button variant="ghost" size="sm" asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-1 group/btn hover:text-primary transition-colors"
+            >
               <Link
                 href={`/campaigns/${campaign.id}`}
-                className="gap-1"
                 prefetch={true}
               >
                 View
-                <ArrowRight className="w-3 h-3" />
+                <ArrowRight className="w-3 h-3 group-hover/btn:translate-x-0.5 transition-transform" />
               </Link>
             </Button>
           </div>
@@ -158,7 +162,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             <Button
               onClick={handleDelete}
               disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors"
             >
               {isDeleting ? (
                 <>

@@ -110,7 +110,11 @@ export function AuthForm({ mode }: AuthFormProps) {
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={loading}>
+      <Button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 transition-all duration-300"
+      >
         {loading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
