@@ -572,7 +572,7 @@ export default function Home() {
             {/* Pricing note */}
             <div className="max-w-2xl mx-auto text-center mt-12 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl">
               <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <strong className="text-foreground">
                   30-day money-back guarantee
                 </strong>{' '}
