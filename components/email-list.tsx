@@ -30,21 +30,23 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
-            'w-full text-left p-3 rounded-lg transition-colors',
-            'hover:bg-muted/50',
-            selectedId === email.id ? 'bg-muted' : ''
+            'w-full text-left p-3 rounded-lg transition-all duration-200',
+            'border border-border/40 hover:border-primary/30 hover:bg-primary/5 hover:shadow-md',
+            selectedId === email.id
+              ? 'bg-gradient-to-r from-primary/10 to-purple-500/5 border-primary/30 shadow-sm'
+              : ''
           )}
         >
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
+                'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
-                  ? 'bg-primary text-primary-foreground'
-                  : 'bg-muted'
+                  ? 'bg-gradient-to-br from-primary to-purple-600/70 text-primary-foreground font-semibold'
+                  : 'bg-primary/10 text-primary font-medium'
               )}
             >
-              <span className="text-xs font-medium">{email.day}</span>
+              <span className="text-xs">{email.day}</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">

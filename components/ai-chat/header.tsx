@@ -11,18 +11,18 @@ interface AIChatHeaderProps {
 
 function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
   return (
-    <div className="p-4 border-b border-border flex items-center justify-between">
-      <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-          <Sparkles className="w-4 h-4 text-primary" />
+    <div className="p-4 border-b border-border/40 flex items-center justify-between bg-gradient-to-r from-primary/5 to-purple-500/5">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 bg-gradient-to-br from-primary/20 to-purple-500/10 rounded-xl flex items-center justify-center">
+          <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <div>
           <h3 className="font-semibold text-sm">AI Assistant</h3>
           <p className="text-xs text-muted-foreground">
             {hasCampaignContext ? (
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 bg-green-500 rounded-full" />
-                Full campaign context
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                Full context ready
               </span>
             ) : (
               'Always here to help'
@@ -30,7 +30,12 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
           </p>
         </div>
       </div>
-      <Button variant="ghost" size="icon" onClick={onClose}>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onClose}
+        className="hover:bg-primary/10 transition-colors"
+      >
         <X className="w-4 h-4" />
       </Button>
     </div>
