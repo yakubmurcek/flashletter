@@ -17,6 +17,7 @@ import {
   Award,
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import { UserMenu } from '@/components/auth/user-menu'
 import { FAQ_ITEMS } from '@/lib/constants/faq'
@@ -150,10 +151,22 @@ export default function Home() {
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-              <Mail className="w-5 h-5 text-primary-foreground" />
+            <div
+              className="w-8 h-8 rounded-lg overflow-hidden 
+              group-hover:scale-110 transition-transform duration-300"
+            >
+              <Image
+                src="/icon-192.png"
+                alt="Flashletter"
+                width={32}
+                height={32}
+                className="w-full h-full"
+              />
             </div>
-            <span className="text-xl font-semibold group-hover:text-primary transition-colors">
+            <span
+              className="text-xl font-semibold group-hover:text-primary 
+              transition-colors"
+            >
               Flashletter
             </span>
           </Link>
@@ -843,8 +856,14 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <Mail className="w-6 h-6 text-primary-foreground" />
+              <div className="w-10 h-10 rounded-lg overflow-hidden">
+                <Image
+                  src="/icon-192.png"
+                  alt="Flashletter"
+                  width={40}
+                  height={40}
+                  className="w-full h-full"
+                />
               </div>
               <div>
                 <span className="text-xl font-semibold">Flashletter</span>
