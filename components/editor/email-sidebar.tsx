@@ -20,7 +20,7 @@ function EmailSidebarComponent({
 }: EmailSidebarProps) {
   return (
     <aside className="w-80 border-r border-border bg-card flex flex-col">
-      <div className="p-4 border-b border-border flex-shrink-0 h-20">
+      <div className="p-4 flex-shrink-0 h-20">
         <div className="flex items-center gap-2 mb-2">
           <Mail className="w-5 h-5 text-primary" />
           <h2 className="font-semibold truncate">Campaign Emails</h2>
