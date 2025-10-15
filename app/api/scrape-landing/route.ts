@@ -2,9 +2,49 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 import { scrapeLandingRequestSchema } from '@/lib'
+import { createClient } from '@/lib/supabase/server'
+import {
+  checkRateLimit,
+  scrapeLandingRateLimit,
+  getRateLimitHeaders,
+} from '@/lib/utils/rate-limit'
+import { getClientIp } from '@/lib/utils/get-client-ip'
 
 export async function POST(req: NextRequest) {
   try {
+    // Get user ID for rate limiting
+    const supabase = await createClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    // Use user ID or IP address as identifier
+    const identifier = user?.id || getClientIp(req)
+
+    // Check rate limit
+    const rateLimitResult = await checkRateLimit(
+      scrapeLandingRateLimit,
+      identifier
+    )
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: 'Too many requests',
+          message:
+            'Landing page scraping rate limit exceeded. Please try again later.',
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(
+            rateLimitResult.limit,
+            rateLimitResult.remaining,
+            rateLimitResult.reset
+          ),
+        }
+      )
+    }
+
     const body = await req.json()
     const { url } = scrapeLandingRequestSchema.parse(body)
 
@@ -23,11 +63,20 @@ export async function POST(req: NextRequest) {
     const textContent = extractTextFromHTML(html)
     const metadata = extractMetadata(html)
 
-    return NextResponse.json({
-      content: textContent,
-      metadata,
-      url,
-    })
+    return NextResponse.json(
+      {
+        content: textContent,
+        metadata,
+        url,
+      },
+      {
+        headers: getRateLimitHeaders(
+          rateLimitResult.limit,
+          rateLimitResult.remaining,
+          rateLimitResult.reset
+        ),
+      }
+    )
   } catch (error) {
     console.error('Scrape Landing API Error:', error)
 
