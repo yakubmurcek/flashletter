@@ -93,7 +93,7 @@ const PulseButton = ({
   return (
     <div className="relative">
       <div
-        className="absolute -inset-1 bg-primary/30 rounded-lg blur-sm"
+        className="absolute -inset-0.5 bg-primary/20 rounded-full blur-sm"
         style={{
           animation: 'pulseButton 3s ease-in-out infinite',
         }}
@@ -466,7 +466,7 @@ export default function Home() {
                 </Button>
               </div>
 
-              <div className="relative bg-gradient-to-br from-primary to-purple-600 text-primary-foreground border border-primary rounded-xl p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
+              <div className="relative bg-gradient-to-br from-primary to-purple-600 text-primary-foreground border border-primary rounded-xl overflow-hidden p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
                 <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 text-sm font-medium rounded-full bg-primary-foreground text-primary shadow-lg">
                   Most Popular
                 </span>
