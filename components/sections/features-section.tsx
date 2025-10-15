@@ -1,0 +1,110 @@
+import {
+  Zap,
+  Sparkles,
+  Mail,
+  Clock,
+  Target,
+  Award,
+  TrendingUp,
+  Users,
+} from 'lucide-react'
+import { AnimatedSection, GradientText } from '@/components/ui/animations'
+
+export function FeaturesSection() {
+  return (
+    <AnimatedSection delay={250}>
+      <section id="features" aria-label="Features" className="py-14 md:py-20">
+        <div className="max-w-2xl mx-auto text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-bold mb-3">
+            <GradientText>Powerful Features</GradientText>
+          </h2>
+          <p className="text-muted-foreground text-lg">
+            Everything you need to ship effective email campaigns fast.
+          </p>
+        </div>
+
+        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Zap className="w-8 h-8 text-primary" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
+              Lightning Fast
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Generate complete email campaigns in seconds. No more hours spent
+              writing copy.
+            </p>
+            <div className="mt-4 flex items-center text-sm text-primary font-medium">
+              <Clock className="w-4 h-4 mr-2" />
+              <span>30 seconds average</span>
+            </div>
+          </div>
+
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500/10 to-purple-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-8 h-8 text-purple-500" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
+              AI-Powered
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Advanced AI analyzes your landing page and creates contextually
+              relevant emails.
+            </p>
+            <div className="mt-4 flex items-center text-sm text-primary font-medium">
+              <Target className="w-4 h-4 mr-2" />
+              <span>95% accuracy rate</span>
+            </div>
+          </div>
+
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+            <div className="w-16 h-16 bg-gradient-to-br from-pink-500/10 to-pink-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Mail className="w-8 h-8 text-pink-500" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
+              Fully Editable
+            </h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Customize every aspect of your emails with our intuitive editor
+              and AI assistant.
+            </p>
+            <div className="mt-4 flex items-center text-sm text-primary font-medium">
+              <Award className="w-4 h-4 mr-2" />
+              <span>Unlimited revisions</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional features grid */}
+        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
+          <div className="group bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <TrendingUp className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-lg font-semibold">Analytics & Insights</h3>
+            </div>
+            <p className="text-muted-foreground">
+              Track performance with detailed analytics and get AI-powered
+              insights to optimize your campaigns.
+            </p>
+          </div>
+
+          <div className="group bg-gradient-to-br from-blue-500/5 to-indigo-500/5 border border-blue-500/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+            <div className="flex items-center gap-4 mb-4">
+              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Users className="w-6 h-6 text-blue-500" />
+              </div>
+              <h3 className="text-lg font-semibold">Team Collaboration</h3>
+            </div>
+            <p className="text-muted-foreground">
+              Work together seamlessly with real-time collaboration, comments,
+              and approval workflows.
+            </p>
+          </div>
+        </div>
+      </section>
+    </AnimatedSection>
+  )
+}
