@@ -160,10 +160,12 @@ export function PricingSection() {
         <div className="max-w-2xl mx-auto text-center mt-10 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl">
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <strong className="text-foreground">
-              30-day money-back guarantee
-            </strong>{' '}
-            on all paid plans. Cancel anytime. No questions asked.
+            <span>
+              <strong className="text-foreground">
+                30-day money-back guarantee
+              </strong>{' '}
+              on all paid plans. Cancel anytime. No questions asked.
+            </span>
           </p>
         </div>
       </section>
