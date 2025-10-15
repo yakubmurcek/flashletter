@@ -22,7 +22,7 @@ import { UserMenu } from '@/components/auth/user-menu'
 import { FAQ_ITEMS } from '@/lib/constants/faq'
 import { useEffect, useState, useRef, memo } from 'react'
 
-// Animated components
+// Animated components - simple CSS-based approach
 const AnimatedSection = ({
   children,
   className = '',
@@ -33,49 +33,32 @@ const AnimatedSection = ({
   delay?: number
 }) => {
   const elementRef = useRef<HTMLDivElement>(null)
-  const hasAnimatedRef = useRef(false)
-  const [isInView, setIsInView] = useState(false)
 
   useEffect(() => {
     const element = elementRef.current
     if (!element) return
 
-    // Prevent re-animation on re-renders
-    if (hasAnimatedRef.current) {
-      setIsInView(true)
-      return
-    }
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && !hasAnimatedRef.current) {
-            hasAnimatedRef.current = true
-            setIsInView(true)
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
             observer.unobserve(entry.target)
           }
         })
       },
-      {
-        threshold: 0,
-        rootMargin: '0px 0px 600px 0px',
-      }
+      { threshold: 0.1, rootMargin: '0px 0px -20px 0px' }
     )
 
     observer.observe(element)
-
     return () => observer.disconnect()
   }, [])
 
   return (
     <div
       ref={elementRef}
-      style={{
-        transitionDelay: `${delay}ms`,
-        opacity: isInView ? 1 : 0,
-        transform: isInView ? 'translateY(0)' : 'translateY(32px)',
-      }}
-      className={`transition-all duration-1000 ease-out ${className}`}
+      style={{ transitionDelay: `${delay}ms` }}
+      className={`fade-in-section ${className}`}
     >
       {children}
     </div>
@@ -239,7 +222,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="max-w-3xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28">
+        <div className="max-w-3xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
           {/* Floating elements around hero */}
           <FloatingElement delay={0}>
             <div className="absolute top-20 left-10 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
@@ -309,7 +292,7 @@ export default function Home() {
 
           {/* Stats section */}
           <AnimatedSection delay={400}>
-            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="text-center">
                 <div className="text-3xl font-bold text-primary mb-2">10x</div>
                 <div className="text-sm text-muted-foreground">
@@ -332,13 +315,13 @@ export default function Home() {
           </AnimatedSection>
         </div>
 
-        <AnimatedSection delay={1000}>
+        <AnimatedSection delay={400}>
           <section
             id="features"
             aria-label="Features"
-            className="py-16 md:py-24"
+            className="py-14 md:py-20"
           >
-            <div className="max-w-2xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Powerful Features</GradientText>
               </h2>
@@ -401,7 +384,7 @@ export default function Home() {
             </div>
 
             {/* Additional features grid */}
-            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
               <div className="group bg-gradient-to-br from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
                 <div className="flex items-center gap-4 mb-4">
                   <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -433,9 +416,9 @@ export default function Home() {
           </section>
         </AnimatedSection>
 
-        <AnimatedSection delay={1500}>
-          <section id="pricing" aria-label="Pricing" className="py-16 md:py-24">
-            <div className="max-w-2xl mx-auto text-center mb-12">
+        <AnimatedSection delay={400}>
+          <section id="pricing" aria-label="Pricing" className="py-14 md:py-20">
+            <div className="max-w-2xl mx-auto text-center mb-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Simple Pricing</GradientText>
               </h2>
@@ -583,7 +566,7 @@ export default function Home() {
             </div>
 
             {/* Pricing note */}
-            <div className="max-w-2xl mx-auto text-center mt-12 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl">
+            <div className="max-w-2xl mx-auto text-center mt-10 p-6 bg-gradient-to-r from-primary/5 to-purple-500/5 border border-primary/20 rounded-xl">
               <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                 <strong className="text-foreground">
@@ -595,13 +578,13 @@ export default function Home() {
           </section>
         </AnimatedSection>
 
-        <AnimatedSection delay={2000}>
+        <AnimatedSection delay={400}>
           <section
             id="testimonials"
             aria-label="Testimonials"
-            className="py-16 md:py-24"
+            className="py-14 md:py-20"
           >
-            <div className="max-w-2xl mx-auto text-center mb-12">
+            <div className="max-w-2xl mx-auto text-center mb-10">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
                 <GradientText>Loved by teams worldwide</GradientText>
               </h2>
@@ -722,7 +705,7 @@ export default function Home() {
             </div>
 
             {/* Additional testimonial row */}
-            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-12">
+            <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
               <div className="group bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1">
                 <div className="flex items-center gap-1 mb-6">
                   {[...Array(5)].map((_, i) => (
@@ -800,7 +783,7 @@ export default function Home() {
           </section>
         </AnimatedSection>
 
-        <AnimatedSection delay={2500}>
+        <AnimatedSection delay={400}>
           <section id="faq" aria-label="FAQ" className="py-16 md:py-24">
             <div className="max-w-2xl mx-auto text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-3">
@@ -818,8 +801,8 @@ export default function Home() {
       </main>
 
       {/* Final CTA Section */}
-      <AnimatedSection delay={3000}>
-        <section className="py-16 md:py-24 bg-gradient-to-br from-primary/5 to-purple-500/5 border-y border-primary/10 w-full">
+      <AnimatedSection delay={400}>
+        <section className="py-14 md:py-20 bg-gradient-to-br from-primary/5 to-purple-500/5 border-y border-primary/10 w-full">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-3xl mx-auto text-center">
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
