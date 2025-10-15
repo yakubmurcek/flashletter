@@ -33,27 +33,33 @@ const AnimatedSection = ({
   delay?: number
 }) => {
   const elementRef = useRef<HTMLDivElement>(null)
+  const hasAnimatedRef = useRef(false)
   const [isInView, setIsInView] = useState(false)
 
   useEffect(() => {
     const element = elementRef.current
     if (!element) return
 
-    // Check if already visible (prevent re-animation)
-    if (element.classList.contains('animated')) return
+    // Prevent re-animation on re-renders
+    if (hasAnimatedRef.current) {
+      setIsInView(true)
+      return
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // Mark as animated immediately
-            entry.target.classList.add('animated')
+          if (entry.isIntersecting && !hasAnimatedRef.current) {
+            hasAnimatedRef.current = true
             setIsInView(true)
             observer.unobserve(entry.target)
           }
         })
       },
-      { threshold: 0.1 }
+      {
+        threshold: 0,
+        rootMargin: '0px 0px 600px 0px',
+      }
     )
 
     observer.observe(element)
@@ -65,7 +71,7 @@ const AnimatedSection = ({
     <div
       ref={elementRef}
       style={{
-        animationDelay: `${delay}ms`,
+        transitionDelay: `${delay}ms`,
         opacity: isInView ? 1 : 0,
         transform: isInView ? 'translateY(0)' : 'translateY(32px)',
       }}
@@ -233,10 +239,7 @@ export default function Home() {
       </header>
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <AnimatedSection
-          delay={0}
-          className="max-w-3xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28"
-        >
+        <div className="max-w-3xl mx-auto text-center pt-12 pb-16 md:pt-20 md:pb-28">
           {/* Floating elements around hero */}
           <FloatingElement delay={0}>
             <div className="absolute top-20 left-10 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
@@ -254,70 +257,80 @@ export default function Home() {
             </div>
           </FloatingElement>
 
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 text-foreground text-sm mb-6 animate-fade-in-up">
-            <Sparkles className="w-4 h-4 animate-pulse text-yellow-500 fill-yellow-500 drop-shadow-lg" />
-            <span className="font-medium">
-              Lightning-fast AI Email Campaigns
-            </span>
-          </div>
+          <AnimatedSection delay={0}>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-purple-500/10 text-foreground text-sm mb-6">
+              <Sparkles className="w-4 h-4 animate-pulse text-yellow-500 fill-yellow-500 drop-shadow-lg" />
+              <span className="font-medium">
+                Lightning-fast AI Email Campaigns
+              </span>
+            </div>
+          </AnimatedSection>
 
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight animate-fade-in-up delay-200">
-            Converting email campaigns in{' '}
-            <GradientText className="cursor-behind">seconds</GradientText> with
-            Flashletter
-          </h1>
+          <AnimatedSection delay={100}>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
+              Converting email campaigns in{' '}
+              <GradientText className="cursor-behind">seconds</GradientText>{' '}
+              with Flashletter
+            </h1>
+          </AnimatedSection>
 
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed animate-fade-in-up delay-400">
-            Transform your landing page into a complete email campaign. AI
-            analyzes your content and creates personalized email sequences that
-            convert.
-          </p>
+          <AnimatedSection delay={200}>
+            <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
+              Transform your landing page into a complete email campaign. AI
+              analyzes your content and creates personalized email sequences
+              that convert.
+            </p>
+          </AnimatedSection>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up delay-600">
-            <PulseButton>
+          <AnimatedSection delay={300}>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <PulseButton>
+                <Button
+                  size="lg"
+                  asChild
+                  className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Link href="/create" prefetch={true}>
+                    Start Creating
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </Button>
+              </PulseButton>
               <Button
                 size="lg"
-                asChild
-                className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 shadow-lg hover:shadow-xl transition-all duration-300"
+                variant="outline"
+                className="gap-2 text-base px-6 py-3 bg-transparent hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group"
               >
-                <Link href="/create" prefetch={true}>
-                  Start Creating
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </Link>
+                <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                Watch Demo
               </Button>
-            </PulseButton>
-            <Button
-              size="lg"
-              variant="outline"
-              className="gap-2 text-base px-6 py-3 bg-transparent hover:bg-primary/5 hover:border-primary/50 transition-all duration-300 group"
-            >
-              <Play className="w-4 h-4 group-hover:scale-110 transition-transform" />
-              Watch Demo
-            </Button>
-          </div>
+            </div>
+          </AnimatedSection>
 
           {/* Stats section */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8 animate-fade-in-up delay-800">
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">10x</div>
-              <div className="text-sm text-muted-foreground">
-                Faster Campaign Creation
+          <AnimatedSection delay={400}>
+            <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">10x</div>
+                <div className="text-sm text-muted-foreground">
+                  Faster Campaign Creation
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">45%</div>
+                <div className="text-sm text-muted-foreground">
+                  Higher Open Rates
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-primary mb-2">67%</div>
+                <div className="text-sm text-muted-foreground">
+                  ROI Improvement
+                </div>
               </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">45%</div>
-              <div className="text-sm text-muted-foreground">
-                Higher Open Rates
-              </div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">67%</div>
-              <div className="text-sm text-muted-foreground">
-                ROI Improvement
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
+          </AnimatedSection>
+        </div>
 
         <AnimatedSection delay={1000}>
           <section
