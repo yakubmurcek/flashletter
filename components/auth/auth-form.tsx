@@ -113,7 +113,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="submit"
         disabled={loading}
-        className="w-full bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 transition-all duration-300"
+        className="w-full bg-gradient-to-r from-primary to-amber-600/70 hover:from-primary/90 hover:to-amber-600/60 transition-all duration-300"
       >
         {loading ? (
           <>

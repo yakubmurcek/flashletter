@@ -71,7 +71,7 @@ export function Footer() {
               <Button
                 size="sm"
                 asChild
-                className="bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60"
+                className="bg-gradient-to-r from-primary to-amber-600/70 hover:from-primary/90 hover:to-amber-600/60"
               >
                 <Link href={user ? '/campaigns' : '/signup'}>
                   {user ? 'Open App' : 'Get Started'}

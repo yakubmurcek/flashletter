@@ -33,7 +33,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
             'w-full text-left p-3 rounded-lg transition-all duration-200',
             'border border-border/40 hover:border-primary/30 hover:bg-primary/5 hover:shadow-md',
             selectedId === email.id
-              ? 'bg-gradient-to-r from-primary/10 to-purple-500/5 border-primary/30 shadow-sm'
+              ? 'bg-gradient-to-r from-primary/10 to-amber-500/5 border-primary/30 shadow-sm'
               : ''
           )}
         >
@@ -42,7 +42,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
               className={cn(
                 'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
-                  ? 'bg-gradient-to-br from-primary to-purple-600/70 text-primary-foreground font-semibold'
+                  ? 'bg-gradient-to-br from-primary to-amber-600/70 text-primary-foreground font-semibold'
                   : 'bg-primary/10 text-primary font-medium'
               )}
             >

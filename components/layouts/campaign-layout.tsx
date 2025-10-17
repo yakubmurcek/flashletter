@@ -22,7 +22,7 @@ export function CampaignLayout({
       {/* Animated background elements - matching landing page */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-amber-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
@@ -46,10 +46,7 @@ export function CampaignLayout({
                   <div className="h-6 w-px bg-border" />
                 </>
               ) : null}
-              <Link
-                href="/"
-                className="flex items-center gap-2 group"
-              >
+              <Link href="/" className="flex items-center gap-2 group">
                 <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
                   <Image
                     src="/icon-192.png"

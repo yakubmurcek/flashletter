@@ -42,7 +42,7 @@ export function TestimonialsSection() {
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 bg-gradient-to-br from-orange-500 to-amber-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
                 AT
               </div>
               <div>
@@ -165,7 +165,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border border-blue-200 dark:border-blue-800 rounded-xl p-8 hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-500 hover:-translate-y-1">
+          <div className="group bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20 border border-orange-200 dark:border-orange-800 rounded-xl p-8 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -187,7 +187,7 @@ export function TestimonialsSection() {
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 bg-gradient-to-br from-amber-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
                 RK
               </div>
               <div>

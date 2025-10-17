@@ -106,7 +106,7 @@ export const GradientText = ({
   className?: string
 }) => (
   <span
-    className={`bg-gradient-to-r from-primary via-indigo-500 to-purple-600 bg-clip-text text-transparent animate-gradient ${className}`}
+    className={`bg-gradient-to-r from-primary via-orange-500 to-amber-600 bg-clip-text text-transparent animate-gradient ${className}`}
   >
     {children}
   </span>
