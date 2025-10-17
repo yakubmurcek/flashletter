@@ -81,8 +81,14 @@ export function Footer() {
           </nav>
         </div>
         <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-muted-foreground">
-          <div>
-            © {new Date().getFullYear()} Flashletter. All rights reserved.
+          <div className="flex flex-col">
+            <div>
+              © {new Date().getFullYear()} Flashletter 2025. All rights
+              reserved.
+            </div>
+            <div className="text-xs text-muted-foreground opacity-80">
+              Jakub Murcek — IČO 08294593
+            </div>
           </div>
           <div className="flex items-center gap-6">
             <a
