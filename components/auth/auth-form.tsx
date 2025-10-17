@@ -43,6 +43,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         setMessage(
           'Check your email for a confirmation link to complete your registration.'
         )
+        setLoading(false)
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -55,11 +56,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         const params = new URLSearchParams(window.location.search)
         const redirectTo = params.get('redirectTo') || '/'
         router.push(redirectTo)
-        router.refresh()
+        // Don't reset loading state - let the page navigation handle it
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
-    } finally {
       setLoading(false)
     }
   }
