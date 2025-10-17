@@ -30,7 +30,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
           )}
         >
           {message.role === 'assistant' && (
-            <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-amber-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-yellow-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4 text-primary" />
             </div>
           )}
@@ -38,7 +38,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
             className={cn(
               'px-3 py-2 max-w-[85%] min-w-[120px] transition-all',
               message.role === 'user'
-                ? 'bg-gradient-to-r from-primary to-amber-600/70 text-primary-foreground border-0 shadow-sm'
+                ? 'bg-gradient-to-r from-primary to-yellow-600/70 text-primary-foreground border-0 shadow-sm'
                 : message.appliedEdit
                 ? 'bg-green-500/10 border border-green-500/20'
                 : 'bg-primary/5 border border-border/40 hover:border-primary/20'
@@ -97,7 +97,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
       ))}
       {isLoading && (
         <div className="flex gap-2 justify-start">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-amber-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-yellow-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
             <Sparkles className="w-4 h-4 text-primary" />
           </div>
           <Card className="px-3 py-2 bg-primary/5 border border-border/40 min-w-[120px]">

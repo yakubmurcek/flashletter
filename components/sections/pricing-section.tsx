@@ -57,7 +57,7 @@ export function PricingSection() {
             </Button>
           </div>
 
-          <div className="relative bg-gradient-to-br from-primary to-amber-600 text-primary-foreground border border-primary rounded-xl overflow-visible p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
+          <div className="relative bg-gradient-to-br from-primary to-yellow-600 text-primary-foreground border border-primary rounded-xl overflow-visible p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
             <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 text-sm font-medium rounded-full bg-primary-foreground text-primary shadow-lg z-10">
               Most Popular
             </span>
@@ -157,7 +157,7 @@ export function PricingSection() {
         </div>
 
         {/* Pricing note */}
-        <div className="max-w-2xl mx-auto text-center mt-10 p-6 bg-gradient-to-r from-primary/5 to-amber-500/5 border border-primary/20 rounded-xl">
+        <div className="max-w-2xl mx-auto text-center mt-10 p-6 bg-gradient-to-r from-primary/5 to-yellow-500/5 border border-primary/20 rounded-xl">
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             <span>

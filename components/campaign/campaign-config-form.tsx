@@ -56,7 +56,7 @@ export function CampaignConfigForm({
         type="submit"
         size="lg"
         disabled={isLoading}
-        className="w-full gap-2 bg-gradient-to-r from-primary to-amber-600/70 hover:from-primary/90 hover:to-amber-600/60 transition-all duration-300"
+        className="w-full gap-2 bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300"
       >
         {isLoading ? (
           <>

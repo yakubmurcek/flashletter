@@ -96,7 +96,7 @@ export function EditorHeader({
           </Button>
           <Button
             size="sm"
-            className="gap-2 bg-gradient-to-r from-primary to-amber-600/70 hover:from-primary/90 hover:to-amber-600/60 transition-all duration-300"
+            className="gap-2 bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300"
           >
             <Send className="w-4 h-4" />
             <span className="hidden sm:inline">Deploy</span>

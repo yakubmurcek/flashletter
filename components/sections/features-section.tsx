@@ -42,8 +42,8 @@ export function FeaturesSection() {
           </div>
 
           <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-500/10 to-amber-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="w-8 h-8 text-amber-500" />
+            <div className="w-16 h-16 bg-gradient-to-br from-yellow-500/10 to-yellow-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-8 h-8 text-yellow-600" />
             </div>
             <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
               AI-Powered
@@ -78,7 +78,7 @@ export function FeaturesSection() {
 
         {/* Additional features grid */}
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
-          <div className="group bg-gradient-to-br from-primary/5 to-amber-500/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+          <div className="group bg-gradient-to-br from-primary/5 to-yellow-500/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <TrendingUp className="w-6 h-6 text-primary" />
@@ -91,7 +91,7 @@ export function FeaturesSection() {
             </p>
           </div>
 
-          <div className="group bg-gradient-to-br from-orange-500/5 to-amber-500/5 border border-orange-500/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
+          <div className="group bg-gradient-to-br from-yellow-500/5 to-amber-500/5 border border-yellow-500/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
                 <Users className="w-6 h-6 text-blue-500" />

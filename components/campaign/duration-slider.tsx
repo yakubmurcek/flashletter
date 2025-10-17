@@ -16,7 +16,7 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
         <Label htmlFor="days" className="text-base font-semibold">
           Campaign Duration
         </Label>
-        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-amber-600 bg-clip-text text-transparent">
+        <span className="text-2xl font-bold bg-gradient-to-r from-primary to-yellow-600 bg-clip-text text-transparent">
           {days} days
         </span>
       </div>
