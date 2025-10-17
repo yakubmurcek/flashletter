@@ -40,7 +40,7 @@ export default async function CampaignsPage() {
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
               <Image
-                src="/icon-192.png"
+                src="/icon-192.webp"
                 alt="Flashletter"
                 width={32}
                 height={32}

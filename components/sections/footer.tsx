@@ -28,7 +28,7 @@ export function Footer() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg overflow-hidden">
               <Image
-                src="/icon-192.png"
+                src="/icon-192.webp"
                 alt="Flashletter"
                 width={40}
                 height={40}

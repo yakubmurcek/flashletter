@@ -31,7 +31,7 @@ export function Header() {
             group-hover:scale-110 transition-transform duration-300"
           >
             <Image
-              src="/icon-192.png"
+              src="/icon-192.webp"
               alt="Flashletter"
               width={32}
               height={32}
