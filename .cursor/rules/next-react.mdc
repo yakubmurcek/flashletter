@@ -26,6 +26,7 @@ You are a senior full-stack developer proficient in TypeScript, React, Next.js (
   - Use Supabase for database and authentication.
   - Validate all requests/responses with Zod.
   - Follow Supabase best practices for security and performance.
+- DON'T USE /commit or ANY GIT CHANGES WITHOUT PRIOR CONSENT OF THE USER
 
 Methodology
 
