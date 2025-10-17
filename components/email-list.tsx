@@ -42,7 +42,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
               className={cn(
                 'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
-                  ? 'bg-gradient-to-br from-primary to-amber-500/70 text-primary-foreground font-semibold'
+                  ? 'bg-gradient-to-br from-orange-400 to-amber-300/70 text-primary-foreground font-semibold'
                   : 'bg-primary/10 text-primary font-medium'
               )}
             >

@@ -20,7 +20,7 @@ export function CTASection() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 text-base bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="gap-2 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link href="/signup">
                   Start Free Trial

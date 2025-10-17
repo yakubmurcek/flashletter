@@ -38,7 +38,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
             className={cn(
               'px-3 py-2 max-w-[85%] min-w-[120px] transition-all',
               message.role === 'user'
-                ? 'bg-gradient-to-r from-primary to-amber-500/70 text-primary-foreground border-0 shadow-sm'
+                ? 'bg-gradient-to-r from-orange-400 to-amber-300/70 text-white border-0 shadow-sm'
                 : message.appliedEdit
                 ? 'bg-green-500/10 border border-green-500/20'
                 : 'bg-primary/5 border border-border/40 hover:border-primary/20'

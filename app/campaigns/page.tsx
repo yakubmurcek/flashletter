@@ -66,7 +66,7 @@ export default async function CampaignsPage() {
             <Button
               asChild
               size="lg"
-              className="gap-2 bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300 w-full md:w-auto"
+              className="gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300 w-full md:w-auto"
             >
               <Link href="/create" prefetch={true}>
                 <Plus className="w-5 h-5" />
@@ -87,7 +87,7 @@ export default async function CampaignsPage() {
                 </p>
                 <Button
                   asChild
-                  className="bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
                 >
                   <Link href="/create" prefetch={true}>
                     Create Your First Campaign

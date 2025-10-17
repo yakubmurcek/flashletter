@@ -18,7 +18,7 @@ export function HeroSection() {
         </div>
       </FloatingElement>
       <FloatingElement delay={1}>
-        <div className="absolute top-32 right-16 w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center">
+        <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center">
           <Mail className="w-6 h-6 text-amber-500" />
         </div>
       </FloatingElement>
@@ -29,8 +29,8 @@ export function HeroSection() {
       </FloatingElement>
 
       <AnimatedSection delay={0} immediate>
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-yellow-500/10 text-foreground text-sm mb-6">
-          <Sparkles className="w-4 h-4 animate-pulse text-amber-500 fill-yellow-500 drop-shadow-lg" />
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-amber-300/10 text-foreground text-sm mb-6">
+          <Sparkles className="w-4 h-4 animate-pulse text-amber-500 fill-amber-500 drop-shadow-lg" />
           <span className="font-medium">Lightning-fast AI Email Campaigns</span>
         </div>
       </AnimatedSection>
@@ -57,7 +57,7 @@ export function HeroSection() {
             <Button
               size="lg"
               asChild
-              className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 shadow-lg hover:shadow-xl transition-all duration-300"
+              className="gap-2 text-base px-6 py-3 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 shadow-lg hover:shadow-xl transition-all duration-300"
             >
               <Link href="/create" prefetch={true}>
                 Start Creating

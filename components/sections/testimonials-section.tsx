@@ -42,7 +42,7 @@ export function TestimonialsSection() {
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-500 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
+              <div className="w-14 h-14 bg-gradient-to-br from-yellow-500 to-amber-300 rounded-full flex items-center justify-center text-white font-bold text-lg group-hover:scale-110 transition-transform">
                 AT
               </div>
               <div>
