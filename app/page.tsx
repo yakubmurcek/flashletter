@@ -22,7 +22,7 @@ export default function Home() {
 
       <Header />
 
-      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
         <HeroSection />
         <FeaturesSection />
         <PricingSection />
