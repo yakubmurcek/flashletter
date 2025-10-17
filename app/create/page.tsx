@@ -91,7 +91,7 @@ export default function CreatePage() {
               type="submit"
               size="lg"
               disabled={isAnalyzing || isSubmitting}
-              className="w-full gap-2 bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300"
+              className="w-full gap-2 bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300"
             >
               {isAnalyzing || isSubmitting ? (
                 <>

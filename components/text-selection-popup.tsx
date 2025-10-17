@@ -22,7 +22,7 @@ interface TextSelectionPopupProps {
 const ACTIONS = [
   { label: 'Ask AI about this', icon: Sparkles, color: 'text-blue-500' },
   { label: 'Improve this', icon: CheckCircle2, color: 'text-primary' },
-  { label: 'Rewrite this', icon: RefreshCw, color: 'text-yellow-600' },
+  { label: 'Rewrite this', icon: RefreshCw, color: 'text-amber-500' },
   { label: 'Make it shorter', icon: Minimize2, color: 'text-orange-500' },
   { label: 'Make it longer', icon: Maximize2, color: 'text-green-500' },
   { label: 'Fix grammar', icon: Pencil, color: 'text-pink-500' },

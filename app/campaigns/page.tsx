@@ -31,7 +31,7 @@ export default async function CampaignsPage() {
       {/* Animated background elements - matching landing page */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute top-40 right-20 w-96 h-96 bg-yellow-500/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-amber-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
         <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
       </div>
 
@@ -66,7 +66,7 @@ export default async function CampaignsPage() {
             <Button
               asChild
               size="lg"
-              className="gap-2 bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300 w-full md:w-auto"
+              className="gap-2 bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300 w-full md:w-auto"
             >
               <Link href="/create" prefetch={true}>
                 <Plus className="w-5 h-5" />
@@ -87,7 +87,7 @@ export default async function CampaignsPage() {
                 </p>
                 <Button
                   asChild
-                  className="bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300"
+                  className="bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300"
                 >
                   <Link href="/create" prefetch={true}>
                     Create Your First Campaign

@@ -63,7 +63,7 @@ function InputFormBase({
       data-chat-form
     >
       {selectedContext && (
-        <div className="mb-3 p-3 bg-gradient-to-r from-primary/10 to-yellow-500/5 border border-primary/20 rounded-lg">
+        <div className="mb-3 p-3 bg-gradient-to-r from-primary/10 to-amber-400/5 border border-primary/20 rounded-lg">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center">
@@ -104,7 +104,7 @@ function InputFormBase({
           type="submit"
           size="icon"
           disabled={isLoading || !input.trim()}
-          className="bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 transition-all duration-300"
+          className="bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 transition-all duration-300"
         >
           <Send className="w-4 h-4" />
         </Button>

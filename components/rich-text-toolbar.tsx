@@ -22,7 +22,7 @@ interface RichTextToolbarProps {
 
 const colors = [
   { name: 'Default', value: '#000000' },
-  { name: 'Primary', value: '#eab308' },
+  { name: 'Primary', value: '#f97316' },
   { name: 'Accent', value: '#64748b' },
   { name: 'Muted', value: '#78716c' },
   { name: 'Red', value: '#dc2626' },

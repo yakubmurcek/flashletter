@@ -5,7 +5,7 @@ import { PulseButton } from '@/components/ui/animations'
 
 export function CTASection() {
   return (
-    <section className="py-14 md:py-20 bg-gradient-to-br from-primary/5 to-yellow-500/5 border-y border-primary/10 w-full">
+    <section className="py-14 md:py-20 bg-gradient-to-br from-primary/5 to-amber-400/5 border-y border-primary/10 w-full">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -20,7 +20,7 @@ export function CTASection() {
               <Button
                 size="lg"
                 asChild
-                className="gap-2 text-base bg-gradient-to-r from-primary to-yellow-600/70 hover:from-primary/90 hover:to-yellow-600/60 shadow-lg hover:shadow-xl transition-all duration-300"
+                className="gap-2 text-base bg-gradient-to-r from-primary to-amber-500/70 hover:from-primary/90 hover:to-amber-500/60 shadow-lg hover:shadow-xl transition-all duration-300"
               >
                 <Link href="/signup">
                   Start Free Trial
