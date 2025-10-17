@@ -1,6 +1,6 @@
-import { Mail } from 'lucide-react'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import Image from 'next/image'
 
 export default function CampaignsLoading() {
   return (
@@ -8,8 +8,15 @@ export default function CampaignsLoading() {
       <header className="border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Mail className="w-5 h-5 text-primary-foreground" />
+            <div className="w-8 h-8 rounded-lg overflow-hidden">
+              <Image
+                src="/icon-192.webp"
+                alt="Flashletter"
+                width={32}
+                height={32}
+                className="w-full h-full"
+                priority
+              />
             </div>
             <span className="text-xl font-semibold">Flashletter</span>
           </div>

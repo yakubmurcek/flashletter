@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
-import { Mail } from 'lucide-react'
 import Image from 'next/image'
 
 export default async function AuthLayout({

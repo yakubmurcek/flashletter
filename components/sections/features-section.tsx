@@ -1,7 +1,6 @@
 import {
   Zap,
   Sparkles,
-  Mail,
   Clock,
   Target,
   Award,
@@ -59,8 +58,12 @@ export function FeaturesSection() {
           </div>
 
           <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-pink-500/10 to-pink-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Mail className="w-8 h-8 text-pink-500" />
+            <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <img
+                src="/icon-192.webp"
+                alt="Flashletter"
+                className="w-12 h-12"
+              />
             </div>
             <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
               Fully Editable

@@ -1,7 +1,7 @@
 'use client'
 
 import { memo } from 'react'
-import { Mail } from 'lucide-react'
+import Image from 'next/image'
 import { EmailList } from '@/components/email-list'
 import type { Email } from '@/lib/types'
 
@@ -22,8 +22,14 @@ function EmailSidebarComponent({
     <aside className="w-80 border-r border-border/60 bg-card/95 backdrop-blur-sm flex flex-col hover:border-border/80 transition-colors">
       <div className="p-4 flex-shrink-0 h-20 border-b border-border/40">
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-6 h-6 bg-primary/10 rounded-lg flex items-center justify-center">
-            <Mail className="w-4 h-4 text-primary" />
+          <div className="w-6 h-6 rounded-lg overflow-hidden">
+            <Image
+              src="/icon-192.webp"
+              alt="Flashletter"
+              width={24}
+              height={24}
+              className="w-full h-full"
+            />
           </div>
           <h2 className="font-semibold text-sm truncate">Campaign Emails</h2>
         </div>

@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Plus, Mail } from 'lucide-react'
+import { Plus } from 'lucide-react'
+
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
 export const metadata = {
@@ -78,8 +79,15 @@ export default async function CampaignsPage() {
           {campaigns.length === 0 ? (
             <Card className="text-center py-16 border-border/60">
               <CardContent>
-                <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Mail className="w-10 h-10 text-primary" />
+                <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 overflow-hidden">
+                  <Image
+                    src="/icon-192.webp"
+                    alt="Flashletter"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-contain"
+                    priority
+                  />
                 </div>
                 <h3 className="text-2xl font-bold mb-3">No campaigns yet</h3>
                 <p className="text-muted-foreground mb-8 text-lg">
