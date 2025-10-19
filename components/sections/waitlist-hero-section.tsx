@@ -10,7 +10,7 @@ import { WaitlistForm } from '@/components/waitlist-form'
 
 export function WaitlistHeroSection() {
   return (
-    <div className="max-w-4xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
+    <div className="max-w-4xl mx-auto text-center pt-4 pb-14 md:pt-6 md:pb-24">
       {/* Floating elements around hero */}
       <FloatingElement delay={0.1} variant="bouncy">
         <div className="absolute top-[152px] md:top-2 md:left-4 left-2 w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center">
@@ -27,13 +27,6 @@ export function WaitlistHeroSection() {
           <Sparkles className="w-7 h-7 text-pink-500" />
         </div>
       </FloatingElement>
-
-      <AnimatedSection delay={0} immediate>
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-amber-300/10 text-foreground text-sm mb-6">
-          <Clock className="w-5 h-5 animate-pulse text-amber-500 drop-shadow-lg" />
-          <span className="font-medium">Coming Soon - Join the Waitlist</span>
-        </div>
-      </AnimatedSection>
 
       <AnimatedSection delay={250} immediate>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">

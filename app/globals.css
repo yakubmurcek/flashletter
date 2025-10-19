@@ -510,6 +510,27 @@
   }
 }
 
+/* Interactive clock animations */
+@keyframes clock-tick {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes clock-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(249, 115, 22, 0);
+  }
+}
+
+@keyframes time-update {
+  0% { opacity: 0.7; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
+}
+
 .animate-pulse-glow {
   animation: pulse-glow 2s infinite;
 }
@@ -540,6 +561,19 @@
 
 .animate-confetti {
   animation: confetti 3s linear forwards;
+}
+
+/* Interactive clock animation classes */
+.animate-clock-tick {
+  animation: clock-tick 1s ease-in-out infinite;
+}
+
+.animate-clock-glow {
+  animation: clock-glow 2s ease-in-out infinite;
+}
+
+.animate-time-update {
+  animation: time-update 1s ease-in-out infinite;
 }
 
 /* Simple scroll-based fade-in */
