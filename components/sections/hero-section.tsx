@@ -36,7 +36,7 @@ export function HeroSection() {
       </AnimatedSection>
 
       <AnimatedSection delay={250} immediate>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
           Converting email campaigns in{' '}
           <GradientText className="cursor-behind">seconds</GradientText> with
           Flashletter
@@ -44,7 +44,7 @@ export function HeroSection() {
       </AnimatedSection>
 
       <AnimatedSection delay={500} immediate>
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
           Transform your landing page into a complete email campaign. AI
           analyzes your content and creates personalized email sequences that
           convert.
