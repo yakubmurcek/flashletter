@@ -11,9 +11,9 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Lightning-fast AI email campaigns',
+  title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
   description:
-    'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+    'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
   keywords: [
     'email campaigns',
     'AI email generator',
@@ -22,6 +22,8 @@ export const metadata: Metadata = {
     'AI copywriting',
     'email automation',
     'marketing automation',
+    'waitlist',
+    'coming soon',
   ],
   authors: [{ name: 'Flashletter' }],
   creator: 'Flashletter',
@@ -33,24 +35,24 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'Flashletter - Lightning-fast AI email campaigns',
+    title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
     description:
-      'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     siteName: 'Flashletter',
     images: [
       {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Lightning-fast AI email campaigns',
+        alt: 'Flashletter - Join the Waitlist for AI Email Campaigns',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Lightning-fast AI email campaigns',
+    title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
     description:
-      'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     images: ['/og-image.png'],
     creator: '@flashletter',
   },
@@ -96,13 +98,15 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'Generate complete email campaigns in seconds with AI',
+                'AI-powered email campaign generator - Join the waitlist for lightning-fast email campaigns',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com',
               applicationCategory: 'BusinessApplication',
+              applicationStatus: 'ComingSoon',
               offers: {
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'USD',
+                availability: 'https://schema.org/PreOrder',
               },
             }),
           }}

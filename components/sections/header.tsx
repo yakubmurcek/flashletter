@@ -53,12 +53,6 @@ export function Header() {
             Features
           </a>
           <a
-            href="#pricing"
-            className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-          >
-            Pricing
-          </a>
-          <a
             href="#testimonials"
             className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
           >
@@ -72,39 +66,14 @@ export function Header() {
           </a>
         </nav>
         <div className="flex items-center gap-3">
-          {user ? (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="hover:scale-105 transition-transform"
-              >
-                <Link href="/campaigns">My Campaigns</Link>
-              </Button>
-              <UserMenu user={user} />
-            </>
-          ) : (
-            <>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="hover:scale-105 transition-transform"
-              >
-                <Link href="/login">Sign In</Link>
-              </Button>
-              <PulseButton>
-                <Button
-                  size="sm"
-                  asChild
-                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
-                >
-                  <Link href="/signup">Get Started</Link>
-                </Button>
-              </PulseButton>
-            </>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
+            className="hover:scale-105 transition-transform"
+          >
+            <a href="#waitlist">Join Waitlist</a>
+          </Button>
         </div>
       </div>
     </header>
