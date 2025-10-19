@@ -171,12 +171,50 @@
 /* Custom animations for landing page */
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
+  50% { transform: translateY(-12px); }
 }
 
 @keyframes float-mobile {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes fadeInFloat {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes floatAfterFadeIn {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes floatAfterFadeInMobile {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes floatGentle {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-14px); }
+}
+
+@keyframes floatBouncy {
+  0%, 100% { transform: translateY(0px); }
+  25% { transform: translateY(-10px); }
+  75% { transform: translateY(-16px); }
+}
+
+@keyframes floatSway {
+  0%, 100% { transform: translateY(0px) translateX(0px); }
+  33% { transform: translateY(-12px) translateX(2px); }
+  66% { transform: translateY(-8px) translateX(-2px); }
 }
 
 @keyframes gradient {
@@ -245,11 +283,33 @@
 
 /* Animation utility classes */
 .animate-float {
-  animation: float 6s ease-in-out infinite;
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  animation: fadeInFloat 0.3s ease-out forwards, floatAfterFadeIn 8s ease-in-out infinite 0.3s;
 }
 
 .animate-float-mobile {
-  animation: float-mobile 6s ease-in-out infinite;
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  animation: fadeInFloat 0.3s ease-out forwards, floatAfterFadeInMobile 7s ease-in-out infinite 0.3s;
+}
+
+.animate-float-gentle {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  animation: fadeInFloat 0.3s ease-out forwards, floatGentle 9s ease-in-out infinite 0.3s;
+}
+
+.animate-float-bouncy {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  animation: fadeInFloat 0.3s ease-out forwards, floatBouncy 7s ease-in-out infinite 0.3s;
+}
+
+.animate-float-sway {
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+  animation: fadeInFloat 0.3s ease-out forwards, floatSway 8s ease-in-out infinite 0.3s;
 }
 
 .animate-gradient {
@@ -497,6 +557,10 @@
 /* Reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-float,
+  .animate-float-mobile,
+  .animate-float-gentle,
+  .animate-float-bouncy,
+  .animate-float-sway,
   .animate-gradient,
   .animate-fade-in-up,
   .animate-slide-in-left,
@@ -509,7 +573,9 @@
   .animate-typewriter,
   .animate-sparkle,
   .animate-confetti {
-    animation: none;
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
   
   .hover-lift:hover {

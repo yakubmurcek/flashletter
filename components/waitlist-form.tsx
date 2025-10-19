@@ -118,7 +118,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-4">Join the Waitlist</h2>
           <p className="text-muted-foreground text-lg">
-            Be the first to experience lightning-fast AI email campaigns
+            Be the first to create lightning-fast AI email campaigns
           </p>
         </div>
 

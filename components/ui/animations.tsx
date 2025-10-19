@@ -56,20 +56,30 @@ export const AnimatedSection = ({
 export const FloatingElement = ({
   children,
   delay = 0,
+  variant = 'default',
 }: {
   children: React.ReactNode
   delay?: number
-}) => (
-  <div
-    className="animate-float"
-    style={{
-      animationDelay: `${delay}s`,
-      animationDuration: '6s',
-    }}
-  >
-    {children}
-  </div>
-)
+  variant?: 'default' | 'gentle' | 'bouncy' | 'sway'
+}) => {
+  const animationClass = {
+    default: 'animate-float',
+    gentle: 'animate-float-gentle',
+    bouncy: 'animate-float-bouncy',
+    sway: 'animate-float-sway',
+  }[variant]
+
+  return (
+    <div
+      className={animationClass}
+      style={{
+        animationDelay: `${delay}s, ${delay + 0.3}s`,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
 
 export const PulseButton = ({
   children,
