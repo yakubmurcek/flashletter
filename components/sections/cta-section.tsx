@@ -12,7 +12,7 @@ export function CTASection() {
             Ready to transform your email marketing?
           </h2>
           <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Join thousands of teams already using Flashletter to create
+            Join hundreds of users already using Flashletter to create
             high-converting email campaigns in seconds.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
