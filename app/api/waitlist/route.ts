@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, name } = waitlistSchema.parse(body)
 
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Check if email already exists
     const { data: existingEntry } = await supabase
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 // Optional: Add GET endpoint to check waitlist status (for admin)
 export async function GET() {
   try {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const { data, error } = await supabase
       .from('waitlist')
