@@ -49,20 +49,66 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
 
   if (isSubmitted) {
     return (
-      <AnimatedSection delay={0} immediate>
-        <div
-          className={`text-center p-8 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-200 dark:border-green-800 ${className}`}
-        >
-          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h3 className="text-2xl font-bold text-green-700 dark:text-green-300 mb-2">
+      <div className={`relative animate-success-bounce ${className}`}>
+        {/* Confetti effect */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden">
+          <div
+            className="absolute top-0 left-1/4 w-2 h-2 bg-green-400 rounded-full animate-confetti"
+            style={{ animationDelay: '0.2s' }}
+          ></div>
+          <div
+            className="absolute top-0 left-1/2 w-1.5 h-1.5 bg-yellow-400 rounded-full animate-confetti"
+            style={{ animationDelay: '0.4s' }}
+          ></div>
+          <div
+            className="absolute top-0 left-3/4 w-2 h-2 bg-orange-400 rounded-full animate-confetti"
+            style={{ animationDelay: '0.6s' }}
+          ></div>
+          <div
+            className="absolute top-0 left-1/3 w-1 h-1 bg-pink-400 rounded-full animate-confetti"
+            style={{ animationDelay: '0.8s' }}
+          ></div>
+          <div
+            className="absolute top-0 left-2/3 w-1.5 h-1.5 bg-blue-400 rounded-full animate-confetti"
+            style={{ animationDelay: '1s' }}
+          ></div>
+        </div>
+
+        <div className="relative text-center p-8 bg-green-50 dark:bg-green-950/20 rounded-2xl border border-green-200 dark:border-green-800 overflow-hidden">
+          {/* Sparkle decorations */}
+          <div
+            className="absolute top-4 left-4 w-2 h-2 bg-yellow-400 rounded-full animate-sparkle"
+            style={{ animationDelay: '0.5s' }}
+          ></div>
+          <div
+            className="absolute top-6 right-6 w-1.5 h-1.5 bg-yellow-300 rounded-full animate-sparkle"
+            style={{ animationDelay: '1s' }}
+          ></div>
+          <div
+            className="absolute bottom-4 left-6 w-1 h-1 bg-yellow-500 rounded-full animate-sparkle"
+            style={{ animationDelay: '1.5s' }}
+          ></div>
+          <div
+            className="absolute bottom-6 right-4 w-2 h-2 bg-yellow-400 rounded-full animate-sparkle"
+            style={{ animationDelay: '2s' }}
+          ></div>
+
+          <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 animate-checkmark-pulse" />
+          <h3
+            className="text-2xl font-bold text-green-700 dark:text-green-300 mb-2 animate-fade-in-up"
+            style={{ animationDelay: '0.8s' }}
+          >
             You're on the list!
           </h3>
-          <p className="text-green-600 dark:text-green-400">
+          <p
+            className="text-green-600 dark:text-green-400 animate-fade-in-up"
+            style={{ animationDelay: '1.2s' }}
+          >
             We'll notify you as soon as Flashletter is ready. Get ready for
             lightning-fast email campaigns!
           </p>
         </div>
-      </AnimatedSection>
+      </div>
     )
   }
 
