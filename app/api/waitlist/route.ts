@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 const waitlistSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  name: z.string().optional(),
+  name: z.string().optional().nullable(),
 })
 
 export async function POST(request: NextRequest) {

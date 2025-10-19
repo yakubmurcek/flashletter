@@ -124,23 +124,6 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">
-              Name (optional)
-            </Label>
-            <div className="relative">
-              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="pl-10 h-12 text-base"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
               Email Address *
             </Label>
@@ -153,6 +136,23 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="pl-10 h-12 text-base"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="name" className="text-sm font-medium">
+              Name (optional)
+            </Label>
+            <div className="relative">
+              <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="name"
+                type="text"
+                placeholder="Your name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
                 className="pl-10 h-12 text-base"
               />
             </div>
