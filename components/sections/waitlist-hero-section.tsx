@@ -18,7 +18,7 @@ export function WaitlistHeroSection() {
         </div>
       </FloatingElement>
       <FloatingElement delay={1}>
-        <div className="absolute top-[45px] md:top-32 md:right-16 right-48 md:w-12 md:h-12 w-5 h-5 bg-amber-400/10 rounded-full flex items-center justify-center">
+        <div className="absolute top-[45px] md:top-32 md:right-4 right-48 md:w-12 md:h-12 w-5 h-5 bg-amber-400/10 rounded-full flex items-center justify-center">
           <Mail className="w-6 h-6 text-amber-500" />
         </div>
       </FloatingElement>
@@ -30,7 +30,7 @@ export function WaitlistHeroSection() {
 
       <AnimatedSection delay={0} immediate>
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-amber-300/10 text-foreground text-sm mb-6">
-          <Clock className="w-4 h-4 animate-pulse text-amber-500 fill-amber-500 drop-shadow-lg" />
+          <Clock className="w-5 h-5 animate-pulse text-amber-500 drop-shadow-lg" />
           <span className="font-medium">Coming Soon - Join the Waitlist</span>
         </div>
       </AnimatedSection>
