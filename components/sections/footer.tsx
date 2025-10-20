@@ -109,6 +109,12 @@ export function Footer() {
             >
               Terms of Service
             </a>
+            <a
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              href="/unsubscribe"
+            >
+              Unsubscribe
+            </a>
           </div>
         </div>
       </div>

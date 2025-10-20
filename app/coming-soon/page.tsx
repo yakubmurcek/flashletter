@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Clock, ArrowLeft, Mail } from 'lucide-react'
 import Link from 'next/link'
 import { WaitlistForm } from '@/components/waitlist-form'
+import { CookieConsentBanner } from '@/components/cookie-consent-banner'
 
 export default function ComingSoonPage() {
   return (
@@ -27,6 +28,8 @@ export default function ComingSoonPage() {
           </Link>
         </Button>
       </div>
+
+      <CookieConsentBanner />
     </div>
   )
 }

@@ -5,12 +5,23 @@ import { z } from 'zod'
 const waitlistSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   name: z.string().optional().nullable(),
+  privacyConsent: z.boolean().optional().default(true),
+  marketingConsent: z.boolean().optional().default(false),
+  consentTimestamp: z.string().datetime().optional(),
+  userRegion: z.enum(['EU', 'US', 'OTHER']).optional().default('OTHER'),
 })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, name } = waitlistSchema.parse(body)
+    const {
+      email,
+      name,
+      privacyConsent,
+      marketingConsent,
+      consentTimestamp,
+      userRegion,
+    } = waitlistSchema.parse(body)
 
     const supabase = await createClient()
 
@@ -36,6 +47,10 @@ export async function POST(request: NextRequest) {
         name: name || null,
         source: 'landing_page',
         status: 'pending',
+        privacy_consent: privacyConsent,
+        marketing_consent: marketingConsent || false,
+        consent_timestamp: consentTimestamp || new Date().toISOString(),
+        user_region: userRegion || 'OTHER',
       })
       .select()
       .single()

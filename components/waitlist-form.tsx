@@ -7,6 +7,9 @@ import { Label } from '@/components/ui/label'
 import { CheckCircle, Mail, User, Loader2, Timer } from 'lucide-react'
 import { AnimatedSection, PulseButton } from '@/components/ui/animations'
 import { InteractiveClock } from '@/components/ui/interactive-clock'
+import Link from 'next/link'
+import { useRegionDetection } from '@/lib/utils/location-detection'
+import { RegionSelector } from '@/components/region-selector'
 
 interface WaitlistFormProps {
   className?: string
@@ -18,11 +21,23 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
   const [error, setError] = useState('')
+  const [privacyConsent, setPrivacyConsent] = useState(false)
+  const [marketingConsent, setMarketingConsent] = useState(false)
+
+  // Region-based privacy controls
+  const { locationInfo, isLoading } = useRegionDetection()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setError('')
+
+    // Validate required consent (only for non-US users)
+    if (locationInfo?.requiresGDPR && !privacyConsent) {
+      setError('You must accept the privacy policy to join the waitlist.')
+      setIsSubmitting(false)
+      return
+    }
 
     try {
       const response = await fetch('/api/waitlist', {
@@ -30,7 +45,16 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, name: name || null }),
+        body: JSON.stringify({
+          email,
+          name: name || null,
+          privacyConsent: locationInfo?.requiresGDPR ? privacyConsent : true,
+          marketingConsent: locationInfo?.requiresGDPR
+            ? marketingConsent
+            : false,
+          consentTimestamp: new Date().toISOString(),
+          userRegion: locationInfo?.region || 'OTHER',
+        }),
       })
 
       if (!response.ok) {
@@ -41,6 +65,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
       setIsSubmitted(true)
       setEmail('')
       setName('')
+      setPrivacyConsent(false)
+      setMarketingConsent(false)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong')
     } finally {
@@ -134,6 +160,11 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           </p>
         </div>
 
+        {/* Region Selector */}
+        <div className="mb-6">
+          <RegionSelector />
+        </div>
+
         <div className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm font-medium">
@@ -171,6 +202,68 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           </div>
         </div>
 
+        {/* Privacy Consent Section - Only show for non-US users */}
+        {!isLoading && locationInfo?.requiresGDPR && (
+          <div className="space-y-4 p-4 bg-muted/30 rounded-lg border">
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="privacy-consent"
+                  checked={privacyConsent}
+                  onChange={(e) => setPrivacyConsent(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                  required
+                />
+                <label
+                  htmlFor="privacy-consent"
+                  className="text-sm text-foreground"
+                >
+                  <span className="font-medium">Privacy Policy Consent *</span>
+                  <br />
+                  <span className="text-muted-foreground">
+                    I agree to the{' '}
+                    <Link
+                      href="/privacy"
+                      className="text-primary hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Privacy Policy
+                    </Link>{' '}
+                    and consent to the processing of my personal data for the
+                    purpose of joining the waitlist.
+                  </span>
+                </label>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <input
+                  type="checkbox"
+                  id="marketing-consent"
+                  checked={marketingConsent}
+                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                />
+                <label
+                  htmlFor="marketing-consent"
+                  className="text-sm text-foreground"
+                >
+                  <span className="font-medium">
+                    Marketing Communications (Optional)
+                  </span>
+                  <br />
+                  <span className="text-muted-foreground">
+                    I would like to receive additional marketing communications
+                    about Flashletter features, tips, and special offers. You
+                    can unsubscribe at any time.
+                  </span>
+                </label>
+              </div>
+            </div>
+          </div>
+        )}
+
         {error && (
           <div className="p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>
@@ -180,7 +273,11 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         <PulseButton>
           <Button
             type="submit"
-            disabled={isSubmitting || !email}
+            disabled={
+              isSubmitting ||
+              !email ||
+              (locationInfo?.requiresGDPR && !privacyConsent)
+            }
             className="w-full h-12 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
@@ -195,7 +292,40 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         </PulseButton>
 
         <p className="text-xs text-muted-foreground text-center">
-          We respect your privacy. No spam, just updates about Flashletter.
+          {locationInfo?.requiresGDPR ? (
+            <>
+              By joining, you agree to our{' '}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+              . No spam, just updates about Flashletter.
+            </>
+          ) : (
+            <>
+              By joining, you agree to our{' '}
+              <Link href="/terms" className="text-primary hover:underline">
+                Terms of Service
+              </Link>{' '}
+              and{' '}
+              <Link href="/privacy" className="text-primary hover:underline">
+                Privacy Policy
+              </Link>
+              .{' '}
+              <br />
+              You can{' '}
+              <Link
+                href="/unsubscribe"
+                className="text-primary hover:underline"
+              >
+                unsubscribe
+              </Link>{' '}
+              at any time.
+            </>
+          )}
         </p>
       </form>
     </AnimatedSection>
