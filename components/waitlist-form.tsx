@@ -9,7 +9,6 @@ import { AnimatedSection, PulseButton } from '@/components/ui/animations'
 import { InteractiveClock } from '@/components/ui/interactive-clock'
 import Link from 'next/link'
 import { useRegionDetection } from '@/lib/utils/location-detection'
-import { RegionSelector } from '@/components/region-selector'
 
 interface WaitlistFormProps {
   className?: string
@@ -158,11 +157,6 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           <p className="text-muted-foreground text-lg">
             Be the first to create lightning-fast AI email campaigns
           </p>
-        </div>
-
-        {/* Region Selector */}
-        <div className="mb-6">
-          <RegionSelector />
         </div>
 
         <div className="space-y-4">
