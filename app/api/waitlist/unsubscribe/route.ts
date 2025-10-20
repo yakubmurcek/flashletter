@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
     // Check if email exists in waitlist
     const { data: existingEntry } = await supabase
       .from('waitlist')
-      .select('id, email')
+      .select('id, email, privacy_consent')
       .eq('email', email)
       .single()
 
@@ -27,11 +27,15 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Delete the waitlist entry (GDPR right to erasure)
-    const { error } = await supabase
+    // Update privacy consent to false (unsubscribe)
+    const { data: updateData, error } = await supabase
       .from('waitlist')
-      .delete()
+      .update({
+        privacy_consent: false,
+        marketing_consent: false,
+      })
       .eq('email', email)
+      .select()
 
     if (error) {
       console.error('Unsubscribe error:', error)
@@ -41,9 +45,12 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    console.log('Unsubscribe successful:', { email, updateData })
+
     return NextResponse.json(
       {
-        message: 'Successfully unsubscribed from waitlist.',
+        message:
+          'Successfully unsubscribed from waitlist. You will no longer receive updates.',
         email: email,
       },
       { status: 200 }
@@ -63,4 +70,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
