@@ -17,8 +17,10 @@ function QuickActionsBase({
   if (!isVisible || actions.length === 0) return null
 
   return (
-    <div className="px-4 pt-2 pb-3">
-      <p className="text-xs text-muted-foreground mb-2">Suggested actions:</p>
+    <div className="px-4 pt-2 pb-3 border-t border-border/40">
+      <p className="text-xs text-muted-foreground mb-2 font-medium">
+        Suggested actions
+      </p>
       <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <Button
@@ -26,7 +28,7 @@ function QuickActionsBase({
             variant="outline"
             size="sm"
             onClick={() => onSelect(action)}
-            className="text-xs bg-transparent"
+            className="text-xs bg-primary/5 border-primary/20 hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
           >
             {action}
           </Button>

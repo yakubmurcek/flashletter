@@ -7,12 +7,15 @@ import { useUrlState } from './use-url-state'
 
 type LoadingState = 'idle' | 'loading' | 'loaded' | 'error'
 
+import type { LandingPageData, CampaignConfig, Email } from '@/lib/types'
+
 interface CampaignLoaderReturn {
   loadingState: LoadingState
   campaignData: {
-    landingPageData: any
-    config: any
-    emails: any[]
+    name: string | null
+    landingPageData: LandingPageData | null
+    config: CampaignConfig | null
+    emails: Email[]
   } | null
   error: string | null
   loadCampaign: (campaignId: string) => Promise<void>
@@ -21,6 +24,7 @@ interface CampaignLoaderReturn {
 export function useCampaignLoader(): CampaignLoaderReturn {
   const router = useRouter()
   const {
+    campaignName,
     landingPageData,
     config,
     generatedEmails,
@@ -83,6 +87,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
     campaignIdFromUrl,
     campaignLoaded,
     error,
+    campaignName,
     landingPageData,
     config,
     generatedEmails.length,
@@ -91,6 +96,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
   const campaignData =
     loadingState === 'loaded'
       ? {
+          name: campaignName,
           landingPageData,
           config,
           emails: generatedEmails,

@@ -13,10 +13,12 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label htmlFor="days" className="text-base">
+        <Label htmlFor="days" className="text-base font-semibold">
           Campaign Duration
         </Label>
-        <span className="text-2xl font-bold text-primary">{days} days</span>
+        <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
+          {days} days
+        </span>
       </div>
       <Slider
         id="days"
@@ -32,7 +34,7 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
         <span>{CAMPAIGN_DURATION.MAX} days</span>
       </div>
       <p className="text-sm text-muted-foreground">
-        We'll generate {days} emails, one for each day of your campaign
+        We&apos;ll generate {days} emails, one for each day of your campaign
       </p>
     </div>
   )

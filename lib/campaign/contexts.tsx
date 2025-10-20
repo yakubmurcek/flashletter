@@ -5,6 +5,7 @@ import type { CampaignConfig, LandingPageData, Email } from '../types'
 
 export interface CampaignDataContextType {
   currentCampaignId: string | null
+  campaignName: string | null
   landingPageData: LandingPageData | null
   config: CampaignConfig | null
   generatedEmails: Email[]

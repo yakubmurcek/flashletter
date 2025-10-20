@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
@@ -38,7 +38,10 @@ function HistoryPageContent() {
 
   // Initialize version storage service
   const supabase = createClient()
-  const versionStorageService = new EmailVersionStorageService(supabase)
+  const versionStorageService = useMemo(
+    () => new EmailVersionStorageService(supabase),
+    [supabase]
+  )
 
   // Load versions when email ID changes
   useEffect(() => {
@@ -77,7 +80,7 @@ function HistoryPageContent() {
       }
       loadVersions()
     }
-  }, [validEmailId, generatedEmails])
+  }, [validEmailId, generatedEmails, selectedVersionId, versionStorageService])
 
   // Route guard
   useEffect(() => {
@@ -106,7 +109,7 @@ function HistoryPageContent() {
           <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Email Not Found</h2>
           <p className="text-muted-foreground mb-4">
-            The email you're looking for doesn't exist.
+            The email you&apos;re looking for doesn&apos;t exist.
           </p>
           <Button asChild>
             <Link
@@ -141,13 +144,6 @@ function HistoryPageContent() {
 
   const confirmRestore = async () => {
     if (!versionToRestore) return
-
-    // Save the restored version as a new version (non-destructive)
-    const restoredEmail = {
-      ...currentEmail,
-      subject: versionToRestore.subject,
-      content: versionToRestore.content,
-    }
 
     // Save current state as a version before restoring
     if (currentEmail.uuid) {
@@ -218,7 +214,6 @@ function HistoryPageContent() {
             selectedVersionId={selectedVersionId}
             onSelectVersion={setSelectedVersionId}
             onRestoreVersion={handleRestoreVersion}
-            currentEmailId={validEmailId}
           />
         </aside>
 

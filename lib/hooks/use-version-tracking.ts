@@ -3,12 +3,15 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
-import { useUrlState } from './use-url-state'
 import type { Email } from '@/lib/types'
 
 interface VersionTrackingReturn {
   versionCounts: Record<number, number>
-  restoreVersion: (restoreData: any) => Promise<void>
+  restoreVersion: (restoreData: {
+    emailId: number
+    subject: string
+    content: string
+  }) => Promise<void>
   refreshVersionCount: (emailId: number) => Promise<void>
   isLoading: boolean
 }
@@ -16,15 +19,12 @@ interface VersionTrackingReturn {
 export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
   const [versionCounts, setVersionCounts] = useState<Record<number, number>>({})
   const [isLoading, setIsLoading] = useState(false)
-  const { getParam, setMultipleParams, getCampaignId } = useUrlState()
 
   const supabase = createClient()
   const versionStorageService = useMemo(
     () => new EmailVersionStorageService(supabase),
     [supabase]
   )
-  const restoreParam = getParam('restore')
-  const campaignIdFromUrl = getCampaignId()
 
   // Load version counts for all emails
   useEffect(() => {
@@ -63,7 +63,11 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
   // Note: Restore handling is now done in the editor page to avoid duplicate processing
 
   const restoreVersion = useCallback(
-    async (restoreData: any) => {
+    async (restoreData: {
+      emailId: number
+      subject: string
+      content: string
+    }) => {
       // This will be called by the parent component to update the email
       // The actual email update logic is handled in the parent
       // This function just handles the version count update
@@ -83,7 +87,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         }
       }
     },
-    [emails]
+    [emails, versionStorageService]
   )
 
   const refreshVersionCount = useCallback(
@@ -104,7 +108,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         }
       }
     },
-    [emails]
+    [emails, versionStorageService]
   )
 
   return {

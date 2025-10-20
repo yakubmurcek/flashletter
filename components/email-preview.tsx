@@ -1,28 +1,29 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
-import { cn } from '@/lib/utils'
 import { TextSelectionPopup } from './text-selection-popup'
 import { EmailEditorSidebar } from './email-editor-sidebar'
 import { EmailPreviewContent } from './email-preview-content'
+import { cn } from '@/lib/utils'
 import type { Email } from '@/lib/types'
 
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
   onTextSelected?: (text: string, action: string) => void
+  showChat?: boolean
 }
 
-export function EmailPreview({
+function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
+  showChat = false,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject)
   const [editedContent, setEditedContent] = useState(email.content)
-  const [hasChanges, setHasChanges] = useState(false)
   const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
     'markdown'
   )
@@ -33,23 +34,23 @@ export function EmailPreview({
     y: number
   } | null>(null)
 
+  // Combine both effects into one - more efficient
   useEffect(() => {
-    const changed =
-      editedSubject !== email.subject || editedContent !== email.content
-    setHasChanges(changed)
-  }, [editedSubject, editedContent, email.subject, email.content])
-
-  useEffect(() => {
+    // Reset edited content when email changes
     setEditedSubject(email.subject)
     setEditedContent(email.content)
   }, [email.id, email.subject, email.content])
+
+  // Memoize hasChanges to avoid recalculation
+  const hasChanges = useMemo(() => {
+    return editedSubject !== email.subject || editedContent !== email.content
+  }, [editedSubject, editedContent, email.subject, email.content])
 
   const handleSave = () => {
     onUpdate({
       subject: editedSubject,
       content: editedContent,
     })
-    setHasChanges(false)
   }
 
   const handleTextSelection = () => {
@@ -95,10 +96,15 @@ export function EmailPreview({
             <p className="text-sm text-muted-foreground truncate">
               {showEditor
                 ? 'Edit content on the left, see preview on the right'
-                : 'Preview mode - click to show editor'}
+                : 'Preview mode'}
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div
+            className={cn(
+              'flex items-center gap-2',
+              showChat ? 'mr-4' : 'mr-0'
+            )}
+          >
             <Button
               variant="outline"
               size="sm"
@@ -161,3 +167,6 @@ export function EmailPreview({
     </div>
   )
 }
+
+// Memoize to prevent re-renders when parent re-renders
+export const EmailPreview = memo(EmailPreviewComponent)

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import type { ReactNode } from 'react'
 
 interface CampaignLayoutProps {
@@ -17,25 +18,54 @@ export function CampaignLayout({
   headerContent,
 }: CampaignLayoutProps) {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="min-h-screen bg-background flex flex-col relative overflow-hidden">
+      {/* Animated background elements - matching landing page */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-amber-400/5 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-500/5 rounded-full blur-3xl animate-pulse delay-2000"></div>
+      </div>
+
       {showHeader && (
-        <header className="border-b border-border">
+        <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-            {backHref ? (
-              <Button variant="ghost" size="sm" asChild className="gap-2">
-                <Link href={backHref}>
-                  <ArrowLeft className="w-4 h-4" />
-                  Back
-                </Link>
-              </Button>
-            ) : (
-              <div />
-            )}
+            <div className="flex items-center gap-6">
+              {backHref ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    asChild
+                    className="gap-2 hover:bg-primary/10 transition-colors"
+                  >
+                    <Link href={backHref}>
+                      <ArrowLeft className="w-4 h-4" />
+                      Back
+                    </Link>
+                  </Button>
+                  <div className="h-6 w-px bg-border" />
+                </>
+              ) : null}
+              <Link href="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
+                  <Image
+                    src="/icon-192.webp"
+                    alt="Flashletter"
+                    width={32}
+                    height={32}
+                    className="w-full h-full"
+                  />
+                </div>
+                <span className="text-xl font-semibold group-hover:text-primary transition-colors">
+                  Flashletter
+                </span>
+              </Link>
+            </div>
             {headerContent}
           </div>
         </header>
       )}
-      <main className="flex-1 container mx-auto px-4 flex items-center justify-center">
+      <main className="flex-1 container mx-auto px-4 flex items-center justify-center relative z-10">
         {children}
       </main>
     </div>

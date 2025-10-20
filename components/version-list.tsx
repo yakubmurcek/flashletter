@@ -11,7 +11,6 @@ interface VersionListProps {
   selectedVersionId: string | null
   onSelectVersion: (versionId: string) => void
   onRestoreVersion: (version: EmailVersion) => void
-  currentEmailId: number
 }
 
 /**
@@ -62,7 +61,6 @@ export function VersionList({
   selectedVersionId,
   onSelectVersion,
   onRestoreVersion,
-  currentEmailId,
 }: VersionListProps) {
   // Reverse to show newest first
   const sortedVersions = [...versions].reverse()

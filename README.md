@@ -14,6 +14,8 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - 💾 **Database Storage** - All campaigns and emails persisted in Supabase
 - 📝 **Version History** - Track changes to your emails over time
 - 🔄 **Auto-save** - Your work is automatically saved as you edit
+- 🛡️ **Rate Limiting** - Built-in protection against API abuse with Redis-based rate limiting
+- ⚡ **Retry Logic** - Automatic retry with exponential backoff for OpenAI API calls
 
 ## Tech Stack
 
@@ -22,6 +24,7 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - **TypeScript**
 - **Supabase** (Database & Authentication)
 - **OpenAI API** (GPT-4)
+- **Upstash Redis** (Rate Limiting)
 - **Tailwind CSS**
 - **shadcn/ui**
 - **Framer Motion**
@@ -66,12 +69,21 @@ cp .env.local.example .env.local
 Add your keys to `.env.local`:
 
 ```
+# Required
 OPENAI_API_KEY=sk-your-openai-api-key-here
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Optional (for rate limiting in production)
+UPSTASH_REDIS_REST_URL=your-upstash-redis-url
+UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 ```
 
-> **Get your OpenAI API key:** Visit [OpenAI Platform](https://platform.openai.com/api-keys) > **Get your Supabase keys:** Visit your [Supabase project settings](https://app.supabase.com) → API
+> **Get your OpenAI API key:** Visit [OpenAI Platform](https://platform.openai.com/api-keys)  
+> **Get your Supabase keys:** Visit your [Supabase project settings](https://app.supabase.com) → API  
+> **Get Upstash Redis credentials (optional):** Sign up at [Upstash](https://upstash.com) and create a Redis database
+
+**Note:** Rate limiting is optional for development. Without Upstash Redis configured, the app will work normally but without rate limit protection.
 
 ### 5. Run the development server
 
@@ -252,11 +264,15 @@ flashletter/
 
 ## Environment Variables
 
-| Variable                        | Description               | Required |
-| ------------------------------- | ------------------------- | -------- |
-| `OPENAI_API_KEY`                | Your OpenAI API key       | Yes      |
-| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL | Yes      |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key    | Yes      |
+| Variable                        | Description                    | Required |
+| ------------------------------- | ------------------------------ | -------- |
+| `OPENAI_API_KEY`                | Your OpenAI API key            | Yes      |
+| `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL      | Yes      |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key         | Yes      |
+| `UPSTASH_REDIS_REST_URL`        | Upstash Redis URL (rate limit) | No       |
+| `UPSTASH_REDIS_REST_TOKEN`      | Upstash Redis token            | No       |
+
+**Rate Limiting:** For production deployments, it's recommended to configure Upstash Redis to enable rate limiting. See [RATE_LIMITING.md](./RATE_LIMITING.md) for details.
 
 ## Cost Considerations
 
@@ -300,6 +316,13 @@ pnpm lint
 - Verify your OpenAI API key is valid
 - Check you have sufficient credits in your OpenAI account
 - Review the console for detailed error messages
+
+### "Too many requests" (429 error)
+
+- You've hit the rate limit for the API endpoint
+- Wait for the cooldown period (shown in error headers)
+- For production, configure Upstash Redis for better rate limiting
+- OpenAI rate limits are automatically retried with exponential backoff
 
 ### "Authentication error"
 

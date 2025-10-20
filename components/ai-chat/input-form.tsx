@@ -59,14 +59,16 @@ function InputFormBase({
   return (
     <form
       onSubmit={onSubmit}
-      className="p-4 border-t border-border"
+      className="p-4 border-t border-border/40 bg-gradient-to-t from-primary/5 to-transparent"
       data-chat-form
     >
       {selectedContext && (
-        <div className="mb-3 p-3 bg-primary/10 border border-primary/20 rounded-md">
+        <div className="mb-3 p-3 bg-gradient-to-r from-primary/10 to-amber-400/5 border border-primary/20 rounded-lg">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary flex-shrink-0" />
+              <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center">
+                <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
+              </div>
               <span className="text-xs font-semibold text-primary">
                 {selectedContext.action}
               </span>
@@ -77,14 +79,14 @@ function InputFormBase({
                 variant="ghost"
                 size="sm"
                 onClick={onClearContext}
-                className="h-5 w-5 p-0 hover:bg-primary/20"
+                className="h-5 w-5 p-0 hover:bg-primary/20 transition-colors"
               >
                 <X className="w-3 h-3" />
               </Button>
             )}
           </div>
-          <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-border/50 max-h-24 overflow-y-auto">
-            "{selectedContext.text}"
+          <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-border/40 max-h-24 overflow-y-auto">
+            &quot;{selectedContext.text}&quot;
           </div>
         </div>
       )}
@@ -94,11 +96,16 @@ function InputFormBase({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me anything..."
-          className="flex-1"
+          className="flex-1 border-border/60 focus:border-primary/50 transition-colors"
           disabled={isLoading}
           data-ai-chat-input
         />
-        <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+        <Button
+          type="submit"
+          size="icon"
+          disabled={isLoading || !input.trim()}
+          className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+        >
           <Send className="w-4 h-4" />
         </Button>
       </div>

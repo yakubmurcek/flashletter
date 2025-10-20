@@ -10,18 +10,19 @@ import {
 } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'Sign Up - Newsletter Generator',
+  title: 'Sign Up - Flashletter',
   description: 'Create a new account',
 }
 
 export default function SignupPage() {
   return (
-    <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold">Create an account</CardTitle>
-        <CardDescription>
-          Enter your email and password to get started with AI-powered email
-          campaigns
+    <Card className="border-border/60 shadow-lg">
+      <CardHeader className="space-y-2 text-center">
+        <CardTitle className="text-3xl font-bold">Create an account</CardTitle>
+        <CardDescription className="text-base">
+          Enter your email and password to get started
+          <br />
+          with AI-powered email campaigns
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -32,7 +33,7 @@ export default function SignupPage() {
           Already have an account?{' '}
           <Link
             href="/login"
-            className="font-medium text-primary hover:underline"
+            className="font-semibold text-primary hover:text-primary/80 transition-colors"
           >
             Sign in
           </Link>

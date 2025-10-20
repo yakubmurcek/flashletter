@@ -75,6 +75,11 @@ export function useEmailState(): EmailStateReturn {
         return
       }
 
+      // Skip URL update if already selected (prevents unnecessary re-renders)
+      if (emailIdFromUrl !== null && emailIdFromUrl === id) {
+        return
+      }
+
       // Set email ID and preserve campaign ID
       const params: Record<string, string> = { email: id.toString() }
       if (campaignIdFromUrl) {
@@ -83,7 +88,7 @@ export function useEmailState(): EmailStateReturn {
 
       setMultipleParams(params)
     },
-    [isValidEmailId, campaignIdFromUrl, setMultipleParams]
+    [isValidEmailId, campaignIdFromUrl, setMultipleParams, emailIdFromUrl]
   )
 
   // Wrap in useCallback to prevent unnecessary re-renders in child components

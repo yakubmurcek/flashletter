@@ -42,7 +42,7 @@ export function ChatSidebar({
   return createPortal(
     <aside
       className={cn(
-        'fixed inset-y-0 right-0 border-l border-border bg-card transition-all duration-300 shadow-lg z-[60]',
+        'fixed inset-y-0 right-0 border-l border-border/60 bg-card/95 backdrop-blur-sm transition-all duration-300 shadow-xl z-[60]',
         isOpen ? 'w-96' : 'w-0 overflow-hidden'
       )}
       role="dialog"

@@ -7,7 +7,7 @@ import { z } from 'zod'
 // Email schema
 export const emailSchema = z.object({
   id: z.number().int().min(1),
-  uuid: z.string().uuid().nullable(),
+  uuid: z.string().uuid().nullable().optional(),
   day: z.number().int().min(1),
   subject: z.string(),
   preview: z.string().default(''),
