@@ -32,7 +32,7 @@ export function FeaturesSection() {
             </h3>
             <p className="text-muted-foreground leading-relaxed">
               Generate complete email campaigns in seconds. No more hours spent
-              writing copy.
+              writing copy. The AI analyzes your existing product.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Clock className="w-4 h-4 mr-2" />
@@ -45,11 +45,11 @@ export function FeaturesSection() {
               <Sparkles className="w-8 h-8 text-amber-500" />
             </div>
             <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-              AI-Powered
+              Custom AI
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Advanced AI analyzes your landing page and creates contextually
-              relevant emails.
+              It knows about converting newsletters and creates contextually
+              relevant emails that perfectly match your brand voice.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Target className="w-4 h-4 mr-2" />
@@ -69,8 +69,8 @@ export function FeaturesSection() {
               Fully Editable
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Customize every aspect of your emails with our intuitive editor
-              and AI assistant.
+              Customize every aspect of your emails with an intuitive editor and
+              AI assistant that helps you refine your campaigns even further.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Award className="w-4 h-4 mr-2" />

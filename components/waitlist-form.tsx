@@ -175,20 +175,13 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
     <AnimatedSection delay={0} immediate>
       <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
         <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-primary/10 to-amber-300/10 text-foreground text-sm mb-6 border border-primary/20 shadow-lg hover:shadow-xl transition-all duration-300 group">
-            <InteractiveClock
-              size="sm"
-              className="group-hover:scale-110 transition-transform duration-300"
-            />
-            <div className="flex items-center gap-2">
-              <Timer className="w-4 h-4 animate-pulse text-amber-500 drop-shadow-lg" />
-              <span className="font-semibold bg-gradient-to-r from-primary to-amber-500 bg-clip-text text-transparent">
-                Join the Waitlist - Limited Early Access
-              </span>
-            </div>
-          </div>
+          <h2 className="text-3xl font-bold text-foreground mb-4">
+            Get Early Access
+          </h2>
           <p className="text-muted-foreground text-lg">
-            Be the first to create lightning-fast AI email campaigns
+            Be one of the first to experience the future
+            <br />
+            of email campaigns
           </p>
         </div>
 
