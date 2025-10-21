@@ -6,6 +6,8 @@ import {
   Award,
   TrendingUp,
   Users,
+  Mail,
+  Link,
 } from 'lucide-react'
 import { AnimatedSection, GradientText } from '@/components/ui/animations'
 
@@ -58,12 +60,8 @@ export function FeaturesSection() {
           </div>
 
           <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 rounded-xl overflow-hidden flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <img
-                src="/icon-192.webp"
-                alt="Flashletter"
-                className="w-12 h-12"
-              />
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-300/10 to-orange-300/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Mail className="w-8 h-8 text-orange-400" />
             </div>
             <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
               Fully Editable
@@ -74,7 +72,7 @@ export function FeaturesSection() {
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Award className="w-4 h-4 mr-2" />
-              <span>Unlimited revisions</span>
+              <span>Full control</span>
             </div>
           </div>
         </div>
@@ -84,13 +82,13 @@ export function FeaturesSection() {
           <div className="group bg-gradient-to-br from-primary/5 to-amber-400/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-4 mb-4">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <TrendingUp className="w-6 h-6 text-primary" />
+                <Link className="w-6 h-6 text-primary" />
               </div>
-              <h3 className="text-lg font-semibold">Analytics & Insights</h3>
+              <h3 className="text-lg font-semibold">Platform Integrations</h3>
             </div>
             <p className="text-muted-foreground">
-              Track performance with detailed analytics and get AI-powered
-              insights to optimize your campaigns.
+              Seamlessly export to popular email platforms like Mailchimp,
+              ConvertKit, and more with one-click integration.
             </p>
           </div>
 
