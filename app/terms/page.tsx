@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export const metadata: Metadata = {
@@ -6,6 +7,8 @@ export const metadata: Metadata = {
   description:
     'Terms of Service for Flashletter - Legal terms and conditions for using our waitlist service.',
 }
+
+const LAST_UPDATED = 'June 12, 2024'
 
 export default function TermsOfServicePage() {
   return (
@@ -15,11 +18,7 @@ export default function TermsOfServicePage() {
           <h1 className="text-4xl font-bold mb-4">Terms of Service</h1>
           <p className="text-muted-foreground text-lg">
             Last updated:{' '}
-            {new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            <time dateTime="2024-06-12">{LAST_UPDATED}</time>
           </p>
         </div>
 
@@ -76,13 +75,34 @@ export default function TermsOfServicePage() {
               <CardTitle>4. Privacy and Data Protection</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
-                Your privacy is important to us. Please review our Privacy
-                Policy, which also governs your use of the service, to
-                understand our practices. By using our service, you consent to
-                the collection and use of information in accordance with our
-                Privacy Policy.
-              </p>
+              <div className="space-y-4 text-muted-foreground">
+                <p>
+                  Your privacy is important to us. Please review our{' '}
+                  <Link
+                    href="/privacy"
+                    className="text-primary underline-offset-2 hover:underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                  , which also governs your use of the service, to understand
+                  our practices.
+                </p>
+                <p>
+                  When you join the waitlist we collect the information you
+                  submit (typically your email address and an optional name) so
+                  we can send operational updates about Flashletter. If you
+                  choose to opt in to receive additional marketing
+                  communications, we will also send occasional product news and
+                  promotions. You can withdraw consent or unsubscribe at any
+                  time by using the unsubscribe link included in every message
+                  or by contacting us directly.
+                </p>
+                <p>
+                  By using our service, you consent to the collection and use of
+                  information in accordance with our Privacy Policy and the
+                  selections you make in the waitlist form.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -95,9 +115,9 @@ export default function TermsOfServicePage() {
                 The service and its original content, features, and
                 functionality are and will remain the exclusive property of
                 Flashletter and its licensors. The service is protected by
-                copyright, trademark, and other laws. Our trademarks and trade
-                dress may not be used in connection with any product or service
-                without our prior written consent.
+                copyright and other applicable laws. The Flashletter name and
+                branding may not be used in connection with any product or
+                service without our prior written consent.
               </p>
             </CardContent>
           </Card>
@@ -218,11 +238,9 @@ export default function TermsOfServicePage() {
               </p>
               <div className="space-y-2 text-muted-foreground">
                 <p>
-                  <strong>Email:</strong> legal@flashletter.com
+                  <strong>Email:</strong> yakubmurcek@gmail.com
                 </p>
-                <p>
-                  <strong>Company:</strong> Flashletter
-                </p>
+
                 <p>
                   <strong>IČO:</strong> 08294593
                 </p>
@@ -234,4 +252,3 @@ export default function TermsOfServicePage() {
     </div>
   )
 }
-
