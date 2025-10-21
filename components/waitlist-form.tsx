@@ -152,8 +152,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   #{orderInfo.order}
                 </div>
                 <div className="text-sm text-amber-600 dark:text-amber-400">
-                  You're #{orderInfo.order} of {orderInfo.totalCount + 1} people
-                  on the waitlist
+                  You're #{orderInfo.order} of {orderInfo.totalCount} people on
+                  the waitlist
                 </div>
               </div>
             </div>
