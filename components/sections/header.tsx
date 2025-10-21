@@ -54,12 +54,6 @@ export function Header() {
             Features
           </a>
           <a
-            href="#testimonials"
-            className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-          >
-            Testimonials
-          </a>
-          <a
             href="#faq"
             className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
           >
