@@ -38,7 +38,7 @@ export function Footer() {
             <div>
               <span className="text-xl font-semibold">Flashletter</span>
               <p className="text-sm text-muted-foreground">
-                Lighting Fast AI powered email campaigns
+                Lighting-fast AI powered email campaigns
               </p>
             </div>
           </div>
@@ -61,9 +61,7 @@ export function Footer() {
                 asChild
                 className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
               >
-                <Link href={user ? '/campaigns' : '/signup'}>
-                  {user ? 'Open App' : 'Get Started'}
-                </Link>
+                <Link href="/#waitlist">Get Early Access</Link>
               </Button>
             </PulseButton>
           </nav>

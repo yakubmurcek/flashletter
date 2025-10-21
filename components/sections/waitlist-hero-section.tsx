@@ -44,7 +44,7 @@ export function WaitlistHeroSection() {
       </AnimatedSection>
 
       {/* Waitlist Form */}
-      <div id="waitlist" className="max-w-md mx-auto mb-12">
+      <div id="waitlist" className="max-w-md mx-auto mb-12 scroll-mt-40">
         <WaitlistForm />
       </div>
 
