@@ -22,6 +22,10 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   const [error, setError] = useState('')
   const [privacyConsent, setPrivacyConsent] = useState(false)
   const [marketingConsent, setMarketingConsent] = useState(false)
+  const [orderInfo, setOrderInfo] = useState<{
+    order: number
+    totalCount: number
+  } | null>(null)
 
   // Region-based privacy controls
   const { locationInfo, isLoading } = useRegionDetection()
@@ -59,6 +63,16 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
       if (!response.ok) {
         const errorData = await response.json()
         throw new Error(errorData.error || 'Something went wrong')
+      }
+
+      const responseData = await response.json()
+
+      // Store order information if provided
+      if (responseData.order && responseData.totalCount !== undefined) {
+        setOrderInfo({
+          order: responseData.order,
+          totalCount: responseData.totalCount,
+        })
       }
 
       setIsSubmitted(true)
@@ -126,6 +140,25 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           >
             You're on the list!
           </h3>
+
+          {/* Show order information only if there are more than 9 users */}
+          {orderInfo && orderInfo.totalCount > 9 && (
+            <div
+              className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-lg border border-amber-200 dark:border-amber-800 animate-fade-in-up"
+              style={{ animationDelay: '1s' }}
+            >
+              <div className="text-center">
+                <div className="text-3xl font-bold text-amber-600 dark:text-amber-400 mb-1">
+                  #{orderInfo.order}
+                </div>
+                <div className="text-sm text-amber-600 dark:text-amber-400">
+                  You're #{orderInfo.order} of {orderInfo.totalCount + 1} people
+                  on the waitlist
+                </div>
+              </div>
+            </div>
+          )}
+
           <p
             className="text-green-600 dark:text-green-400 animate-fade-in-up"
             style={{ animationDelay: '1.2s' }}
@@ -308,8 +341,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
               <Link href="/privacy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>
-              .{' '}
-              <br />
+              . <br />
               You can{' '}
               <Link
                 href="/unsubscribe"
