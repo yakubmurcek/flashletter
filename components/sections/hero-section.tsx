@@ -10,20 +10,29 @@ import {
 
 export function HeroSection() {
   return (
-    <div className="max-w-3xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
+    <div className="relative max-w-3xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
       {/* Floating elements around hero */}
-      <FloatingElement delay={0}>
-        <div className="absolute top-20 left-10 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+      <FloatingElement
+        delay={0}
+        className="pointer-events-none absolute top-20 left-10"
+      >
+        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
           <Zap className="w-8 h-8 text-primary" />
         </div>
       </FloatingElement>
-      <FloatingElement delay={1}>
-        <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center overflow-hidden">
+      <FloatingElement
+        delay={1}
+        className="pointer-events-none absolute top-32 right-16"
+      >
+        <div className="w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center overflow-hidden">
           <img src="/icon-192.webp" alt="Flashletter" className="w-6 h-6" />
         </div>
       </FloatingElement>
-      <FloatingElement delay={2}>
-        <div className="absolute bottom-20 left-20 w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
+      <FloatingElement
+        delay={2}
+        className="pointer-events-none absolute bottom-20 left-20"
+      >
+        <div className="w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
           <Sparkles className="w-7 h-7 text-pink-500" />
         </div>
       </FloatingElement>
