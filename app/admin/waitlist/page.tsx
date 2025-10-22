@@ -23,7 +23,7 @@ export default async function WaitlistAdminPage() {
   const { data: waitlistEntries, error } = await supabase
     .from('waitlist')
     .select('*')
-    .order('created_at', { ascending: false })
+    .order('order', { ascending: true })
 
   if (error) {
     console.error('Error fetching waitlist:', error)

@@ -44,10 +44,9 @@ export async function updateSession(request: NextRequest) {
   )
 
   if (isProtectedRoute && !user) {
-    // Redirect to login page
+    // Redirect to waitlist
     const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    url.searchParams.set('redirectTo', request.nextUrl.pathname)
+    url.pathname = '/#waitlist'
     return NextResponse.redirect(url)
   }
 
@@ -57,7 +56,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/'
+    url.pathname = '/#waitlist'
     return NextResponse.redirect(url)
   }
 

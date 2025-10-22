@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react'
 import { Header } from '@/components/sections/header'
 import { WaitlistHeroSection } from '@/components/sections/waitlist-hero-section'
 import { FeaturesSection } from '@/components/sections/features-section'
-import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { FAQSection } from '@/components/sections/faq-section'
 import { Footer } from '@/components/sections/footer'
 
@@ -23,7 +22,6 @@ export default function Home() {
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
         <WaitlistHeroSection />
         <FeaturesSection />
-        <TestimonialsSection />
         <FAQSection />
       </main>
 

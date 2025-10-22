@@ -39,7 +39,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert new waitlist entry
+    // Insert new waitlist entry - let Supabase handle order assignment
+    // We'll use a database function to ensure atomic order assignment
     const { data, error } = await supabase
       .from('waitlist')
       .insert({
@@ -51,9 +52,15 @@ export async function POST(request: NextRequest) {
         marketing_consent: marketingConsent || false,
         consent_timestamp: consentTimestamp || new Date().toISOString(),
         user_region: userRegion || 'OTHER',
+        order: null, // Let database assign order
       })
       .select()
       .single()
+
+    // Get the total count for response
+    const { count: totalCount } = await supabase
+      .from('waitlist')
+      .select('*', { count: 'exact', head: true })
 
     if (error) {
       console.error('Waitlist signup error:', error)
@@ -67,6 +74,8 @@ export async function POST(request: NextRequest) {
       {
         message: 'Successfully joined the waitlist!',
         id: data.id,
+        order: data.order,
+        totalCount: totalCount || 0,
       },
       { status: 201 }
     )

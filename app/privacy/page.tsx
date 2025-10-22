@@ -8,6 +8,8 @@ export const metadata: Metadata = {
     'Privacy Policy for Flashletter - GDPR and CCPA compliant data protection information.',
 }
 
+const LAST_UPDATED = 'June 12, 2024'
+
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-background">
@@ -15,12 +17,7 @@ export default function PrivacyPolicyPage() {
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold mb-4">Privacy Policy</h1>
           <p className="text-muted-foreground text-lg">
-            Last updated:{' '}
-            {new Date().toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
+            Last updated: <time dateTime="2024-06-12">{LAST_UPDATED}</time>
           </p>
           <div className="flex justify-center gap-2 mt-4">
             <Badge variant="secondary">GDPR Compliant</Badge>
@@ -43,8 +40,13 @@ export default function PrivacyPolicyPage() {
                   <li>Email address (required)</li>
                   <li>Name (optional)</li>
                   <li>Timestamp of signup</li>
-                  <li>IP address (for security purposes)</li>
                 </ul>
+                <p className="mt-3 text-muted-foreground text-sm">
+                  We do not store your IP address. We only receive coarse region
+                  information through our hosting provider so we can show the
+                  right consent options (for example, GDPR prompts in the EU),
+                  and we discard that information after the consent decision.
+                </p>
               </div>
 
               <div>
@@ -72,11 +74,24 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>To notify you when Flashletter becomes available</li>
-                <li>To send you updates about our product development</li>
+                <li>
+                  To send service or operational updates about our product
+                  development and waitlist status
+                </li>
+                <li>
+                  To send additional marketing updates, tips, or promotions—but
+                  only if you have explicitly opted in. Every marketing message
+                  includes an unsubscribe link so you can withdraw consent at
+                  any time.
+                </li>
                 <li>To improve our website and services</li>
                 <li>To prevent fraud and ensure security</li>
                 <li>To comply with legal obligations</li>
               </ul>
+              <p className="mt-4 text-muted-foreground">
+                We honor the selections you make in the waitlist form. If you do
+                not opt in to marketing communications, we will not send them.
+              </p>
             </CardContent>
           </Card>
 
@@ -92,7 +107,8 @@ export default function PrivacyPolicyPage() {
                 <li>
                   <strong>Consent:</strong> You have given clear consent for us
                   to process your personal data for the specific purpose of
-                  joining our waitlist
+                  joining our waitlist and, where selected, to receive optional
+                  marketing communications
                 </li>
                 <li>
                   <strong>Legitimate Interest:</strong> We have a legitimate
@@ -121,6 +137,10 @@ export default function PrivacyPolicyPage() {
                     <li>Right to object to processing</li>
                     <li>Right to withdraw consent at any time</li>
                   </ul>
+                  <p className="mt-2 text-muted-foreground text-sm">
+                    You can unsubscribe at any time using the link provided in
+                    our emails or by contacting us directly.
+                  </p>
                 </div>
 
                 <div>
@@ -163,6 +183,29 @@ export default function PrivacyPolicyPage() {
                   (under strict data protection agreements)
                 </li>
               </ul>
+              <div className="mt-4 space-y-2 text-muted-foreground text-sm">
+                <p>
+                  In particular, we rely on the following processors to deliver
+                  the waitlist experience:
+                </p>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>
+                    <strong>Supabase:</strong> Cloud database and auth provider
+                    we use to store waitlist submissions and related metadata.
+                  </li>
+                  <li>
+                    <strong>Sentry:</strong> Error monitoring service that helps
+                    us diagnose and fix issues. Sentry receives technical error
+                    details and may include the email address you entered if an
+                    error occurs during signup.
+                  </li>
+                </ul>
+                <p>
+                  These providers only process data on our behalf and in
+                  accordance with their data protection addenda. We regularly
+                  review them to ensure they maintain appropriate safeguards.
+                </p>
+              </div>
             </CardContent>
           </Card>
 
@@ -204,6 +247,13 @@ export default function PrivacyPolicyPage() {
                 than your own. We ensure appropriate safeguards are in place to
                 protect your data in accordance with applicable data protection
                 laws.
+              </p>
+              <p className="text-muted-foreground mt-4 text-sm">
+                We host our core waitlist data in Supabase's EU region and use
+                Sentry's EU data residency option for error monitoring. They
+                commit to appropriate transfer safeguards. You can review their
+                individual data protection terms via Supabase's and Sentry's
+                privacy policies.
               </p>
             </CardContent>
           </Card>
@@ -247,13 +297,10 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="space-y-2 text-muted-foreground">
                 <p>
-                  <strong>Email:</strong> privacy@flashletter.com
+                  <strong>Email:</strong> yakubmurcek@gmail.com
                 </p>
                 <p>
                   <strong>Data Protection Officer:</strong> Jakub Murcek
-                </p>
-                <p>
-                  <strong>Company:</strong> Flashletter
                 </p>
                 <p>
                   <strong>IČO:</strong> 08294593
