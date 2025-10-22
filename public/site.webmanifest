@@ -1,7 +1,7 @@
 {
   "name": "Flashletter",
   "short_name": "Flashletter",
-  "description": "Lightning-fast AI email campaigns",
+  "description": "Lightning-fast AI newsletter campaigns",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

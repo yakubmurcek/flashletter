@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -9,6 +9,7 @@ import { AnimatedSection, PulseButton } from '@/components/ui/animations'
 import { InteractiveClock } from '@/components/ui/interactive-clock'
 import Link from 'next/link'
 import { useRegionDetection } from '@/lib/utils/location-detection'
+import * as Sentry from '@sentry/nextjs'
 
 interface WaitlistFormProps {
   className?: string
@@ -30,6 +31,21 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   // Region-based privacy controls
   const { locationInfo, isLoading } = useRegionDetection()
 
+  // Track region detection completion
+  useEffect(() => {
+    if (!isLoading && locationInfo) {
+      Sentry.addBreadcrumb({
+        message: 'Region detection completed',
+        category: 'location',
+        level: 'info',
+        data: {
+          region: locationInfo.region,
+          requiresGDPR: locationInfo.requiresGDPR,
+        },
+      })
+    }
+  }, [isLoading, locationInfo])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -37,54 +53,165 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
 
     // Validate required consent (only for non-US users)
     if (locationInfo?.requiresGDPR && !privacyConsent) {
-      setError('You must accept the privacy policy to join the waitlist.')
+      const errorMessage =
+        'You must accept the privacy policy to join the waitlist.'
+      setError(errorMessage)
       setIsSubmitting(false)
+
+      // Log validation failure
+      Sentry.addBreadcrumb({
+        message: 'Form validation failed - GDPR consent required',
+        category: 'form',
+        level: 'warning',
+        data: {
+          userRegion: locationInfo.region,
+          requiresGDPR: locationInfo.requiresGDPR,
+          privacyConsent,
+        },
+      })
+
       return
     }
 
-    try {
-      const response = await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          name: name || null,
-          privacyConsent: locationInfo?.requiresGDPR ? privacyConsent : true,
-          marketingConsent: locationInfo?.requiresGDPR
-            ? marketingConsent
-            : false,
-          consentTimestamp: new Date().toISOString(),
-          userRegion: locationInfo?.region || 'OTHER',
-        }),
-      })
+    // Create a span to track the form submission
+    return Sentry.startSpan(
+      {
+        op: 'ui.form.submit',
+        name: 'Waitlist Form Submission',
+      },
+      async (span) => {
+        // Add form data as attributes (excluding sensitive info)
+        span.setAttribute('form.email_provided', !!email)
+        span.setAttribute('form.name_provided', !!name)
+        span.setAttribute('form.privacy_consent', privacyConsent)
+        span.setAttribute('form.marketing_consent', marketingConsent)
+        span.setAttribute('form.user_region', locationInfo?.region || 'OTHER')
+        span.setAttribute('form.requires_gdpr', !!locationInfo?.requiresGDPR)
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Something went wrong')
+        try {
+          const response = await fetch('/api/waitlist', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              email,
+              name: name || null,
+              privacyConsent: locationInfo?.requiresGDPR
+                ? privacyConsent
+                : true,
+              marketingConsent: locationInfo?.requiresGDPR
+                ? marketingConsent
+                : false,
+              consentTimestamp: new Date().toISOString(),
+              userRegion: locationInfo?.region || 'OTHER',
+            }),
+          })
+
+          span.setAttribute('http.status_code', response.status)
+          span.setAttribute('http.method', 'POST')
+          span.setAttribute('http.url', '/api/waitlist')
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            const error = new Error(errorData.error || 'Something went wrong')
+
+            // Capture the error with additional context
+            Sentry.captureException(error, {
+              tags: {
+                component: 'waitlist-form',
+                action: 'form-submission',
+              },
+              extra: {
+                responseStatus: response.status,
+                responseData: errorData,
+                formData: {
+                  email: email.substring(0, 3) + '***', // Partial email for debugging
+                  hasName: !!name,
+                  privacyConsent,
+                  marketingConsent,
+                  userRegion: locationInfo?.region || 'OTHER',
+                },
+              },
+            })
+
+            throw error
+          }
+
+          const responseData = await response.json()
+
+          // Store order information if provided
+          if (responseData.order && responseData.totalCount !== undefined) {
+            setOrderInfo({
+              order: responseData.order,
+              totalCount: responseData.totalCount,
+            })
+
+            // Log successful submission with order info
+            Sentry.addBreadcrumb({
+              message: 'Waitlist submission successful',
+              category: 'form',
+              level: 'info',
+              data: {
+                order: responseData.order,
+                totalCount: responseData.totalCount,
+                userRegion: locationInfo?.region || 'OTHER',
+              },
+            })
+          }
+
+          // Log successful submission
+          Sentry.addBreadcrumb({
+            message: 'Waitlist form submitted successfully',
+            category: 'form',
+            level: 'info',
+            data: {
+              userRegion: locationInfo?.region || 'OTHER',
+              hasOrderInfo: !!(
+                responseData.order && responseData.totalCount !== undefined
+              ),
+            },
+          })
+
+          span.setAttribute('form.submission_successful', true)
+          span.setAttribute('form.order_number', responseData.order || null)
+          span.setAttribute('form.total_count', responseData.totalCount || null)
+
+          setIsSubmitted(true)
+          setEmail('')
+          setName('')
+          setPrivacyConsent(false)
+          setMarketingConsent(false)
+        } catch (err) {
+          const error =
+            err instanceof Error ? err : new Error('Something went wrong')
+
+          // Capture the error with context
+          Sentry.captureException(error, {
+            tags: {
+              component: 'waitlist-form',
+              action: 'form-submission',
+            },
+            extra: {
+              formData: {
+                email: email.substring(0, 3) + '***', // Partial email for debugging
+                hasName: !!name,
+                privacyConsent,
+                marketingConsent,
+                userRegion: locationInfo?.region || 'OTHER',
+              },
+            },
+          })
+
+          span.setAttribute('form.submission_successful', false)
+          span.setAttribute('error.message', error.message)
+
+          setError(error.message)
+        } finally {
+          setIsSubmitting(false)
+        }
       }
-
-      const responseData = await response.json()
-
-      // Store order information if provided
-      if (responseData.order && responseData.totalCount !== undefined) {
-        setOrderInfo({
-          order: responseData.order,
-          totalCount: responseData.totalCount,
-        })
-      }
-
-      setIsSubmitted(true)
-      setEmail('')
-      setName('')
-      setPrivacyConsent(false)
-      setMarketingConsent(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong')
-    } finally {
-      setIsSubmitting(false)
-    }
+    )
   }
 
   if (isSubmitted) {
@@ -164,7 +291,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             style={{ animationDelay: '1.2s' }}
           >
             We'll notify you as soon as Flashletter is ready. Get ready for
-            lightning-fast email campaigns!
+            lightning-fast newsletter campaigns!
           </p>
         </div>
       </div>
@@ -197,7 +324,19 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                 type="email"
                 placeholder="your@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  // Log email field interaction
+                  Sentry.addBreadcrumb({
+                    message: 'Email field updated',
+                    category: 'form',
+                    level: 'debug',
+                    data: {
+                      hasValue: !!e.target.value,
+                      valueLength: e.target.value.length,
+                    },
+                  })
+                }}
                 required
                 className="pl-10 h-12 text-base"
               />
@@ -215,7 +354,19 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                 type="text"
                 placeholder="Your name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value)
+                  // Log name field interaction
+                  Sentry.addBreadcrumb({
+                    message: 'Name field updated',
+                    category: 'form',
+                    level: 'debug',
+                    data: {
+                      hasValue: !!e.target.value,
+                      valueLength: e.target.value.length,
+                    },
+                  })
+                }}
                 className="pl-10 h-12 text-base"
               />
             </div>
@@ -231,7 +382,19 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   type="checkbox"
                   id="privacy-consent"
                   checked={privacyConsent}
-                  onChange={(e) => setPrivacyConsent(e.target.checked)}
+                  onChange={(e) => {
+                    setPrivacyConsent(e.target.checked)
+                    // Log privacy consent interaction
+                    Sentry.addBreadcrumb({
+                      message: 'Privacy consent updated',
+                      category: 'form',
+                      level: 'debug',
+                      data: {
+                        checked: e.target.checked,
+                        userRegion: locationInfo?.region || 'OTHER',
+                      },
+                    })
+                  }}
                   className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                   required
                 />
@@ -262,7 +425,19 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   type="checkbox"
                   id="marketing-consent"
                   checked={marketingConsent}
-                  onChange={(e) => setMarketingConsent(e.target.checked)}
+                  onChange={(e) => {
+                    setMarketingConsent(e.target.checked)
+                    // Log marketing consent interaction
+                    Sentry.addBreadcrumb({
+                      message: 'Marketing consent updated',
+                      category: 'form',
+                      level: 'debug',
+                      data: {
+                        checked: e.target.checked,
+                        userRegion: locationInfo?.region || 'OTHER',
+                      },
+                    })
+                  }}
                   className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
                 />
                 <label

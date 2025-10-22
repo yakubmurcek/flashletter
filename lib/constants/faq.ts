@@ -23,7 +23,7 @@ export const FAQ_ITEMS: FAQItem[] = [
     id: 'early-access',
     question: 'What do I get for joining the waitlist?',
     answer:
-      "Waitlist members get early access to Flashletter, exclusive updates on development progress, and priority support when it launches. Plus, you'll be among the first to experience lightning-fast AI email campaigns.",
+      "Waitlist members get early access to Flashletter, exclusive updates on development progress, and priority support when it launches. Plus, you'll be among the first to experience lightning-fast AI newsletter campaigns.",
   },
   {
     id: 'features',
