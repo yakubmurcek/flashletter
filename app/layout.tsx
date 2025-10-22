@@ -30,12 +30,12 @@ export const metadata: Metadata = {
   creator: 'Flashletter',
   publisher: 'Flashletter',
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com'
+    process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
   ),
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: '/',
+    url: 'https://flashletter.app',
     title: 'Flashletter - Join the Newsletter Revolution',
     description:
       'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
