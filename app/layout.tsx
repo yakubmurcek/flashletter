@@ -99,7 +99,7 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'AI-powered email campaign generator - Join the waitlist for lightning-fast email campaigns',
+                'AI-powered email campaign generator - Join the waitlist for lightning-fast newsletter campaigns',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com',
               applicationCategory: 'BusinessApplication',
               applicationStatus: 'ComingSoon',

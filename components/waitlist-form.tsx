@@ -164,7 +164,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             style={{ animationDelay: '1.2s' }}
           >
             We'll notify you as soon as Flashletter is ready. Get ready for
-            lightning-fast email campaigns!
+            lightning-fast newsletter campaigns!
           </p>
         </div>
       </div>

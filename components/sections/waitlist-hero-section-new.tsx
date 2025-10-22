@@ -54,7 +54,7 @@ export function WaitlistHeroSection() {
 
       <AnimatedSection delay={250} immediate>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
-          Lightning-fast AI email campaigns{' '}
+          Lightning-fast AI newsletter campaigns{' '}
           <GradientText className="cursor-behind">coming soon</GradientText>
         </h1>
       </AnimatedSection>

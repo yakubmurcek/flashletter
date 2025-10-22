@@ -13,7 +13,7 @@ export default function ComingSoonPage() {
           <h1 className="text-4xl font-bold mb-4">Coming Soon</h1>
           <p className="text-muted-foreground text-lg mb-8">
             Flashletter is currently in development. Join our waitlist to be the
-            first to experience lightning-fast AI email campaigns.
+            first to experience lightning-fast AI newsletter campaigns.
           </p>
         </div>
 

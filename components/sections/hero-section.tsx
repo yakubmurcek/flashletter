@@ -40,7 +40,9 @@ export function HeroSection() {
       <AnimatedSection delay={0} immediate>
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary/10 to-amber-300/10 text-foreground text-sm mb-6">
           <Sparkles className="w-4 h-4 animate-pulse text-amber-500 fill-amber-500 drop-shadow-lg" />
-          <span className="font-medium">Lightning-fast AI Email Campaigns</span>
+          <span className="font-medium">
+            Lightning-fast AI Newsletter Campaigns
+          </span>
         </div>
       </AnimatedSection>
 
