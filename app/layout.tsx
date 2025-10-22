@@ -12,7 +12,7 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
+  title: 'Flashletter - Join the Newsletter Revolution',
   description:
     'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
   keywords: [
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
+    title: 'Flashletter - Join the Newsletter Revolution',
     description:
       'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     siteName: 'Flashletter',
@@ -45,13 +45,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Join the Waitlist for AI Email Campaigns',
+        alt: 'Flashletter - Join the Newsletter Revolution',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Join the Waitlist for AI Email Campaigns',
+    title: 'Flashletter - Join the Newsletter Revolution',
     description:
       'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     images: ['/og-image.png'],
