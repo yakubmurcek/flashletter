@@ -181,7 +181,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           <p className="text-muted-foreground text-lg">
             Be one of the first to experience the future
             <br />
-            of email campaigns
+            of newsletter campaigns
           </p>
         </div>
 
@@ -320,7 +320,14 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
               <Link href="/privacy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>
-              . No spam, just updates about Flashletter.
+              . You can{' '}
+              <Link
+                href="/unsubscribe"
+                className="text-primary hover:underline"
+              >
+                unsubscribe
+              </Link>{' '}
+              at any time.
             </>
           ) : (
             <>
@@ -332,15 +339,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
               <Link href="/privacy" className="text-primary hover:underline">
                 Privacy Policy
               </Link>
-              . <br />
-              You can{' '}
-              <Link
-                href="/unsubscribe"
-                className="text-primary hover:underline"
-              >
-                unsubscribe
-              </Link>{' '}
-              at any time.
+              . No spam, just updates about Flashletter.
             </>
           )}
         </p>
