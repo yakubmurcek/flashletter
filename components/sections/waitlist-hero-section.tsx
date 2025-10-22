@@ -43,8 +43,8 @@ export function WaitlistHeroSection() {
         variant="gentle"
         className="pointer-events-none absolute bottom-0 left-0"
       >
-        <div className="w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
-          <Sparkles className="w-7 h-7 text-pink-500" />
+        <div className="w-14 h-14 bg-amber-400/10 rounded-full flex items-center justify-center">
+          <Sparkles className="w-7 h-7 text-amber-500" />
         </div>
       </FloatingElement>
 

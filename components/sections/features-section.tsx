@@ -34,7 +34,7 @@ export function FeaturesSection() {
             </h3>
             <p className="text-muted-foreground leading-relaxed">
               Generate complete email campaigns in seconds. No more hours spent
-              writing copy. The AI analyzes your existing product.
+              writing copy. The AI analyzes your existing website.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Clock className="w-4 h-4 mr-2" />
