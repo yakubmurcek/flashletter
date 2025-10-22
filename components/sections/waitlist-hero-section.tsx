@@ -10,12 +10,20 @@ import { WaitlistForm } from '@/components/waitlist-form'
 
 export function WaitlistHeroSection() {
   return (
-    <div className="relative max-w-4xl mx-auto text-center pt-4 pb-14 md:pt-6 md:pb-24">
+    <div className="relative max-w-4xl mx-auto text-center pb-14 md:-mt-4 md:pb-24">
+      {/* Going Live Badge */}
+      <AnimatedSection delay={0} immediate>
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-full text-sm font-medium text-primary mt-2 mb-2 backdrop-blur-sm">
+          <Clock className="w-4 h-4" />
+          <span>Launching soon</span>
+        </div>
+      </AnimatedSection>
+
       {/* Floating elements around hero */}
       <FloatingElement
         delay={0.1}
         variant="sway"
-        className="pointer-events-none absolute top-[-23px] lg:top-4 md:top-24 md:left-4 left-1"
+        className="pointer-events-none absolute top-[-20px] lg:top-4 md:top-28 md:left-4 left-1"
       >
         <div className="w-12 h-12 md:w-16 md:h-16 bg-primary/10 rounded-full flex items-center justify-center">
           <Zap className="w-6 h-6 md:w-8 md:h-8 text-primary" />
@@ -24,7 +32,7 @@ export function WaitlistHeroSection() {
       <FloatingElement
         delay={0.4}
         variant="sway"
-        className="pointer-events-none absolute top-69 md:top-26 md:right-4 right-8 z-10"
+        className="pointer-events-none absolute top-75 md:top-26 md:right-4 right-8 z-10"
       >
         <div className="md:w-12 md:h-12 w-5 h-5 bg-amber-400/10 rounded-full flex items-center justify-center">
           <Mail className="w-6 h-6 text-amber-500" />
@@ -33,7 +41,7 @@ export function WaitlistHeroSection() {
       <FloatingElement
         delay={0.7}
         variant="gentle"
-        className="pointer-events-none absolute bottom-20 left-20"
+        className="pointer-events-none absolute bottom-0 left-0"
       >
         <div className="w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
           <Sparkles className="w-7 h-7 text-pink-500" />
@@ -41,7 +49,7 @@ export function WaitlistHeroSection() {
       </FloatingElement>
 
       <AnimatedSection delay={250} immediate>
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.2]">
           Lightning-fast AI email campaigns{' '}
           <GradientText className="cursor-behind">coming soon</GradientText>
         </h1>
