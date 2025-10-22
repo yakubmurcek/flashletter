@@ -57,10 +57,12 @@ export const FloatingElement = ({
   children,
   delay = 0,
   variant = 'default',
+  className = '',
 }: {
   children: React.ReactNode
   delay?: number
   variant?: 'default' | 'gentle' | 'bouncy' | 'sway'
+  className?: string
 }) => {
   const animationClass = {
     default: 'animate-float',
@@ -69,9 +71,13 @@ export const FloatingElement = ({
     sway: 'animate-float-sway',
   }[variant]
 
+  const combinedClassName = className
+    ? `${animationClass} ${className}`
+    : animationClass
+
   return (
     <div
-      className={animationClass}
+      className={combinedClassName}
       style={{
         animationDelay: `${delay}s, ${delay + 0.3}s`,
       }}

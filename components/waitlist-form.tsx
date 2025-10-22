@@ -294,9 +294,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           <Button
             type="submit"
             disabled={
-              isSubmitting ||
-              !email ||
-              (locationInfo?.requiresGDPR && !privacyConsent)
+              isSubmitting || (locationInfo?.requiresGDPR && !privacyConsent)
             }
             className="w-full h-12 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
           >

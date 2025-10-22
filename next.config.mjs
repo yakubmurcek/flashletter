@@ -1,8 +1,13 @@
-import {withSentryConfig} from '@sentry/nextjs';
+import { withSentryConfig } from '@sentry/nextjs';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
+  },
+  webpack: (config, { dev, isServer }) => {
+    // Disable webpack caching to avoid large string warnings
+    config.cache = false
+    return config
   },
 }
 
