@@ -10,6 +10,8 @@ interface EmailSidebarProps {
   selectedId: number
   onSelect: (id: number) => void
   campaignType?: string
+  tone?: string
+  days?: number
 }
 
 function EmailSidebarComponent({
@@ -17,6 +19,8 @@ function EmailSidebarComponent({
   selectedId,
   onSelect,
   campaignType,
+  tone,
+  days,
 }: EmailSidebarProps) {
   return (
     <aside className="w-80 border-r border-border/60 bg-card/95 backdrop-blur-sm flex flex-col hover:border-border/80 transition-colors">
@@ -28,7 +32,8 @@ function EmailSidebarComponent({
           <h2 className="font-semibold text-sm truncate">Campaign Emails</h2>
         </div>
         <p className="text-xs text-muted-foreground truncate">
-          {emails.length} emails • {campaignType || 'Unknown'}
+          {emails.length} emails • {campaignType || 'Unknown'} •{' '}
+          {tone || 'Unknown tone'}
         </p>
       </div>
       <div className="flex-1 overflow-y-auto">

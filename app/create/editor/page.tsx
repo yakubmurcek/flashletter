@@ -265,6 +265,8 @@ function EditorPageContent() {
           selectedId={selectedEmailId}
           onSelect={handleSelectEmail}
           campaignType={config?.campaignType}
+          tone={config?.tone}
+          days={config?.days}
         />
 
         <main className="flex-1 overflow-y-auto">
