@@ -39,10 +39,13 @@ export const metadata: Metadata = {
     siteName: 'Flashletter',
     images: [
       {
-        url: '/og-image.png',
+        url: `${
+          process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
+        }/og-image.png`,
         width: 1200,
         height: 630,
         alt: 'Flashletter - Lightning-fast AI email campaigns',
+        type: 'image/png',
       },
     ],
   },
@@ -51,7 +54,11 @@ export const metadata: Metadata = {
     title: 'Flashletter - Lightning-fast AI email campaigns',
     description:
       'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
-    images: ['/og-image.png'],
+    images: [
+      `${
+        process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
+      }/og-image.png`,
+    ],
     creator: '@flashletter',
   },
   robots: {
