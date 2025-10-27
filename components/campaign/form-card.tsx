@@ -26,7 +26,7 @@ export function FormCard({
             <Icon className="w-10 h-10 text-primary" />
           </div>
           <h2 className="text-4xl font-bold mb-4">{title}</h2>
-          <p className="text-muted-foreground text-lg text-balance leading-relaxed">
+          <p className="text-muted-foreground text-lg leading-relaxed">
             {description}
           </p>
         </div>

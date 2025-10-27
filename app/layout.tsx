@@ -2,8 +2,9 @@ import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
-import { CampaignProvider } from '@/lib/campaign-context'
 import { ThemeProvider } from '@/components/theme-provider'
+import { CampaignProvider } from '@/lib/campaign-context'
+import { RegionProvider } from '@/lib/utils/location-detection'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -11,9 +12,9 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Lightning-fast AI newsletter campaigns',
+  title: 'Flashletter - Join the Newsletter Revolution',
   description:
-    'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+    'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform your landing page into personalized email newsletter campaigns in seconds.',
   keywords: [
     'newsletter campaigns',
     'AI email generator',
@@ -22,6 +23,8 @@ export const metadata: Metadata = {
     'AI copywriting',
     'email automation',
     'marketing automation',
+    'waitlist',
+    'coming soon',
   ],
   authors: [{ name: 'Flashletter' }],
   creator: 'Flashletter',
@@ -32,10 +35,10 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: '/',
+    url: 'https://flashletter.app',
     title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     siteName: 'Flashletter',
     images: [
       {
@@ -53,7 +56,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
     images: [
       `${
         process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
@@ -103,13 +106,15 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'Generate complete newsletter campaigns in seconds with AI',
+                'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app',
               applicationCategory: 'BusinessApplication',
+              applicationStatus: 'ComingSoon',
               offers: {
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'USD',
+                availability: 'https://schema.org/PreOrder',
               },
             }),
           }}
@@ -122,7 +127,9 @@ export default function RootLayout({
           enableSystem={false}
           themes={['light']}
         >
-          <CampaignProvider>{children}</CampaignProvider>
+          <RegionProvider>
+            <CampaignProvider>{children}</CampaignProvider>
+          </RegionProvider>
           <Analytics />
         </ThemeProvider>
       </body>

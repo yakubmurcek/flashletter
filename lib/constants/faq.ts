@@ -2,39 +2,33 @@ import { FAQItem } from '@/components/ui/faq'
 
 export const FAQ_ITEMS: FAQItem[] = [
   {
+    id: 'what-is-flashletter',
+    question: 'What is Flashletter?',
+    answer:
+      'Flashletter is an AI-powered email campaign generator that leverages your existing landing page content to create engaging newsletter campaigns. Instead of starting from scratch, it analyzes your current content and transforms it into personalized email sequences in seconds. Currently in development with a waitlist for early access.',
+  },
+  {
     id: 'how-it-works',
-    question: 'How does Flashletter generate emails?',
+    question: 'How does Flashletter work?',
     answer:
-      'We analyze your landing page content and brand tone, then generate tailored email sequences you can edit and approve.',
+      'Simply provide your landing page URL, and the AI analyzes your content and brand tone to generate tailored email sequences. You can then edit and customize every email using the built-in editor and integrated AI assistant tailored to the email campaign workflow.',
   },
   {
-    id: 'editing',
-    question: 'Can I edit the generated content?',
+    id: 'waitlist-status',
+    question: 'When will Flashletter be available?',
     answer:
-      'Yes. Our editor and AI assistant help you refine copy, structure, and tone until it is perfect.',
+      'Flashletter is currently in development, adding core features and testing thoroughly before launch. Join the waitlist to be notified when it launches and get early access to the platform.',
   },
   {
-    id: 'free-plan',
-    question: 'Do you offer a free plan?',
+    id: 'early-access',
+    question: 'What do I get for joining the waitlist?',
     answer:
-      'Start on our Free plan and upgrade anytime. No credit card required.',
+      "Waitlist members get early access to Flashletter, exclusive updates on development progress, and priority support when it launches. Plus, you'll be among the first to experience lightning-fast AI newsletter campaigns.",
   },
   {
-    id: 'integrations',
-    question: 'What email platforms do you integrate with?',
+    id: 'features',
+    question: 'What features will Flashletter have?',
     answer:
-      'We integrate with popular platforms like Mailchimp, ConvertKit, and Klaviyo. More integrations coming soon.',
-  },
-  {
-    id: 'support',
-    question: 'What kind of support do you provide?',
-    answer:
-      'We offer email support, comprehensive documentation, and video tutorials to help you get the most out of Flashletter.',
-  },
-  {
-    id: 'data-security',
-    question: 'How secure is my data?',
-    answer:
-      'We use enterprise-grade security with encrypted data transmission and storage. Your data is never shared with third parties.',
+      'Flashletter will include AI-powered email generation, a full editor with real-time AI assistance, campaign management, version history, and integrations with popular email platforms. New features will be continuously developed based on user feedback and needs, so let us know what you need!',
   },
 ]

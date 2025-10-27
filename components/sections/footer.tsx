@@ -38,7 +38,7 @@ export function Footer() {
             <div>
               <span className="text-xl font-semibold">Flashletter</span>
               <p className="text-sm text-muted-foreground">
-                Lighting Fast AI powered email campaigns
+                Lighting-fast AI powered email campaigns
               </p>
             </div>
           </div>
@@ -48,18 +48,6 @@ export function Footer() {
               className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               Features
-            </a>
-            <a
-              href="#pricing"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-            >
-              Pricing
-            </a>
-            <a
-              href="#testimonials"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-            >
-              Testimonials
             </a>
             <a
               href="#faq"
@@ -73,9 +61,7 @@ export function Footer() {
                 asChild
                 className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
               >
-                <Link href={user ? '/campaigns' : '/signup'}>
-                  {user ? 'Open App' : 'Get Started'}
-                </Link>
+                <Link href="/#waitlist">Get Early Access</Link>
               </Button>
             </PulseButton>
           </nav>
@@ -92,10 +78,15 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-6">
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-              href="mailto:support@flashletter.com"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105"
+              href="https://x.com/ykbmck"
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              support@flashletter.com
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+              Follow @ykbmck
             </a>
             <a
               className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
@@ -108,6 +99,12 @@ export function Footer() {
               href="/terms"
             >
               Terms of Service
+            </a>
+            <a
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              href="/unsubscribe"
+            >
+              Unsubscribe
             </a>
           </div>
         </div>

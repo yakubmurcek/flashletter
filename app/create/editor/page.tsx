@@ -15,6 +15,7 @@ import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { cn } from '@/lib/utils'
+import { redirect } from 'next/navigation'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
 const ChatSidebar = dynamic(
@@ -317,15 +318,5 @@ function EditorPageContent() {
 }
 
 export default function EditorPage() {
-  return (
-    <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center">
-          Loading...
-        </div>
-      }
-    >
-      <EditorPageContent />
-    </Suspense>
-  )
+  redirect('/#waitlist')
 }

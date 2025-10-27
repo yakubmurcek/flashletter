@@ -2,12 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { Header } from '@/components/sections/header'
-import { HeroSection } from '@/components/sections/hero-section'
+import { WaitlistHeroSection } from '@/components/sections/waitlist-hero-section'
 import { FeaturesSection } from '@/components/sections/features-section'
-import { PricingSection } from '@/components/sections/pricing-section'
-import { TestimonialsSection } from '@/components/sections/testimonials-section'
 import { FAQSection } from '@/components/sections/faq-section'
-import { CTASection } from '@/components/sections/cta-section'
 import { Footer } from '@/components/sections/footer'
 
 export default function Home() {
@@ -23,15 +20,11 @@ export default function Home() {
       <Header />
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
-        <HeroSection />
+        <WaitlistHeroSection />
         <FeaturesSection />
-        <PricingSection />
-        <TestimonialsSection />
-
         <FAQSection />
       </main>
 
-      <CTASection />
       <Footer />
     </div>
   )
