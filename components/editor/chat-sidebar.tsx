@@ -17,6 +17,8 @@ interface ChatSidebarProps {
   onClearContext: () => void
   autoSubmitMessage: string | null
   onAutoSubmitComplete: () => void
+  shouldFocusInput: boolean
+  onFocusHandled: () => void
 }
 
 export function ChatSidebar({
@@ -30,6 +32,8 @@ export function ChatSidebar({
   onClearContext,
   autoSubmitMessage,
   onAutoSubmitComplete,
+  shouldFocusInput,
+  onFocusHandled,
 }: ChatSidebarProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -67,6 +71,8 @@ export function ChatSidebar({
             onClearContext={onClearContext}
             autoSubmitMessage={autoSubmitMessage}
             onAutoSubmitComplete={onAutoSubmitComplete}
+            shouldFocusInput={shouldFocusInput}
+            onFocusHandled={onFocusHandled}
           />
         </div>
       )}

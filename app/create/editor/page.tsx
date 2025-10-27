@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense, useCallback } from 'react'
+import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
@@ -48,11 +48,13 @@ function EditorPageContent() {
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
-
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
   const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
   const restoreParam = getParam('restore')
+  const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
+  const openedViaAutoSelectionRef = useRef(false)
+  const prevShowChatRef = useRef(showChat)
 
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
@@ -76,14 +78,32 @@ function EditorPageContent() {
   )
 
   const handleToggleChat = useCallback(() => {
+    if (showChat) {
+      setShouldFocusChatInput(false)
+    } else {
+      setShouldFocusChatInput(true)
+    }
+    openedViaAutoSelectionRef.current = false
     toggleParam('chat', 'closed')
-  }, [toggleParam])
+  }, [toggleParam, showChat])
 
   const handleTextSelected = useCallback(
-    (text: string, action: string) => {
+    (
+      text: string,
+      action: string,
+      meta?: {
+        shouldFocus?: boolean
+      }
+    ) => {
       setSelectedContext({ text, action })
-      // Auto-open chat when text is selected
+      const shouldFocus =
+        meta?.shouldFocus !== undefined
+          ? meta.shouldFocus
+          : action !== 'Ask AI about this'
+      setShouldFocusChatInput(shouldFocus)
+
       if (!showChat) {
+        openedViaAutoSelectionRef.current = !shouldFocus
         deleteParam('chat') // Remove 'closed' parameter to open chat
       }
 
@@ -98,11 +118,27 @@ function EditorPageContent() {
 
   const handleClearContext = useCallback(() => {
     setSelectedContext(null)
+    setShouldFocusChatInput(false)
+  }, [])
+
+  const handleFocusHandled = useCallback(() => {
+    setShouldFocusChatInput(false)
   }, [])
 
   const handleAutoSubmitComplete = useCallback(() => {
     setAutoSubmitMessage(null)
   }, [])
+
+  useEffect(() => {
+    if (showChat && !prevShowChatRef.current) {
+      if (openedViaAutoSelectionRef.current) {
+        openedViaAutoSelectionRef.current = false
+      } else {
+        setShouldFocusChatInput(true)
+      }
+    }
+    prevShowChatRef.current = showChat
+  }, [showChat])
 
   // Handle restoration from history page
   useEffect(() => {
@@ -268,6 +304,8 @@ function EditorPageContent() {
           onClearContext={handleClearContext}
           autoSubmitMessage={autoSubmitMessage}
           onAutoSubmitComplete={handleAutoSubmitComplete}
+          shouldFocusInput={shouldFocusChatInput}
+          onFocusHandled={handleFocusHandled}
         />
       </div>
 
