@@ -15,6 +15,7 @@ import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { cn } from '@/lib/utils'
+import { redirect } from 'next/navigation'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
 const ChatSidebar = dynamic(
