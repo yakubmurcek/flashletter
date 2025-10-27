@@ -20,7 +20,7 @@ export function FeaturesSection() {
             <GradientText>Powerful Features</GradientText>
           </h2>
           <p className="text-muted-foreground text-lg">
-            Everything you need to ship effective email campaigns fast.
+            Everything you need to ship effective newsletter campaigns fast.
           </p>
         </div>
 

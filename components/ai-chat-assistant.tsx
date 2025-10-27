@@ -28,6 +28,8 @@ interface AIChatAssistantProps {
   onClearContext?: () => void
   autoSubmitMessage?: string | null
   onAutoSubmitComplete?: () => void
+  shouldFocusInput?: boolean
+  onFocusHandled?: () => void
 }
 
 export function AIChatAssistant({
@@ -39,6 +41,8 @@ export function AIChatAssistant({
   onClearContext,
   autoSubmitMessage,
   onAutoSubmitComplete,
+  shouldFocusInput = false,
+  onFocusHandled,
 }: AIChatAssistantProps) {
   const { messages, input, setInput, isLoading, quickActions, handleSubmit } =
     useAIChat({
@@ -88,6 +92,8 @@ export function AIChatAssistant({
           selectedContext={selectedContext}
           onClearContext={onClearContext}
           onSubmit={handleSubmit}
+          shouldFocus={shouldFocusInput}
+          onFocusHandled={onFocusHandled}
         />
       </div>
     </AIChatErrorBoundary>

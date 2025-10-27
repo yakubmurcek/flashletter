@@ -27,7 +27,7 @@ export function Header() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2 group">
           <div
-            className="w-8 h-8 rounded-lg overflow-hidden
+            className="w-10 h-10 rounded-lg overflow-hidden
             group-hover:scale-110 transition-transform duration-300"
           >
             <Image
