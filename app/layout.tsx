@@ -11,11 +11,11 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Lightning-fast AI email campaigns',
+  title: 'Flashletter - Lightning-fast AI newsletter campaigns',
   description:
-    'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+    'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
   keywords: [
-    'email campaigns',
+    'newsletter campaigns',
     'AI email generator',
     'newsletter tool',
     'email marketing',
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: '/',
-    title: 'Flashletter - Lightning-fast AI email campaigns',
+    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
     siteName: 'Flashletter',
     images: [
       {
@@ -44,16 +44,16 @@ export const metadata: Metadata = {
         }/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Lightning-fast AI email campaigns',
+        alt: 'Flashletter - Lightning-fast AI newsletter campaigns',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Lightning-fast AI email campaigns',
+    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Generate complete email campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
+      'Generate complete newsletter campaigns in seconds with AI. Transform landing pages into personalized email sequences.',
     images: [
       `${
         process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
@@ -103,7 +103,7 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'Generate complete email campaigns in seconds with AI',
+                'Generate complete newsletter campaigns in seconds with AI',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com',
               applicationCategory: 'BusinessApplication',
               offers: {

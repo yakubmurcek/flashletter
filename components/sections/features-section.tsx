@@ -18,7 +18,7 @@ export function FeaturesSection() {
             <GradientText>Powerful Features</GradientText>
           </h2>
           <p className="text-muted-foreground text-lg">
-            Everything you need to ship effective email campaigns fast.
+            Everything you need to ship effective newsletter campaigns fast.
           </p>
         </div>
 
@@ -31,8 +31,8 @@ export function FeaturesSection() {
               Lightning Fast
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Generate complete email campaigns in seconds. No more hours spent
-              writing copy.
+              Generate complete newsletter campaigns in seconds. No more hours
+              spent writing copy.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Clock className="w-4 h-4 mr-2" />
@@ -90,7 +90,7 @@ export function FeaturesSection() {
             </div>
             <p className="text-muted-foreground">
               Track performance with detailed analytics and get AI-powered
-              insights to optimize your campaigns.
+              insights to optimize your newsletter campaigns.
             </p>
           </div>
 
