@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   creator: 'Flashletter',
   publisher: 'Flashletter',
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com'
+    process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
   ),
   openGraph: {
     type: 'website',
@@ -104,7 +104,7 @@ export default function RootLayout({
               name: 'Flashletter',
               description:
                 'Generate complete newsletter campaigns in seconds with AI',
-              url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com',
+              url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app',
               applicationCategory: 'BusinessApplication',
               offers: {
                 '@type': 'Offer',
