@@ -37,7 +37,7 @@ export function extractTextFromHTML(html: string): ScrapedContent {
     '.section',
   ]
 
-  let mainElement: cheerio.Cheerio | null = null
+  let mainElement: cheerio.Cheerio<any> | null = null
   let structuredHtml = ''
 
   for (const selector of contentSelectors) {
@@ -287,9 +287,7 @@ function sanitizeInlineContent(
       const href = sanitizeHref(($(node).attr('href') || '').trim())
       const inner = sanitizeInlineContent($(node), $)
       if (inner) {
-        result += href
-          ? `<a href="${escapeHtml(href)}">${inner}</a>`
-          : inner
+        result += href ? `<a href="${escapeHtml(href)}">${inner}</a>` : inner
       }
       return
     }
