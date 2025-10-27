@@ -45,25 +45,25 @@ export function Footer() {
           <nav className="flex flex-wrap items-center gap-6 text-sm">
             <a
               href="#features"
-              className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               Features
             </a>
             <a
               href="#pricing"
-              className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               Pricing
             </a>
             <a
               href="#testimonials"
-              className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               Testimonials
             </a>
             <a
               href="#faq"
-              className="text-muted-foreground hover:text-foreground transition-colors hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               FAQ
             </a>
@@ -92,19 +92,19 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-6">
             <a
-              className="hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
               href="mailto:support@flashletter.com"
             >
               support@flashletter.com
             </a>
             <a
-              className="hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
               href="/privacy"
             >
               Privacy Policy
             </a>
             <a
-              className="hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
               href="/terms"
             >
               Terms of Service
