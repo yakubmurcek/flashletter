@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { Header } from '@/components/sections/header'
-import { WaitlistHeroSection } from '@/components/sections/waitlist-hero-section'
+import { DynamicHeroSection } from '@/components/sections/dynamic-hero-section'
 import { FeaturesSection } from '@/components/sections/features-section'
 import { FAQSection } from '@/components/sections/faq-section'
 import { Footer } from '@/components/sections/footer'
+import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
 
 export default function Home() {
   return (
@@ -20,7 +21,7 @@ export default function Home() {
       <Header />
 
       <main className="flex-1 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 pt-20">
-        <WaitlistHeroSection />
+        <DynamicHeroSection />
         <FeaturesSection />
         <FAQSection />
       </main>
