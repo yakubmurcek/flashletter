@@ -72,14 +72,7 @@ export function Footer() {
             >
               FAQ
             </a>
-            {LANDING_PAGE_CONFIG.showProductFeatures && (
-              <a
-                href="#cta"
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-              >
-                Get Started
-              </a>
-            )}
+
             <PulseButton>
               <Button
                 size="sm"
@@ -87,7 +80,7 @@ export function Footer() {
                 className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
               >
                 {LANDING_PAGE_CONFIG.showProductFeatures ? (
-                  <Link href="/#cta">Start Free Trial</Link>
+                  <Link href="/signup">Start Free Trial</Link>
                 ) : (
                   <Link href="/#waitlist">Get Early Access</Link>
                 )}

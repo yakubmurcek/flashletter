@@ -76,14 +76,6 @@ export function Header() {
           >
             FAQ
           </a>
-          {LANDING_PAGE_CONFIG.showProductFeatures && (
-            <a
-              href="#cta"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-            >
-              Get Started
-            </a>
-          )}
         </nav>
         <div className="flex items-center gap-3">
           {!LANDING_PAGE_CONFIG.showProductFeatures ? (
@@ -102,7 +94,7 @@ export function Header() {
               asChild
               className="hover:scale-105 transition-transform"
             >
-              <a href="#cta">Start Free Trial</a>
+              <Link href="/signup">Start Free Trial</Link>
             </Button>
           )}
         </div>
