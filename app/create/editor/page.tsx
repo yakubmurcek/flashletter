@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
@@ -15,7 +16,7 @@ import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { cn } from '@/lib/utils'
-import { redirect } from 'next/navigation'
+import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
 const ChatSidebar = dynamic(
@@ -34,6 +35,7 @@ const ChatSidebar = dynamic(
 )
 
 function EditorPageContent() {
+  const router = useRouter()
   // Use new focused hooks
   const { loadingState, campaignData, error } = useCampaignLoader()
   const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } =
@@ -49,6 +51,12 @@ function EditorPageContent() {
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
+
+  useEffect(() => {
+    if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
+      router.replace('/#waitlist')
+    }
+  }, [router])
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
   const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
@@ -318,5 +326,15 @@ function EditorPageContent() {
 }
 
 export default function EditorPage() {
-  redirect('/#waitlist')
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen flex items-center justify-center">
+          Loading...
+        </div>
+      }
+    >
+      <EditorPageContent />
+    </Suspense>
+  )
 }

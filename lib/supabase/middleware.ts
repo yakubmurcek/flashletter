@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -43,10 +44,16 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
+  const useWaitlistVariant = !FEATURE_FLAGS.SHOW_FULL_PRODUCT
+
   if (isProtectedRoute && !user) {
-    // Redirect to waitlist
     const url = request.nextUrl.clone()
-    url.pathname = '/#waitlist'
+    if (useWaitlistVariant) {
+      url.pathname = '/#waitlist'
+    } else {
+      url.pathname = '/login'
+      url.searchParams.set('redirectTo', request.nextUrl.pathname)
+    }
     return NextResponse.redirect(url)
   }
 
@@ -56,7 +63,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/#waitlist'
+    url.pathname = useWaitlistVariant ? '/#waitlist' : '/'
     return NextResponse.redirect(url)
   }
 

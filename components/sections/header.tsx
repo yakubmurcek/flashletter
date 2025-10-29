@@ -8,9 +8,10 @@ import { UserMenu } from '@/components/auth/user-menu'
 import { PulseButton } from '@/components/ui/animations'
 import { useEffect, useState } from 'react'
 import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
+import type { User } from '@supabase/supabase-js'
 
 export function Header() {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<User | null>(null)
 
   useEffect(() => {
     const getUser = async () => {
@@ -18,10 +19,25 @@ export function Header() {
       const {
         data: { user },
       } = await supabase.auth.getUser()
-      setUser(user)
+      setUser(user ?? null)
     }
     getUser()
   }, [])
+
+  const navItems = [
+    { href: '#features', label: 'Features', show: true },
+    {
+      href: '#testimonials',
+      label: 'Testimonials',
+      show: LANDING_PAGE_CONFIG.showProductFeatures,
+    },
+    {
+      href: '#pricing',
+      label: 'Pricing',
+      show: LANDING_PAGE_CONFIG.showProductFeatures,
+    },
+    { href: '#faq', label: 'FAQ', show: true },
+  ].filter((item) => item.show)
 
   return (
     <header className="border-b border-border backdrop-blur-sm bg-background/80 fixed top-0 left-0 right-0 z-50">
@@ -48,54 +64,53 @@ export function Header() {
           </span>
         </Link>
         <nav className="hidden md:flex items-center gap-6">
-          <a
-            href="#features"
-            className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-          >
-            Features
-          </a>
-          {LANDING_PAGE_CONFIG.showProductFeatures && (
+          {navItems.map((item) => (
             <a
-              href="#testimonials"
+              key={item.href}
+              href={item.href}
               className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
-              Testimonials
+              {item.label}
             </a>
-          )}
-          {LANDING_PAGE_CONFIG.showProductFeatures && (
-            <a
-              href="#pricing"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-            >
-              Pricing
-            </a>
-          )}
-          <a
-            href="#faq"
-            className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
-          >
-            FAQ
-          </a>
+          ))}
         </nav>
         <div className="flex items-center gap-3">
-          {!LANDING_PAGE_CONFIG.showProductFeatures ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="hover:scale-105 transition-transform"
-            >
-              <a href="#waitlist">Get Early Access</a>
-            </Button>
+          {user ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="hover:scale-105 transition-transform"
+              >
+                <Link href="/campaigns">My Campaigns</Link>
+              </Button>
+              <UserMenu user={user} />
+            </>
           ) : (
-            <Button
-              variant="ghost"
-              size="sm"
-              asChild
-              className="hover:scale-105 transition-transform"
-            >
-              <Link href="/signup">Start Free Trial</Link>
-            </Button>
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                asChild
+                className="hover:scale-105 transition-transform"
+              >
+                <Link href="/login">Sign In</Link>
+              </Button>
+              <PulseButton>
+                <Button
+                  size="sm"
+                  asChild
+                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+                >
+                  {LANDING_PAGE_CONFIG.showProductFeatures ? (
+                    <Link href="/signup">Get Started</Link>
+                  ) : (
+                    <a href="#waitlist">Join Waitlist</a>
+                  )}
+                </Button>
+              </PulseButton>
+            </>
           )}
         </div>
       </div>
