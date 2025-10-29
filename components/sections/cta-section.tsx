@@ -5,7 +5,10 @@ import { PulseButton } from '@/components/ui/animations'
 
 export function CTASection() {
   return (
-    <section className="py-14 md:py-20 bg-gradient-to-br from-primary/5 to-amber-400/5 border-y border-primary/10 w-screen mx-[calc(50%-50vw)]">
+    <section
+      id="cta"
+      className="py-14 md:py-20 bg-gradient-to-br from-primary/5 to-amber-400/5 border-y border-primary/10 w-screen mx-[calc(50%-50vw)]"
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">

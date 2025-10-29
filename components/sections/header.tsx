@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { UserMenu } from '@/components/auth/user-menu'
 import { PulseButton } from '@/components/ui/animations'
 import { useEffect, useState } from 'react'
+import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
 
 export function Header() {
   const [user, setUser] = useState<any>(null)
@@ -53,22 +54,57 @@ export function Header() {
           >
             Features
           </a>
+          {LANDING_PAGE_CONFIG.showProductFeatures && (
+            <a
+              href="#testimonials"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+            >
+              Testimonials
+            </a>
+          )}
+          {LANDING_PAGE_CONFIG.showProductFeatures && (
+            <a
+              href="#pricing"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+            >
+              Pricing
+            </a>
+          )}
           <a
             href="#faq"
             className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
           >
             FAQ
           </a>
+          {LANDING_PAGE_CONFIG.showProductFeatures && (
+            <a
+              href="#cta"
+              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+            >
+              Get Started
+            </a>
+          )}
         </nav>
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="hover:scale-105 transition-transform"
-          >
-            <a href="#waitlist">Get Early Access</a>
-          </Button>
+          {!LANDING_PAGE_CONFIG.showProductFeatures ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="hover:scale-105 transition-transform"
+            >
+              <a href="#waitlist">Get Early Access</a>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="hover:scale-105 transition-transform"
+            >
+              <a href="#cta">Start Free Trial</a>
+            </Button>
+          )}
         </div>
       </div>
     </header>

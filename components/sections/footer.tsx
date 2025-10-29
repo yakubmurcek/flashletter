@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PulseButton } from '@/components/ui/animations'
+import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -49,19 +50,47 @@ export function Footer() {
             >
               Features
             </a>
+            {LANDING_PAGE_CONFIG.showProductFeatures && (
+              <a
+                href="#testimonials"
+                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              >
+                Testimonials
+              </a>
+            )}
+            {LANDING_PAGE_CONFIG.showProductFeatures && (
+              <a
+                href="#pricing"
+                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              >
+                Pricing
+              </a>
+            )}
             <a
               href="#faq"
               className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               FAQ
             </a>
+            {LANDING_PAGE_CONFIG.showProductFeatures && (
+              <a
+                href="#cta"
+                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              >
+                Get Started
+              </a>
+            )}
             <PulseButton>
               <Button
                 size="sm"
                 asChild
                 className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
               >
-                <Link href="/#waitlist">Get Early Access</Link>
+                {LANDING_PAGE_CONFIG.showProductFeatures ? (
+                  <Link href="/#cta">Start Free Trial</Link>
+                ) : (
+                  <Link href="/#waitlist">Get Early Access</Link>
+                )}
               </Button>
             </PulseButton>
           </nav>
