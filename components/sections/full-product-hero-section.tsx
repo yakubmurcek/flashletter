@@ -11,17 +11,26 @@ import {
 
 export function FullProductHeroSection() {
   return (
-    <div className="text-center py-20 md:py-32">
+    <div className="relative text-center py-20 md:py-32">
       {/* Floating elements */}
-      <FloatingElement delay={0} className="top-20 left-10">
+      <FloatingElement
+        delay={0}
+        className="absolute pointer-events-none top-20 left-10"
+      >
         <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-xl"></div>
       </FloatingElement>
 
-      <FloatingElement delay={1000} className="top-40 right-20">
+      <FloatingElement
+        delay={1000}
+        className="absolute pointer-events-none top-40 right-20"
+      >
         <div className="w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-xl"></div>
       </FloatingElement>
 
-      <FloatingElement delay={2000} className="bottom-20 left-1/3">
+      <FloatingElement
+        delay={2000}
+        className="absolute pointer-events-none bottom-20 left-1/3"
+      >
         <div className="w-24 h-24 bg-gradient-to-br from-pink-500/20 to-red-500/20 rounded-full blur-xl"></div>
       </FloatingElement>
 
