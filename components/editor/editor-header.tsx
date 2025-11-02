@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Download, Send, History } from 'lucide-react'
+import { ArrowLeft, Download, History } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface EditorHeaderProps {
@@ -97,13 +97,6 @@ export function EditorHeader({
           >
             <Download className="w-4 h-4" />
             <span className="hidden sm:inline">Export</span>
-          </Button>
-          <Button
-            size="sm"
-            className="gap-2 rounded-full bg-gradient-to-r from-primary via-amber-400 to-orange-500/80 text-primary-foreground hover:shadow-lg transition-all duration-300"
-          >
-            <Send className="w-4 h-4" />
-            <span className="hidden sm:inline">Deploy</span>
           </Button>
         </div>
       </div>
