@@ -51,18 +51,14 @@ export function EditorHeader({
           href="/"
           className="group flex items-center gap-3 rounded-full bg-white/5 px-4 py-2 transition-all hover:bg-white/10 hover:shadow-md"
         >
-          <div className="w-9 h-9 rounded-full overflow-hidden ring-1 ring-border/20 transition-transform duration-300 group-hover:scale-110">
-            <Image
-              src="/icon-192.webp"
-              alt="Flashletter"
-              width={32}
-              height={32}
-              className="w-full h-full"
-            />
-          </div>
-          <span className="text-lg font-semibold">
-            Flashletter
-          </span>
+          <Image
+            src="/icon-192.webp"
+            alt="Flashletter"
+            width={36}
+            height={36}
+            className="transition-transform duration-300 group-hover:scale-110"
+          />
+          <span className="text-lg font-semibold">Flashletter</span>
         </Link>
 
         <div className="hidden md:block flex-1">

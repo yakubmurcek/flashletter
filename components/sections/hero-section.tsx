@@ -19,13 +19,12 @@ export function HeroSection() {
         </div>
       </FloatingElement>
       <FloatingElement delay={1}>
-        <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center overflow-hidden">
+        <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center">
           <Image
             src="/icon-192.webp"
             alt="Flashletter"
-            width={24}
-            height={24}
-            className="w-6 h-6"
+            width={48}
+            height={48}
             priority
           />
         </div>
