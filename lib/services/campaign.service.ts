@@ -1,6 +1,13 @@
-import { emailsResponseSchema } from '../schemas'
-import { scrapeLandingResponseSchema } from '../schemas/api'
-import type { CampaignConfig, Email, LandingPageData } from '../types'
+import {
+  generateEmailsResponseSchema,
+  scrapeLandingResponseSchema,
+} from '../schemas/api'
+import type {
+  CampaignConfig,
+  Email,
+  GenerateEmailsResponse,
+  LandingPageData,
+} from '../types'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -71,7 +78,7 @@ export class CampaignService {
     config: CampaignConfig,
     campaignId?: string,
     signal?: AbortSignal
-  ): Promise<Email[]> {
+  ): Promise<GenerateEmailsResponse> {
     const response = await fetch('/api/generate-emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -92,15 +99,19 @@ export class CampaignService {
       )
     }
 
-    const { emails } = emailsResponseSchema.parse(raw)
+    const parsed = generateEmailsResponseSchema.parse(raw)
 
-    const normalizedEmails = emails.map((email) => ({
+    const normalizedEmails = parsed.emails.map((email) => ({
       ...email,
       preview: email.preview || email.subject || '',
       id: email.id,
       day: email.day,
     })) satisfies Email[]
 
-    return normalizedEmails
+    return {
+      emails: normalizedEmails,
+      warning: parsed.warning,
+      usage: parsed.usage,
+    }
   }
 }

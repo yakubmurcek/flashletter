@@ -23,7 +23,8 @@ export function useCampaignConfig(validCampaignId: string | null) {
   const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } =
     useCampaignActions()
 
-  const { isGenerating, error, generateEmails } = useEmailGeneration()
+  const { isGenerating, error, warning, generateEmails } =
+    useEmailGeneration()
 
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
   const [campaignType, setCampaignType] = useState<string>(
@@ -69,16 +70,16 @@ export function useCampaignConfig(validCampaignId: string | null) {
 
       await updateCampaignConfig(config)
 
-      const emails = await generateEmails(
+      const result = await generateEmails(
         landingPageData.url,
         landingPageData.content || '',
         config,
         currentCampaignId || undefined
       )
 
-      if (emails) {
+      if (result) {
         setConfig(config)
-        await setGeneratedEmails(emails)
+        await setGeneratedEmails(result.emails)
         const editorUrl = currentCampaignId
           ? `/create/editor?campaign=${currentCampaignId}`
           : '/create/editor'
@@ -113,6 +114,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
 
     // Error
     error,
+    warning,
 
     // Actions
     handleSubmit,

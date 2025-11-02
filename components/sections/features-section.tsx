@@ -24,7 +24,7 @@ export function FeaturesSection() {
         </div>
 
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <Zap className="w-8 h-8 text-primary" />
             </div>
@@ -41,7 +41,7 @@ export function FeaturesSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="w-16 h-16 bg-gradient-to-br from-amber-400/10 to-amber-400/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <Sparkles className="w-8 h-8 text-amber-500" />
             </div>
@@ -58,7 +58,7 @@ export function FeaturesSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="w-16 h-16 bg-gradient-to-br from-orange-300/10 to-orange-300/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <Mail className="w-8 h-8 text-orange-400" />
             </div>

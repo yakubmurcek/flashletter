@@ -26,7 +26,7 @@ export function EditorHeader({
       className={cn(
         'flex-shrink-0 relative z-50 flex items-center',
         'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/70',
-        'shadow-[0_15px_60px_-35px_rgba(15,23,42,0.55)] ring-1 ring-border/10',
+        'shadow-[0_15px_60px_-35px_rgba(15,23,42,0.35)] ring-1 ring-border/10',
         className
       )}
     >

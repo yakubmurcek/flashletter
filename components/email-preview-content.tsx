@@ -14,12 +14,12 @@ function EmailPreviewContentComponent({
 }: EmailPreviewContentProps) {
   return (
     <div
-      className="flex-1 overflow-y-auto rounded-3xl bg-white/[0.03] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.85)]"
+      className="flex-1 overflow-y-auto rounded-3xl bg-white/[0.03] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]"
       onMouseUp={onMouseUp}
     >
       <div className="p-10">
         <div className="max-w-2xl mx-auto space-y-8">
-          <div className="rounded-3xl bg-white/[0.08] p-10 shadow-[0_40px_90px_-60px_rgba(15,23,42,0.95)]">
+          <div className="rounded-3xl bg-white/[0.08] p-10">
             <div className="text-xs text-muted-foreground/80 mb-3 uppercase tracking-[0.35em]">
               Subject
             </div>

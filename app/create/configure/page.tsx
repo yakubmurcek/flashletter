@@ -31,6 +31,7 @@ function ConfigurePageContent() {
     isSubmitting,
     isReady,
     error,
+    warning,
     handleSubmit,
   } = useCampaignConfig(validCampaignId)
 
@@ -71,6 +72,7 @@ function ConfigurePageContent() {
             isGenerating={isGenerating}
             isSubmitting={isSubmitting}
             error={error}
+            warning={warning}
             onSubmit={handleSubmit}
           />
         </FormCard>

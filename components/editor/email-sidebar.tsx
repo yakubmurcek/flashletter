@@ -21,7 +21,7 @@ function EmailSidebarComponent({
   tone,
 }: EmailSidebarProps) {
   return (
-    <aside className="w-80 flex flex-col bg-gradient-to-b from-background/80 via-card/70 to-background/90 supports-[backdrop-filter]:backdrop-blur-2xl ring-1 ring-border/10 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.65)]">
+    <aside className="w-80 flex flex-col bg-gradient-to-b from-background/80 via-card/70 to-background/90 supports-[backdrop-filter]:backdrop-blur-2xl ring-1 ring-border/10 shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)]">
       <div className="p-6 flex-shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-3">

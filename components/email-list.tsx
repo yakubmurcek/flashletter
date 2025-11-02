@@ -24,17 +24,17 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
   )
 
   return (
-    <div className="px-4 pb-6 space-y-2">
+    <div className="px-4 pt-4 pb-6 space-y-2">
       {sortedEmails.map((email) => (
         <button
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
             'group w-full text-left p-4 rounded-2xl transition-all duration-300',
-            'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.75)]',
+            'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
             'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
-              ? 'bg-gradient-to-r from-primary/20 via-primary/10 to-amber-300/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.85)] ring-primary/30'
+              ? 'bg-gradient-to-r from-primary/20 via-primary/10 to-amber-300/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
               : ''
           )}
         >
