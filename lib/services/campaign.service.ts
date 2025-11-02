@@ -43,7 +43,11 @@ export class CampaignService {
       throw new Error('Invalid response from scrape endpoint')
     }
 
-    const { url, content, metadata } = parsed.data
+    const {
+      url: scrapedUrl,
+      content,
+      metadata,
+    } = parsed.data
 
     const normalizedMetadata: LandingPageData['metadata'] = metadata
       ? {
@@ -55,7 +59,7 @@ export class CampaignService {
       : undefined
 
     return {
-      url,
+      url: scrapedUrl,
       content,
       metadata: normalizedMetadata,
     }

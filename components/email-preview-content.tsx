@@ -1,5 +1,4 @@
 import { memo } from 'react'
-import { Card } from '@/components/ui/card'
 import { renderMarkdown } from '@/lib/utils/markdown-renderer'
 
 interface EmailPreviewContentProps {
@@ -14,25 +13,23 @@ function EmailPreviewContentComponent({
   onMouseUp,
 }: EmailPreviewContentProps) {
   return (
-    <div className="flex-1 overflow-y-auto bg-muted/30" onMouseUp={onMouseUp}>
-      <div className="p-6">
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-8 bg-card shadow-sm">
-            <div className="space-y-6">
-              <div className="border-b border-border pb-4">
-                <div className="text-xs text-muted-foreground mb-2 uppercase tracking-wide">
-                  Subject
-                </div>
-                <div className="text-xl font-semibold text-foreground">
-                  {subject || 'No subject'}
-                </div>
-              </div>
-
-              <div className="prose prose-sm max-w-none">
-                <div className="text-foreground">{renderMarkdown(content)}</div>
-              </div>
+    <div
+      className="flex-1 overflow-y-auto rounded-3xl bg-white/[0.03] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.85)]"
+      onMouseUp={onMouseUp}
+    >
+      <div className="p-10">
+        <div className="max-w-2xl mx-auto space-y-8">
+          <div className="rounded-3xl bg-white/[0.08] p-10 shadow-[0_40px_90px_-60px_rgba(15,23,42,0.95)]">
+            <div className="text-xs text-muted-foreground/80 mb-3 uppercase tracking-[0.35em]">
+              Subject
             </div>
-          </Card>
+            <div className="text-2xl font-semibold text-foreground mb-8 leading-tight">
+              {subject || 'No subject'}
+            </div>
+            <div className="prose prose-sm max-w-none text-foreground/90">
+              {renderMarkdown(content)}
+            </div>
+          </div>
         </div>
       </div>
     </div>

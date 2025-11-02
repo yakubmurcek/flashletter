@@ -180,11 +180,13 @@ function EmailPreviewComponent({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="border-b border-border bg-card p-4 h-20">
+      <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.9)]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold">Day {email.day}</h2>
-            <p className="text-sm text-muted-foreground truncate">
+            <h2 className="text-xl font-semibold tracking-tight">
+              Day {email.day}
+            </h2>
+            <p className="text-sm text-muted-foreground/80 truncate">
               {showEditor
                 ? 'Edit content on the left, see preview on the right'
                 : 'Preview mode'}
@@ -200,7 +202,7 @@ function EmailPreviewComponent({
               variant="outline"
               size="sm"
               onClick={() => setShowEditor(!showEditor)}
-              className="gap-2"
+              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/12 hover:border-border/60 transition-colors"
             >
               {showEditor ? (
                 <>
@@ -217,7 +219,7 @@ function EmailPreviewComponent({
             <Button
               onClick={handleSave}
               disabled={!hasChanges}
-              className="gap-2"
+              className="gap-2 rounded-full shadow-[0_15px_45px_-25px_rgba(249,115,22,0.9)]"
             >
               <Save className="w-4 h-4" />
               {hasChanges ? 'Save Changes' : 'Saved'}
@@ -226,25 +228,29 @@ function EmailPreviewComponent({
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden gap-6 px-6 pb-6 pt-4">
         {showEditor && (
-          <div className="flex-1 border-r border-border overflow-y-auto transition-all duration-300">
-            <EmailEditorSidebar
-              subject={editedSubject}
-              content={editedContent}
-              editorMode={editorMode}
-              onSubjectChange={setEditedSubject}
-              onContentChange={setEditedContent}
-              onEditorModeChange={setEditorMode}
-            />
+          <div className="flex-1 overflow-hidden transition-all duration-300">
+            <div className="h-full overflow-y-auto rounded-3xl bg-white/[0.04] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.9)]">
+              <EmailEditorSidebar
+                subject={editedSubject}
+                content={editedContent}
+                editorMode={editorMode}
+                onSubjectChange={setEditedSubject}
+                onContentChange={setEditedContent}
+                onEditorModeChange={setEditorMode}
+              />
+            </div>
           </div>
         )}
 
-        <EmailPreviewContent
-          subject={editedSubject}
-          content={editedContent}
-          onMouseUp={handleTextSelection}
-        />
+        <div className={cn('flex-[1.35] min-w-0 h-full')}>
+          <EmailPreviewContent
+            subject={editedSubject}
+            content={editedContent}
+            onMouseUp={handleTextSelection}
+          />
+        </div>
       </div>
 
       {selectedText && popupPosition && (

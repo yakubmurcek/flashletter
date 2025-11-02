@@ -12,7 +12,7 @@ export function MarkdownEditor({ value, onChange }: MarkdownEditorProps) {
         id="content"
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="min-h-[600px] font-mono text-sm leading-relaxed resize-none bg-card border-border"
+        className="min-h-[600px] font-mono text-sm leading-relaxed resize-none rounded-3xl bg-white/[0.06] border-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
         placeholder="Write your email content here using markdown...
 
 # Heading 1
