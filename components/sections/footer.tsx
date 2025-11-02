@@ -5,23 +5,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { PulseButton } from '@/components/ui/animations'
 import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 
 export function Footer() {
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [])
-
   return (
     <footer className="border-t border-border bg-background/80 backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

@@ -29,7 +29,7 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                By accessing and using Flashletter's waitlist service, you
+                By accessing and using Flashletter&rsquo;s waitlist service, you
                 accept and agree to be bound by the terms and provision of this
                 agreement. If you do not agree to abide by the above, please do
                 not use this service.
@@ -128,7 +128,8 @@ export default function TermsOfServicePage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                The information on this service is provided on an "as is" basis.
+                The information on this service is provided on an &ldquo;as
+                is&rdquo; basis.
                 To the fullest extent permitted by law, Flashletter:
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
@@ -179,7 +180,7 @@ export default function TermsOfServicePage() {
                 contractors, agents, officers and directors, from and against
                 any and all claims, damages, obligations, losses, liabilities,
                 costs or debt, and expenses (including but not limited to
-                attorney's fees).
+                attorney&rsquo;s fees).
               </p>
             </CardContent>
           </Card>

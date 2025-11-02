@@ -1,5 +1,6 @@
 import { getRedisClient, withRedisFallback, CacheKeys } from './redis-client'
 import { SCRAPE_CACHE_TTL } from '@/lib/constants/app'
+import type { ExtractedMetadata } from './metadata-extractor'
 
 /**
  * Redis-based caching layer for scraped content
@@ -8,7 +9,7 @@ import { SCRAPE_CACHE_TTL } from '@/lib/constants/app'
 
 export interface CachedScrapeData {
   content: string
-  metadata: Record<string, any>
+  metadata: ExtractedMetadata
   url: string
   wordCount: number
   extractionMethod: 'static' | 'dynamic'

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles, Zap, Play } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   AnimatedSection,
   FloatingElement,
@@ -19,7 +20,14 @@ export function HeroSection() {
       </FloatingElement>
       <FloatingElement delay={1}>
         <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center overflow-hidden">
-          <img src="/icon-192.webp" alt="Flashletter" className="w-6 h-6" />
+          <Image
+            src="/icon-192.webp"
+            alt="Flashletter"
+            width={24}
+            height={24}
+            className="w-6 h-6"
+            priority
+          />
         </div>
       </FloatingElement>
       <FloatingElement delay={2}>

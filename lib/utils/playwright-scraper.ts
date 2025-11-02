@@ -4,17 +4,35 @@ import {
   type Page,
 } from 'playwright-core'
 import { PLAYWRIGHT_TIMEOUT } from '@/lib/constants/app'
-import { extractTextFromHTML, type ScrapedContent } from './scraper'
+import { extractTextFromHTML } from './scraper'
 import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
 
-// Only import @sparticuz/chromium in production/serverless environments
-let chromium: any = null
-if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
-  try {
-    chromium = require('@sparticuz/chromium')
-  } catch (error) {
-    console.warn('@sparticuz/chromium not available, using system browser')
+type LaunchOptions = Parameters<typeof playwrightChromium.launch>[0]
+type ChromiumModule = Awaited<typeof import('@sparticuz/chromium')>['default']
+
+let chromiumInstance: ChromiumModule | null | undefined
+
+async function loadChromiumModule(): Promise<ChromiumModule | null> {
+  if (chromiumInstance !== undefined) {
+    return chromiumInstance
   }
+
+  if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    try {
+      const importedModule = await import('@sparticuz/chromium')
+      chromiumInstance = importedModule.default
+    } catch (error) {
+      console.warn(
+        '@sparticuz/chromium not available, using system browser',
+        error
+      )
+      chromiumInstance = null
+    }
+  } else {
+    chromiumInstance = null
+  }
+
+  return chromiumInstance
 }
 
 /**
@@ -69,15 +87,14 @@ export async function scrapeWithPlaywright(
   let page: Page | null = null
 
   try {
+    const chromium = await loadChromiumModule()
+
     // Configure browser launch options based on environment
-    let launchOptions: any = {
+    const launchOptions: LaunchOptions = {
       headless: true,
     }
 
-    if (
-      chromium &&
-      (process.env.NODE_ENV === 'production' || process.env.VERCEL)
-    ) {
+    if (chromium) {
       // Production/serverless environment - use @sparticuz/chromium
       const browserArgs = [
         ...chromium.args,
@@ -198,7 +215,10 @@ async function waitForContent(page: Page): Promise<void> {
     ])
   } catch (error) {
     // Ignore timeout errors, continue with whatever content is available
-    console.warn('Content wait timeout, proceeding with available content')
+    console.warn(
+      'Content wait timeout, proceeding with available content',
+      error
+    )
   }
 
   // Wait a bit more for any lazy-loaded content
@@ -207,7 +227,7 @@ async function waitForContent(page: Page): Promise<void> {
   // Wait for images to load (optional)
   try {
     await page.waitForLoadState('networkidle', { timeout: 3000 })
-  } catch (error) {
+  } catch {
     // Ignore timeout, continue
   }
 }
@@ -316,20 +336,21 @@ export async function getBrowserInfo(): Promise<{
   let browser: Browser | null = null
 
   try {
+    const chromium = await loadChromiumModule()
     // Use same launch options as main scraping function
-    let launchOptions: any = {
+    const launchOptions: LaunchOptions = {
       headless: true,
     }
 
-    if (
-      chromium &&
-      (process.env.NODE_ENV === 'production' || process.env.VERCEL)
-    ) {
+    if (chromium) {
       launchOptions.args = chromium.args
       try {
         launchOptions.executablePath = await chromium.executablePath()
       } catch (error) {
-        console.warn('Failed to get Chromium executable path for browser info')
+        console.warn(
+          'Failed to get Chromium executable path for browser info',
+          error
+        )
       }
     } else {
       launchOptions.args = [

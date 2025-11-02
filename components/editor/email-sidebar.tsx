@@ -11,7 +11,6 @@ interface EmailSidebarProps {
   onSelect: (id: number) => void
   campaignType?: string
   tone?: string
-  days?: number
 }
 
 function EmailSidebarComponent({
@@ -20,7 +19,6 @@ function EmailSidebarComponent({
   onSelect,
   campaignType,
   tone,
-  days,
 }: EmailSidebarProps) {
   return (
     <aside className="w-80 border-r border-border/60 bg-card/95 backdrop-blur-sm flex flex-col hover:border-border/80 transition-colors">

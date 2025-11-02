@@ -38,9 +38,6 @@ const EU_COUNTRIES = [
 // US states/countries that use CCPA-style privacy laws
 const CCPA_COUNTRIES = ['US']
 
-// Countries that should use GDPR-style privacy (EU + others for safety)
-const GDPR_COUNTRIES = [...EU_COUNTRIES]
-
 export interface RegionInfo {
   country: string | null
   countryCode: string | null

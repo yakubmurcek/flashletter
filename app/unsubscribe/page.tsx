@@ -6,8 +6,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CheckCircle, AlertCircle, Mail, Trash2 } from 'lucide-react'
-import { Metadata } from 'next'
-
 export default function UnsubscribePage() {
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)

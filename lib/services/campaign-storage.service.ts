@@ -1,21 +1,64 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
-import type { Campaign, CampaignWithEmails, Email } from '../schemas'
+import { z } from 'zod'
+import {
+  campaignSchema,
+  campaignWithEmailsSchema,
+  emailSchema,
+  type Campaign,
+  type CampaignWithEmails,
+  type Email,
+  type LandingPageData,
+} from '../schemas'
 
 // Re-export for backwards compatibility
 export type { Campaign, CampaignWithEmails }
+
+type LandingPageMetadata = LandingPageData['metadata']
+
+const dbEmailRowSchema = z.object({
+  id: z.string().uuid(),
+  campaign_id: z.string().uuid(),
+  day: z.number().int().min(1),
+  subject: z.string(),
+  preview: z.string().nullable(),
+  content: z.string(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+})
+
+type DbEmailRow = z.infer<typeof dbEmailRowSchema>
+
+function mapDbEmailToDomain(email: DbEmailRow): Email {
+  return emailSchema.parse({
+    id: email.day,
+    uuid: email.id,
+    day: email.day,
+    subject: email.subject,
+    preview: email.preview ?? '',
+    content: email.content,
+  })
+}
+
+type CampaignInsertData = {
+  name?: string
+  landingPageUrl?: string
+  landingPageContent?: string
+  landingPageMetadata?: LandingPageMetadata
+}
+
+type CampaignUpdateData = CampaignInsertData & {
+  tone?: string
+  campaignType?: string
+  days?: number
+  status?: 'draft' | 'active' | 'completed'
+}
 
 export class CampaignStorageService {
   constructor(private supabase: SupabaseClient) {}
 
   async createCampaign(
     userId: string,
-    data: {
-      name?: string
-      landingPageUrl?: string
-      landingPageContent?: string
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      landingPageMetadata?: any
-    }
+    data: CampaignInsertData
   ): Promise<Campaign> {
     const { data: campaign, error } = await this.supabase
       .from('campaigns')
@@ -31,7 +74,7 @@ export class CampaignStorageService {
       .single()
 
     if (error) throw error
-    return campaign
+    return campaignSchema.parse(campaign)
   }
 
   async getCampaign(campaignId: string): Promise<CampaignWithEmails | null> {
@@ -60,41 +103,23 @@ export class CampaignStorageService {
       throw error
     }
 
-    // Transform the data to match our Email type and sort by day
-    const emails: Email[] = (campaign.emails || [])
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .map((email: any) => ({
-        id: email.day, // Use day as numeric id for backwards compatibility
-        uuid: email.id, // Include the actual UUID from database
-        day: email.day,
-        subject: email.subject,
-        preview: email.preview || '',
-        content: email.content,
-      }))
-      .sort((a: Email, b: Email) => a.day - b.day) // Sort by day in ascending order
+    const parsedCampaign = campaignSchema.parse(campaign)
 
-    return {
-      ...campaign,
+    const emails: Email[] = (campaign.emails || [])
+      .map((email) => mapDbEmailToDomain(dbEmailRowSchema.parse(email)))
+      .sort((a: Email, b: Email) => a.day - b.day)
+
+    return campaignWithEmailsSchema.parse({
+      ...parsedCampaign,
       emails,
-    }
+    })
   }
 
   async updateCampaign(
     campaignId: string,
-    data: {
-      name?: string
-      landingPageUrl?: string
-      landingPageContent?: string
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      landingPageMetadata?: any
-      tone?: string
-      campaignType?: string
-      days?: number
-      status?: 'draft' | 'active' | 'completed'
-    }
+    data: CampaignUpdateData
   ): Promise<Campaign> {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
 
     if (data.name !== undefined) updateData.name = data.name
     if (data.landingPageUrl !== undefined)
@@ -109,6 +134,17 @@ export class CampaignStorageService {
     if (data.days !== undefined) updateData.days = data.days
     if (data.status !== undefined) updateData.status = data.status
 
+    if (Object.keys(updateData).length === 0) {
+      const { data: existingCampaign, error: fetchError } = await this.supabase
+        .from('campaigns')
+        .select()
+        .eq('id', campaignId)
+        .single()
+
+      if (fetchError) throw fetchError
+      return campaignSchema.parse(existingCampaign)
+    }
+
     const { data: campaign, error } = await this.supabase
       .from('campaigns')
       .update(updateData)
@@ -117,7 +153,7 @@ export class CampaignStorageService {
       .single()
 
     if (error) throw error
-    return campaign
+    return campaignSchema.parse(campaign)
   }
 
   async listCampaigns(userId: string): Promise<Campaign[]> {
@@ -128,7 +164,7 @@ export class CampaignStorageService {
       .order('created_at', { ascending: false })
 
     if (error) throw error
-    return campaigns || []
+    return (campaigns || []).map((campaign) => campaignSchema.parse(campaign))
   }
 
   async deleteCampaign(campaignId: string): Promise<void> {
@@ -142,7 +178,12 @@ export class CampaignStorageService {
 
   async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
     // Delete existing emails for this campaign
-    await this.supabase.from('emails').delete().eq('campaign_id', campaignId)
+    const { error: deleteError } = await this.supabase
+      .from('emails')
+      .delete()
+      .eq('campaign_id', campaignId)
+
+    if (deleteError) throw deleteError
 
     // Insert new emails
     const emailsToInsert = emails.map((email) => ({
@@ -160,16 +201,9 @@ export class CampaignStorageService {
 
     if (error) throw error
 
-    // Transform the returned data to match our Email type with UUIDs
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (data || []).map((email: any) => ({
-      id: email.day, // Use day as numeric id for backwards compatibility
-      uuid: email.id, // Include the actual UUID from database
-      day: email.day,
-      subject: email.subject,
-      preview: email.preview || '',
-      content: email.content,
-    }))
+    return (data || []).map((email) =>
+      mapDbEmailToDomain(dbEmailRowSchema.parse(email))
+    )
   }
 
   async updateEmail(
@@ -199,13 +233,6 @@ export class CampaignStorageService {
       throw error
     }
 
-    return {
-      id: data.day,
-      uuid: data.id,
-      day: data.day,
-      subject: data.subject,
-      preview: data.preview || '',
-      content: data.content,
-    }
+    return mapDbEmailToDomain(dbEmailRowSchema.parse(data))
   }
 }

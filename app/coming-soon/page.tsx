@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/button'
-import { Clock, ArrowLeft, Mail } from 'lucide-react'
+import { Clock, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { WaitlistForm } from '@/components/waitlist-form'
 import { CookieConsentBanner } from '@/components/cookie-consent-banner'

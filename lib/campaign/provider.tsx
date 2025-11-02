@@ -19,7 +19,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const [generatedEmails, setGeneratedEmailsState] = useState<Email[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
   const campaignService = useMemo(
     () => new CampaignStorageService(supabase),
     [supabase]

@@ -16,7 +16,10 @@ import {
   setCachedScrapeData,
 } from '@/lib/utils/scraper-cache'
 import { extractTextFromHTML } from '@/lib/utils/scraper'
-import { extractMetadata } from '@/lib/utils/metadata-extractor'
+import {
+  extractMetadata,
+  type ExtractedMetadata,
+} from '@/lib/utils/metadata-extractor'
 import {
   scrapeWithPlaywright,
   shouldUseDynamicScraping,
@@ -93,7 +96,7 @@ export async function POST(req: NextRequest) {
     // Perform scraping
     let scrapeResult: {
       content: string
-      metadata: any
+      metadata: ExtractedMetadata
       wordCount: number
       extractionMethod: 'static' | 'dynamic'
       finalUrl?: string

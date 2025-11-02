@@ -88,10 +88,11 @@ export function CookieConsentBanner({
                     We use cookies to enhance your experience
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    We use essential cookies to make our site work. We'd also
-                    like to set analytics cookies to help us improve it. By
-                    clicking "Accept All", you consent to our use of cookies.
-                    You can manage your preferences or learn more in our{' '}
+                    We use essential cookies to make our site work. We&apos;d
+                    also like to set analytics cookies to help us improve it. By
+                    clicking &quot;Accept All&quot;, you consent to our use of
+                    cookies. You can manage your preferences or learn more in
+                    our{' '}
                     <Link
                       href="/privacy"
                       className="text-primary hover:underline"

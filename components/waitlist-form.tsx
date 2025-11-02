@@ -4,9 +4,8 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { CheckCircle, Mail, User, Loader2, Timer } from 'lucide-react'
+import { CheckCircle, Mail, User, Loader2 } from 'lucide-react'
 import { AnimatedSection, PulseButton } from '@/components/ui/animations'
-import { InteractiveClock } from '@/components/ui/interactive-clock'
 import Link from 'next/link'
 import { useRegionDetection } from '@/lib/utils/location-detection'
 import * as Sentry from '@sentry/nextjs'
@@ -265,7 +264,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             className="text-2xl font-bold text-green-700 dark:text-green-300 mb-2 animate-fade-in-up"
             style={{ animationDelay: '0.8s' }}
           >
-            You're on the list!
+            You&apos;re on the list!
           </h3>
 
           {/* Show order information only if there are more than 9 users */}
@@ -279,7 +278,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   #{orderInfo.order}
                 </div>
                 <div className="text-sm text-amber-600 dark:text-amber-400">
-                  You're #{orderInfo.order} of {orderInfo.totalCount} people on
+                  You&apos;re #{orderInfo.order} of {orderInfo.totalCount} people on
                   the waitlist
                 </div>
               </div>
@@ -290,7 +289,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             className="text-green-600 dark:text-green-400 animate-fade-in-up"
             style={{ animationDelay: '1.2s' }}
           >
-            We'll notify you as soon as Flashletter is ready. Get ready for
+            We&apos;ll notify you as soon as Flashletter is ready. Get ready for
             lightning-fast newsletter campaigns!
           </p>
         </div>

@@ -4,7 +4,6 @@ import {
   Clock,
   Target,
   Award,
-  TrendingUp,
   Users,
   Mail,
   Link,
