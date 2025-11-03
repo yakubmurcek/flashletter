@@ -8,6 +8,56 @@ import { debounce } from '../utils/debounce'
 import { logError } from '../utils/error-handling'
 import { CampaignActionsContext, CampaignDataContext } from './contexts'
 
+function extractTitleFromContent(html?: string | null): string | null {
+  if (!html || typeof window === 'undefined' || !('DOMParser' in window)) {
+    return null
+  }
+
+  try {
+    const parser = new window.DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
+    const title = doc.querySelector('title')?.textContent?.trim()
+    return title ? title : null
+  } catch {
+    return null
+  }
+}
+
+function deriveCampaignName(data?: LandingPageData | null): string | null {
+  if (!data) return null
+
+  const contentTitle = extractTitleFromContent(data.content)
+  if (contentTitle) return contentTitle
+
+  const meta = data.metadata
+  const candidates = [
+    meta?.title,
+    meta?.ogTitle,
+    meta?.twitterTitle,
+    meta?.ogSiteName,
+  ]
+
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string') {
+      const trimmed = candidate.trim()
+      if (trimmed) return trimmed
+    }
+  }
+
+  if (data.url) {
+    try {
+      const hostname = new URL(data.url).hostname.replace(/^www\./, '')
+      if (hostname.trim()) {
+        return hostname
+      }
+    } catch {
+      // Ignore URL parsing errors and fall through to default
+    }
+  }
+
+  return null
+}
+
 export function CampaignProvider({ children }: { children: ReactNode }) {
   const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
     null
@@ -77,18 +127,21 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       if (!user) throw new Error('User not authenticated')
 
       const dataToUse = providedLandingPageData || landingPageData
+      const derivedName =
+        deriveCampaignName(dataToUse) || 'New Campaign'
 
       const campaign = await campaignService.createCampaign(user.id, {
-        name: 'New Campaign',
+        name: derivedName,
         landingPageUrl: dataToUse?.url,
         landingPageContent: dataToUse?.content,
         landingPageMetadata: dataToUse?.metadata,
       })
 
       setCurrentCampaignId(campaign.id)
+      setCampaignName(campaign.name ?? derivedName)
       return campaign.id
     },
-    [supabase, campaignService, landingPageData]
+    [supabase, campaignService, landingPageData, setCampaignName]
   )
 
   const loadCampaign = useCallback(
@@ -101,24 +154,33 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         }
 
         setCurrentCampaignId(campaign.id)
-        setCampaignName(campaign.name)
+        const landingData: LandingPageData = campaign.landing_page_url
+          ? {
+              url: campaign.landing_page_url,
+              content: campaign.landing_page_content || undefined,
+              metadata: campaign.landing_page_metadata,
+            }
+          : {
+              url: 'https://example.com',
+              content: 'Landing page content not available',
+              metadata: {
+                title: 'Campaign Landing Page',
+                description: 'Landing page data not available',
+              },
+            }
 
-        if (campaign.landing_page_url) {
-          setLandingPageDataState({
-            url: campaign.landing_page_url,
-            content: campaign.landing_page_content || undefined,
-            metadata: campaign.landing_page_metadata,
-          })
-        } else {
-          setLandingPageDataState({
-            url: 'https://example.com',
-            content: 'Landing page content not available',
-            metadata: {
-              title: 'Campaign Landing Page',
-              description: 'Landing page data not available',
-            },
-          })
-        }
+        setLandingPageDataState(landingData)
+
+        const rawName = typeof campaign.name === 'string'
+          ? campaign.name.trim()
+          : ''
+        const derivedFromMeta = deriveCampaignName(landingData)
+        const nameToUse =
+          rawName && !['New Campaign', 'Untitled Campaign'].includes(rawName)
+            ? rawName
+            : derivedFromMeta || rawName || null
+
+        setCampaignName(nameToUse ?? null)
 
         if (campaign.tone && campaign.campaign_type && campaign.days) {
           setConfigState({
@@ -250,10 +312,11 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     debouncedSaveLandingPage.cancel()
     debouncedSaveConfig.cancel()
     setCurrentCampaignId(null)
+    setCampaignName(null)
     setLandingPageDataState(null)
     setConfigState(null)
     setGeneratedEmailsState([])
-  }, [debouncedSaveLandingPage, debouncedSaveConfig])
+  }, [debouncedSaveLandingPage, debouncedSaveConfig, setCampaignName])
 
   const dataContextValue = useMemo(
     () => ({

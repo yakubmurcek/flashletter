@@ -62,6 +62,8 @@ export class CampaignService {
           description: metadata.description,
           ogTitle: metadata.ogTitle,
           ogDescription: metadata.ogDescription,
+          ogSiteName: metadata.ogSiteName,
+          twitterTitle: metadata.twitterTitle,
         }
       : undefined
 
