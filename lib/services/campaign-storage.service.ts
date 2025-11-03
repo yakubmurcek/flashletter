@@ -106,7 +106,9 @@ export class CampaignStorageService {
     const parsedCampaign = campaignSchema.parse(campaign)
 
     const emails: Email[] = (campaign.emails || [])
-      .map((email) => mapDbEmailToDomain(dbEmailRowSchema.parse(email)))
+      .map((email: unknown) =>
+        mapDbEmailToDomain(dbEmailRowSchema.parse(email))
+      )
       .sort((a: Email, b: Email) => a.day - b.day)
 
     return campaignWithEmailsSchema.parse({

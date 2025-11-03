@@ -6,13 +6,13 @@ import { FEATURE_FLAGS } from '@/lib/constants/app'
 export default async function CampaignDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
     redirect('/#waitlist')
   }
 
-  const { id } = params
+  const { id } = await params
   const supabase = await createClient()
   const {
     data: { user },
