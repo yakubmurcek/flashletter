@@ -34,7 +34,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
             'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
             'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
-              ? 'bg-gradient-to-r from-primary/20 via-primary/10 to-amber-300/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
+              ? 'bg-primary/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
               : ''
           )}
         >
@@ -43,8 +43,8 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
               className={cn(
                 'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
-                  ? 'bg-gradient-to-br from-orange-400 via-primary to-amber-300 text-primary-foreground font-semibold shadow-lg'
-                  : 'bg-white/10 text-primary font-medium ring-1 ring-border/15'
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-lg'
+                  : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15'
               )}
             >
               <span className="text-xs">{email.day}</span>

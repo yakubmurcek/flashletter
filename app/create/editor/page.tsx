@@ -57,6 +57,13 @@ function EditorPageContent() {
       router.replace('/#waitlist')
     }
   }, [router])
+
+  // Ensure AI assistant panel is open by default on initial load
+  useEffect(() => {
+    deleteParam('chat')
+    // Focus the chat input on first open
+    setShouldFocusChatInput(true)
+  }, [deleteParam])
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
   const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
@@ -275,7 +282,6 @@ function EditorPageContent() {
           onSelect={handleSelectEmail}
           campaignType={config?.campaignType}
           tone={config?.tone}
-          days={config?.days}
         />
 
         <main className="flex-1 overflow-y-auto">
