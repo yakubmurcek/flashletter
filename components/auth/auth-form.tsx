@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -108,6 +109,26 @@ export function AuthForm({ mode }: AuthFormProps) {
         <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
           {message}
         </div>
+      )}
+
+      {mode === 'signup' && (
+        <p className="text-xs text-center text-muted-foreground">
+          By creating an account, you agree to our{' '}
+          <Link
+            href="/terms"
+            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Terms of Service
+          </Link>{' '}
+          and{' '}
+          <Link
+            href="/privacy"
+            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+          >
+            Privacy Policy
+          </Link>
+          .
+        </p>
       )}
 
       <Button
