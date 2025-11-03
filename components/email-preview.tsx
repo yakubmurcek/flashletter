@@ -228,7 +228,7 @@ function EmailPreviewComponent({
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden gap-6 px-6 pb-6 pt-4">
+      <div className="flex-1 flex overflow-hidden gap-6 px-6 pb-6 pt-4 min-h-0">
         {showEditor && (
           <div className="flex-1 overflow-hidden transition-all duration-300">
             <div className="h-full overflow-y-auto rounded-3xl bg-white/[0.04] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]">
@@ -244,7 +244,7 @@ function EmailPreviewComponent({
           </div>
         )}
 
-        <div className={cn('flex-[1.35] min-w-0 h-full')}>
+        <div className={cn('flex-[1.35] min-w-0 h-full flex flex-col min-h-0')}>
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}
