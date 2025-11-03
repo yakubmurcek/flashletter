@@ -30,7 +30,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
-            'group w-full text-left p-4 rounded-2xl transition-all duration-300',
+            'group w-full text-left p-4 rounded-2xl transition-all duration-300 cursor-pointer',
             'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
             'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
