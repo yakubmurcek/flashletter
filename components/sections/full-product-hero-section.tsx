@@ -17,7 +17,7 @@ export function FullProductHeroSection() {
         delay={0}
         className="absolute pointer-events-none top-20 left-10"
       >
-        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-purple-600/20 rounded-full blur-xl"></div>
+        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-amber-400/20 rounded-full blur-xl"></div>
       </FloatingElement>
 
       <FloatingElement
@@ -65,7 +65,7 @@ export function FullProductHeroSection() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <Button
             size="lg"
-            className="bg-gradient-to-r from-primary to-purple-600/70 hover:from-primary/90 hover:to-purple-600/60 text-white px-8 py-3 text-lg font-semibold"
+            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-all duration-300"
             asChild
           >
             <Link href="/create" className="flex items-center gap-2">
