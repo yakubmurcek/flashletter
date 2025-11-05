@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { redirect } from 'next/navigation'
 import { AuthForm } from '@/components/auth/auth-form'
 import {
   Card,
@@ -9,7 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export const metadata = {
   title: 'Sign In - Flashletter',
@@ -17,10 +15,6 @@ export const metadata = {
 }
 
 export default function LoginPage() {
-  if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-    redirect('/#waitlist')
-  }
-
   return (
     <Card className="border-border/60 shadow-lg">
       <CardHeader className="space-y-2 text-center">

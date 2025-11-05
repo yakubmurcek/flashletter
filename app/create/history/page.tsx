@@ -13,7 +13,6 @@ import type { EmailVersion } from '@/lib/types'
 import { isValidCampaignId, isValidEmailId } from '@/lib/utils/validation'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 function HistoryPageContent() {
   const router = useRouter()
@@ -36,12 +35,6 @@ function HistoryPageContent() {
   const [versionToRestore, setVersionToRestore] = useState<EmailVersion | null>(
     null
   )
-
-  useEffect(() => {
-    if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-      router.replace('/#waitlist')
-    }
-  }, [router])
 
   // Initialize version storage service
   const supabase = createClient()

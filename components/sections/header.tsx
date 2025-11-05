@@ -84,14 +84,16 @@ export function Header() {
             </>
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
-                asChild
-                className="hover:scale-105 transition-transform"
-              >
-                <Link href="/login">Sign In</Link>
-              </Button>
+              {LANDING_PAGE_CONFIG.showProductFeatures && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  asChild
+                  className="hover:scale-105 transition-transform"
+                >
+                  <Link href="/login">Sign In</Link>
+                </Button>
+              )}
               <PulseButton>
                 <Button
                   size="sm"

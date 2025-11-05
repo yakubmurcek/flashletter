@@ -1,6 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -44,17 +43,15 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(route)
   )
 
-  const useWaitlistVariant = !FEATURE_FLAGS.SHOW_FULL_PRODUCT
-
   if (isProtectedRoute && !user) {
     const url = request.nextUrl.clone()
-    if (useWaitlistVariant) {
-      url.pathname = '/'
-      url.hash = 'waitlist'
-    } else {
-      url.pathname = '/login'
-      url.searchParams.set('redirectTo', request.nextUrl.pathname)
-    }
+    const redirectDestination = `${request.nextUrl.pathname}${
+      request.nextUrl.search ?? ''
+    }${request.nextUrl.hash ?? ''}`
+    url.pathname = '/login'
+    url.search = ''
+    url.hash = ''
+    url.searchParams.set('redirectTo', redirectDestination)
     return NextResponse.redirect(url)
   }
 
@@ -64,13 +61,9 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    if (useWaitlistVariant) {
-      url.pathname = '/'
-      url.hash = 'waitlist'
-    } else {
-      url.pathname = '/'
-      url.hash = ''
-    }
+    url.pathname = '/create'
+    url.search = ''
+    url.hash = ''
     return NextResponse.redirect(url)
   }
 

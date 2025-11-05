@@ -16,7 +16,6 @@ import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { cn } from '@/lib/utils'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
 const ChatSidebar = dynamic(
@@ -51,12 +50,6 @@ function EditorPageContent() {
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
     null
   )
-
-  useEffect(() => {
-    if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-      router.replace('/#waitlist')
-    }
-  }, [router])
 
   // Ensure AI assistant panel is open by default on initial load
   useEffect(() => {

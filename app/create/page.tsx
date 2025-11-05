@@ -13,7 +13,6 @@ import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { ErrorMessage } from '@/components/campaign/error-message'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export default function CreatePage() {
   const router = useRouter()
@@ -22,12 +21,6 @@ export default function CreatePage() {
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  useEffect(() => {
-    if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-      router.replace('/#waitlist')
-    }
-  }, [router])
 
   useEffect(() => {
     clearAll()

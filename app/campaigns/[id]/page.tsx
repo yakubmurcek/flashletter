@@ -1,17 +1,12 @@
 import { redirect, notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export default async function CampaignDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
-  if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-    redirect('/#waitlist')
-  }
-
   const { id } = await params
   const supabase = await createClient()
   const {

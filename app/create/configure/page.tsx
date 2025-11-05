@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect } from 'react'
+import { Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Settings } from 'lucide-react'
 import { CampaignLayout } from '@/components/layouts/campaign-layout'
@@ -10,7 +10,6 @@ import { CampaignConfigForm } from '@/components/campaign/campaign-config-form'
 import { useCampaignConfig } from '@/lib/hooks/use-campaign-config'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { isValidCampaignId } from '@/lib/utils/validation'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 function ConfigurePageContent() {
   const router = useRouter()
@@ -34,12 +33,6 @@ function ConfigurePageContent() {
     warning,
     handleSubmit,
   } = useCampaignConfig(validCampaignId)
-
-  useEffect(() => {
-    if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-      router.replace('/#waitlist')
-    }
-  }, [router])
 
   if (!isReady) {
     return null

@@ -8,7 +8,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus } from 'lucide-react'
 
 import { CampaignCard } from '@/components/campaign/campaign-card'
-import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 export const metadata = {
   title: 'My Campaigns - Flashletter',
@@ -16,10 +15,6 @@ export const metadata = {
 }
 
 export default async function CampaignsPage() {
-  if (!FEATURE_FLAGS.SHOW_FULL_PRODUCT) {
-    redirect('/#waitlist')
-  }
-
   const supabase = await createClient()
   const {
     data: { user },
