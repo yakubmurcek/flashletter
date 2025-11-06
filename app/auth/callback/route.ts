@@ -5,6 +5,7 @@ export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
   const origin = requestUrl.origin
+  const redirectToParam = requestUrl.searchParams.get('redirectTo')
 
   if (code) {
     const supabase = await createClient()
@@ -12,5 +13,13 @@ export async function GET(request: Request) {
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(`${origin}/`)
+  const isValidRedirect =
+    redirectToParam &&
+    redirectToParam.startsWith('/') &&
+    !redirectToParam.startsWith('//')
+
+  const fallbackPath = '/campaigns'
+  const redirectPath = isValidRedirect ? redirectToParam : fallbackPath
+
+  return NextResponse.redirect(new URL(redirectPath, origin))
 }
