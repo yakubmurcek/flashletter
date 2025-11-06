@@ -68,7 +68,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         }
 
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/'
+        const redirectTo = params.get('redirectTo') || '/campaigns'
         router.push(redirectTo)
         return
       } else {
@@ -81,7 +81,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         // Get redirect URL from query params or default to home
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/'
+        const redirectTo = params.get('redirectTo') || '/campaigns'
         router.push(redirectTo)
         // Don't reset loading state - let the page navigation handle it
       }

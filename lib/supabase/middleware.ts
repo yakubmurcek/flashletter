@@ -61,7 +61,7 @@ export async function updateSession(request: NextRequest) {
 
   if (isAuthRoute && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/create'
+    url.pathname = '/campaigns'
     url.search = ''
     url.hash = ''
     return NextResponse.redirect(url)
