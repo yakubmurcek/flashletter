@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef } from 'react'
 import { Card } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
@@ -14,73 +14,10 @@ interface AIChatMessageListProps {
 
 function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [typedContentById, setTypedContentById] = useState<Record<string, string>>({})
-  const typingTimersRef = useRef<Record<string, number>>({})
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
-
-  useEffect(() => {
-    if (!messages.length) return
-
-    const lastMessage = messages[messages.length - 1]
-    if (lastMessage.role !== 'assistant') return
-
-    const full = lastMessage.content
-    const id = lastMessage.id
-    if (typedContentById[id] === full) return
-
-    // Initialize typed content if first time
-    if (typedContentById[id] == null) {
-      setTypedContentById((prev) => ({ ...prev, [id]: '' }))
-    }
-
-    const typeMore = () => {
-      setTypedContentById((prev) => {
-        const current = prev[id] ?? ''
-        if (current.length >= full.length) return prev
-
-        // Fast, human-like chunks with slight randomness
-        const chunk = Math.min(
-          full.length - current.length,
-          Math.floor(Math.random() * 4) + 3
-        )
-        const next = full.slice(0, current.length + chunk)
-        return { ...prev, [id]: next }
-      })
-
-      // Scroll as we type
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-
-      const currentNow = typedContentById[id] ?? ''
-      const done = (currentNow?.length || 0) >= full.length
-      if (done) return
-
-      const delay = Math.floor(Math.random() * 15) + 14 // 14-28ms
-      const timer = window.setTimeout(typeMore, delay)
-      typingTimersRef.current[id] = timer
-    }
-
-    // Kick off typing loop
-    const startDelay = Math.floor(Math.random() * 41) + 10 // 10-50ms
-    const timer = window.setTimeout(typeMore, startDelay)
-    typingTimersRef.current[id] = timer
-
-    return () => {
-      const t = typingTimersRef.current[id]
-      if (t) window.clearTimeout(t)
-    }
-  }, [messages, typedContentById])
-
-  useEffect(() => {
-    // Cleanup timers on unmount
-    return () => {
-      Object.values(typingTimersRef.current).forEach((t) =>
-        window.clearTimeout(t)
-      )
-    }
-  }, [])
 
   return (
     <div className="flex-1 overflow-y-auto p-3 space-y-3">
@@ -131,16 +68,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
               </div>
             )}
             {message.role === 'assistant' ? (
-              <>
-                <MarkdownRenderer
-                  content={typedContentById[message.id] ?? message.content}
-                />
-                {typedContentById[message.id] != null &&
-                  (typedContentById[message.id]?.length ?? 0) <
-                    message.content.length && (
-                    <span className="inline-block w-2 h-4 ml-0.5 align-baseline bg-primary/60 animate-pulse rounded-sm" />
-                  )}
-              </>
+              <MarkdownRenderer content={message.content} />
             ) : (
               <p className="text-sm leading-relaxed whitespace-pre-wrap">
                 {message.content}
