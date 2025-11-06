@@ -6,6 +6,7 @@ import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Plus } from 'lucide-react'
+import { SignOutButton } from '@/components/auth/sign-out-button'
 
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
@@ -50,6 +51,7 @@ export default async function CampaignsPage() {
               Flashletter
             </span>
           </Link>
+          <SignOutButton />
         </div>
       </header>
 
