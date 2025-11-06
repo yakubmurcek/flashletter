@@ -51,12 +51,6 @@ function EditorPageContent() {
     null
   )
 
-  // Ensure AI assistant panel is open by default on initial load
-  useEffect(() => {
-    deleteParam('chat')
-    // Focus the chat input on first open
-    setShouldFocusChatInput(true)
-  }, [deleteParam])
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
   const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
@@ -64,6 +58,19 @@ function EditorPageContent() {
   const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
   const openedViaAutoSelectionRef = useRef(false)
   const prevShowChatRef = useRef(showChat)
+  const hasInitializedChatStateRef = useRef(false)
+
+  // Ensure AI assistant panel is open by default on initial load
+  useEffect(() => {
+    if (hasInitializedChatStateRef.current) {
+      return
+    }
+    hasInitializedChatStateRef.current = true
+    // Reset any persisted "closed" state when the editor mounts
+    deleteParam('chat')
+    // Focus the chat input on first open
+    setShouldFocusChatInput(true)
+  }, [deleteParam])
 
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
