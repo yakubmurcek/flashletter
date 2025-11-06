@@ -17,6 +17,8 @@ interface ChatSidebarProps {
   onClearContext: () => void
   autoSubmitMessage: string | null
   onAutoSubmitComplete: () => void
+  shouldFocusInput: boolean
+  onFocusHandled: () => void
 }
 
 export function ChatSidebar({
@@ -30,6 +32,8 @@ export function ChatSidebar({
   onClearContext,
   autoSubmitMessage,
   onAutoSubmitComplete,
+  shouldFocusInput,
+  onFocusHandled,
 }: ChatSidebarProps) {
   const [mounted, setMounted] = useState(false)
 
@@ -42,7 +46,9 @@ export function ChatSidebar({
   return createPortal(
     <aside
       className={cn(
-        'fixed inset-y-0 right-0 border-l border-border/60 bg-card/95 backdrop-blur-sm transition-all duration-300 shadow-xl z-[60]',
+        'fixed inset-y-0 right-0 transition-all duration-300 z-[60]',
+        'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/70',
+        'shadow-[0_45px_120px_-60px_rgba(15,23,42,0.45)] ring-1 ring-border/15 rounded-l-3xl',
         isOpen ? 'w-96' : 'w-0 overflow-hidden'
       )}
       role="dialog"
@@ -67,6 +73,8 @@ export function ChatSidebar({
             onClearContext={onClearContext}
             autoSubmitMessage={autoSubmitMessage}
             onAutoSubmitComplete={onAutoSubmitComplete}
+            shouldFocusInput={shouldFocusInput}
+            onFocusHandled={onFocusHandled}
           />
         </div>
       )}

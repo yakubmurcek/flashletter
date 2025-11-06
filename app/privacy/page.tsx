@@ -131,7 +131,7 @@ export default function PrivacyPolicyPage() {
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Right to access your personal data</li>
                     <li>Right to rectification of inaccurate data</li>
-                    <li>Right to erasure ("right to be forgotten")</li>
+                    <li>Right to erasure (&ldquo;right to be forgotten&rdquo;)</li>
                     <li>Right to restrict processing</li>
                     <li>Right to data portability</li>
                     <li>Right to object to processing</li>
@@ -230,7 +230,8 @@ export default function PrivacyPolicyPage() {
             <CardContent>
               <p className="text-muted-foreground">
                 We retain your waitlist information until you request its
-                deletion or until it's no longer necessary for the purposes
+                deletion or until it&rsquo;s no longer necessary for the
+                purposes
                 outlined in this policy. You can request deletion at any time by
                 contacting us.
               </p>
@@ -249,10 +250,12 @@ export default function PrivacyPolicyPage() {
                 laws.
               </p>
               <p className="text-muted-foreground mt-4 text-sm">
-                We host our core waitlist data in Supabase's EU region and use
-                Sentry's EU data residency option for error monitoring. They
+                We host our core waitlist data in Supabase&rsquo;s EU region
+                and use Sentry&rsquo;s EU data residency option for error
+                monitoring. They
                 commit to appropriate transfer safeguards. You can review their
-                individual data protection terms via Supabase's and Sentry's
+                individual data protection terms via Supabase&rsquo;s and
+                Sentry&rsquo;s
                 privacy policies.
               </p>
             </CardContent>
@@ -260,7 +263,7 @@ export default function PrivacyPolicyPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>9. Children's Privacy</CardTitle>
+              <CardTitle>9. Children&rsquo;s Privacy</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
@@ -280,8 +283,8 @@ export default function PrivacyPolicyPage() {
               <p className="text-muted-foreground">
                 We may update this privacy policy from time to time. We will
                 notify you of any changes by posting the new privacy policy on
-                this page and updating the "Last updated" date. We encourage you
-                to review this privacy policy periodically.
+                this page and updating the &ldquo;Last updated&rdquo; date. We
+                encourage you to review this privacy policy periodically.
               </p>
             </CardContent>
           </Card>

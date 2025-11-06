@@ -23,10 +23,12 @@ export function EmailEditorSidebar({
   onEditorModeChange,
 }: EmailEditorSidebarProps) {
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-8 space-y-8">
       <div className="space-y-2">
-        <div className="flex items-center gap-2 mb-2">
-          <Type className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-9 h-9 rounded-2xl bg-white/10 flex items-center justify-center ring-1 ring-border/15">
+            <Type className="w-4 h-4 text-primary" />
+          </div>
           <Label htmlFor="subject" className="text-sm font-medium">
             Subject Line
           </Label>
@@ -35,7 +37,7 @@ export function EmailEditorSidebar({
           id="subject"
           value={subject}
           onChange={(e) => onSubjectChange(e.target.value)}
-          className="text-base bg-card border-border"
+          className="text-base bg-white/[0.08] border-none rounded-2xl focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:ring-offset-0"
           placeholder="Enter email subject..."
         />
       </div>
@@ -43,7 +45,9 @@ export function EmailEditorSidebar({
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
-            <AlignLeft className="w-4 h-4 text-muted-foreground" />
+            <div className="w-9 h-9 rounded-2xl bg-white/10 flex items-center justify-center ring-1 ring-border/15">
+              <AlignLeft className="w-4 h-4 text-primary" />
+            </div>
             <Label htmlFor="content" className="text-sm font-medium">
               Email Content
             </Label>
@@ -55,16 +59,23 @@ export function EmailEditorSidebar({
                 onEditorModeChange(v as 'markdown' | 'richtext')
               }
             >
-              <TabsList className="h-8">
-                <TabsTrigger value="markdown" className="text-xs">
+              <TabsList className="h-9 rounded-full bg-white/5 p-1">
+                <TabsTrigger
+                  value="markdown"
+                  className="text-xs rounded-full data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+                >
                   Markdown
                 </TabsTrigger>
-                <TabsTrigger value="richtext" className="text-xs" disabled>
+                <TabsTrigger
+                  value="richtext"
+                  className="text-xs rounded-full opacity-60"
+                  disabled
+                >
                   Rich Text
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-medium bg-primary/90 text-white rounded-sm rotate-12 pointer-events-none shadow-sm">
+            <span className="absolute -top-1 -right-1 px-1.5 py-0.5 text-[9px] font-medium bg-primary/90 text-white rounded-sm rotate-12 pointer-events-none shadow-md">
               Soon
             </span>
           </div>

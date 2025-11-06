@@ -20,7 +20,7 @@ export function TestimonialsSection() {
         </div>
 
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -32,13 +32,14 @@ export function TestimonialsSection() {
             </div>
             <blockquote className="text-lg leading-relaxed mb-6 text-foreground relative">
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
-                "
+                &ldquo;
               </span>
               Flashletter cut our email campaign creation time from 3 days to 30
-              minutes. Our open rates jumped 45% and we're finally hitting our
+              minutes. Our open rates jumped 45% and we&apos;re finally hitting
+              our
               quarterly targets consistently.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
-                "
+                &rdquo;
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
@@ -56,7 +57,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -68,13 +69,13 @@ export function TestimonialsSection() {
             </div>
             <blockquote className="text-lg leading-relaxed mb-6 text-foreground relative">
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
-                "
+                &ldquo;
               </span>
               The AI perfectly captures our brand voice across all campaigns.
               What used to take our entire marketing team a week now happens in
               hours. ROI increased by 67% in just two months.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
-                "
+                &rdquo;
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
@@ -92,7 +93,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -104,13 +105,13 @@ export function TestimonialsSection() {
             </div>
             <blockquote className="text-lg leading-relaxed mb-6 text-foreground relative">
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
-                "
+                &ldquo;
               </span>
               The collaborative features are game-changing. Our distributed team
               can now work on campaigns in real-time. Customer engagement is up
               52% since we started using Flashletter.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
-                "
+                &rdquo;
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
@@ -141,13 +142,13 @@ export function TestimonialsSection() {
             </div>
             <blockquote className="text-lg leading-relaxed mb-6 text-foreground relative">
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
-                "
+                &ldquo;
               </span>
               As a startup, we needed to move fast without sacrificing quality.
               Flashletter delivers professional campaigns that look like they
               came from a Fortune 500 company. Our conversion rate tripled.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
-                "
+                &rdquo;
               </span>
             </blockquote>
             <div className="flex items-center gap-4">
@@ -177,13 +178,14 @@ export function TestimonialsSection() {
             </div>
             <blockquote className="text-lg leading-relaxed mb-6 text-foreground relative">
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
-                "
+                &ldquo;
               </span>
               The A/B testing features helped us discover what resonates with
-              our audience. We've seen a 78% improvement in click-through rates
+              our audience. We&apos;ve seen a 78% improvement in click-through
+              rates
               and our unsubscribe rate dropped to almost zero.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
-                "
+                &rdquo;
               </span>
             </blockquote>
             <div className="flex items-center gap-4">

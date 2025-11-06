@@ -24,26 +24,27 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
   )
 
   return (
-    <div className="p-2 space-y-1">
+    <div className="px-4 pt-4 pb-6 space-y-2">
       {sortedEmails.map((email) => (
         <button
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
-            'w-full text-left p-3 rounded-lg transition-all duration-200',
-            'border border-border/40 hover:border-primary/30 hover:bg-primary/5 hover:shadow-md',
+            'group w-full text-left p-4 rounded-2xl transition-all duration-300 cursor-pointer',
+            'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
+            'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
-              ? 'bg-gradient-to-r from-primary/10 to-amber-400/5 border-primary/30 shadow-sm'
+              ? 'bg-primary/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
               : ''
           )}
         >
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                'w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
+                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
-                  ? 'bg-gradient-to-br from-orange-400 to-amber-300/70 text-primary-foreground font-semibold'
-                  : 'bg-primary/10 text-primary font-medium'
+                  ? 'bg-primary text-primary-foreground font-semibold shadow-lg'
+                  : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15'
               )}
             >
               <span className="text-xs">{email.day}</span>

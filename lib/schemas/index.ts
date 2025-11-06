@@ -31,6 +31,8 @@ export const landingPageDataSchema = z.object({
       description: z.string().optional(),
       ogTitle: z.string().optional(),
       ogDescription: z.string().optional(),
+      twitterTitle: z.string().optional(),
+      ogSiteName: z.string().optional(),
     })
     .optional(),
 })

@@ -17,7 +17,12 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
           <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h3 className="font-semibold text-sm">AI Assistant</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-sm">AI Assistant</h3>
+            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-orange-100 text-orange-700 rounded-full border border-orange-200">
+              BETA
+            </span>
+          </div>
           <p className="text-xs text-muted-foreground">
             {hasCampaignContext ? (
               <span className="flex items-center gap-1.5">

@@ -1,4 +1,35 @@
-import type { LandingPageData, CampaignConfig, Email } from '../types'
+import {
+  generateEmailsResponseSchema,
+  scrapeLandingResponseSchema,
+} from '../schemas/api'
+import type {
+  CampaignConfig,
+  Email,
+  GenerateEmailsResponse,
+  LandingPageData,
+} from '../types'
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+function extractErrorMessage(payload: unknown, fallback: string): string {
+  if (typeof payload === 'string' && payload.trim()) {
+    return payload
+  }
+
+  if (isRecord(payload)) {
+    const { error, message } = payload
+    if (typeof error === 'string' && error.trim()) {
+      return error
+    }
+    if (typeof message === 'string' && message.trim()) {
+      return message
+    }
+  }
+
+  return fallback
+}
 
 export class CampaignService {
   static async scrapeLandingPage(url: string): Promise<LandingPageData> {
@@ -8,15 +39,38 @@ export class CampaignService {
       body: JSON.stringify({ url }),
     })
 
+    const raw = await response.json().catch(() => null)
+
     if (!response.ok) {
-      throw new Error('Failed to scrape landing page')
+      throw new Error(extractErrorMessage(raw, 'Failed to scrape landing page'))
     }
 
-    const data = await response.json()
+    const parsed = scrapeLandingResponseSchema.safeParse(raw)
+    if (!parsed.success) {
+      throw new Error('Invalid response from scrape endpoint')
+    }
+
+    const {
+      url: scrapedUrl,
+      content,
+      metadata,
+    } = parsed.data
+
+    const normalizedMetadata: LandingPageData['metadata'] = metadata
+      ? {
+          title: metadata.title,
+          description: metadata.description,
+          ogTitle: metadata.ogTitle,
+          ogDescription: metadata.ogDescription,
+          ogSiteName: metadata.ogSiteName,
+          twitterTitle: metadata.twitterTitle,
+        }
+      : undefined
+
     return {
-      url: data.url,
-      content: data.content,
-      metadata: data.metadata,
+      url: scrapedUrl,
+      content,
+      metadata: normalizedMetadata,
     }
   }
 
@@ -26,7 +80,7 @@ export class CampaignService {
     config: CampaignConfig,
     campaignId?: string,
     signal?: AbortSignal
-  ): Promise<Email[]> {
+  ): Promise<GenerateEmailsResponse> {
     const response = await fetch('/api/generate-emails', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -39,18 +93,27 @@ export class CampaignService {
       signal,
     })
 
+    const raw = await response.json().catch(() => null)
+
     if (!response.ok) {
-      throw new Error('Failed to generate emails')
+      throw new Error(
+        extractErrorMessage(raw, 'Failed to generate emails')
+      )
     }
 
-    const data = await response.json()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return data.emails.map((email: any, index: number) => ({
-      id: index + 1,
-      day: email.day || index + 1,
-      subject: email.subject || `Email ${index + 1}`,
+    const parsed = generateEmailsResponseSchema.parse(raw)
+
+    const normalizedEmails = parsed.emails.map((email) => ({
+      ...email,
       preview: email.preview || email.subject || '',
-      content: email.content || '',
-    }))
+      id: email.id,
+      day: email.day,
+    })) satisfies Email[]
+
+    return {
+      emails: normalizedEmails,
+      warning: parsed.warning,
+      usage: parsed.usage,
+    }
   }
 }

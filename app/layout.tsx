@@ -14,9 +14,9 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Flashletter - Join the Newsletter Revolution',
   description:
-    'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
+    'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform your landing page into personalized email newsletter campaigns in seconds.',
   keywords: [
-    'email campaigns',
+    'newsletter campaigns',
     'AI email generator',
     'newsletter tool',
     'email marketing',
@@ -36,25 +36,32 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://flashletter.app',
-    title: 'Flashletter - Join the Newsletter Revolution',
+    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
       'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
     siteName: 'Flashletter',
     images: [
       {
-        url: '/og-image.png',
+        url: `${
+          process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
+        }/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Join the Newsletter Revolution',
+        alt: 'Flashletter - Lightning-fast AI newsletter campaigns',
+        type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Join the Newsletter Revolution',
+    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
-    images: ['/og-image.png'],
+      'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
+    images: [
+      `${
+        process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
+      }/og-image.png`,
+    ],
     creator: '@flashletter',
   },
   robots: {
@@ -99,8 +106,8 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'AI-powered email campaign generator - Join the waitlist for lightning-fast newsletter campaigns',
-              url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.com',
+                'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
+              url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app',
               applicationCategory: 'BusinessApplication',
               applicationStatus: 'ComingSoon',
               offers: {

@@ -1,1 +1,1 @@
-Commit the changes done in git with a standard best practice short decriptive git commit name. Use prefixes like fix:, feat:, chore:, style: etc.
+Commit the current changes done in git with a standard best practice short decriptive git commit name. Make sure not to list changes already comitted maybe manually by the user (check the last commit or two to be sure). Use prefixes like fix:, feat:, chore:, style: etc.

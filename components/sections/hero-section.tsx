@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { ArrowRight, Sparkles, Zap, Play } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   AnimatedSection,
   FloatingElement,
@@ -10,29 +11,26 @@ import {
 
 export function HeroSection() {
   return (
-    <div className="relative max-w-3xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
+    <div className="max-w-3xl mx-auto text-center pt-10 pb-14 md:pt-16 md:pb-24">
       {/* Floating elements around hero */}
-      <FloatingElement
-        delay={0}
-        className="pointer-events-none absolute top-20 left-10"
-      >
-        <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
+      <FloatingElement delay={0}>
+        <div className="absolute top-20 left-10 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
           <Zap className="w-8 h-8 text-primary" />
         </div>
       </FloatingElement>
-      <FloatingElement
-        delay={1}
-        className="pointer-events-none absolute top-32 right-16"
-      >
-        <div className="w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center overflow-hidden">
-          <img src="/icon-192.webp" alt="Flashletter" className="w-6 h-6" />
+      <FloatingElement delay={1}>
+        <div className="absolute top-32 right-16 w-12 h-12 bg-amber-400/10 rounded-full flex items-center justify-center">
+          <Image
+            src="/icon-192.webp"
+            alt="Flashletter"
+            width={48}
+            height={48}
+            priority
+          />
         </div>
       </FloatingElement>
-      <FloatingElement
-        delay={2}
-        className="pointer-events-none absolute bottom-20 left-20"
-      >
-        <div className="w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
+      <FloatingElement delay={2}>
+        <div className="absolute bottom-20 left-20 w-14 h-14 bg-pink-500/10 rounded-full flex items-center justify-center">
           <Sparkles className="w-7 h-7 text-pink-500" />
         </div>
       </FloatingElement>
@@ -47,16 +45,16 @@ export function HeroSection() {
       </AnimatedSection>
 
       <AnimatedSection delay={250} immediate>
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-          Converting email campaigns in{' '}
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 text-balance leading-tight">
+          Converting newsletter campaigns in{' '}
           <GradientText className="cursor-behind">seconds</GradientText> with
           Flashletter
         </h1>
       </AnimatedSection>
 
       <AnimatedSection delay={500} immediate>
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-          Transform your landing page into a complete email campaign. AI
+        <p className="text-lg md:text-xl text-muted-foreground mb-10 text-balance max-w-2xl mx-auto leading-relaxed">
+          Transform your landing page into a complete newsletter campaign. AI
           analyzes your content and creates personalized email sequences that
           convert.
         </p>

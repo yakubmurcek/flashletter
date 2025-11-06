@@ -4,37 +4,20 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PulseButton } from '@/components/ui/animations'
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { LANDING_PAGE_CONFIG } from '@/lib/constants/app'
 
 export function Footer() {
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    const getUser = async () => {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    getUser()
-  }, [])
-
   return (
     <footer className="border-t border-border bg-background/80 backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-8">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg overflow-hidden">
-              <Image
-                src="/icon-192.webp"
-                alt="Flashletter"
-                width={40}
-                height={40}
-                className="w-full h-full"
-              />
-            </div>
+            <Image
+              src="/icon-192.webp"
+              alt="Flashletter"
+              width={40}
+              height={40}
+            />
             <div>
               <span className="text-xl font-semibold">Flashletter</span>
               <p className="text-sm text-muted-foreground">
@@ -49,19 +32,40 @@ export function Footer() {
             >
               Features
             </a>
+            {LANDING_PAGE_CONFIG.showProductFeatures && (
+              <a
+                href="#testimonials"
+                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              >
+                Testimonials
+              </a>
+            )}
+            {LANDING_PAGE_CONFIG.showProductFeatures && (
+              <a
+                href="#pricing"
+                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              >
+                Pricing
+              </a>
+            )}
             <a
               href="#faq"
               className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
             >
               FAQ
             </a>
+
             <PulseButton>
               <Button
                 size="sm"
                 asChild
                 className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
               >
-                <Link href="/#waitlist">Get Early Access</Link>
+                {LANDING_PAGE_CONFIG.showProductFeatures ? (
+                  <Link href="/signup">Start Free Trial</Link>
+                ) : (
+                  <Link href="/#waitlist">Get Early Access</Link>
+                )}
               </Button>
             </PulseButton>
           </nav>

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import * as cheerio from 'cheerio'
 import { extractTextFromHTML, isContentMeaningful } from '@/lib/utils/scraper'
 import {
   extractMetadata,
@@ -26,8 +27,13 @@ describe('Content Extraction', () => {
 
     const result = extractTextFromHTML(html)
 
-    expect(result.content).toContain('Main Title')
-    expect(result.content).toContain('This is the main content')
+    expect(result.content).toContain('<h1>Main Title</h1>')
+    expect(result.content).toContain(
+      '<p>This is the main content of the page.</p>'
+    )
+    expect(result.content).toContain(
+      '<p>Another paragraph with more content.</p>'
+    )
     expect(result.content).not.toContain('Navigation')
     expect(result.content).not.toContain('Footer content')
     expect(result.wordCount).toBeGreaterThan(0)
@@ -49,7 +55,7 @@ describe('Content Extraction', () => {
 
     const result = extractTextFromHTML(html)
 
-    expect(result.content).toContain('Content without scripts or styles')
+    expect(result.content).toContain('<p>Content without scripts or styles</p>')
     expect(result.content).not.toContain('console.log')
     expect(result.content).not.toContain('color: red')
   })
@@ -70,8 +76,8 @@ describe('Content Extraction', () => {
 
     const result = extractTextFromHTML(html)
 
-    expect(result.content).toContain('Article Title')
-    expect(result.content).toContain('Article content here')
+    expect(result.content).toContain('<h1>Article Title</h1>')
+    expect(result.content).toContain('<p>Article content here.</p>')
     expect(result.content).not.toContain('Navigation')
     expect(result.content).not.toContain('Sidebar content')
   })
@@ -82,11 +88,11 @@ describe('Content Extraction', () => {
 
     const result = extractTextFromHTML(html)
 
-    expect(result.content.length).toBeLessThanOrEqual(10000)
-    // Check if content is truncated (either ends with ... or is exactly at limit)
+    const textContent = cheerio.load(result.content).text()
+    expect(textContent.length).toBeLessThanOrEqual(10000)
     expect(
-      result.content.length < longContent.length ||
-        result.content.endsWith('...')
+      textContent.length < longContent.length ||
+        textContent.trim().endsWith('...')
     ).toBe(true)
   })
 

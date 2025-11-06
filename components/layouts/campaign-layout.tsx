@@ -47,15 +47,13 @@ export function CampaignLayout({
                 </>
               ) : null}
               <Link href="/" className="flex items-center gap-2 group">
-                <div className="w-8 h-8 rounded-lg overflow-hidden group-hover:scale-110 transition-transform duration-300">
-                  <Image
-                    src="/icon-192.webp"
-                    alt="Flashletter"
-                    width={32}
-                    height={32}
-                    className="w-full h-full"
-                  />
-                </div>
+                <Image
+                  src="/icon-192.webp"
+                  alt="Flashletter"
+                  width={32}
+                  height={32}
+                  className="transition-transform duration-300 group-hover:scale-110"
+                />
                 <span className="text-xl font-semibold group-hover:text-primary transition-colors">
                   Flashletter
                 </span>

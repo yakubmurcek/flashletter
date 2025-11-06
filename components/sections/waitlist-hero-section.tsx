@@ -1,9 +1,7 @@
-import { Button } from '@/components/ui/button'
-import { ArrowRight, Sparkles, Zap, Clock, Users, Mail } from 'lucide-react'
+import { Sparkles, Zap, Clock, Mail } from 'lucide-react'
 import {
   AnimatedSection,
   FloatingElement,
-  PulseButton,
   GradientText,
 } from '@/components/ui/animations'
 import { WaitlistForm } from '@/components/waitlist-form'

@@ -22,7 +22,7 @@ export interface ExtractedMetadata {
   twitterSite?: string
   twitterCreator?: string
   favicon?: string
-  structuredData?: any[]
+  structuredData?: unknown[]
   canonicalUrl?: string
   author?: string
   publishedTime?: string
@@ -182,8 +182,8 @@ function extractFavicon(
 /**
  * Extract structured data (JSON-LD)
  */
-function extractStructuredData($: cheerio.CheerioAPI): any[] {
-  const structuredData: any[] = []
+function extractStructuredData($: cheerio.CheerioAPI): unknown[] {
+  const structuredData: unknown[] = []
 
   $('script[type="application/ld+json"]').each((_, element) => {
     try {
@@ -234,7 +234,7 @@ function resolveUrl(
   try {
     return new URL(url, baseUrl).toString()
   } catch (error) {
-    console.warn('Failed to resolve URL:', url, 'with base:', baseUrl)
+    console.warn('Failed to resolve URL:', url, 'with base:', baseUrl, error)
     return url
   }
 }

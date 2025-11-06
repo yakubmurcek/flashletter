@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 
 export async function DELETE(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {

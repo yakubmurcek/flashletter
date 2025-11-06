@@ -14,6 +14,8 @@ export type {
   CampaignContext,
 } from './schemas'
 
+export type { GenerateEmailsResponse } from './schemas/api'
+
 // Types without schemas (UI-specific, not validated)
 export interface EmailVersion {
   id: string // timestamp-based unique identifier

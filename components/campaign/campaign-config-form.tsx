@@ -5,6 +5,7 @@ import { CampaignTypeSelector } from './campaign-type-selector'
 import { DurationSlider } from './duration-slider'
 import { ConfigPreviewCard } from './config-preview-card'
 import { ErrorMessage } from './error-message'
+import { WarningMessage } from './warning-message'
 
 interface CampaignConfigFormProps {
   tone: string
@@ -16,6 +17,7 @@ interface CampaignConfigFormProps {
   isGenerating: boolean
   isSubmitting: boolean
   error: string | null
+  warning: string | null
   onSubmit: (e: React.FormEvent) => void
 }
 
@@ -29,6 +31,7 @@ export function CampaignConfigForm({
   isGenerating,
   isSubmitting,
   error,
+  warning,
   onSubmit,
 }: CampaignConfigFormProps) {
   const isLoading = isGenerating || isSubmitting
@@ -51,6 +54,7 @@ export function CampaignConfigForm({
       />
 
       {error && <ErrorMessage message={error} />}
+      {warning && <WarningMessage message={warning} />}
 
       <Button
         type="submit"
