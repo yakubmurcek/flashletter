@@ -38,20 +38,22 @@ export default async function CampaignsPage() {
       </div>
 
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
-            <Image
-              src="/icon-192.webp"
-              alt="Flashletter"
-              width={32}
-              height={32}
-              className="transition-transform duration-300 group-hover:scale-110"
-            />
-            <span className="text-xl font-semibold group-hover:text-primary transition-colors">
-              Flashletter
-            </span>
-          </Link>
-          <SignOutButton />
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto py-4 flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-2 group">
+              <Image
+                src="/icon-192.webp"
+                alt="Flashletter"
+                width={32}
+                height={32}
+                className="transition-transform duration-300 group-hover:scale-110"
+              />
+              <span className="text-xl font-semibold group-hover:text-primary transition-colors">
+                Flashletter
+              </span>
+            </Link>
+            <SignOutButton />
+          </div>
         </div>
       </header>
 
