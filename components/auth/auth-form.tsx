@@ -27,6 +27,10 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const { locationInfo, isLoading } = useRegionDetection()
 
+  const requiresNonUSConsent =
+    mode === 'signup' && !isLoading && locationInfo?.region === 'OTHER'
+  const needsConsentConfirmation = requiresNonUSConsent && !legalConsent
+
   useEffect(() => {
     if (mode !== 'signup') {
       setLegalConsent(false)
@@ -43,7 +47,7 @@ export function AuthForm({ mode }: AuthFormProps) {
     setError(null)
     setMessage(null)
 
-    if (mode === 'signup' && locationInfo?.requiresGDPR && !legalConsent) {
+    if (needsConsentConfirmation) {
       setError('You must agree to the Terms and Privacy Policy to continue.')
       setLoading(false)
       return
@@ -96,12 +100,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   const handleGoogleSignIn = async () => {
-    if (
-      mode === 'signup' &&
-      locationInfo?.requiresGDPR &&
-      !legalConsent &&
-      !isLoading
-    ) {
+    if (needsConsentConfirmation) {
       setError('You must agree to the Terms and Privacy Policy to continue.')
       return
     }
@@ -250,14 +249,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
       <Button
         type="submit"
-        disabled={
-          loading ||
-          oauthLoading ||
-          (mode === 'signup' &&
-            locationInfo?.requiresGDPR &&
-            !legalConsent &&
-            !isLoading)
-        }
+        disabled={loading || oauthLoading || needsConsentConfirmation}
         className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
       >
         {loading ? (
@@ -282,14 +274,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="button"
         variant="outline"
-        disabled={
-          loading ||
-          oauthLoading ||
-          (mode === 'signup' &&
-            locationInfo?.requiresGDPR &&
-            !legalConsent &&
-            !isLoading)
-        }
+        disabled={loading || oauthLoading || needsConsentConfirmation}
         onClick={handleGoogleSignIn}
         className="w-full"
       >

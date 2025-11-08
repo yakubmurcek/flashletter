@@ -103,7 +103,7 @@ export function Header() {
                   {LANDING_PAGE_CONFIG.showProductFeatures ? (
                     <Link href="/signup">Get Started</Link>
                   ) : (
-                    <a href="#waitlist">Join Waitlist</a>
+                    <Link href="/login">Sign In</Link>
                   )}
                 </Button>
               </PulseButton>
