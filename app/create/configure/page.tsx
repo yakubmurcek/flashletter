@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { Settings } from 'lucide-react'
 import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
@@ -12,7 +12,6 @@ import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { isValidCampaignId } from '@/lib/utils/validation'
 
 function ConfigurePageContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const campaignId = searchParams.get('campaign')
   const validCampaignId =
