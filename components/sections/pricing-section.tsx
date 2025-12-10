@@ -1,16 +1,16 @@
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import Link from 'next/link'
-import {
-  AnimatedSection,
-  GradientText,
-  PulseButton,
-} from '@/components/ui/animations'
+import { AnimatedSection, GradientText, PulseButton } from '@/components/ui/animations'
 
 export function PricingSection() {
   return (
     <AnimatedSection delay={250}>
-      <section id="pricing" aria-label="Pricing" className="py-14 md:py-20">
+      <section
+        id="pricing"
+        aria-label="Pricing"
+        className="py-14 md:py-20"
+      >
         <div className="max-w-2xl mx-auto text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">
             <GradientText>Simple Pricing</GradientText>
@@ -24,16 +24,13 @@ export function PricingSection() {
           <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-semibold mb-2">Free</h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Perfect for trying things out
-              </p>
+              <p className="text-muted-foreground text-sm mb-4">Perfect for trying things out</p>
               <div className="text-4xl font-bold mb-2">$0</div>
               <div className="text-sm text-muted-foreground">Forever free</div>
             </div>
             <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
               <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />3
-                campaigns/month
+                <Check className="w-5 h-5 text-primary flex-shrink-0" />3 campaigns/month
               </li>
               <li className="flex items-center gap-3">
                 <Check className="w-5 h-5 text-primary flex-shrink-0" />
@@ -68,13 +65,9 @@ export function PricingSection() {
               </p>
               <div className="text-5xl font-bold mb-2">
                 $19
-                <span className="text-lg font-normal text-primary-foreground/80">
-                  /mo
-                </span>
+                <span className="text-lg font-normal text-primary-foreground/80">/mo</span>
               </div>
-              <div className="text-sm text-primary-foreground/80">
-                Billed monthly
-              </div>
+              <div className="text-sm text-primary-foreground/80">Billed monthly</div>
             </div>
             <ul className="space-y-3 text-sm text-primary-foreground/90 mb-8 flex-1">
               <li className="flex items-center gap-3">
@@ -113,14 +106,10 @@ export function PricingSection() {
           <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-semibold mb-2">Team</h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Collaboration at scale
-              </p>
+              <p className="text-muted-foreground text-sm mb-4">Collaboration at scale</p>
               <div className="text-4xl font-bold mb-2">
                 $49
-                <span className="text-lg font-normal text-muted-foreground">
-                  /mo
-                </span>
+                <span className="text-lg font-normal text-muted-foreground">/mo</span>
               </div>
               <div className="text-sm text-muted-foreground">Per team</div>
             </div>
@@ -161,10 +150,8 @@ export function PricingSection() {
           <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
             <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
             <span>
-              <strong className="text-foreground">
-                30-day money-back guarantee
-              </strong>{' '}
-              on all paid plans. Cancel anytime. No questions asked.
+              <strong className="text-foreground">30-day money-back guarantee</strong> on all paid
+              plans. Cancel anytime. No questions asked.
             </span>
           </p>
         </div>

@@ -9,10 +9,7 @@ let redis: Redis | undefined
 let redisAvailable = false
 
 // Initialize Redis client if credentials are available
-if (
-  process.env.UPSTASH_REDIS_REST_URL &&
-  process.env.UPSTASH_REDIS_REST_TOKEN
-) {
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -44,7 +41,7 @@ export function isRedisAvailable(): boolean {
  */
 export async function withRedisFallback<T>(
   operation: (client: Redis) => Promise<T>,
-  fallbackValue: T
+  fallbackValue: T,
 ): Promise<T> {
   if (!redis) {
     return fallbackValue

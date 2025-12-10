@@ -9,18 +9,12 @@ interface AIChatQuickActionsProps {
   isVisible: boolean
 }
 
-function QuickActionsBase({
-  actions,
-  onSelect,
-  isVisible,
-}: AIChatQuickActionsProps) {
+function QuickActionsBase({ actions, onSelect, isVisible }: AIChatQuickActionsProps) {
   if (!isVisible || actions.length === 0) return null
 
   return (
     <div className="px-4 pt-2 pb-3 border-t border-border/40">
-      <p className="text-xs text-muted-foreground mb-2 font-medium">
-        Suggested actions
-      </p>
+      <p className="text-xs text-muted-foreground mb-2 font-medium">Suggested actions</p>
       <div className="flex flex-wrap gap-2">
         {actions.map((action) => (
           <Button

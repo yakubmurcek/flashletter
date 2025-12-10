@@ -14,8 +14,7 @@ import { isValidCampaignId } from '@/lib/utils/validation'
 function ConfigurePageContent() {
   const searchParams = useSearchParams()
   const campaignId = searchParams.get('campaign')
-  const validCampaignId =
-    campaignId && isValidCampaignId(campaignId) ? campaignId : null
+  const validCampaignId = campaignId && isValidCampaignId(campaignId) ? campaignId : null
 
   const {
     tone,
@@ -47,7 +46,10 @@ function ConfigurePageContent() {
       }
     >
       <div className="w-full max-w-2xl py-8">
-        <ProgressIndicator currentStep={2} steps={CAMPAIGN_STEPS} />
+        <ProgressIndicator
+          currentStep={2}
+          steps={CAMPAIGN_STEPS}
+        />
 
         <FormCard
           icon={Settings}
@@ -76,11 +78,7 @@ function ConfigurePageContent() {
 export default function ConfigurePage() {
   return (
     <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center">
-          Loading...
-        </div>
-      }
+      fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}
     >
       <ConfigurePageContent />
     </Suspense>

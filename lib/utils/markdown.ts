@@ -2,26 +2,26 @@ export function markdownToHtml(text: string): string {
   let html = text
   html = html.replace(
     /^# (.+)$/gm,
-    '<h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">$1</h1>'
+    '<h1 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">$1</h1>',
   )
   html = html.replace(
     /^## (.+)$/gm,
-    '<h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">$1</h2>'
+    '<h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem;">$1</h2>',
   )
   html = html.replace(
     /^### (.+)$/gm,
-    '<h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">$1</h3>'
+    '<h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">$1</h3>',
   )
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
   html = html.replace(/^• (.+)$/gm, '<li style="margin-left: 1.5rem;">$1</li>')
   html = html.replace(
     /(<li[\s\S]*<\/li>)/,
-    '<ul style="list-style-type: disc; margin-bottom: 1rem;">$1</ul>'
+    '<ul style="list-style-type: disc; margin-bottom: 1rem;">$1</ul>',
   )
   html = html.replace(
     /^(?!<[h|u|l])(.*?)$/gm,
-    '<p style="margin-bottom: 1rem; line-height: 1.6;">$1</p>'
+    '<p style="margin-bottom: 1rem; line-height: 1.6;">$1</p>',
   )
   return html
 }

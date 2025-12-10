@@ -3,11 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import Link from 'next/link'
 import Image from 'next/image'
 
-export default async function AuthLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -29,7 +25,10 @@ export default async function AuthLayout({
 
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2 group">
+          <Link
+            href="/"
+            className="flex items-center gap-2 group"
+          >
             <Image
               src="/icon-192.webp"
               alt="Flashletter"

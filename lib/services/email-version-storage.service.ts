@@ -6,7 +6,7 @@ import type { EmailVersion } from '../types'
  */
 function generateChangesSummary(
   oldEmail: { subject: string; content: string } | null,
-  newEmail: { subject: string; content: string }
+  newEmail: { subject: string; content: string },
 ): string {
   if (!oldEmail) {
     return 'Initial version'
@@ -50,12 +50,11 @@ export class EmailVersionStorageService {
   async saveVersion(
     emailUuid: string,
     emailDay: number,
-    email: { subject: string; content: string }
+    email: { subject: string; content: string },
   ): Promise<EmailVersion> {
     // Get previous versions to check for duplicates and generate summary
     const versions = await this.getVersions(emailUuid)
-    const previousVersion =
-      versions.length > 0 ? versions[versions.length - 1] : null
+    const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
 
     // Check if this version is identical to the previous one
     if (
@@ -145,10 +144,7 @@ export class EmailVersionStorageService {
    * Delete a specific version
    */
   async deleteVersion(versionId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('email_versions')
-      .delete()
-      .eq('id', versionId)
+    const { error } = await this.supabase.from('email_versions').delete().eq('id', versionId)
 
     if (error) throw error
   }
@@ -170,10 +166,7 @@ export class EmailVersionStorageService {
    * Clear all versions for an email
    */
   async clearVersions(emailUuid: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('email_versions')
-      .delete()
-      .eq('email_id', emailUuid)
+    const { error } = await this.supabase.from('email_versions').delete().eq('email_id', emailUuid)
 
     if (error) throw error
   }

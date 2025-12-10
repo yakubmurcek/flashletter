@@ -97,8 +97,8 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
                   campaign.status === 'active'
                     ? 'bg-green-100 text-green-700'
                     : campaign.status === 'completed'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-primary/10 text-primary'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-primary/10 text-primary'
                 }`}
               >
                 {campaign.status}
@@ -140,7 +140,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
         </CardFooter>
       </Card>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+      >
         <AlertDialogContent
           onInteractOutside={(e: React.SyntheticEvent | Event) => {
             if (isDeleting) e.preventDefault()
@@ -152,9 +155,8 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              campaign &quot;{campaign.name || 'Untitled Campaign'}&quot; and
-              all associated emails.
+              This action cannot be undone. This will permanently delete the campaign &quot;
+              {campaign.name || 'Untitled Campaign'}&quot; and all associated emails.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -17,7 +17,10 @@ export default function CreateLoading() {
           <div className="mb-8">
             <div className="flex items-center justify-center gap-2 mb-2">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-2 w-24" />
+                <Skeleton
+                  key={i}
+                  className="h-2 w-24"
+                />
               ))}
             </div>
             <Skeleton className="h-4 w-48 mx-auto" />

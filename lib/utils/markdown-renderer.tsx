@@ -44,9 +44,12 @@ export function processInlineFormattingForPreview(text: string) {
 
     if (pattern.type === 'bold') {
       parts.push(
-        <strong key={`bold-${idx}`} className="font-semibold">
+        <strong
+          key={`bold-${idx}`}
+          className="font-semibold"
+        >
           {pattern.text}
-        </strong>
+        </strong>,
       )
     } else if (pattern.type === 'link') {
       parts.push(
@@ -58,7 +61,7 @@ export function processInlineFormattingForPreview(text: string) {
           className="text-primary underline hover:text-primary/80 transition-colors"
         >
           {pattern.text}
-        </a>
+        </a>,
       )
     }
 
@@ -76,21 +79,30 @@ export function renderMarkdown(text: string) {
   return text.split('\n\n').map((paragraph, i) => {
     if (paragraph.startsWith('# ')) {
       return (
-        <h1 key={i} className="text-2xl font-bold mb-4">
+        <h1
+          key={i}
+          className="text-2xl font-bold mb-4"
+        >
           {paragraph.slice(2)}
         </h1>
       )
     }
     if (paragraph.startsWith('## ')) {
       return (
-        <h2 key={i} className="text-xl font-semibold mb-3">
+        <h2
+          key={i}
+          className="text-xl font-semibold mb-3"
+        >
           {paragraph.slice(3)}
         </h2>
       )
     }
     if (paragraph.startsWith('### ')) {
       return (
-        <h3 key={i} className="text-lg font-semibold mb-2">
+        <h3
+          key={i}
+          className="text-lg font-semibold mb-2"
+        >
           {paragraph.slice(4)}
         </h3>
       )
@@ -114,31 +126,36 @@ export function renderMarkdown(text: string) {
         if (trimmedLine.match(/^[-•*]\s/)) {
           // It's a list item
           const itemText = trimmedLine.substring(2).trim()
-          listItems.push(
-            <li key={idx}>{processInlineFormattingForPreview(itemText)}</li>
-          )
+          listItems.push(<li key={idx}>{processInlineFormattingForPreview(itemText)}</li>)
         } else if (trimmedLine) {
           // It's a non-list line (like a heading before the list)
           nonListLines.push(
-            <div key={idx} className="mb-2">
+            <div
+              key={idx}
+              className="mb-2"
+            >
               {processInlineFormattingForPreview(trimmedLine)}
-            </div>
+            </div>,
           )
         }
       })
 
       return (
-        <div key={i} className="mb-4">
+        <div
+          key={i}
+          className="mb-4"
+        >
           {nonListLines}
-          {listItems.length > 0 && (
-            <ul className="list-disc list-inside space-y-1">{listItems}</ul>
-          )}
+          {listItems.length > 0 && <ul className="list-disc list-inside space-y-1">{listItems}</ul>}
         </div>
       )
     }
 
     return (
-      <p key={i} className="mb-4 leading-relaxed">
+      <p
+        key={i}
+        className="mb-4 leading-relaxed"
+      >
         {processInlineFormattingForPreview(paragraph)}
       </p>
     )

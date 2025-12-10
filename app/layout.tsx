@@ -29,9 +29,7 @@ export const metadata: Metadata = {
   authors: [{ name: 'Flashletter' }],
   creator: 'Flashletter',
   publisher: 'Flashletter',
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
-  ),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'),
   openGraph: {
     type: 'website',
     locale: 'en_US',
@@ -42,9 +40,7 @@ export const metadata: Metadata = {
     siteName: 'Flashletter',
     images: [
       {
-        url: `${
-          process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
-        }/og-image.png`,
+        url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`,
         width: 1200,
         height: 630,
         alt: 'Flashletter - Lightning-fast AI newsletter campaigns',
@@ -55,13 +51,8 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Flashletter - Lightning-fast AI newsletter campaigns',
-    description:
-      'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
-    images: [
-      `${
-        process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'
-      }/og-image.png`,
-    ],
+    description: 'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
+    images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`],
     creator: '@flashletter',
   },
   robots: {
@@ -96,7 +87,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <script
           type="application/ld+json"

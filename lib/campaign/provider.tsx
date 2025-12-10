@@ -30,12 +30,7 @@ function deriveCampaignName(data?: LandingPageData | null): string | null {
   if (contentTitle) return contentTitle
 
   const meta = data.metadata
-  const candidates = [
-    meta?.title,
-    meta?.ogTitle,
-    meta?.twitterTitle,
-    meta?.ogSiteName,
-  ]
+  const candidates = [meta?.title, meta?.ogTitle, meta?.twitterTitle, meta?.ogSiteName]
 
   for (const candidate of candidates) {
     if (typeof candidate === 'string') {
@@ -59,21 +54,15 @@ function deriveCampaignName(data?: LandingPageData | null): string | null {
 }
 
 export function CampaignProvider({ children }: { children: ReactNode }) {
-  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(
-    null
-  )
+  const [currentCampaignId, setCurrentCampaignId] = useState<string | null>(null)
   const [campaignName, setCampaignName] = useState<string | null>(null)
-  const [landingPageData, setLandingPageDataState] =
-    useState<LandingPageData | null>(null)
+  const [landingPageData, setLandingPageDataState] = useState<LandingPageData | null>(null)
   const [config, setConfigState] = useState<CampaignConfig | null>(null)
   const [generatedEmails, setGeneratedEmailsState] = useState<Email[]>([])
   const [isLoading, setIsLoading] = useState(false)
 
   const supabase = useMemo(() => createClient(), [])
-  const campaignService = useMemo(
-    () => new CampaignStorageService(supabase),
-    [supabase]
-  )
+  const campaignService = useMemo(() => new CampaignStorageService(supabase), [supabase])
 
   const debouncedSaveLandingPage = useRef(
     debounce(async (campaignId: string, data: LandingPageData) => {
@@ -91,7 +80,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           additionalData: { url: data.url },
         })
       }
-    }, 1000)
+    }, 1000),
   ).current
 
   const debouncedSaveConfig = useRef(
@@ -114,21 +103,18 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           },
         })
       }
-    }, 1000)
+    }, 1000),
   ).current
 
   const createNewCampaign = useCallback(
-    async (
-      providedLandingPageData?: LandingPageData | null
-    ): Promise<string> => {
+    async (providedLandingPageData?: LandingPageData | null): Promise<string> => {
       const {
         data: { user },
       } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
       const dataToUse = providedLandingPageData || landingPageData
-      const derivedName =
-        deriveCampaignName(dataToUse) || 'New Campaign'
+      const derivedName = deriveCampaignName(dataToUse) || 'New Campaign'
 
       const campaign = await campaignService.createCampaign(user.id, {
         name: derivedName,
@@ -141,7 +127,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setCampaignName(campaign.name ?? derivedName)
       return campaign.id
     },
-    [supabase, campaignService, landingPageData, setCampaignName]
+    [supabase, campaignService, landingPageData, setCampaignName],
   )
 
   const loadCampaign = useCallback(
@@ -171,9 +157,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
 
         setLandingPageDataState(landingData)
 
-        const rawName = typeof campaign.name === 'string'
-          ? campaign.name.trim()
-          : ''
+        const rawName = typeof campaign.name === 'string' ? campaign.name.trim() : ''
         const derivedFromMeta = deriveCampaignName(landingData)
         const nameToUse =
           rawName && !['New Campaign', 'Untitled Campaign'].includes(rawName)
@@ -204,8 +188,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
             day: 1,
             subject: 'Welcome to our newsletter',
             preview: 'Thank you for subscribing!',
-            content:
-              "Welcome to our newsletter. We're excited to have you on board!",
+            content: "Welcome to our newsletter. We're excited to have you on board!",
           }
           setGeneratedEmailsState([defaultEmail])
         }
@@ -213,7 +196,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         setIsLoading(false)
       }
     },
-    [campaignService]
+    [campaignService],
   )
 
   const saveCampaign = useCallback(async () => {
@@ -227,19 +210,10 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       days: config?.days,
     })
     if (generatedEmails.length > 0) {
-      const savedEmails = await campaignService.saveEmails(
-        currentCampaignId,
-        generatedEmails
-      )
+      const savedEmails = await campaignService.saveEmails(currentCampaignId, generatedEmails)
       setGeneratedEmailsState(savedEmails)
     }
-  }, [
-    currentCampaignId,
-    campaignService,
-    landingPageData,
-    config,
-    generatedEmails,
-  ])
+  }, [currentCampaignId, campaignService, landingPageData, config, generatedEmails])
 
   const updateCampaignConfig = useCallback(
     async (newConfig: CampaignConfig) => {
@@ -252,7 +226,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         })
       }
     },
-    [currentCampaignId, campaignService]
+    [currentCampaignId, campaignService],
   )
 
   const setLandingPageData = useCallback(
@@ -262,7 +236,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         debouncedSaveLandingPage(currentCampaignId, data)
       }
     },
-    [currentCampaignId, debouncedSaveLandingPage]
+    [currentCampaignId, debouncedSaveLandingPage],
   )
 
   const setConfig = useCallback(
@@ -272,17 +246,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         debouncedSaveConfig(currentCampaignId, cfg)
       }
     },
-    [currentCampaignId, debouncedSaveConfig]
+    [currentCampaignId, debouncedSaveConfig],
   )
 
   const setGeneratedEmails = useCallback(
     async (emails: Email[]) => {
       if (currentCampaignId && emails.length > 0) {
         try {
-          const savedEmails = await campaignService.saveEmails(
-            currentCampaignId,
-            emails
-          )
+          const savedEmails = await campaignService.saveEmails(currentCampaignId, emails)
           setGeneratedEmailsState(savedEmails)
         } catch (error) {
           logError(error, {
@@ -297,14 +268,12 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         setGeneratedEmailsState(emails)
       }
     },
-    [currentCampaignId, campaignService]
+    [currentCampaignId, campaignService],
   )
 
   const updateEmail = useCallback((id: number, updates: Partial<Email>) => {
     setGeneratedEmailsState((prevEmails) =>
-      prevEmails.map((email) =>
-        email.id === id ? { ...email, ...updates } : email
-      )
+      prevEmails.map((email) => (email.id === id ? { ...email, ...updates } : email)),
     )
   }, [])
 
@@ -327,14 +296,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       generatedEmails,
       isLoading,
     }),
-    [
-      currentCampaignId,
-      campaignName,
-      landingPageData,
-      config,
-      generatedEmails,
-      isLoading,
-    ]
+    [currentCampaignId, campaignName, landingPageData, config, generatedEmails, isLoading],
   )
 
   const actionsContextValue = useMemo(
@@ -359,7 +321,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       createNewCampaign,
       updateCampaignConfig,
       clearAll,
-    ]
+    ],
   )
 
   return (

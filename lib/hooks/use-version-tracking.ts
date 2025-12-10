@@ -21,10 +21,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
   const [isLoading, setIsLoading] = useState(false)
 
   const supabase = createClient()
-  const versionStorageService = useMemo(
-    () => new EmailVersionStorageService(supabase),
-    [supabase]
-  )
+  const versionStorageService = useMemo(() => new EmailVersionStorageService(supabase), [supabase])
 
   // Load version counts for all emails
   useEffect(() => {
@@ -36,15 +33,10 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         for (const email of emails) {
           if (email.uuid) {
             try {
-              const count = await versionStorageService.getVersionCount(
-                email.uuid
-              )
+              const count = await versionStorageService.getVersionCount(email.uuid)
               counts[email.id] = count
             } catch (error) {
-              console.error(
-                `Failed to load version count for email ${email.id}:`,
-                error
-              )
+              console.error(`Failed to load version count for email ${email.id}:`, error)
               counts[email.id] = 0
             }
           } else {
@@ -63,11 +55,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
   // Note: Restore handling is now done in the editor page to avoid duplicate processing
 
   const restoreVersion = useCallback(
-    async (restoreData: {
-      emailId: number
-      subject: string
-      content: string
-    }) => {
+    async (restoreData: { emailId: number; subject: string; content: string }) => {
       // This will be called by the parent component to update the email
       // The actual email update logic is handled in the parent
       // This function just handles the version count update
@@ -75,9 +63,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
       const restoredEmail = emails.find((e) => e.id === restoreData.emailId)
       if (restoredEmail?.uuid) {
         try {
-          const count = await versionStorageService.getVersionCount(
-            restoredEmail.uuid
-          )
+          const count = await versionStorageService.getVersionCount(restoredEmail.uuid)
           setVersionCounts((prev) => ({
             ...prev,
             [restoreData.emailId]: count,
@@ -87,7 +73,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         }
       }
     },
-    [emails, versionStorageService]
+    [emails, versionStorageService],
   )
 
   const refreshVersionCount = useCallback(
@@ -101,14 +87,11 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
             [emailId]: count,
           }))
         } catch (error) {
-          console.error(
-            `Failed to refresh version count for email ${emailId}:`,
-            error
-          )
+          console.error(`Failed to refresh version count for email ${emailId}:`, error)
         }
       }
     },
-    [emails, versionStorageService]
+    [emails, versionStorageService],
   )
 
   return {

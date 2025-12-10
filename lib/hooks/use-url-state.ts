@@ -21,7 +21,7 @@ export function useUrlState() {
     (key: string): string | null => {
       return searchParams.get(key)
     },
-    [searchParams]
+    [searchParams],
   )
 
   const setParam = useCallback(
@@ -30,7 +30,7 @@ export function useUrlState() {
       params.set(key, value)
       router.push(`?${params.toString()}`)
     },
-    [router, searchParams]
+    [router, searchParams],
   )
 
   const deleteParam = useCallback(
@@ -40,7 +40,7 @@ export function useUrlState() {
       const query = params.toString()
       router.replace(query ? `?${query}` : window.location.pathname)
     },
-    [router, searchParams]
+    [router, searchParams],
   )
 
   const toggleParam = useCallback(
@@ -54,7 +54,7 @@ export function useUrlState() {
       const query = params.toString()
       router.replace(query ? `?${query}` : window.location.pathname)
     },
-    [router, searchParams]
+    [router, searchParams],
   )
 
   // Campaign ID getter with basic validation
@@ -76,7 +76,7 @@ export function useUrlState() {
       const currentEmailId = getEmailId()
       return currentEmailId || fallbackId
     },
-    [getEmailId]
+    [getEmailId],
   )
 
   // Set multiple params with optional validation
@@ -101,7 +101,7 @@ export function useUrlState() {
 
       router.push(`?${urlParams.toString()}`)
     },
-    [router, searchParams]
+    [router, searchParams],
   )
 
   // Simple cleanup - remove all params except specified ones
@@ -118,7 +118,7 @@ export function useUrlState() {
       const query = params.toString()
       router.replace(query ? `?${query}` : window.location.pathname)
     },
-    [router, searchParams]
+    [router, searchParams],
   )
 
   return {

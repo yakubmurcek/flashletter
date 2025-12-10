@@ -15,12 +15,8 @@ Day ${days}: Strong call-to-action`,
     onboarding: `
 Day 1: Warm welcome, set expectations
 Days 2-${Math.floor(days / 3)}: Getting started guide, basic features
-Days ${Math.floor(days / 3) + 1}-${Math.floor(
-      (2 * days) / 3
-    )}: Advanced features, pro tips
-Days ${
-      Math.floor((2 * days) / 3) + 1
-    }-${days}: Completion celebration, next steps`,
+Days ${Math.floor(days / 3) + 1}-${Math.floor((2 * days) / 3)}: Advanced features, pro tips
+Days ${Math.floor((2 * days) / 3) + 1}-${days}: Completion celebration, next steps`,
 
     promotional: `
 Day 1: Introduce offer, create awareness
@@ -34,12 +30,9 @@ Day ${days}: Final push, last chance messaging`,
 
 export function getToneGuidelines(tone: string): string {
   const tones: Record<string, string> = {
-    professional:
-      'Formal language, clear and direct, industry expertise, authoritative',
-    friendly:
-      'Conversational, warm, approachable, use "you" and "we", casual but respectful',
-    enthusiastic:
-      'Energetic, exciting, use exclamation points (moderately), positive language',
+    professional: 'Formal language, clear and direct, industry expertise, authoritative',
+    friendly: 'Conversational, warm, approachable, use "you" and "we", casual but respectful',
+    enthusiastic: 'Energetic, exciting, use exclamation points (moderately), positive language',
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
   }
 
@@ -49,18 +42,14 @@ export function getToneGuidelines(tone: string): string {
 export function buildInstructions(
   config: { days: number; campaignType: string; tone: string },
   landingUrl: string,
-  landingContent?: string
+  landingContent?: string,
 ): string {
   return `You are an expert email marketing copywriter. Generate a ${
     config.days
   }-day ${config.campaignType} email campaign with a ${config.tone} tone.
 
 Landing Page URL: ${landingUrl}
-${
-  landingContent
-    ? `Landing Page Content:\n${landingContent.substring(0, 2000)}`
-    : ''
-}
+${landingContent ? `Landing Page Content:\n${landingContent.substring(0, 2000)}` : ''}
 
 For each email, provide:
 1. A compelling subject line (under 60 characters)

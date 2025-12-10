@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { Header } from '@/components/sections/header'
 import { WaitlistHeroSection } from '@/components/sections/waitlist-hero-section'
@@ -27,5 +27,3 @@ export function WaitlistLanding() {
     </div>
   )
 }
-
-

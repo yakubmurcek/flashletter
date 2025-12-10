@@ -8,11 +8,7 @@ import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 import type { Email } from '@/lib/types'
 
 interface EmailAutosaveReturn {
-  saveEmail: (
-    id: number,
-    updates: Partial<Email>,
-    skipVersioning?: boolean
-  ) => Promise<void>
+  saveEmail: (id: number, updates: Partial<Email>, skipVersioning?: boolean) => Promise<void>
   isSaving: boolean
   lastSaved: Date | null
   cleanup: () => void
@@ -21,7 +17,7 @@ interface EmailAutosaveReturn {
 export function useEmailAutosave(
   emails: Email[],
   currentCampaignId: string | null,
-  updateEmail: (id: number, updates: Partial<Email>) => void
+  updateEmail: (id: number, updates: Partial<Email>) => void,
 ): EmailAutosaveReturn {
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -34,14 +30,8 @@ export function useEmailAutosave(
   }, [emails])
 
   const supabase = createClient()
-  const campaignService = useMemo(
-    () => new CampaignStorageService(supabase),
-    [supabase]
-  )
-  const versionStorageService = useMemo(
-    () => new EmailVersionStorageService(supabase),
-    [supabase]
-  )
+  const campaignService = useMemo(() => new CampaignStorageService(supabase), [supabase])
+  const versionStorageService = useMemo(() => new EmailVersionStorageService(supabase), [supabase])
 
   const saveEmail = useCallback(
     async (id: number, updates: Partial<Email>, skipVersioning = false) => {
@@ -50,14 +40,10 @@ export function useEmailAutosave(
         const currentEmail = emails.find((e) => e.id === id)
         if (currentEmail && currentEmail.uuid) {
           try {
-            await versionStorageService.saveVersion(
-              currentEmail.uuid,
-              currentEmail.day,
-              {
-                subject: currentEmail.subject,
-                content: currentEmail.content,
-              }
-            )
+            await versionStorageService.saveVersion(currentEmail.uuid, currentEmail.day, {
+              subject: currentEmail.subject,
+              content: currentEmail.content,
+            })
           } catch (error) {
             console.error('Failed to save version:', error)
             // Continue with update even if versioning fails
@@ -96,7 +82,7 @@ export function useEmailAutosave(
                 'Email not found for save operation:',
                 id,
                 'Available:',
-                emailsRef.current.map((e) => e.id)
+                emailsRef.current.map((e) => e.id),
               )
             }
           } catch (error) {
@@ -107,13 +93,7 @@ export function useEmailAutosave(
         }, EMAIL_SAVE_DEBOUNCE_MS)
       }
     },
-    [
-      emails,
-      currentCampaignId,
-      updateEmail,
-      campaignService,
-      versionStorageService,
-    ]
+    [emails, currentCampaignId, updateEmail, campaignService, versionStorageService],
   )
 
   // Cleanup timeout on unmount

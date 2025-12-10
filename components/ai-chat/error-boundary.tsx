@@ -11,10 +11,7 @@ interface ErrorBoundaryState {
   hasError: boolean
 }
 
-export class AIChatErrorBoundary extends React.Component<
-  ErrorBoundaryProps,
-  ErrorBoundaryState
-> {
+export class AIChatErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   state: ErrorBoundaryState = { hasError: false }
 
   static getDerivedStateFromError() {

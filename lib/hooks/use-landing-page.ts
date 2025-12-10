@@ -15,9 +15,7 @@ export function useLandingPage(): UseLandingPageReturn {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const analyzeLandingPage = async (
-    url: string
-  ): Promise<LandingPageData | null> => {
+  const analyzeLandingPage = async (url: string): Promise<LandingPageData | null> => {
     setIsAnalyzing(true)
     setError(null)
 

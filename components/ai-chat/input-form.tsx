@@ -47,7 +47,7 @@ function InputFormBase({
         inputRef.current.focus()
         inputRef.current.setSelectionRange(
           inputRef.current.value.length,
-          inputRef.current.value.length
+          inputRef.current.value.length,
         )
       }
     }
@@ -79,9 +79,7 @@ function InputFormBase({
               <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-3 h-3 text-primary flex-shrink-0" />
               </div>
-              <span className="text-xs font-semibold text-primary">
-                {selectedContext.action}
-              </span>
+              <span className="text-xs font-semibold text-primary">{selectedContext.action}</span>
             </div>
             {onClearContext && (
               <Button

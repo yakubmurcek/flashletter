@@ -55,9 +55,7 @@ export default function UnsubscribePage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold mb-2">Unsubscribe</h1>
-          <p className="text-muted-foreground">
-            Remove your email from our waitlist
-          </p>
+          <p className="text-muted-foreground">Remove your email from our waitlist</p>
         </div>
 
         <Card>
@@ -68,7 +66,10 @@ export default function UnsubscribePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleUnsubscribe} className="space-y-4">
+            <form
+              onSubmit={handleUnsubscribe}
+              className="space-y-4"
+            >
               <div className="space-y-2">
                 <Label htmlFor="email">Email Address</Label>
                 <Input

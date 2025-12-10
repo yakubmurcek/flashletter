@@ -6,13 +6,13 @@ export function createClient() {
 
   if (!supabaseUrl) {
     throw new Error(
-      'Missing NEXT_PUBLIC_SUPABASE_URL environment variable. Please check your .env.local file.'
+      'Missing NEXT_PUBLIC_SUPABASE_URL environment variable. Please check your .env.local file.',
     )
   }
 
   if (!supabaseAnonKey) {
     throw new Error(
-      'Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable. Please check your .env.local file.'
+      'Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable. Please check your .env.local file.',
     )
   }
 

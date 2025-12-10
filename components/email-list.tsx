@@ -18,10 +18,7 @@ interface EmailListProps {
 
 function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
   // Memoize sorted emails to avoid resorting on every render
-  const sortedEmails = useMemo(
-    () => [...emails].sort((a, b) => a.day - b.day),
-    [emails]
-  )
+  const sortedEmails = useMemo(() => [...emails].sort((a, b) => a.day - b.day), [emails])
 
   return (
     <div className="px-4 pt-4 pb-6 space-y-2">
@@ -35,7 +32,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
             'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
               ? 'bg-primary/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
-              : ''
+              : '',
           )}
         >
           <div className="flex items-start gap-3">
@@ -44,23 +41,17 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
                 'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
                 selectedId === email.id
                   ? 'bg-primary text-primary-foreground font-semibold shadow-lg'
-                  : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15'
+                  : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15',
               )}
             >
               <span className="text-xs">{email.day}</span>
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1">
-                <h3 className="font-medium text-sm truncate">
-                  Day {email.day}
-                </h3>
+                <h3 className="font-medium text-sm truncate">Day {email.day}</h3>
               </div>
-              <p className="text-sm font-medium truncate mb-1">
-                {email.subject}
-              </p>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {email.preview}
-              </p>
+              <p className="text-sm font-medium truncate mb-1">{email.subject}</p>
+              <p className="text-xs text-muted-foreground line-clamp-2">{email.preview}</p>
             </div>
           </div>
         </button>

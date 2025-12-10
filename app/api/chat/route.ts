@@ -5,15 +5,8 @@ import { requestSchema } from './schemas'
 import { buildSystemInstructions } from './prompt-builder'
 import { parseOpenAIResponse } from './response-handler'
 import { createClient } from '@/lib/supabase/server'
-import {
-  checkRateLimit,
-  chatRateLimit,
-  getRateLimitHeaders,
-} from '@/lib/utils/rate-limit'
-import {
-  retryWithBackoff,
-  extractRateLimitInfo,
-} from '@/lib/utils/openai-retry'
+import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import { retryWithBackoff, extractRateLimitInfo } from '@/lib/utils/openai-retry'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 
 export async function POST(req: NextRequest) {
@@ -41,21 +34,16 @@ export async function POST(req: NextRequest) {
           headers: getRateLimitHeaders(
             rateLimitResult.limit,
             rateLimitResult.remaining,
-            rateLimitResult.reset
+            rateLimitResult.reset,
           ),
-        }
+        },
       )
     }
 
     const body = await req.json()
-    const { messages, campaignContext, emailContext, selectedContext } =
-      requestSchema.parse(body)
+    const { messages, campaignContext, emailContext, selectedContext } = requestSchema.parse(body)
 
-    const instructions = buildSystemInstructions(
-      campaignContext,
-      emailContext,
-      selectedContext
-    )
+    const instructions = buildSystemInstructions(campaignContext, emailContext, selectedContext)
 
     const userInput = messages[messages.length - 1]?.content || ''
 
@@ -67,7 +55,7 @@ export async function POST(req: NextRequest) {
         input: userInput,
         temperature: 0.7,
         max_output_tokens: 2000,
-      })
+      }),
     )
 
     const parsedResponse = parseOpenAIResponse(response)
@@ -76,15 +64,12 @@ export async function POST(req: NextRequest) {
       headers: getRateLimitHeaders(
         rateLimitResult.limit,
         rateLimitResult.remaining,
-        rateLimitResult.reset
+        rateLimitResult.reset,
       ),
     })
   } catch (error) {
     console.error('Chat API Error:', error)
-    console.error(
-      'Error details:',
-      error instanceof Error ? error.message : error
-    )
+    console.error('Error details:', error instanceof Error ? error.message : error)
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
@@ -92,7 +77,7 @@ export async function POST(req: NextRequest) {
           error: 'Invalid request format',
           details: error.errors,
         },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -106,7 +91,7 @@ export async function POST(req: NextRequest) {
             message: 'Too many requests to AI service. Please try again later.',
             rateLimitInfo,
           },
-          { status: 429 }
+          { status: 429 },
         )
       }
     }
@@ -116,7 +101,7 @@ export async function POST(req: NextRequest) {
         error: 'Failed to process chat request',
         details: error instanceof Error ? error.message : 'Unknown error',
       },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

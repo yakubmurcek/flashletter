@@ -1,18 +1,6 @@
 import { Button } from '@/components/ui/button'
-import {
-  Bold,
-  Italic,
-  List,
-  Heading1,
-  Heading2,
-  Heading3,
-  Palette,
-} from 'lucide-react'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
+import { Bold, Italic, List, Heading1, Heading2, Heading3, Palette } from 'lucide-react'
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 
 interface RichTextToolbarProps {
   onFormat: (command: string, value?: string) => void
@@ -29,11 +17,7 @@ const colors = [
   { name: 'Blue', value: '#2563eb' },
 ]
 
-export function RichTextToolbar({
-  onFormat,
-  onHeading,
-  onColor,
-}: RichTextToolbarProps) {
+export function RichTextToolbar({ onFormat, onHeading, onColor }: RichTextToolbarProps) {
   return (
     <div className="flex flex-wrap items-center gap-1 p-2 border border-border rounded-md bg-muted/30">
       <Button

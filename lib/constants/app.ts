@@ -22,10 +22,8 @@ export const FEATURE_FLAGS = {
   ENABLE_BETA_FEATURES: process.env.NEXT_PUBLIC_ENABLE_BETA_FEATURES === 'true',
 
   // Waitlist features (only relevant when SHOW_FULL_PRODUCT is false)
-  ENABLE_WAITLIST_ORDER:
-    process.env.NEXT_PUBLIC_ENABLE_WAITLIST_ORDER === 'true',
-  ENABLE_REGION_DETECTION:
-    process.env.NEXT_PUBLIC_ENABLE_REGION_DETECTION === 'true',
+  ENABLE_WAITLIST_ORDER: process.env.NEXT_PUBLIC_ENABLE_WAITLIST_ORDER === 'true',
+  ENABLE_REGION_DETECTION: process.env.NEXT_PUBLIC_ENABLE_REGION_DETECTION === 'true',
 
   // Analytics and tracking
   ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',

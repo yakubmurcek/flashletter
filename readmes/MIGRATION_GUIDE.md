@@ -134,10 +134,7 @@ import { CAMPAIGN_TONES, CAMPAIGN_DURATION } from '@/lib/constants/campaign'
 const setLandingPageData = (data) => {
   setLandingPageDataState(data)
   const current = JSON.parse(sessionStorage.getItem('campaign-data') || '{}')
-  sessionStorage.setItem(
-    'campaign-data',
-    JSON.stringify({ ...current, landingPageData: data })
-  )
+  sessionStorage.setItem('campaign-data', JSON.stringify({ ...current, landingPageData: data }))
 }
 ```
 

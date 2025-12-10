@@ -2,14 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { Card } from '@/components/ui/card'
-import {
-  Sparkles,
-  RefreshCw,
-  Minimize2,
-  Maximize2,
-  Pencil,
-  CheckCircle2,
-} from 'lucide-react'
+import { Sparkles, RefreshCw, Minimize2, Maximize2, Pencil, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface TextSelectionPopupProps {
@@ -38,10 +31,7 @@ export function TextSelectionPopup({
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        popupRef.current &&
-        !popupRef.current.contains(event.target as Node)
-      ) {
+      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
         onClose()
       }
     }
@@ -88,9 +78,7 @@ export function TextSelectionPopup({
               title={action.label}
             >
               <Icon className={cn('w-3.5 h-3.5 flex-shrink-0', action.color)} />
-              <span className="text-xs font-medium whitespace-nowrap">
-                {action.label}
-              </span>
+              <span className="text-xs font-medium whitespace-nowrap">{action.label}</span>
             </button>
           )
         })}

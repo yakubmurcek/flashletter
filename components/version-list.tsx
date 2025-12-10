@@ -71,8 +71,8 @@ export function VersionList({
         <Clock className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
         <h3 className="text-lg font-semibold mb-2">No Saved Versions Yet</h3>
         <p className="text-sm text-muted-foreground max-w-xs">
-          When you save changes to this email, previous versions will appear
-          here so you can review and restore them.
+          When you save changes to this email, previous versions will appear here so you can review
+          and restore them.
         </p>
       </div>
     )
@@ -98,9 +98,7 @@ export function VersionList({
             key={version.id}
             className={cn(
               'p-4 cursor-pointer transition-all hover:shadow-md border-2',
-              isSelected
-                ? 'border-primary bg-primary/5'
-                : 'border-transparent hover:border-border'
+              isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:border-border',
             )}
             onClick={() => onSelectVersion(version.id)}
           >
@@ -108,9 +106,7 @@ export function VersionList({
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">
-                      Version {versions.length - index}
-                    </span>
+                    <span className="text-sm font-semibold">Version {versions.length - index}</span>
                     {isLatest && (
                       <span className="px-2 py-0.5 text-xs font-medium bg-primary text-primary-foreground rounded-full">
                         Latest
@@ -129,9 +125,7 @@ export function VersionList({
                 </div>
               </div>
 
-              <div className="text-sm text-muted-foreground">
-                {version.changesSummary}
-              </div>
+              <div className="text-sm text-muted-foreground">{version.changesSummary}</div>
 
               {!isLatest && (
                 <Button

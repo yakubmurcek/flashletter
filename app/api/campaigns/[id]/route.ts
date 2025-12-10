@@ -4,7 +4,7 @@ import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient()
@@ -36,9 +36,6 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting campaign:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete campaign' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to delete campaign' }, { status: 500 })
   }
 }

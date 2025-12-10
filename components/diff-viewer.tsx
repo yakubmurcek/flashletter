@@ -22,15 +22,9 @@ interface DiffViewerProps {
 
 type DiffSection = 'subject' | 'content'
 
-export function DiffViewer({
-  oldVersion,
-  newVersion,
-  viewMode = 'unified',
-}: DiffViewerProps) {
+export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: DiffViewerProps) {
   const [activeSection, setActiveSection] = useState<DiffSection>('content')
-  const [expandedSections, setExpandedSections] = useState<Set<number>>(
-    new Set()
-  )
+  const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set())
 
   if (!oldVersion) {
     return (
@@ -61,10 +55,8 @@ export function DiffViewer({
     setExpandedSections(newExpanded)
   }
 
-  const hasSubjectChanges =
-    subjectDiff.stats.added > 0 || subjectDiff.stats.removed > 0
-  const hasContentChanges =
-    contentDiff.stats.added > 0 || contentDiff.stats.removed > 0
+  const hasSubjectChanges = subjectDiff.stats.added > 0 || subjectDiff.stats.removed > 0
+  const hasContentChanges = contentDiff.stats.added > 0 || contentDiff.stats.removed > 0
 
   return (
     <div className="h-full flex flex-col">
@@ -72,9 +64,7 @@ export function DiffViewer({
         <div className="flex items-center justify-between mb-4">
           <div>
             <h3 className="text-lg font-semibold">Changes</h3>
-            <p className="text-sm text-muted-foreground">
-              Comparing with previous version
-            </p>
+            <p className="text-sm text-muted-foreground">Comparing with previous version</p>
           </div>
         </div>
 
@@ -83,20 +73,22 @@ export function DiffViewer({
           onValueChange={(v) => setActiveSection(v as DiffSection)}
         >
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="subject" className="gap-2">
+            <TabsTrigger
+              value="subject"
+              className="gap-2"
+            >
               Subject Line
               {hasSubjectChanges && (
-                <span className="px-1.5 py-0.5 text-xs bg-primary/20 rounded">
-                  Changed
-                </span>
+                <span className="px-1.5 py-0.5 text-xs bg-primary/20 rounded">Changed</span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="content" className="gap-2">
+            <TabsTrigger
+              value="content"
+              className="gap-2"
+            >
               Content
               {hasContentChanges && (
-                <span className="px-1.5 py-0.5 text-xs bg-primary/20 rounded">
-                  Changed
-                </span>
+                <span className="px-1.5 py-0.5 text-xs bg-primary/20 rounded">Changed</span>
               )}
             </TabsTrigger>
           </TabsList>
@@ -121,15 +113,18 @@ export function DiffViewer({
                         className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center cursor-pointer hover:bg-muted transition-colors"
                         onClick={() => toggleSection(index)}
                       >
-                        <Button variant="ghost" size="sm" className="gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-2"
+                        >
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4" />
                           ) : (
                             <ChevronDown className="w-4 h-4" />
                           )}
                           <span className="text-xs text-muted-foreground">
-                            {isExpanded ? 'Hide' : 'Show'} {item.count}{' '}
-                            unchanged line
+                            {isExpanded ? 'Hide' : 'Show'} {item.count} unchanged line
                             {item.count > 1 ? 's' : ''}
                           </span>
                         </Button>
@@ -142,24 +137,20 @@ export function DiffViewer({
                     line.type === 'added'
                       ? 'bg-green-500/10'
                       : line.type === 'removed'
-                      ? 'bg-red-500/10'
-                      : line.type === 'modified'
-                      ? 'bg-yellow-500/10'
-                      : 'bg-transparent'
+                        ? 'bg-red-500/10'
+                        : line.type === 'modified'
+                          ? 'bg-yellow-500/10'
+                          : 'bg-transparent'
 
                   const textColor =
                     line.type === 'added'
                       ? 'text-green-700 dark:text-green-400'
                       : line.type === 'removed'
-                      ? 'text-red-700 dark:text-red-400'
-                      : 'text-foreground'
+                        ? 'text-red-700 dark:text-red-400'
+                        : 'text-foreground'
 
                   const prefix =
-                    line.type === 'added'
-                      ? '+ '
-                      : line.type === 'removed'
-                      ? '- '
-                      : '  '
+                    line.type === 'added' ? '+ ' : line.type === 'removed' ? '- ' : '  '
 
                   const lineNum =
                     line.type === 'removed'
@@ -171,21 +162,16 @@ export function DiffViewer({
                       key={index}
                       className={cn(
                         'flex items-start border-b border-border last:border-b-0',
-                        bgColor
+                        bgColor,
                       )}
                     >
                       <div className="w-12 flex-shrink-0 text-right pr-4 py-2 text-muted-foreground text-xs border-r border-border bg-muted/30">
                         {lineNum}
                       </div>
                       <div
-                        className={cn(
-                          'flex-1 px-4 py-2 whitespace-pre-wrap break-all',
-                          textColor
-                        )}
+                        className={cn('flex-1 px-4 py-2 whitespace-pre-wrap break-all', textColor)}
                       >
-                        <span className="select-none mr-2 opacity-50">
-                          {prefix}
-                        </span>
+                        <span className="select-none mr-2 opacity-50">{prefix}</span>
                         {line.content || ' '}
                       </div>
                     </div>
@@ -200,25 +186,17 @@ export function DiffViewer({
                     Previous Version
                   </div>
                   {collapsedLines
-                    .filter(
-                      (item) => !('type' in item && item.type === 'collapsed')
-                    )
+                    .filter((item) => !('type' in item && item.type === 'collapsed'))
                     .map((item, index) => {
                       const line = item as DiffLine
                       if (line.type === 'added') return null
 
-                      const bgColor =
-                        line.type === 'removed'
-                          ? 'bg-red-500/10'
-                          : 'bg-transparent'
+                      const bgColor = line.type === 'removed' ? 'bg-red-500/10' : 'bg-transparent'
 
                       return (
                         <div
                           key={index}
-                          className={cn(
-                            'flex items-start border-b border-border',
-                            bgColor
-                          )}
+                          className={cn('flex items-start border-b border-border', bgColor)}
                         >
                           <div className="w-12 flex-shrink-0 text-right pr-4 py-2 text-muted-foreground text-xs">
                             {line.oldLineNumber || ''}
@@ -235,25 +213,17 @@ export function DiffViewer({
                     Current Version
                   </div>
                   {collapsedLines
-                    .filter(
-                      (item) => !('type' in item && item.type === 'collapsed')
-                    )
+                    .filter((item) => !('type' in item && item.type === 'collapsed'))
                     .map((item, index) => {
                       const line = item as DiffLine
                       if (line.type === 'removed') return null
 
-                      const bgColor =
-                        line.type === 'added'
-                          ? 'bg-green-500/10'
-                          : 'bg-transparent'
+                      const bgColor = line.type === 'added' ? 'bg-green-500/10' : 'bg-transparent'
 
                       return (
                         <div
                           key={index}
-                          className={cn(
-                            'flex items-start border-b border-border',
-                            bgColor
-                          )}
+                          className={cn('flex items-start border-b border-border', bgColor)}
                         >
                           <div className="w-12 flex-shrink-0 text-right pr-4 py-2 text-muted-foreground text-xs">
                             {line.newLineNumber || line.lineNumber || ''}

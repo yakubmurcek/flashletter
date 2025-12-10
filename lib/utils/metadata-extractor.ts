@@ -35,10 +35,7 @@ export interface ExtractedMetadata {
  * @param baseUrl Base URL for resolving relative URLs
  * @returns Extracted metadata object
  */
-export function extractMetadata(
-  html: string,
-  baseUrl?: string
-): ExtractedMetadata {
+export function extractMetadata(html: string, baseUrl?: string): ExtractedMetadata {
   const $ = cheerio.load(html)
   const metadata: ExtractedMetadata = {}
 
@@ -152,10 +149,7 @@ function extractCanonicalUrl($: cheerio.CheerioAPI): string | undefined {
 /**
  * Extract favicon URL
  */
-function extractFavicon(
-  $: cheerio.CheerioAPI,
-  baseUrl?: string
-): string | undefined {
+function extractFavicon($: cheerio.CheerioAPI, baseUrl?: string): string | undefined {
   // Try various favicon link tags
   const faviconSelectors = [
     'link[rel="icon"]',
@@ -207,10 +201,7 @@ function extractStructuredData($: cheerio.CheerioAPI): unknown[] {
 /**
  * Extract meta content by property or name
  */
-function extractMetaContent(
-  $: cheerio.CheerioAPI,
-  property: string
-): string | undefined {
+function extractMetaContent($: cheerio.CheerioAPI, property: string): string | undefined {
   // Try property attribute first (Open Graph, etc.)
   let content = $(`meta[property="${property}"]`).attr('content')
   if (content) return content.trim()
@@ -225,10 +216,7 @@ function extractMetaContent(
 /**
  * Resolve relative URL to absolute URL
  */
-function resolveUrl(
-  url: string | undefined,
-  baseUrl: string | undefined
-): string | undefined {
+function resolveUrl(url: string | undefined, baseUrl: string | undefined): string | undefined {
   if (!url || !baseUrl) return url
 
   try {
@@ -251,9 +239,7 @@ export function getBestTitle(metadata: ExtractedMetadata): string | undefined {
  * Get the most relevant description from metadata
  * Prioritizes Open Graph description, then regular description
  */
-export function getBestDescription(
-  metadata: ExtractedMetadata
-): string | undefined {
+export function getBestDescription(metadata: ExtractedMetadata): string | undefined {
   return metadata.ogDescription || metadata.description
 }
 

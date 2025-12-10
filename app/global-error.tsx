@@ -56,8 +56,7 @@ export default function GlobalError({
                 marginBottom: '1rem',
               }}
             >
-              A critical error occurred. Please refresh the page or contact
-              support.
+              A critical error occurred. Please refresh the page or contact support.
             </p>
             {error.digest && (
               <p

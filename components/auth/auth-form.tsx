@@ -27,8 +27,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
   const { locationInfo, isLoading } = useRegionDetection()
 
-  const requiresNonUSConsent =
-    mode === 'signup' && !isLoading && locationInfo?.region === 'OTHER'
+  const requiresNonUSConsent = mode === 'signup' && !isLoading && locationInfo?.region === 'OTHER'
   const needsConsentConfirmation = requiresNonUSConsent && !legalConsent
 
   useEffect(() => {
@@ -66,11 +65,10 @@ export function AuthForm({ mode }: AuthFormProps) {
         if (error) throw error
 
         if (!data.session) {
-          const { error: signInError } =
-            await supabase.auth.signInWithPassword({
-              email,
-              password,
-            })
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
 
           if (signInError) throw signInError
         }
@@ -146,7 +144,10 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
       <div className="space-y-2">
         <Label htmlFor="email">Email</Label>
         <Input
@@ -173,9 +174,7 @@ export function AuthForm({ mode }: AuthFormProps) {
           minLength={6}
         />
         {mode === 'signup' && (
-          <p className="text-xs text-muted-foreground">
-            Password must be at least 6 characters
-          </p>
+          <p className="text-xs text-muted-foreground">Password must be at least 6 characters</p>
         )}
       </div>
 
@@ -221,8 +220,7 @@ export function AuthForm({ mode }: AuthFormProps) {
                 >
                   Privacy Policy
                 </Link>{' '}
-                and consent to the processing of my personal data in accordance
-                with GDPR.
+                and consent to the processing of my personal data in accordance with GDPR.
               </label>
             </div>
           ) : (

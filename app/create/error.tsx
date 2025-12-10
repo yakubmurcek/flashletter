@@ -19,21 +19,19 @@ export default function CreateError({
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="max-w-md w-full p-6 space-y-4">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-destructive">
-            Campaign Creation Error
-          </h2>
+          <h2 className="text-2xl font-bold text-destructive">Campaign Creation Error</h2>
           <p className="text-sm text-muted-foreground">
-            Something went wrong while creating your campaign. Your progress may
-            have been saved.
+            Something went wrong while creating your campaign. Your progress may have been saved.
           </p>
           {error.digest && (
-            <p className="text-xs text-muted-foreground font-mono">
-              Error ID: {error.digest}
-            </p>
+            <p className="text-xs text-muted-foreground font-mono">Error ID: {error.digest}</p>
           )}
         </div>
         <div className="flex gap-2">
-          <Button onClick={reset} className="flex-1">
+          <Button
+            onClick={reset}
+            className="flex-1"
+          >
             Try again
           </Button>
           <Button

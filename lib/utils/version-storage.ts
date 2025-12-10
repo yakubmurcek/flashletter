@@ -7,7 +7,7 @@ const VERSION_KEY_PREFIX = 'email-versions-'
  */
 function generateChangesSummary(
   oldEmail: { subject: string; content: string } | null,
-  newEmail: { subject: string; content: string }
+  newEmail: { subject: string; content: string },
 ): string {
   if (!oldEmail) {
     return 'Initial version'
@@ -55,17 +55,12 @@ export const versionStorage = {
     }
 
     // Validate input
-    if (
-      !email ||
-      typeof email.subject !== 'string' ||
-      typeof email.content !== 'string'
-    ) {
+    if (!email || typeof email.subject !== 'string' || typeof email.content !== 'string') {
       throw new Error('Invalid email data provided to saveVersion')
     }
 
     const versions = this.getVersions(emailId)
-    const previousVersion =
-      versions.length > 0 ? versions[versions.length - 1] : null
+    const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
 
     // Check if this version is identical to the previous one (avoid duplicate saves)
     if (
@@ -109,9 +104,7 @@ export const versionStorage = {
     } catch (error) {
       // Handle quota exceeded error
       if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error(
-          'localStorage quota exceeded. Consider clearing old versions.'
-        )
+        console.error('localStorage quota exceeded. Consider clearing old versions.')
       }
       console.error('Failed to save version:', error)
       throw error
@@ -158,10 +151,7 @@ export const versionStorage = {
     }
 
     const versions = this.getVersions(emailId).filter((v) => v.id !== versionId)
-    localStorage.setItem(
-      `${VERSION_KEY_PREFIX}${emailId}`,
-      JSON.stringify(versions)
-    )
+    localStorage.setItem(`${VERSION_KEY_PREFIX}${emailId}`, JSON.stringify(versions))
   },
 
   /**

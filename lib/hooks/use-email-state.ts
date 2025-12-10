@@ -14,18 +14,9 @@ interface EmailStateReturn {
 }
 
 export function useEmailState(): EmailStateReturn {
-  const {
-    generatedEmails,
-    isLoading,
-    updateEmail: contextUpdateEmail,
-  } = useCampaign()
-  const {
-    getEmailId,
-    getEmailIdWithFallback,
-    setMultipleParams,
-    isValidEmailId,
-    getCampaignId,
-  } = useUrlState()
+  const { generatedEmails, isLoading, updateEmail: contextUpdateEmail } = useCampaign()
+  const { getEmailId, getEmailIdWithFallback, setMultipleParams, isValidEmailId, getCampaignId } =
+    useUrlState()
 
   const emailIdFromUrl = getEmailId()
   const selectedEmailId = getEmailIdWithFallback(1)
@@ -41,12 +32,7 @@ export function useEmailState(): EmailStateReturn {
     // 2. No emails are available yet
     // 3. Email parameter is already set
     // 4. No campaign ID is available (campaign not loaded)
-    if (
-      isLoading ||
-      emails.length === 0 ||
-      emailIdFromUrl ||
-      !campaignIdFromUrl
-    ) {
+    if (isLoading || emails.length === 0 || emailIdFromUrl || !campaignIdFromUrl) {
       return
     }
 
@@ -59,13 +45,7 @@ export function useEmailState(): EmailStateReturn {
       params.campaign = campaignIdFromUrl
     }
     setMultipleParams(params)
-  }, [
-    isLoading,
-    emails.length,
-    emailIdFromUrl,
-    campaignIdFromUrl,
-    setMultipleParams,
-  ])
+  }, [isLoading, emails.length, emailIdFromUrl, campaignIdFromUrl, setMultipleParams])
 
   const selectEmail = useCallback(
     (id: number) => {
@@ -88,7 +68,7 @@ export function useEmailState(): EmailStateReturn {
 
       setMultipleParams(params)
     },
-    [isValidEmailId, campaignIdFromUrl, setMultipleParams, emailIdFromUrl]
+    [isValidEmailId, campaignIdFromUrl, setMultipleParams, emailIdFromUrl],
   )
 
   // Wrap in useCallback to prevent unnecessary re-renders in child components

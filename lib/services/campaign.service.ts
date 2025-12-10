@@ -1,13 +1,5 @@
-import {
-  generateEmailsResponseSchema,
-  scrapeLandingResponseSchema,
-} from '../schemas/api'
-import type {
-  CampaignConfig,
-  Email,
-  GenerateEmailsResponse,
-  LandingPageData,
-} from '../types'
+import { generateEmailsResponseSchema, scrapeLandingResponseSchema } from '../schemas/api'
+import type { CampaignConfig, Email, GenerateEmailsResponse, LandingPageData } from '../types'
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -50,11 +42,7 @@ export class CampaignService {
       throw new Error('Invalid response from scrape endpoint')
     }
 
-    const {
-      url: scrapedUrl,
-      content,
-      metadata,
-    } = parsed.data
+    const { url: scrapedUrl, content, metadata } = parsed.data
 
     const normalizedMetadata: LandingPageData['metadata'] = metadata
       ? {
@@ -79,7 +67,7 @@ export class CampaignService {
     landingContent: string,
     config: CampaignConfig,
     campaignId?: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<GenerateEmailsResponse> {
     const response = await fetch('/api/generate-emails', {
       method: 'POST',
@@ -96,9 +84,7 @@ export class CampaignService {
     const raw = await response.json().catch(() => null)
 
     if (!response.ok) {
-      throw new Error(
-        extractErrorMessage(raw, 'Failed to generate emails')
-      )
+      throw new Error(extractErrorMessage(raw, 'Failed to generate emails'))
     }
 
     const parsed = generateEmailsResponseSchema.parse(raw)

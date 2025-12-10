@@ -29,7 +29,10 @@ export function EmailEditorSidebar({
           <div className="w-9 h-9 rounded-2xl bg-white/10 flex items-center justify-center ring-1 ring-border/15">
             <Type className="w-4 h-4 text-primary" />
           </div>
-          <Label htmlFor="subject" className="text-sm font-medium">
+          <Label
+            htmlFor="subject"
+            className="text-sm font-medium"
+          >
             Subject Line
           </Label>
         </div>
@@ -48,16 +51,17 @@ export function EmailEditorSidebar({
             <div className="w-9 h-9 rounded-2xl bg-white/10 flex items-center justify-center ring-1 ring-border/15">
               <AlignLeft className="w-4 h-4 text-primary" />
             </div>
-            <Label htmlFor="content" className="text-sm font-medium">
+            <Label
+              htmlFor="content"
+              className="text-sm font-medium"
+            >
               Email Content
             </Label>
           </div>
           <div className="relative">
             <Tabs
               value={editorMode}
-              onValueChange={(v) =>
-                onEditorModeChange(v as 'markdown' | 'richtext')
-              }
+              onValueChange={(v) => onEditorModeChange(v as 'markdown' | 'richtext')}
             >
               <TabsList className="h-9 rounded-full bg-white/5 p-1">
                 <TabsTrigger
@@ -82,9 +86,15 @@ export function EmailEditorSidebar({
         </div>
 
         {editorMode === 'markdown' ? (
-          <MarkdownEditor value={content} onChange={onContentChange} />
+          <MarkdownEditor
+            value={content}
+            onChange={onContentChange}
+          />
         ) : (
-          <RichTextEditor value={content} onChange={onContentChange} />
+          <RichTextEditor
+            value={content}
+            onChange={onContentChange}
+          />
         )}
       </div>
     </div>

@@ -10,7 +10,7 @@ import * as prompts from './prompts'
 // ============================================================================
 
 export function buildSelectedTextContext(
-  selectedContext: SelectedContext | null | undefined
+  selectedContext: SelectedContext | null | undefined,
 ): string {
   if (!selectedContext) return ''
 
@@ -44,10 +44,7 @@ function formatLandingPageContent(content: string | undefined): string {
   return content
 }
 
-function formatEmailsList(
-  allEmails: CampaignContext['allEmails'],
-  currentEmailId: number
-): string {
+function formatEmailsList(allEmails: CampaignContext['allEmails'], currentEmailId: number): string {
   return allEmails
     .map((email) => {
       const isCurrent = email.id === currentEmailId
@@ -66,9 +63,7 @@ Content (first ${EMAIL_CONTENT_PREVIEW_LIMIT} chars): ${contentPreview}
     .join('\n')
 }
 
-export function buildCampaignContextSection(
-  campaignContext: CampaignContext | undefined
-): string {
+export function buildCampaignContextSection(campaignContext: CampaignContext | undefined): string {
   if (!campaignContext) return ''
 
   const { landingPageData, config, allEmails, currentEmailId } = campaignContext
@@ -80,11 +75,7 @@ CAMPAIGN CONTEXT:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 PRODUCT/LANDING PAGE INFORMATION:
 URL: ${landingPageData.url}
-${
-  landingPageData.metadata?.title
-    ? `Title: ${landingPageData.metadata.title}`
-    : ''
-}
+${landingPageData.metadata?.title ? `Title: ${landingPageData.metadata.title}` : ''}
 ${
   landingPageData.metadata?.description
     ? `Description: ${landingPageData.metadata.description}`
@@ -120,7 +111,7 @@ ${currentEmail?.content}
 
 export function buildLegacyEmailContext(
   campaignContext: CampaignContext | undefined,
-  emailContext: EmailContext | undefined
+  emailContext: EmailContext | undefined,
 ): string {
   if (campaignContext || !emailContext) return ''
 
@@ -140,7 +131,7 @@ ${emailContext.content}`
 export function buildSystemInstructions(
   campaignContext: CampaignContext | undefined,
   emailContext: EmailContext | undefined,
-  selectedContext: SelectedContext | null | undefined
+  selectedContext: SelectedContext | null | undefined,
 ): string {
   const contextSections = [
     buildCampaignContextSection(campaignContext),

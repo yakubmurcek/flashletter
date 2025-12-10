@@ -14,8 +14,7 @@ export function TestimonialsSection() {
             <GradientText>Loved by teams worldwide</GradientText>
           </h2>
           <p className="text-muted-foreground text-lg">
-            See how Flashletter is transforming email marketing for companies of
-            all sizes.
+            See how Flashletter is transforming email marketing for companies of all sizes.
           </p>
         </div>
 
@@ -34,10 +33,8 @@ export function TestimonialsSection() {
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
                 &ldquo;
               </span>
-              Flashletter cut our email campaign creation time from 3 days to 30
-              minutes. Our open rates jumped 45% and we&apos;re finally hitting
-              our
-              quarterly targets consistently.
+              Flashletter cut our email campaign creation time from 3 days to 30 minutes. Our open
+              rates jumped 45% and we&apos;re finally hitting our quarterly targets consistently.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
                 &rdquo;
               </span>
@@ -47,12 +44,8 @@ export function TestimonialsSection() {
                 AT
               </div>
               <div>
-                <div className="font-semibold text-foreground">
-                  Ava Thompson
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Growth Lead at TechFlow
-                </div>
+                <div className="font-semibold text-foreground">Ava Thompson</div>
+                <div className="text-sm text-muted-foreground">Growth Lead at TechFlow</div>
               </div>
             </div>
           </div>
@@ -71,9 +64,9 @@ export function TestimonialsSection() {
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
                 &ldquo;
               </span>
-              The AI perfectly captures our brand voice across all campaigns.
-              What used to take our entire marketing team a week now happens in
-              hours. ROI increased by 67% in just two months.
+              The AI perfectly captures our brand voice across all campaigns. What used to take our
+              entire marketing team a week now happens in hours. ROI increased by 67% in just two
+              months.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
                 &rdquo;
               </span>
@@ -83,12 +76,8 @@ export function TestimonialsSection() {
                 DM
               </div>
               <div>
-                <div className="font-semibold text-foreground">
-                  Diego Martinez
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  CMO at GrowthCo
-                </div>
+                <div className="font-semibold text-foreground">Diego Martinez</div>
+                <div className="text-sm text-muted-foreground">CMO at GrowthCo</div>
               </div>
             </div>
           </div>
@@ -107,9 +96,9 @@ export function TestimonialsSection() {
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
                 &ldquo;
               </span>
-              The collaborative features are game-changing. Our distributed team
-              can now work on campaigns in real-time. Customer engagement is up
-              52% since we started using Flashletter.
+              The collaborative features are game-changing. Our distributed team can now work on
+              campaigns in real-time. Customer engagement is up 52% since we started using
+              Flashletter.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
                 &rdquo;
               </span>
@@ -120,9 +109,7 @@ export function TestimonialsSection() {
               </div>
               <div>
                 <div className="font-semibold text-foreground">Mia Chen</div>
-                <div className="text-sm text-muted-foreground">
-                  Product Ops at InnovateLab
-                </div>
+                <div className="text-sm text-muted-foreground">Product Ops at InnovateLab</div>
               </div>
             </div>
           </div>
@@ -144,9 +131,9 @@ export function TestimonialsSection() {
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
                 &ldquo;
               </span>
-              As a startup, we needed to move fast without sacrificing quality.
-              Flashletter delivers professional campaigns that look like they
-              came from a Fortune 500 company. Our conversion rate tripled.
+              As a startup, we needed to move fast without sacrificing quality. Flashletter delivers
+              professional campaigns that look like they came from a Fortune 500 company. Our
+              conversion rate tripled.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
                 &rdquo;
               </span>
@@ -156,12 +143,8 @@ export function TestimonialsSection() {
                 JS
               </div>
               <div>
-                <div className="font-semibold text-foreground">
-                  James Sullivan
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Founder at StartupXYZ
-                </div>
+                <div className="font-semibold text-foreground">James Sullivan</div>
+                <div className="text-sm text-muted-foreground">Founder at StartupXYZ</div>
               </div>
             </div>
           </div>
@@ -180,10 +163,9 @@ export function TestimonialsSection() {
               <span className="absolute -top-2 -left-2 text-4xl text-primary/20 font-serif">
                 &ldquo;
               </span>
-              The A/B testing features helped us discover what resonates with
-              our audience. We&apos;ve seen a 78% improvement in click-through
-              rates
-              and our unsubscribe rate dropped to almost zero.
+              The A/B testing features helped us discover what resonates with our audience.
+              We&apos;ve seen a 78% improvement in click-through rates and our unsubscribe rate
+              dropped to almost zero.
               <span className="absolute -bottom-4 -right-2 text-4xl text-primary/20 font-serif">
                 &rdquo;
               </span>

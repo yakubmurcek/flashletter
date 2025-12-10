@@ -76,9 +76,7 @@ export async function GET(request: NextRequest) {
 
     const regionInfo = createRegionInfo(countryCode)
 
-    console.log(
-      `Detected country: ${countryCode}, Region: ${regionInfo.region}`
-    )
+    console.log(`Detected country: ${countryCode}, Region: ${regionInfo.region}`)
 
     return NextResponse.json(regionInfo)
   } catch (error) {

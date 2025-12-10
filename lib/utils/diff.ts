@@ -136,7 +136,7 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
  */
 export function collapseUnchangedLines(
   lines: DiffLine[],
-  contextLines: number = 3
+  contextLines: number = 3,
 ): (DiffLine | { type: 'collapsed'; count: number })[] {
   const result: (DiffLine | { type: 'collapsed'; count: number })[] = []
   let unchangedBuffer: DiffLine[] = []

@@ -48,12 +48,7 @@ These schemas define API contracts for request/response validation:
 
 ```typescript
 // Import schemas and types
-import {
-  emailSchema,
-  campaignConfigSchema,
-  type Email,
-  type CampaignConfig,
-} from '@/lib'
+import { emailSchema, campaignConfigSchema, type Email, type CampaignConfig } from '@/lib'
 
 // Or from specific schema module
 import { generateEmailsRequestSchema } from '@/lib/schemas/api'

@@ -239,21 +239,17 @@ pnpm test test/scraper.test.ts
 ### Common Issues
 
 1. **Empty Content**: Check if site requires JavaScript
-
    - Solution: Use `useDynamic: true` or check site structure
 
 2. **Cache Not Working**: Verify Redis configuration
-
    - Check environment variables
    - Test Redis connection
 
 3. **Dynamic Scraping Timeout**: Increase timeout or check site performance
-
    - Adjust `PLAYWRIGHT_TIMEOUT` constant
    - Check site loading speed
 
 4. **Rate Limit Issues**: Check rate limiting configuration
-
    - Verify Redis is working
    - Check rate limit headers in responses
 

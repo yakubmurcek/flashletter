@@ -13,7 +13,7 @@ interface UseEmailGenerationReturn {
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
-    campaignId?: string
+    campaignId?: string,
   ) => Promise<GenerateEmailsResponse | null>
   clearError: () => void
   clearWarning: () => void
@@ -29,7 +29,7 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
-    campaignId?: string
+    campaignId?: string,
   ): Promise<GenerateEmailsResponse | null> => {
     // Abort any existing request
     if (abortControllerRef.current) {
@@ -49,7 +49,7 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
         landingContent,
         config,
         campaignId,
-        abortControllerRef.current.signal
+        abortControllerRef.current.signal,
       )
       setWarning(result.warning ?? null)
       return result

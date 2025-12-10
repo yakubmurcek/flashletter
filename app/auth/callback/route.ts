@@ -14,9 +14,7 @@ export async function GET(request: Request) {
 
   // URL to redirect to after sign in process completes
   const isValidRedirect =
-    redirectToParam &&
-    redirectToParam.startsWith('/') &&
-    !redirectToParam.startsWith('//')
+    redirectToParam && redirectToParam.startsWith('/') && !redirectToParam.startsWith('//')
 
   const fallbackPath = '/campaigns'
   const redirectPath = isValidRedirect ? redirectToParam : fallbackPath

@@ -25,16 +25,17 @@ export default function CampaignsLoading() {
           <div className="flex items-center justify-between mb-8">
             <div>
               <h1 className="text-3xl font-bold mb-2">My Campaigns</h1>
-              <p className="text-muted-foreground">
-                Manage and view all your email campaigns
-              </p>
+              <p className="text-muted-foreground">Manage and view all your email campaigns</p>
             </div>
             <Skeleton className="h-11 w-40" />
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((i) => (
-              <Card key={i} className="flex flex-col">
+              <Card
+                key={i}
+                className="flex flex-col"
+              >
                 <CardHeader>
                   <Skeleton className="h-6 w-3/4 mb-2" />
                   <Skeleton className="h-4 w-full" />

@@ -46,7 +46,10 @@ export function CampaignLayout({
                   <div className="h-6 w-px bg-border" />
                 </>
               ) : null}
-              <Link href="/" className="flex items-center gap-2 group">
+              <Link
+                href="/"
+                className="flex items-center gap-2 group"
+              >
                 <Image
                   src="/icon-192.webp"
                   alt="Flashletter"

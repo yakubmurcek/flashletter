@@ -9,8 +9,7 @@
  */
 export const isValidCampaignId = (id: string): boolean => {
   // UUID v4 format validation
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   return uuidRegex.test(id)
 }
 
@@ -44,11 +43,6 @@ export const isValidUrl = (url: string): boolean => {
  * @param maxLength - Maximum allowed length (default: 1000)
  * @returns true if valid string, false otherwise
  */
-export const isValidString = (
-  str: string,
-  maxLength: number = 1000
-): boolean => {
-  return (
-    typeof str === 'string' && str.trim().length > 0 && str.length <= maxLength
-  )
+export const isValidString = (str: string, maxLength: number = 1000): boolean => {
+  return typeof str === 'string' && str.trim().length > 0 && str.length <= maxLength
 }

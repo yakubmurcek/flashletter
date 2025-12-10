@@ -1,19 +1,14 @@
-import {
-  Zap,
-  Sparkles,
-  Clock,
-  Target,
-  Award,
-  Users,
-  Mail,
-  Link,
-} from 'lucide-react'
+import { Zap, Sparkles, Clock, Target, Award, Users, Mail, Link } from 'lucide-react'
 import { AnimatedSection, GradientText } from '@/components/ui/animations'
 
 export function FeaturesSection() {
   return (
     <AnimatedSection delay={250}>
-      <section id="features" aria-label="Features" className="py-14 md:py-20">
+      <section
+        id="features"
+        aria-label="Features"
+        className="py-14 md:py-20"
+      >
         <div className="max-w-2xl mx-auto text-center mb-10">
           <h2 className="text-3xl md:text-4xl font-bold mb-3">
             <GradientText>Powerful Features</GradientText>
@@ -32,8 +27,8 @@ export function FeaturesSection() {
               Lightning Fast
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Generate complete email campaigns in seconds. No more hours spent
-              writing copy. The AI analyzes your existing website.
+              Generate complete email campaigns in seconds. No more hours spent writing copy. The AI
+              analyzes your existing website.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Clock className="w-4 h-4 mr-2" />
@@ -49,8 +44,8 @@ export function FeaturesSection() {
               Custom AI
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              It knows about converting newsletters and creates contextually
-              relevant emails that perfectly match your brand voice.
+              It knows about converting newsletters and creates contextually relevant emails that
+              perfectly match your brand voice.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Target className="w-4 h-4 mr-2" />
@@ -66,8 +61,8 @@ export function FeaturesSection() {
               Fully Editable
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              Customize every aspect of your emails with an intuitive editor and
-              AI assistant that helps you refine your campaigns even further.
+              Customize every aspect of your emails with an intuitive editor and AI assistant that
+              helps you refine your campaigns even further.
             </p>
             <div className="mt-4 flex items-center text-sm text-primary font-medium">
               <Award className="w-4 h-4 mr-2" />
@@ -86,8 +81,8 @@ export function FeaturesSection() {
               <h3 className="text-lg font-semibold">Platform Integrations</h3>
             </div>
             <p className="text-muted-foreground">
-              Seamlessly export to popular email platforms like Mailchimp,
-              ConvertKit, and more with one-click integration.
+              Seamlessly export to popular email platforms like Mailchimp, ConvertKit, and more with
+              one-click integration.
             </p>
           </div>
 
@@ -99,8 +94,8 @@ export function FeaturesSection() {
               <h3 className="text-lg font-semibold">Team Collaboration</h3>
             </div>
             <p className="text-muted-foreground">
-              Work together seamlessly with real-time collaboration, comments,
-              and approval workflows.
+              Work together seamlessly with real-time collaboration, comments, and approval
+              workflows.
             </p>
           </div>
         </div>

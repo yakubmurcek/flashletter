@@ -8,10 +8,7 @@ interface InteractiveClockProps {
   size?: 'sm' | 'md' | 'lg'
 }
 
-export function InteractiveClock({
-  className = '',
-  size = 'md',
-}: InteractiveClockProps) {
+export function InteractiveClock({ className = '', size = 'md' }: InteractiveClockProps) {
   const [time, setTime] = useState(new Date())
   const [isVisible, setIsVisible] = useState(false)
 
@@ -108,9 +105,7 @@ export function InteractiveClock({
           min-w-[120px] text-center
         `}
       >
-        <div className="text-xs font-mono text-primary font-semibold">
-          {formatTime(time)}
-        </div>
+        <div className="text-xs font-mono text-primary font-semibold">{formatTime(time)}</div>
         <div className="text-xs text-muted-foreground">{formatDate(time)}</div>
 
         {/* Tooltip arrow */}

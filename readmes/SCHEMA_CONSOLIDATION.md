@@ -86,12 +86,7 @@ All types are now generated from Zod schemas, providing:
 
 ```typescript
 // From centralized location
-import {
-  emailSchema,
-  campaignConfigSchema,
-  type Email,
-  type CampaignConfig,
-} from '@/lib'
+import { emailSchema, campaignConfigSchema, type Email, type CampaignConfig } from '@/lib'
 
 // API-specific schemas
 import { generateEmailsRequestSchema } from '@/lib'

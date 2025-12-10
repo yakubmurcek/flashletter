@@ -184,12 +184,10 @@ export function RegionProvider({ children }: { children: ReactNode }) {
       isLoading,
       updateRegion,
     }),
-    [locationInfo, isLoading, updateRegion]
+    [locationInfo, isLoading, updateRegion],
   )
 
-  return (
-    <RegionContext.Provider value={value}>{children}</RegionContext.Provider>
-  )
+  return <RegionContext.Provider value={value}>{children}</RegionContext.Provider>
 }
 
 /**

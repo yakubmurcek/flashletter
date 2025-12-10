@@ -10,10 +10,7 @@ import {
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
-import {
-  retryWithBackoff,
-  extractRateLimitInfo,
-} from '@/lib/utils/openai-retry'
+import { retryWithBackoff, extractRateLimitInfo } from '@/lib/utils/openai-retry'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { buildInstructions } from './prompts'
 
@@ -29,26 +26,22 @@ export async function POST(req: NextRequest) {
     const identifier = user?.id || getClientIp(req)
 
     // Check rate limit
-    const rateLimitResult = await checkRateLimit(
-      generateEmailsRateLimit,
-      identifier
-    )
+    const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
 
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
           error: 'Too many requests',
-          message:
-            'Email generation rate limit exceeded. Please try again later.',
+          message: 'Email generation rate limit exceeded. Please try again later.',
         },
         {
           status: 429,
           headers: getRateLimitHeaders(
             rateLimitResult.limit,
             rateLimitResult.remaining,
-            rateLimitResult.reset
+            rateLimitResult.reset,
           ),
-        }
+        },
       )
     }
 
@@ -72,7 +65,7 @@ export async function POST(req: NextRequest) {
         text: {
           format: zodTextFormat(emailsResponseSchema, 'emails_response'),
         },
-      })
+      }),
     )
 
     const parsed = response.output_parsed
@@ -98,10 +91,7 @@ export async function POST(req: NextRequest) {
       }))
 
       try {
-        const savedEmails = await campaignService.saveEmails(
-          campaignId,
-          emailsToSave
-        )
+        const savedEmails = await campaignService.saveEmails(campaignId, emailsToSave)
         return NextResponse.json(
           {
             emails: savedEmails,
@@ -111,9 +101,9 @@ export async function POST(req: NextRequest) {
             headers: getRateLimitHeaders(
               rateLimitResult.limit,
               rateLimitResult.remaining,
-              rateLimitResult.reset
+              rateLimitResult.reset,
             ),
-          }
+          },
         )
       } catch (saveError) {
         console.error('Failed to save emails to Supabase:', saveError)
@@ -128,9 +118,9 @@ export async function POST(req: NextRequest) {
             headers: getRateLimitHeaders(
               rateLimitResult.limit,
               rateLimitResult.remaining,
-              rateLimitResult.reset
+              rateLimitResult.reset,
             ),
-          }
+          },
         )
       }
     }
@@ -144,9 +134,9 @@ export async function POST(req: NextRequest) {
         headers: getRateLimitHeaders(
           rateLimitResult.limit,
           rateLimitResult.remaining,
-          rateLimitResult.reset
+          rateLimitResult.reset,
         ),
-      }
+      },
     )
   } catch (error) {
     console.error('Generate Emails API Error:', error)
@@ -154,7 +144,7 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request format', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -168,14 +158,11 @@ export async function POST(req: NextRequest) {
             message: 'Too many requests to AI service. Please try again later.',
             rateLimitInfo,
           },
-          { status: 429 }
+          { status: 429 },
         )
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to generate emails' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to generate emails' }, { status: 500 })
   }
 }

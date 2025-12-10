@@ -28,9 +28,7 @@ export interface CacheResult<T> {
  * @param url URL to look up in cache
  * @returns Cached data or null if not found
  */
-export async function getCachedScrapeData(
-  url: string
-): Promise<CacheResult<CachedScrapeData>> {
+export async function getCachedScrapeData(url: string): Promise<CacheResult<CachedScrapeData>> {
   const redis = getRedisClient()
   if (!redis) {
     return { data: null, fromCache: false }
@@ -75,7 +73,7 @@ export async function getCachedScrapeData(
 export async function setCachedScrapeData(
   url: string,
   data: Omit<CachedScrapeData, 'cachedAt' | 'ttl'>,
-  ttl?: number
+  ttl?: number,
 ): Promise<boolean> {
   const cacheKey = CacheKeys.scrape(url)
   const cacheTTL = ttl || SCRAPE_CACHE_TTL
@@ -97,9 +95,7 @@ export async function setCachedScrapeData(
  * @param url URL to invalidate cache for
  * @returns true if invalidated successfully, false otherwise
  */
-export async function invalidateCachedScrapeData(
-  url: string
-): Promise<boolean> {
+export async function invalidateCachedScrapeData(url: string): Promise<boolean> {
   const cacheKey = CacheKeys.scrape(url)
 
   return await withRedisFallback(async (redis) => {

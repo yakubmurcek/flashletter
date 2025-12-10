@@ -126,7 +126,7 @@ const response = await retryWithBackoff(
     initialDelay: 2000, // Start with 2 seconds instead of 1
     maxDelay: 120000, // Max 2 minutes instead of 1
     backoffMultiplier: 3, // 3x instead of 2x
-  }
+  },
 )
 ```
 

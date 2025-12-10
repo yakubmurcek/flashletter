@@ -144,7 +144,6 @@ All API responses include:
    ```
 
 2. **OpenAI Retry**:
-
    - Automatically tested when OpenAI returns 429 or 5xx
    - Check console logs for retry attempts
    - Verify eventual success or final failure
@@ -183,7 +182,6 @@ All API responses include:
 ### Required Steps
 
 1. **Create Upstash Redis Database**:
-
    - Sign up at [upstash.com](https://upstash.com)
    - Create a new Redis database
    - Copy REST URL and Token
@@ -236,22 +234,18 @@ All API responses include:
 ### Potential Improvements
 
 1. **Custom Rate Limits per User Tier**:
-
    - Different limits for free vs. paid users
    - Configurable via database
 
 2. **Rate Limit Analytics**:
-
    - Dashboard to view rate limit usage
    - Alerts for frequent limit hits
 
 3. **Dynamic Rate Limiting**:
-
    - Adjust limits based on system load
    - Burst allowances for trusted users
 
 4. **Advanced Retry Logic**:
-
    - Circuit breaker pattern
    - Fallback to cached responses
 

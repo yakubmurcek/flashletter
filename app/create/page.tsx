@@ -16,8 +16,7 @@ import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 
 export default function CreatePage() {
   const router = useRouter()
-  const { setLandingPageData, createNewCampaign, isLoading, clearAll } =
-    useCampaign()
+  const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -56,14 +55,20 @@ export default function CreatePage() {
   return (
     <CampaignLayout backHref="/">
       <div className="w-full max-w-2xl">
-        <ProgressIndicator currentStep={1} steps={CAMPAIGN_STEPS} />
+        <ProgressIndicator
+          currentStep={1}
+          steps={CAMPAIGN_STEPS}
+        />
 
         <FormCard
           icon={Link2}
           title="Enter your landing page URL"
           description="We'll analyze your landing page to understand your product and create targeted email campaigns."
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             <div className="space-y-2">
               <Label htmlFor="url">Landing Page URL</Label>
               <Input
@@ -75,9 +80,7 @@ export default function CreatePage() {
                 className="h-12 text-base border-border/60 focus:border-primary"
                 required
               />
-              <p className="text-sm text-muted-foreground">
-                Enter the full URL including https://
-              </p>
+              <p className="text-sm text-muted-foreground">Enter the full URL including https://</p>
             </div>
 
             {error && <ErrorMessage message={error} />}

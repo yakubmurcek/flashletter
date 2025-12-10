@@ -16,10 +16,16 @@ interface ToneSelectorProps {
 export function ToneSelector({ value, onChange }: ToneSelectorProps) {
   return (
     <div className="space-y-3">
-      <Label htmlFor="tone" className="text-base font-semibold">
+      <Label
+        htmlFor="tone"
+        className="text-base font-semibold"
+      >
         Campaign Tone
       </Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value}
+        onValueChange={onChange}
+      >
         <SelectTrigger
           id="tone"
           className="h-12 border-border/60 focus:border-primary/50 transition-colors"
@@ -28,7 +34,10 @@ export function ToneSelector({ value, onChange }: ToneSelectorProps) {
         </SelectTrigger>
         <SelectContent>
           {CAMPAIGN_TONES.map((t) => (
-            <SelectItem key={t.value} value={t.value}>
+            <SelectItem
+              key={t.value}
+              value={t.value}
+            >
               {t.label}
             </SelectItem>
           ))}

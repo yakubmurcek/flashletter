@@ -37,15 +37,24 @@ export function CampaignConfigForm({
   const isLoading = isGenerating || isSubmitting
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <ToneSelector value={tone} onChange={onToneChange} />
+    <form
+      onSubmit={onSubmit}
+      className="space-y-8"
+    >
+      <ToneSelector
+        value={tone}
+        onChange={onToneChange}
+      />
 
       <CampaignTypeSelector
         value={campaignType}
         onChange={onCampaignTypeChange}
       />
 
-      <DurationSlider value={days} onChange={onDaysChange} />
+      <DurationSlider
+        value={days}
+        onChange={onDaysChange}
+      />
 
       <ConfigPreviewCard
         tone={tone}

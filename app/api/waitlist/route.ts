@@ -14,14 +14,8 @@ const waitlistSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const {
-      email,
-      name,
-      privacyConsent,
-      marketingConsent,
-      consentTimestamp,
-      userRegion,
-    } = waitlistSchema.parse(body)
+    const { email, name, privacyConsent, marketingConsent, consentTimestamp, userRegion } =
+      waitlistSchema.parse(body)
 
     const supabase = await createClient()
 
@@ -33,10 +27,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingEntry) {
-      return NextResponse.json(
-        { error: 'This email is already on the waitlist!' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'This email is already on the waitlist!' }, { status: 400 })
     }
 
     // Insert new waitlist entry - let Supabase handle order assignment
@@ -66,7 +57,7 @@ export async function POST(request: NextRequest) {
       console.error('Waitlist signup error:', error)
       return NextResponse.json(
         { error: 'Failed to join waitlist. Please try again.' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
@@ -77,21 +68,15 @@ export async function POST(request: NextRequest) {
         order: data.order,
         totalCount: totalCount || 0,
       },
-      { status: 201 }
+      { status: 201 },
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: error.errors[0].message },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
 
     console.error('Waitlist API error:', error)
-    return NextResponse.json(
-      { error: 'Something went wrong. Please try again.' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }
 
@@ -107,10 +92,7 @@ export async function GET() {
 
     if (error) {
       console.error('Waitlist fetch error:', error)
-      return NextResponse.json(
-        { error: 'Failed to fetch waitlist' },
-        { status: 500 }
-      )
+      return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
     }
 
     return NextResponse.json({ waitlist: data })

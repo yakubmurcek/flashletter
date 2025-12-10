@@ -6,10 +6,7 @@ interface MarkdownRendererProps {
   className?: string
 }
 
-export function MarkdownRenderer({
-  content,
-  className,
-}: MarkdownRendererProps) {
+export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
   const renderContent = (text: string) => {
     const lines = text.split('\n')
     const elements: ReactElement[] = []
@@ -20,32 +17,47 @@ export function MarkdownRenderer({
 
       if (line.startsWith('## ')) {
         elements.push(
-          <h3 key={key++} className="font-semibold text-sm mt-3 mb-2">
+          <h3
+            key={key++}
+            className="font-semibold text-sm mt-3 mb-2"
+          >
             {processInlineFormatting(line.substring(3))}
-          </h3>
+          </h3>,
         )
       } else if (line.startsWith('### ')) {
         elements.push(
-          <h4 key={key++} className="font-medium text-sm mt-2 mb-1">
+          <h4
+            key={key++}
+            className="font-medium text-sm mt-2 mb-1"
+          >
             {processInlineFormatting(line.substring(4))}
-          </h4>
+          </h4>,
         )
       } else if (line.match(/^[-*•]\s/)) {
         elements.push(
-          <div key={key++} className="flex gap-2 my-1">
+          <div
+            key={key++}
+            className="flex gap-2 my-1"
+          >
             <span className="text-primary mt-0.5">•</span>
-            <span className="flex-1">
-              {processInlineFormatting(line.substring(2))}
-            </span>
-          </div>
+            <span className="flex-1">{processInlineFormatting(line.substring(2))}</span>
+          </div>,
         )
       } else if (line.trim() === '') {
-        elements.push(<div key={key++} className="h-2" />)
+        elements.push(
+          <div
+            key={key++}
+            className="h-2"
+          />,
+        )
       } else {
         elements.push(
-          <p key={key++} className="my-1">
+          <p
+            key={key++}
+            className="my-1"
+          >
             {processInlineFormatting(line)}
-          </p>
+          </p>,
         )
       }
     }
@@ -76,9 +88,12 @@ export function MarkdownRenderer({
         parts.push(text.substring(currentIndex, pos.start))
       }
       parts.push(
-        <strong key={key++} className="font-semibold">
+        <strong
+          key={key++}
+          className="font-semibold"
+        >
           {pos.content}
-        </strong>
+        </strong>,
       )
       currentIndex = pos.end
     })
@@ -90,9 +105,5 @@ export function MarkdownRenderer({
     return parts.length > 0 ? parts : text
   }
 
-  return (
-    <div className={cn('text-sm leading-relaxed', className)}>
-      {renderContent(content)}
-    </div>
-  )
+  return <div className={cn('text-sm leading-relaxed', className)}>{renderContent(content)}</div>
 }

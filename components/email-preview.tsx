@@ -12,11 +12,7 @@ import type { Email } from '@/lib/types'
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
-  onTextSelected?: (
-    text: string,
-    action: string,
-    meta?: { shouldFocus?: boolean }
-  ) => void
+  onTextSelected?: (text: string, action: string, meta?: { shouldFocus?: boolean }) => void
   showChat?: boolean
 }
 
@@ -28,9 +24,7 @@ function EmailPreviewComponent({
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject)
   const [editedContent, setEditedContent] = useState(email.content)
-  const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
-    'markdown'
-  )
+  const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('markdown')
   const [showEditor, setShowEditor] = useState(false)
   const [selectedText, setSelectedText] = useState<string>('')
   const [popupPosition, setPopupPosition] = useState<{
@@ -72,17 +66,11 @@ function EmailPreviewComponent({
       startOffset: number | null
       endContainer: Node | null
       endOffset: number | null
-    }
+    },
   ) => {
     if (!range) return false
 
-    const {
-      startContainer,
-      startOffset,
-      endContainer,
-      endOffset,
-      text,
-    } = selectionDetails
+    const { startContainer, startOffset, endContainer, endOffset, text } = selectionDetails
 
     if (!lastAutoSelectionRef.current) return false
 
@@ -100,10 +88,7 @@ function EmailPreviewComponent({
     const text = selection?.toString().trim()
 
     if (text && text.length > 0) {
-      const range =
-        selection && selection.rangeCount > 0
-          ? selection.getRangeAt(0)
-          : null
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
       const rect = range?.getBoundingClientRect()
 
       if (rect) {
@@ -138,10 +123,7 @@ function EmailPreviewComponent({
   const handleActionSelected = (action: string, text: string) => {
     if (action === 'Ask AI about this') {
       const selection = window.getSelection()
-      const range =
-        selection && selection.rangeCount > 0
-          ? selection.getRangeAt(0)
-          : null
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
 
       const matchesExisting = selectionsMatch(range, {
         text,
@@ -183,21 +165,12 @@ function EmailPreviewComponent({
       <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.4)]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Day {email.day}
-            </h2>
+            <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
             <p className="text-sm text-muted-foreground/80 truncate">
-              {showEditor
-                ? 'Edit content on the left, see preview on the right'
-                : 'Preview mode'}
+              {showEditor ? 'Edit content on the left, see preview on the right' : 'Preview mode'}
             </p>
           </div>
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              showChat ? 'mr-4' : 'mr-0'
-            )}
-          >
+          <div className={cn('flex items-center gap-2', showChat ? 'mr-4' : 'mr-0')}>
             <Button
               variant="outline"
               size="sm"

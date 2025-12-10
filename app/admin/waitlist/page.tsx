@@ -30,8 +30,7 @@ export default async function WaitlistAdminPage() {
   }
 
   const totalEntries = waitlistEntries?.length || 0
-  const pendingEntries =
-    waitlistEntries?.filter((entry) => entry.status === 'pending').length || 0
+  const pendingEntries = waitlistEntries?.filter((entry) => entry.status === 'pending').length || 0
 
   return (
     <div className="min-h-screen bg-background p-8">
@@ -45,9 +44,7 @@ export default async function WaitlistAdminPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Entries
-              </CardTitle>
+              <CardTitle className="text-sm font-medium">Total Entries</CardTitle>
               <Hash className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -69,9 +66,7 @@ export default async function WaitlistAdminPage() {
               <User className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {totalEntries - pendingEntries}
-              </div>
+              <div className="text-2xl font-bold">{totalEntries - pendingEntries}</div>
             </CardContent>
           </Card>
         </div>
@@ -98,35 +93,25 @@ export default async function WaitlistAdminPage() {
                         {entry.name && (
                           <div className="flex items-center space-x-2 mt-1">
                             <User className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm text-muted-foreground">
-                              {entry.name}
-                            </span>
+                            <span className="text-sm text-muted-foreground">{entry.name}</span>
                           </div>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center space-x-4">
-                      <Badge
-                        variant={
-                          entry.status === 'pending' ? 'secondary' : 'default'
-                        }
-                      >
+                      <Badge variant={entry.status === 'pending' ? 'secondary' : 'default'}>
                         {entry.status}
                       </Badge>
                       <div className="flex items-center space-x-1 text-sm text-muted-foreground">
                         <Calendar className="h-4 w-4" />
-                        <span>
-                          {new Date(entry.created_at).toLocaleDateString()}
-                        </span>
+                        <span>{new Date(entry.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-8 text-muted-foreground">
-                No waitlist entries yet.
-              </div>
+              <div className="text-center py-8 text-muted-foreground">No waitlist entries yet.</div>
             )}
           </CardContent>
         </Card>

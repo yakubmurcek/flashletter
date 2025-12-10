@@ -1,75 +1,73 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-
-<head>
+  <head>
     <title>Debug Version Storage</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <h1>Version Storage Debug Tool</h1>
     <button onclick="showVersions()">Show All Versions</button>
     <button onclick="clearAll()">Clear All</button>
     <pre id="output"></pre>
 
     <script>
-        function showVersions() {
-            const output = document.getElementById('output');
-            let result = '=== ALL STORED VERSIONS ===\n\n';
+      function showVersions() {
+        const output = document.getElementById('output')
+        let result = '=== ALL STORED VERSIONS ===\n\n'
 
-            // Find all version keys in localStorage
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key && key.startsWith('email-versions-')) {
-                    const emailId = key.replace('email-versions-', '');
-                    const data = localStorage.getItem(key);
+        // Find all version keys in localStorage
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i)
+          if (key && key.startsWith('email-versions-')) {
+            const emailId = key.replace('email-versions-', '')
+            const data = localStorage.getItem(key)
 
-                    result += `\nEmail ID: ${emailId}\n`;
-                    result += `Raw data length: ${data ? data.length : 0} bytes\n`;
+            result += `\nEmail ID: ${emailId}\n`
+            result += `Raw data length: ${data ? data.length : 0} bytes\n`
 
-                    try {
-                        const versions = JSON.parse(data);
-                        result += `Number of versions: ${versions.length}\n\n`;
+            try {
+              const versions = JSON.parse(data)
+              result += `Number of versions: ${versions.length}\n\n`
 
-                        versions.forEach((v, idx) => {
-                            result += `  Version ${idx + 1}:\n`;
-                            result += `    ID: ${v.id}\n`;
-                            result += `    Timestamp: ${new Date(v.timestamp).toLocaleString()}\n`;
-                            result += `    Subject: "${v.subject}"\n`;
-                            result += `    Content preview: "${v.content.substring(0, 100)}..."\n`;
-                            result += `    Changes: ${v.changesSummary}\n\n`;
-                        });
-                    } catch (e) {
-                        result += `ERROR parsing: ${e.message}\n`;
-                    }
-                    result += '\n' + '='.repeat(50) + '\n';
-                }
+              versions.forEach((v, idx) => {
+                result += `  Version ${idx + 1}:\n`
+                result += `    ID: ${v.id}\n`
+                result += `    Timestamp: ${new Date(v.timestamp).toLocaleString()}\n`
+                result += `    Subject: "${v.subject}"\n`
+                result += `    Content preview: "${v.content.substring(0, 100)}..."\n`
+                result += `    Changes: ${v.changesSummary}\n\n`
+              })
+            } catch (e) {
+              result += `ERROR parsing: ${e.message}\n`
             }
-
-            if (result === '=== ALL STORED VERSIONS ===\n\n') {
-                result += '\nNo versions found in localStorage.\n';
-            }
-
-            output.textContent = result;
+            result += '\n' + '='.repeat(50) + '\n'
+          }
         }
 
-        function clearAll() {
-            if (confirm('Clear all version history?')) {
-                const keys = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key && key.startsWith('email-versions-')) {
-                        keys.push(key);
-                    }
-                }
-                keys.forEach(key => localStorage.removeItem(key));
-                alert('Cleared ' + keys.length + ' version histories');
-                showVersions();
-            }
+        if (result === '=== ALL STORED VERSIONS ===\n\n') {
+          result += '\nNo versions found in localStorage.\n'
         }
 
-        // Auto-show on load
-        showVersions();
+        output.textContent = result
+      }
+
+      function clearAll() {
+        if (confirm('Clear all version history?')) {
+          const keys = []
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i)
+            if (key && key.startsWith('email-versions-')) {
+              keys.push(key)
+            }
+          }
+          keys.forEach((key) => localStorage.removeItem(key))
+          alert('Cleared ' + keys.length + ' version histories')
+          showVersions()
+        }
+      }
+
+      // Auto-show on load
+      showVersions()
     </script>
-</body>
-
+  </body>
 </html>

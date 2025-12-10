@@ -7,11 +7,7 @@ interface EmailPreviewContentProps {
   onMouseUp?: () => void
 }
 
-function EmailPreviewContentComponent({
-  subject,
-  content,
-  onMouseUp,
-}: EmailPreviewContentProps) {
+function EmailPreviewContentComponent({ subject, content, onMouseUp }: EmailPreviewContentProps) {
   return (
     <div
       className="flex-1 overflow-y-auto rounded-3xl bg-white/[0.03] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]"

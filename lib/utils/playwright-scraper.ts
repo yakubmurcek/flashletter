@@ -1,8 +1,4 @@
-import {
-  chromium as playwrightChromium,
-  type Browser,
-  type Page,
-} from 'playwright-core'
+import { chromium as playwrightChromium, type Browser, type Page } from 'playwright-core'
 import { PLAYWRIGHT_TIMEOUT } from '@/lib/constants/app'
 import { extractTextFromHTML, type ScrapedContent } from './scraper'
 import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
@@ -44,25 +40,23 @@ export async function scrapeWithPlaywright(
     waitFor?: 'load' | 'domcontentloaded' | 'networkidle'
     userAgent?: string
     viewport?: { width: number; height: number }
-  } = {}
+  } = {},
 ): Promise<PlaywrightScrapeResult> {
   // Check if Playwright should be enabled in development
   // Set ENABLE_PLAYWRIGHT_DEV=false in .env.local to disable for testing
   const isDevMode = process.env.NODE_ENV === 'development'
-  const isPlaywrightDisabledInDev =
-    process.env.ENABLE_PLAYWRIGHT_DEV === 'false'
+  const isPlaywrightDisabledInDev = process.env.ENABLE_PLAYWRIGHT_DEV === 'false'
 
   if (isDevMode && isPlaywrightDisabledInDev) {
     throw new Error(
-      'Playwright is disabled in development mode. Remove ENABLE_PLAYWRIGHT_DEV=false from .env.local to enable it.'
+      'Playwright is disabled in development mode. Remove ENABLE_PLAYWRIGHT_DEV=false from .env.local to enable it.',
     )
   }
 
   const startTime = Date.now()
   const timeout = options.timeout || PLAYWRIGHT_TIMEOUT
   const waitFor = options.waitFor || 'networkidle'
-  const userAgent =
-    options.userAgent || 'Mozilla/5.0 (compatible; NewsletterGenerator/1.0)'
+  const userAgent = options.userAgent || 'Mozilla/5.0 (compatible; NewsletterGenerator/1.0)'
   const viewport = options.viewport || { width: 1280, height: 720 }
 
   let browser: Browser | null = null
@@ -74,10 +68,7 @@ export async function scrapeWithPlaywright(
       headless: true,
     }
 
-    if (
-      chromium &&
-      (process.env.NODE_ENV === 'production' || process.env.VERCEL)
-    ) {
+    if (chromium && (process.env.NODE_ENV === 'production' || process.env.VERCEL)) {
       // Production/serverless environment - use @sparticuz/chromium
       const browserArgs = [
         ...chromium.args,
@@ -99,10 +90,7 @@ export async function scrapeWithPlaywright(
       try {
         launchOptions.executablePath = await chromium.executablePath()
       } catch (error) {
-        console.warn(
-          'Failed to get Chromium executable path, using system browser:',
-          error
-        )
+        console.warn('Failed to get Chromium executable path, using system browser:', error)
       }
     } else {
       // Development environment - use system Playwright browser
@@ -135,9 +123,7 @@ export async function scrapeWithPlaywright(
     })
 
     if (!response || !response.ok()) {
-      throw new Error(
-        `Failed to load page: ${response?.status()} ${response?.statusText()}`
-      )
+      throw new Error(`Failed to load page: ${response?.status()} ${response?.statusText()}`)
     }
 
     // Wait for additional content to load
@@ -168,9 +154,7 @@ export async function scrapeWithPlaywright(
   } catch (error) {
     console.error('Playwright scraping failed:', error)
     throw new Error(
-      `Dynamic scraping failed: ${
-        error instanceof Error ? error.message : 'Unknown error'
-      }`
+      `Dynamic scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     )
   } finally {
     // Clean up resources
@@ -218,10 +202,7 @@ async function waitForContent(page: Page): Promise<void> {
  * @param initialHtml Initial HTML from static fetch
  * @returns true if dynamic scraping is recommended
  */
-export function shouldUseDynamicScraping(
-  url: string,
-  initialHtml: string
-): boolean {
+export function shouldUseDynamicScraping(url: string, initialHtml: string): boolean {
   // Check for common indicators that suggest dynamic content
   const dynamicIndicators = [
     // Framework indicators
@@ -249,9 +230,7 @@ export function shouldUseDynamicScraping(
 
   // Check if HTML is mostly empty or contains loading indicators
   const hasMinimalContent = initialHtml.length < 1000
-  const hasDynamicIndicators = dynamicIndicators.some((pattern) =>
-    pattern.test(initialHtml)
-  )
+  const hasDynamicIndicators = dynamicIndicators.some((pattern) => pattern.test(initialHtml))
 
   // Check for specific domains that commonly use SPAs
   const spaDomains = [
@@ -283,7 +262,7 @@ export async function scrapeWithFallback(
     forceDynamic?: boolean
     timeout?: number
     waitFor?: 'load' | 'domcontentloaded' | 'networkidle'
-  } = {}
+  } = {},
 ): Promise<PlaywrightScrapeResult> {
   const { forceDynamic = false, ...playwrightOptions } = options
 
@@ -294,9 +273,7 @@ export async function scrapeWithFallback(
 
   // Check if dynamic scraping is recommended
   if (shouldUseDynamicScraping(url, staticHtml)) {
-    console.log(
-      `Using dynamic scraping for ${url} (detected SPA or minimal content)`
-    )
+    console.log(`Using dynamic scraping for ${url} (detected SPA or minimal content)`)
     return await scrapeWithPlaywright(url, playwrightOptions)
   }
 
@@ -321,10 +298,7 @@ export async function getBrowserInfo(): Promise<{
       headless: true,
     }
 
-    if (
-      chromium &&
-      (process.env.NODE_ENV === 'production' || process.env.VERCEL)
-    ) {
+    if (chromium && (process.env.NODE_ENV === 'production' || process.env.VERCEL)) {
       launchOptions.args = chromium.args
       try {
         launchOptions.executablePath = await chromium.executablePath()
