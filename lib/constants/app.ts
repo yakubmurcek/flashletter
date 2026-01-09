@@ -15,7 +15,7 @@ export const MAX_CACHE_ENTRIES = 1000 // Maximum number of cache entries
 // Feature flags configuration
 export const FEATURE_FLAGS = {
   // Landing page variant - single flag to control the main experience
-  SHOW_FULL_PRODUCT: process.env.NEXT_PUBLIC_SHOW_FULL_PRODUCT === 'true', // true = full product, false = waitlist
+  SHOW_FULL_PRODUCT: true, // true = full product, false = waitlist
   IS_LAUNCHED: true, // app launch status
 
   // Beta features

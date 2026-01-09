@@ -1,4 +1,5 @@
-import { Zap, Sparkles, Clock, Target, Award, Users, Mail, Link } from 'lucide-react'
+import { Sparkles, Users, Link } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 import { AnimatedSection, GradientText } from '@/components/ui/animations'
 
 export function FeaturesSection() {
@@ -20,23 +21,6 @@ export function FeaturesSection() {
 
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
           <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Zap className="w-8 h-8 text-primary" />
-            </div>
-            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-              Lightning Fast
-            </h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Generate complete email campaigns in seconds. No more hours spent writing copy. The AI
-              analyzes your existing website.
-            </p>
-            <div className="mt-4 flex items-center text-sm text-primary font-medium">
-              <Clock className="w-4 h-4 mr-2" />
-              <span>30 seconds average</span>
-            </div>
-          </div>
-
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="w-16 h-16 bg-gradient-to-br from-amber-400/10 to-amber-400/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
               <Sparkles className="w-8 h-8 text-amber-500" />
             </div>
@@ -44,58 +28,47 @@ export function FeaturesSection() {
               Custom AI
             </h3>
             <p className="text-muted-foreground leading-relaxed">
-              It knows about converting newsletters and creates contextually relevant emails that
-              perfectly match your brand voice.
+              Writes your launch sequence so you only tweak and send.
             </p>
-            <div className="mt-4 flex items-center text-sm text-primary font-medium">
-              <Target className="w-4 h-4 mr-2" />
-              <span>95% accuracy rate</span>
-            </div>
           </div>
 
           <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-orange-300/10 to-orange-300/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Mail className="w-8 h-8 text-orange-400" />
+            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Link className="w-8 h-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-              Fully Editable
-            </h3>
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
+                Integrations
+              </h3>
+              <Badge
+                variant="secondary"
+                className="text-xs"
+              >
+                Coming Soon
+              </Badge>
+            </div>
             <p className="text-muted-foreground leading-relaxed">
-              Customize every aspect of your emails with an intuitive editor and AI assistant that
-              helps you refine your campaigns even further.
-            </p>
-            <div className="mt-4 flex items-center text-sm text-primary font-medium">
-              <Award className="w-4 h-4 mr-2" />
-              <span>Full control</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Additional features grid */}
-        <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
-          <div className="group bg-gradient-to-br from-primary/5 to-amber-400/5 border border-primary/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Link className="w-6 h-6 text-primary" />
-              </div>
-              <h3 className="text-lg font-semibold">Platform Integrations</h3>
-            </div>
-            <p className="text-muted-foreground">
-              Seamlessly export to popular email platforms like Mailchimp, ConvertKit, and more with
-              one-click integration.
+              Seamlessly export to popular email platforms like Mailchimp and ConvertKit.
             </p>
           </div>
 
-          <div className="group bg-gradient-to-br from-yellow-500/5 to-amber-500/5 border border-yellow-500/20 rounded-xl p-8 hover:shadow-xl transition-all duration-500 hover:-translate-y-1">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-12 h-12 bg-blue-500/10 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <Users className="w-6 h-6 text-blue-500" />
-              </div>
-              <h3 className="text-lg font-semibold">Team Collaboration</h3>
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+              <Users className="w-8 h-8 text-blue-500" />
             </div>
-            <p className="text-muted-foreground">
-              Work together seamlessly with real-time collaboration, comments, and approval
-              workflows.
+            <div className="flex items-center gap-2 mb-3">
+              <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
+                Team Collab
+              </h3>
+              <Badge
+                variant="secondary"
+                className="text-xs"
+              >
+                Coming Soon
+              </Badge>
+            </div>
+            <p className="text-muted-foreground leading-relaxed">
+              Work together seamlessly with real-time collaboration workflows.
             </p>
           </div>
         </div>

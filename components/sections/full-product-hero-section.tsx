@@ -36,7 +36,9 @@ export function FullProductHeroSection() {
       >
         <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8">
           <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">AI-Powered Email Campaigns</span>
+          <span className="text-sm font-medium text-primary">
+            For founders who hate writing from scratch
+          </span>
         </div>
       </AnimatedSection>
 
@@ -45,8 +47,10 @@ export function FullProductHeroSection() {
         immediate
       >
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.2]">
-          Transform your landing page into{' '}
-          <GradientText className="cursor-behind">converting email campaigns</GradientText>
+          Turn your landing page into a{' '}
+          <GradientText className="cursor-behind">
+            full newsletter campaign in 30 seconds
+          </GradientText>
         </h1>
       </AnimatedSection>
 
@@ -55,8 +59,7 @@ export function FullProductHeroSection() {
         immediate
       >
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-          Flashletter analyzes your existing content and creates personalized email sequences that
-          convert visitors into customers. No more starting from scratch.
+          Stop staring at a blank editor. Start from a ready‑to‑send sequence you just tweak.
         </p>
       </AnimatedSection>
 

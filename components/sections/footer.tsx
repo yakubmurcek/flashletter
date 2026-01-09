@@ -21,7 +21,7 @@ export function Footer() {
             <div>
               <span className="text-xl font-semibold">Flashletter</span>
               <p className="text-sm text-muted-foreground">
-                Lighting-fast AI powered email campaigns
+                Turn your landing page into a newsletter campaign
               </p>
             </div>
           </div>
