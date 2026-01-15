@@ -5,7 +5,7 @@
 
 :root {
   /* Vibrant newsletter palette (orange to yellow gradient) */
-  --background: oklch(0.99 0.008 85);
+  --background: rgb(255 255 255);
   --foreground: oklch(0.22 0.03 60);
   --card: oklch(0.985 0.008 85);
   --card-foreground: var(--foreground);
