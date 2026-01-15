@@ -99,7 +99,7 @@ export function InteractiveClock({ className = '', size = 'md' }: InteractiveClo
           px-3 py-2
           shadow-lg
           opacity-0 group-hover:opacity-100
-          transition-all duration-300
+          transition duration-300
           pointer-events-none
           z-10
           min-w-[120px] text-center

@@ -66,7 +66,7 @@ export function Header() {
             <a
               key={item.href}
               href={item.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               {item.label}
             </a>
@@ -79,7 +79,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="hover:scale-105 transition-transform"
+                className="hover:scale-105 transition"
               >
                 <Link href="/campaigns">My Campaigns</Link>
               </Button>
@@ -92,7 +92,7 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 transition"
                 >
                   <Link href="/login">Sign In</Link>
                 </Button>
@@ -101,7 +101,7 @@ export function Header() {
                 <Button
                   size="sm"
                   asChild
-                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
                 >
                   {LANDING_PAGE_CONFIG.showProductFeatures ? (
                     <Link href="/signup">Get Started</Link>

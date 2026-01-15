@@ -21,7 +21,7 @@ export function PricingSection() {
         </div>
 
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-semibold mb-2">Free</h3>
               <p className="text-muted-foreground text-sm mb-4">Perfect for trying things out</p>
@@ -47,7 +47,7 @@ export function PricingSection() {
             </ul>
             <Button
               variant="outline"
-              className="mt-auto group-hover:border-primary group-hover:text-primary transition-all"
+              className="mt-auto group-hover:border-primary group-hover:text-primary transition"
               asChild
             >
               <Link href="/signup">Get Started Free</Link>
@@ -103,7 +103,7 @@ export function PricingSection() {
             </PulseButton>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="text-center mb-6">
               <h3 className="text-2xl font-semibold mb-2">Team</h3>
               <p className="text-muted-foreground text-sm mb-4">Collaboration at scale</p>
@@ -137,7 +137,7 @@ export function PricingSection() {
             </ul>
             <Button
               variant="outline"
-              className="mt-auto group-hover:border-primary group-hover:text-primary transition-all"
+              className="mt-auto group-hover:border-primary group-hover:text-primary transition"
               asChild
             >
               <Link href="/signup">Contact Sales</Link>

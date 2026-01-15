@@ -33,7 +33,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
           )}
           <Card
             className={cn(
-              'px-3 py-2 max-w-[85%] min-w-[120px] transition-all',
+              'px-3 py-2 max-w-[85%] min-w-[120px] transition-colors',
               message.role === 'user'
                 ? 'bg-gradient-to-r from-orange-400 to-amber-300/70 text-white border-0 shadow-sm'
                 : message.appliedEdit

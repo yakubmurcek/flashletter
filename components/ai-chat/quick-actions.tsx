@@ -22,7 +22,7 @@ function QuickActionsBase({ actions, onSelect, isVisible }: AIChatQuickActionsPr
             variant="outline"
             size="sm"
             onClick={() => onSelect(action)}
-            className="text-xs bg-primary/5 border-primary/20 hover:border-primary/50 hover:bg-primary/10 transition-all duration-200"
+            className="text-xs bg-primary/5 border-primary/20 hover:border-primary/50 hover:bg-primary/10 transition duration-200"
           >
             {action}
           </Button>

@@ -28,14 +28,14 @@ export function Footer() {
           <nav className="flex flex-wrap items-center gap-6 text-sm">
             <a
               href="#features"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               Features
             </a>
             {LANDING_PAGE_CONFIG.showProductFeatures && (
               <a
                 href="#testimonials"
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+                className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               >
                 Testimonials
               </a>
@@ -43,14 +43,14 @@ export function Footer() {
             {LANDING_PAGE_CONFIG.showProductFeatures && (
               <a
                 href="#pricing"
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+                className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               >
                 Pricing
               </a>
             )}
             <a
               href="#faq"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               FAQ
             </a>
@@ -59,7 +59,7 @@ export function Footer() {
               <Button
                 size="sm"
                 asChild
-                className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
+                className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
               >
                 {LANDING_PAGE_CONFIG.showProductFeatures ? (
                   <Link href="/signup">Start Free Trial</Link>
@@ -79,7 +79,7 @@ export function Footer() {
           </div>
           <div className="flex items-center gap-6">
             <a
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition duration-300 hover:scale-105"
               href="https://x.com/ykbmck"
               target="_blank"
               rel="noopener noreferrer"
@@ -94,19 +94,19 @@ export function Footer() {
               Follow @ykbmck
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/privacy"
             >
               Privacy Policy
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/terms"
             >
               Terms of Service
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/unsubscribe"
             >
               Unsubscribe

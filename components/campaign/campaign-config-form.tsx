@@ -69,7 +69,7 @@ export function CampaignConfigForm({
         type="submit"
         size="lg"
         disabled={isLoading}
-        className="w-full gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 shadow-md hover:shadow-lg transition-transform duration-300"
       >
         {isLoading ? (
           <>

@@ -248,7 +248,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="submit"
         disabled={loading || oauthLoading || needsConsentConfirmation}
-        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
       >
         {loading ? (
           <>

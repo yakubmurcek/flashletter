@@ -19,7 +19,7 @@ export function TestimonialsSection() {
         </div>
 
         <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -50,7 +50,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -82,7 +82,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition-all duration-500 hover:-translate-y-2 hover:border-primary/20">
+          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -117,7 +117,7 @@ export function TestimonialsSection() {
 
         {/* Additional testimonial row */}
         <div className="max-w-5xl mx-auto grid md:grid-cols-2 gap-8 mt-10">
-          <div className="group bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 hover:shadow-xl hover:shadow-primary/10 transition-all duration-500 hover:-translate-y-1">
+          <div className="group bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 rounded-xl p-8 hover:shadow-xl hover:shadow-primary/10 transition duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star
@@ -149,7 +149,7 @@ export function TestimonialsSection() {
             </div>
           </div>
 
-          <div className="group bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-8 hover:shadow-xl hover:shadow-yellow-500/10 transition-all duration-500 hover:-translate-y-1">
+          <div className="group bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-8 hover:shadow-xl hover:shadow-yellow-500/10 transition duration-500 hover:-translate-y-1">
             <div className="flex items-center gap-1 mb-6">
               {[...Array(5)].map((_, i) => (
                 <Star

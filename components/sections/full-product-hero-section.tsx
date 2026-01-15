@@ -71,7 +71,7 @@ export function FullProductHeroSection() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           <Button
             size="lg"
-            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-all duration-300"
+            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-transform duration-300"
             asChild
           >
             <Link

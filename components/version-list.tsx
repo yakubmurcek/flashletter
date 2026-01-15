@@ -97,7 +97,7 @@ export function VersionList({
           <Card
             key={version.id}
             className={cn(
-              'p-4 cursor-pointer transition-all hover:shadow-md border-2',
+              'p-4 cursor-pointer transition hover:shadow-md border-2',
               isSelected ? 'border-primary bg-primary/5' : 'border-transparent hover:border-border',
             )}
             onClick={() => onSelectVersion(version.id)}

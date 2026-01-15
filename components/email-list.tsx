@@ -27,7 +27,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
-            'group w-full text-left p-4 rounded-2xl transition-all duration-300 cursor-pointer',
+            'group w-full text-left p-4 rounded-2xl transition duration-300 cursor-pointer',
             'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
             'ring-1 ring-transparent hover:ring-primary/20',
             selectedId === email.id
@@ -38,7 +38,7 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition-all',
+                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition',
                 selectedId === email.id
                   ? 'bg-primary text-primary-foreground font-semibold shadow-lg'
                   : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15',

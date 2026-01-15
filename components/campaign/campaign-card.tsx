@@ -67,7 +67,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col group border-border/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/8 transition-all duration-300 hover:-translate-y-1">
+      <Card className="flex flex-col group border-border/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/8 transition duration-300 hover:-translate-y-1">
         <CardHeader>
           <CardTitle className="line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {campaign.name || 'Untitled Campaign'}
