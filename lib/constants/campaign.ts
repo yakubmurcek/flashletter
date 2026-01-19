@@ -1,24 +1,33 @@
+import playbookData from '@/playbook/newsletter_playbook.json'
+
+interface PlaybookItem {
+  id: string
+  label: string
+  description: string
+}
+
+interface NewsletterPlaybook {
+  tones: PlaybookItem[]
+  purposes: PlaybookItem[]
+}
+
+const playbook = playbookData as NewsletterPlaybook
+
 export const CAMPAIGN_STEPS = [
   { number: 1, label: 'URL Input' },
   { number: 2, label: 'Configuration' },
   { number: 3, label: 'Generate' },
 ]
 
-export const CAMPAIGN_TONES = [
-  { value: 'professional', label: 'Professional' },
-  { value: 'friendly', label: 'Friendly' },
-  { value: 'casual', label: 'Casual' },
-  { value: 'formal', label: 'Formal' },
-  { value: 'enthusiastic', label: 'Enthusiastic' },
-]
+export const CAMPAIGN_TONES = playbook.tones.map((t) => ({
+  value: t.id,
+  label: t.label,
+}))
 
-export const CAMPAIGN_TYPES = [
-  { value: 'nurture', label: 'Nurture Campaign' },
-  { value: 'onboarding', label: 'Onboarding Series' },
-  { value: 'promotional', label: 'Promotional' },
-  { value: 'educational', label: 'Educational' },
-  { value: 're-engagement', label: 'Re-engagement' },
-]
+export const CAMPAIGN_TYPES = playbook.purposes.map((p) => ({
+  value: p.id,
+  label: p.label,
+}))
 
 export const CAMPAIGN_DURATION = {
   MIN: 3,

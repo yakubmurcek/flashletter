@@ -19,19 +19,49 @@
 **ID:** `professional`
 **Description:** Formal, authoritative, and polished.
 
+### Friendly
+
+**ID:** `friendly`
+**Description:** Warm, approachable, and welcoming.
+
 ### Casual
 
 **ID:** `casual`
 **Description:** Friendly, relaxed, and conversational.
 
+### Formal
+
+**ID:** `formal`
+**Description:** Strictly business, precise, and serious.
+
+### Enthusiastic
+
+**ID:** `enthusiastic`
+**Description:** Energetic, excited, and motivating.
+
 ## Purposes
 
-### Education
+### Nurture
 
-**ID:** `education`
+**ID:** `nurture`
+**Description:** To build a relationship and trust over time.
+
+### Onboarding
+
+**ID:** `onboarding`
+**Description:** To help new users get started/successful.
+
+### Promotional
+
+**ID:** `promotional`
+**Description:** To drive sales or sign-ups.
+
+### Educational
+
+**ID:** `educational`
 **Description:** To teach the audience something new.
 
-### Promotion
+### Re-engagement
 
-**ID:** `promotion`
-**Description:** To drive sales or sign-ups.
+**ID:** `re-engagement`
+**Description:** To win back inactive users.

@@ -20,21 +20,51 @@
       "description": "Formal, authoritative, and polished."
     },
     {
+      "id": "friendly",
+      "label": "Friendly",
+      "description": "Warm, approachable, and welcoming."
+    },
+    {
       "id": "casual",
       "label": "Casual",
       "description": "Friendly, relaxed, and conversational."
+    },
+    {
+      "id": "formal",
+      "label": "Formal",
+      "description": "Strictly business, precise, and serious."
+    },
+    {
+      "id": "enthusiastic",
+      "label": "Enthusiastic",
+      "description": "Energetic, excited, and motivating."
     }
   ],
   "purposes": [
     {
-      "id": "education",
-      "label": "Education",
+      "id": "nurture",
+      "label": "Nurture Campaign",
+      "description": "To build a relationship and trust over time."
+    },
+    {
+      "id": "onboarding",
+      "label": "Onboarding Series",
+      "description": "To help new users get started/successful."
+    },
+    {
+      "id": "promotional",
+      "label": "Promotional",
+      "description": "To drive sales or sign-ups."
+    },
+    {
+      "id": "educational",
+      "label": "Educational",
       "description": "To teach the audience something new."
     },
     {
-      "id": "promotion",
-      "label": "Promotion",
-      "description": "To drive sales or sign-ups."
+      "id": "re-engagement",
+      "label": "Re-engagement",
+      "description": "To win back inactive users."
     }
   ]
 }
