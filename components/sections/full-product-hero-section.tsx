@@ -1,20 +1,27 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { ArrowRight, Play, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { AnimatedSection, GradientText, FloatingElement } from '@/components/ui/animations'
 import { createClient, signInAnonymously } from '@/lib/supabase/client'
+import { useLandingPage } from '@/lib/hooks/use-landing-page'
+import { useCampaign } from '@/lib/campaign-context'
 
-function TryFreeButton() {
+function HeroUrlForm() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
+  const [url, setUrl] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
+  const { analyzeLandingPage, isAnalyzing, error: analyzeError } = useLandingPage()
+  const { setLandingPageData, createNewCampaign, clearAll } = useCampaign()
+
   useEffect(() => {
-    // Check if user is already authenticated
     async function checkAuth() {
       const supabase = createClient()
       const {
@@ -25,43 +32,97 @@ function TryFreeButton() {
     checkAuth()
   }, [])
 
-  const handleTryFree = async () => {
-    // If already authenticated, just redirect
-    if (isAuthenticated) {
-      router.push('/create')
-      return
+  // Clear campaign context when form mounts (fresh start)
+  useEffect(() => {
+    clearAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault()
+    const trimmedUrl = url.trim()
+    if (!trimmedUrl) return
+
+    // Normalize URL: add https:// if missing
+    let finalUrl = trimmedUrl
+    if (!/^https?:\/\//i.test(finalUrl)) {
+      finalUrl = `https://${finalUrl}`
     }
 
-    setLoading(true)
+    setIsSubmitting(true)
+    setError(null)
+
     try {
-      await signInAnonymously()
-      router.push('/create')
-    } catch (error) {
-      console.error('Failed to sign in anonymously:', error)
-      // Fallback to regular signup flow
-      router.push('/signup?redirectTo=/create')
+      // Step 1: Ensure user is authenticated (anonymously if needed)
+      if (!isAuthenticated) {
+        await signInAnonymously()
+        setIsAuthenticated(true)
+      }
+
+      // Step 2: Analyze the landing page
+      const data = await analyzeLandingPage(finalUrl)
+      if (!data) {
+        // Error is set by useLandingPage hook
+        setIsSubmitting(false)
+        return
+      }
+
+      // Step 3: Set landing page data and create campaign
+      setLandingPageData(data)
+      const campaignId = await createNewCampaign(data)
+
+      // Step 4: Navigate to configure page
+      router.push(`/create/configure?campaign=${campaignId}`)
+    } catch (err) {
+      console.error('Failed to start campaign:', err)
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
+      setIsSubmitting(false)
     }
   }
 
+  const isLoading = isSubmitting || isAnalyzing
+  const displayError = error || analyzeError
+
   return (
-    <Button
-      size="lg"
-      onClick={handleTryFree}
-      disabled={loading || isAuthenticated === null}
-      className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-transform duration-300"
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-xl mx-auto"
     >
-      {loading ? (
-        <>
-          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-          Starting...
-        </>
-      ) : (
-        <>
-          Try Free — No Sign Up
-          <ArrowRight className="w-5 h-5 ml-2" />
-        </>
-      )}
-    </Button>
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <Input
+          type="text"
+          placeholder="https://your-landing-page.com"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          className="h-12 text-base flex-1 border-border/60 focus:border-primary bg-background/80 backdrop-blur-sm"
+          required
+          autoFocus
+          disabled={isLoading}
+        />
+        <Button
+          type="submit"
+          size="lg"
+          disabled={isLoading || isAuthenticated === null}
+          className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-6 h-12 text-base font-semibold transition-transform duration-300 whitespace-nowrap"
+        >
+          {isLoading ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Analyzing...
+            </>
+          ) : (
+            <>
+              Generate My Campaign
+              <ArrowRight className="w-5 h-5 ml-2" />
+            </>
+          )}
+        </Button>
+      </div>
+      {displayError && <p className="text-sm text-destructive mt-2 text-center">{displayError}</p>}
+      <p className="text-sm text-muted-foreground mt-3 text-center">
+        No sign up required — try it free
+      </p>
+    </form>
   )
 }
 
@@ -123,14 +184,15 @@ export function FullProductHeroSection() {
         </p>
       </AnimatedSection>
 
-      {/* CTA Buttons */}
+      {/* URL Input Form */}
       <AnimatedSection
         delay={750}
         immediate
       >
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-          <TryFreeButton />
-
+        <div className="mb-8">
+          <HeroUrlForm />
+        </div>
+        <div className="flex justify-center">
           <Button
             variant="outline"
             size="lg"
