@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
@@ -36,6 +37,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Unsubscribe error:', error)
+
+      // Report to Sentry
+      Sentry.captureException(error, {
+        tags: { api_route: '/api/waitlist/unsubscribe' },
+      })
+
       return NextResponse.json(
         { error: 'Failed to unsubscribe. Please try again.' },
         { status: 500 },
@@ -57,6 +64,12 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Unsubscribe API error:', error)
+
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/waitlist/unsubscribe' },
+    })
+
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
   }
 }

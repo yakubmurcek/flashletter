@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
@@ -85,6 +86,17 @@ export async function POST(req: NextRequest) {
     if (error && typeof error === 'object' && 'status' in error) {
       if (error.status === 429) {
         const rateLimitInfo = extractRateLimitInfo(error)
+
+        // Report to Sentry as warning (expected but needs visibility)
+        Sentry.captureException(error, {
+          level: 'warning',
+          tags: {
+            error_type: 'openai_rate_limit',
+            api_route: '/api/chat',
+          },
+          extra: { rateLimitInfo },
+        })
+
         return NextResponse.json(
           {
             error: 'OpenAI rate limit exceeded',

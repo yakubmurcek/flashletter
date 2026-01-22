@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
@@ -226,6 +227,11 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('Scrape Landing API Error:', error)
+
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/scrape-landing' },
+    })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(
