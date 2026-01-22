@@ -18,3 +18,18 @@ export function createClient() {
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey)
 }
+
+/**
+ * Sign in anonymously - creates a temporary user session.
+ * The user can later link their account to Google to preserve their data.
+ */
+export async function signInAnonymously() {
+  const supabase = createClient()
+  const { data, error } = await supabase.auth.signInAnonymously()
+
+  if (error) {
+    throw error
+  }
+
+  return data
+}

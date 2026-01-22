@@ -1,9 +1,69 @@
 'use client'
 
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { ArrowRight, Play, Sparkles } from 'lucide-react'
+import { ArrowRight, Play, Sparkles, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { AnimatedSection, GradientText, FloatingElement } from '@/components/ui/animations'
+import { createClient, signInAnonymously } from '@/lib/supabase/client'
+
+function TryFreeButton() {
+  const router = useRouter()
+  const [loading, setLoading] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    // Check if user is already authenticated
+    async function checkAuth() {
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setIsAuthenticated(!!user)
+    }
+    checkAuth()
+  }, [])
+
+  const handleTryFree = async () => {
+    // If already authenticated, just redirect
+    if (isAuthenticated) {
+      router.push('/create')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await signInAnonymously()
+      router.push('/create')
+    } catch (error) {
+      console.error('Failed to sign in anonymously:', error)
+      // Fallback to regular signup flow
+      router.push('/signup?redirectTo=/create')
+    }
+  }
+
+  return (
+    <Button
+      size="lg"
+      onClick={handleTryFree}
+      disabled={loading || isAuthenticated === null}
+      className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-transform duration-300"
+    >
+      {loading ? (
+        <>
+          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+          Starting...
+        </>
+      ) : (
+        <>
+          Try Free — No Sign Up
+          <ArrowRight className="w-5 h-5 ml-2" />
+        </>
+      )}
+    </Button>
+  )
+}
 
 export function FullProductHeroSection() {
   return (
@@ -69,19 +129,7 @@ export function FullProductHeroSection() {
         immediate
       >
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-          <Button
-            size="lg"
-            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-8 py-3 text-lg font-semibold transition-transform duration-300"
-            asChild
-          >
-            <Link
-              href="/create"
-              className="flex items-center gap-2"
-            >
-              Start Creating Campaigns
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-          </Button>
+          <TryFreeButton />
 
           <Button
             variant="outline"

@@ -13,11 +13,14 @@ import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { ErrorMessage } from '@/components/campaign/error-message'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
+import { useAnonymousLimit } from '@/lib/hooks/use-anonymous-limit'
+import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 
 export default function CreatePage() {
   const router = useRouter()
   const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
   const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
+  const { isLoading: isCheckingLimit, isAnonymous, canCreate, campaignCount } = useAnonymousLimit()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -48,8 +51,18 @@ export default function CreatePage() {
     }
   }
 
-  if (isLoading) {
+  // Show loading while checking anonymous limit
+  if (isLoading || isCheckingLimit) {
     return null
+  }
+
+  // Show upgrade prompt if anonymous user has hit their limit
+  if (isAnonymous && !canCreate) {
+    return (
+      <CampaignLayout backHref="/">
+        <UpgradePrompt campaignCount={campaignCount} />
+      </CampaignLayout>
+    )
   }
 
   return (
