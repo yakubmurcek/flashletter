@@ -8,7 +8,7 @@ export const EMAIL_SAVE_DEBOUNCE_MS = 1000
 
 // Scraping constants
 export const SCRAPE_CACHE_TTL = 60 * 60 * 24 // 24 hours in seconds
-export const PLAYWRIGHT_TIMEOUT = 10000 // 10 seconds in milliseconds
+export const PLAYWRIGHT_TIMEOUT = 15000 // 15 seconds in milliseconds
 export const MIN_CONTENT_LENGTH = 50 // Minimum words to consider content meaningful
 export const MAX_CACHE_ENTRIES = 1000 // Maximum number of cache entries
 
