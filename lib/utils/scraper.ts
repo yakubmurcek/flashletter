@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { AnyNode } from 'domhandler'
 import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 /**
@@ -37,7 +38,7 @@ export function extractTextFromHTML(html: string): ScrapedContent {
     '.section',
   ]
 
-  let mainElement: cheerio.Cheerio<any> | null = null
+  let mainElement: cheerio.Cheerio<AnyNode> | null = null
   let structuredHtml = ''
 
   for (const selector of contentSelectors) {
@@ -120,7 +121,7 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   })
 }
 
-function buildStructuredHtml(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI): string {
+function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {
   const parts: string[] = []
 
   element.contents().each((_, node) => {
@@ -187,7 +188,11 @@ function buildStructuredHtml(element: cheerio.Cheerio<any>, $: cheerio.CheerioAP
   return parts.join('\n').replace(/\n{3,}/g, '\n\n')
 }
 
-function buildList(element: cheerio.Cheerio<any>, listTag: string, $: cheerio.CheerioAPI): string {
+function buildList(
+  element: cheerio.Cheerio<AnyNode>,
+  listTag: string,
+  $: cheerio.CheerioAPI,
+): string {
   const items: string[] = []
 
   element.children('li').each((_, li) => {
@@ -230,7 +235,7 @@ function buildList(element: cheerio.Cheerio<any>, listTag: string, $: cheerio.Ch
   return `<${listTag}>\n${items.join('\n')}\n</${listTag}>`
 }
 
-function sanitizeInlineContent(element: cheerio.Cheerio<any>, $: cheerio.CheerioAPI): string {
+function sanitizeInlineContent(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {
   let result = ''
 
   element.contents().each((_, node) => {
@@ -393,7 +398,7 @@ function truncateHtmlByTextLength(html: string, cutoff: number, appendEllipsis: 
   let truncated = false
   let ellipsisApplied = false
 
-  function processNodes(nodes: cheerio.Cheerio<any>): string {
+  function processNodes(nodes: cheerio.Cheerio<AnyNode>): string {
     let output = ''
 
     nodes.each((_, node) => {
@@ -462,7 +467,7 @@ function truncateHtmlByTextLength(html: string, cutoff: number, appendEllipsis: 
   return truncatedHtml
 }
 
-function buildOpenTag(element: cheerio.Cheerio<any>): string {
+function buildOpenTag(element: cheerio.Cheerio<AnyNode>): string {
   const node = element.get(0)
   if (!node || node.type !== 'tag') {
     return ''

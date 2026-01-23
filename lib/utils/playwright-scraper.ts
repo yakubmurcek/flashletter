@@ -1,6 +1,6 @@
 import { chromium as playwrightChromium, type Browser, type Page } from 'playwright-core'
 import { PLAYWRIGHT_TIMEOUT } from '@/lib/constants/app'
-import { extractTextFromHTML, type ScrapedContent } from './scraper'
+import { extractTextFromHTML } from './scraper'
 import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
 
 // Only import @sparticuz/chromium in production/serverless environments
@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     chromium = require('@sparticuz/chromium')
-  } catch (_error) {
+  } catch {
     console.warn('@sparticuz/chromium not available, using system browser')
   }
 }
@@ -149,7 +149,7 @@ async function waitForContent(page: Page): Promise<void> {
       // Removed body from race so we actually try to wait for content
       // If content indicators aren't found, the timeout will trigger and we'll proceed anyway
     ])
-  } catch (_error) {
+  } catch {
     // Ignore timeout errors, continue with whatever content is available
     console.warn('Content wait timeout, proceeding with available content')
   }
@@ -160,7 +160,7 @@ async function waitForContent(page: Page): Promise<void> {
   // Wait for images to load (optional)
   try {
     await page.waitForLoadState('networkidle', { timeout: 3000 })
-  } catch (_error) {
+  } catch {
     // Ignore timeout, continue
   }
 }

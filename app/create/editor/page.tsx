@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
@@ -34,7 +34,6 @@ const ChatSidebar = dynamic(
 )
 
 function EditorPageContent() {
-  const router = useRouter()
   // Use new focused hooks
   const { loadingState, campaignData, error } = useCampaignLoader()
   const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } = useEmailState()
