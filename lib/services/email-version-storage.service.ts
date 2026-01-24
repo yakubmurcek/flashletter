@@ -1,45 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { EmailVersion } from '../types'
 
-/**
- * Generate a simple change summary comparing two versions
- */
-function generateChangesSummary(
-  oldEmail: { subject: string; content: string } | null,
-  newEmail: { subject: string; content: string },
-): string {
-  if (!oldEmail) {
-    return 'Initial version'
-  }
-
-  const changes: string[] = []
-
-  if (oldEmail.subject !== newEmail.subject) {
-    changes.push('subject')
-  }
-
-  const oldLines = oldEmail.content.split('\n')
-  const newLines = newEmail.content.split('\n')
-
-  // Count actual line differences
-  let diffCount = 0
-  const maxLen = Math.max(oldLines.length, newLines.length)
-  for (let i = 0; i < maxLen; i++) {
-    if (oldLines[i] !== newLines[i]) {
-      diffCount++
-    }
-  }
-
-  if (diffCount > 0) {
-    changes.push(`${diffCount} line${diffCount > 1 ? 's' : ''}`)
-  }
-
-  if (changes.length === 0) {
-    return 'No changes'
-  }
-
-  return changes.join(' and ') + ' changed'
-}
+import { extractChangeSummary } from '@/lib/utils/diff'
 
 export class EmailVersionStorageService {
   constructor(private supabase: SupabaseClient) {}
@@ -66,7 +28,7 @@ export class EmailVersionStorageService {
       return previousVersion
     }
 
-    const changesSummary = generateChangesSummary(previousVersion, email)
+    const changesSummary = extractChangeSummary(previousVersion, email)
 
     const { data, error } = await this.supabase
       .from('email_versions')

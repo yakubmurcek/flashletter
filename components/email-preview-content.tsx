@@ -1,5 +1,5 @@
 import { memo } from 'react'
-import { renderMarkdown } from '@/lib/utils/markdown-renderer'
+import { MarkdownRenderer } from '@/components/markdown-renderer'
 
 interface EmailPreviewContentProps {
   subject: string
@@ -22,9 +22,10 @@ function EmailPreviewContentComponent({ subject, content, onMouseUp }: EmailPrev
             <div className="text-2xl font-semibold text-foreground mb-8 leading-tight">
               {subject || 'No subject'}
             </div>
-            <div className="prose prose-sm max-w-none text-foreground/90">
-              {renderMarkdown(content)}
-            </div>
+            <MarkdownRenderer
+              content={content}
+              className="prose prose-sm max-w-none text-foreground/90"
+            />
           </div>
         </div>
       </div>

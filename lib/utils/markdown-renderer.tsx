@@ -1,4 +1,4 @@
-import React from 'react'
+import { cn } from '@/lib/utils'
 
 export function processInlineFormattingForPreview(text: string) {
   const parts: (string | React.ReactElement)[] = []
@@ -196,4 +196,15 @@ export function renderMarkdown(text: string) {
   flushBlock(lines.length)
 
   return elements
+}
+
+interface MarkdownRendererProps {
+  content: string
+  className?: string
+}
+
+export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+  if (!content) return null
+
+  return <div className={cn('text-sm leading-relaxed', className)}>{renderMarkdown(content)}</div>
 }

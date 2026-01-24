@@ -2,45 +2,7 @@ import type { Email, EmailVersion } from '../types'
 
 const VERSION_KEY_PREFIX = 'email-versions-'
 
-/**
- * Generate a simple change summary comparing two versions
- */
-function generateChangesSummary(
-  oldEmail: { subject: string; content: string } | null,
-  newEmail: { subject: string; content: string },
-): string {
-  if (!oldEmail) {
-    return 'Initial version'
-  }
-
-  const changes: string[] = []
-
-  if (oldEmail.subject !== newEmail.subject) {
-    changes.push('subject')
-  }
-
-  const oldLines = oldEmail.content.split('\n')
-  const newLines = newEmail.content.split('\n')
-
-  // Count actual line differences
-  let diffCount = 0
-  const maxLen = Math.max(oldLines.length, newLines.length)
-  for (let i = 0; i < maxLen; i++) {
-    if (oldLines[i] !== newLines[i]) {
-      diffCount++
-    }
-  }
-
-  if (diffCount > 0) {
-    changes.push(`${diffCount} line${diffCount > 1 ? 's' : ''}`)
-  }
-
-  if (changes.length === 0) {
-    return 'No changes'
-  }
-
-  return changes.join(' and ') + ' changed'
-}
+import { extractChangeSummary } from './diff'
 
 /**
  * Version storage utility for managing email versions
@@ -62,13 +24,11 @@ export const versionStorage = {
     const versions = this.getVersions(emailId)
     const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
 
-    // Check if this version is identical to the previous one (avoid duplicate saves)
     if (
       previousVersion &&
       previousVersion.subject === email.subject &&
       previousVersion.content === email.content
     ) {
-      console.log('Skipping duplicate version save - content unchanged')
       return previousVersion
     }
 
@@ -78,18 +38,18 @@ export const versionStorage = {
       subject: email.subject,
       content: email.content,
       timestamp: Date.now(),
-      changesSummary: generateChangesSummary(previousVersion, email),
+      changesSummary: extractChangeSummary(previousVersion, email),
     }
 
     // DEBUG: Log what we're saving
-    console.log('[VERSION SAVE]', {
+    /* console.log('[VERSION SAVE]', {
       emailId,
       versionId: newVersion.id,
       subject: newVersion.subject.substring(0, 50),
       contentPreview: newVersion.content.substring(0, 100),
       previousSubject: previousVersion?.subject?.substring(0, 50),
       totalVersions: versions.length + 1,
-    })
+    }) */
 
     versions.push(newVersion)
 
@@ -98,9 +58,9 @@ export const versionStorage = {
       localStorage.setItem(`${VERSION_KEY_PREFIX}${emailId}`, data)
 
       // DEBUG: Verify it was saved correctly
-      const saved = localStorage.getItem(`${VERSION_KEY_PREFIX}${emailId}`)
-      const parsed = JSON.parse(saved || '[]')
-      console.log('[VERSION SAVED]', 'Total in storage:', parsed.length)
+      // const saved = localStorage.getItem(`${VERSION_KEY_PREFIX}${emailId}`)
+      // const parsed = JSON.parse(saved || '[]')
+      // console.log('[VERSION SAVED]', 'Total in storage:', parsed.length)
     } catch (error) {
       // Handle quota exceeded error
       if (error instanceof Error && error.name === 'QuotaExceededError') {
