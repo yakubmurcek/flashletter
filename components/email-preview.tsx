@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef, memo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Save } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
-import { EmailEditorSidebar } from './email-editor-sidebar'
 import { EmailPreviewContent } from './email-preview-content'
 import { cn } from '@/lib/utils'
 import type { Email } from '@/lib/types'
@@ -22,10 +21,8 @@ function EmailPreviewComponent({
   onTextSelected,
   showChat = false,
 }: EmailPreviewProps) {
-  const [editedSubject, setEditedSubject] = useState(email.subject)
-  const [editedContent, setEditedContent] = useState(email.content)
-  const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>('markdown')
-  const [showEditor, setShowEditor] = useState(false)
+  const [editedSubject, setEditedSubject] = useState(email.subject || '')
+  const [editedContent, setEditedContent] = useState(email.content || '')
   const [selectedText, setSelectedText] = useState<string>('')
   const [popupPosition, setPopupPosition] = useState<{
     x: number
@@ -39,11 +36,10 @@ function EmailPreviewComponent({
     endOffset: number
   } | null>(null)
 
-  // Combine both effects into one - more efficient
+  // Update local state when prop changes
   useEffect(() => {
-    // Reset edited content when email changes
-    setEditedSubject(email.subject)
-    setEditedContent(email.content)
+    setEditedSubject(email.subject || '')
+    setEditedContent(email.content || '')
   }, [email.id, email.subject, email.content])
 
   // Memoize hasChanges to avoid recalculation
@@ -167,28 +163,10 @@ function EmailPreviewComponent({
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
             <p className="text-sm text-muted-foreground/80 truncate">
-              {showEditor ? 'Edit content on the left, see preview on the right' : 'Preview mode'}
+              Review and edit your campaign email
             </p>
           </div>
           <div className={cn('flex items-center gap-2', showChat ? 'mr-4' : 'mr-0')}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowEditor(!showEditor)}
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/12 hover:border-border/60 transition-colors"
-            >
-              {showEditor ? (
-                <>
-                  <PanelLeftClose className="w-4 h-4" />
-                  <span className="hidden sm:inline">Hide Editor</span>
-                </>
-              ) : (
-                <>
-                  <PanelLeftOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Show Editor</span>
-                </>
-              )}
-            </Button>
             <Button
               onClick={handleSave}
               disabled={!hasChanges}
@@ -201,26 +179,13 @@ function EmailPreviewComponent({
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden gap-6 px-6 pb-6 pt-4 min-h-0">
-        {showEditor && (
-          <div className="flex-1 overflow-hidden transition-all duration-300">
-            <div className="h-full overflow-y-auto rounded-3xl bg-white/[0.04] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]">
-              <EmailEditorSidebar
-                subject={editedSubject}
-                content={editedContent}
-                editorMode={editorMode}
-                onSubjectChange={setEditedSubject}
-                onContentChange={setEditedContent}
-                onEditorModeChange={setEditorMode}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className={cn('flex-[1.35] min-w-0 h-full flex flex-col min-h-0')}>
+      <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0 flex flex-col items-center">
+        <div className="w-full max-w-4xl h-full flex flex-col min-h-0">
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}
+            onSubjectChange={setEditedSubject}
+            onContentChange={setEditedContent}
             onMouseUp={handleTextSelection}
           />
         </div>
