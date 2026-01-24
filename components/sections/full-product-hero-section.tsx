@@ -128,7 +128,7 @@ function HeroUrlForm() {
 
 export function FullProductHeroSection() {
   return (
-    <div className="relative text-center py-20 md:py-32">
+    <div className="relative text-center py-20">
       {/* Floating elements */}
       <FloatingElement
         delay={0}
