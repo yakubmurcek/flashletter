@@ -28,6 +28,12 @@ export function RichTextEditor({
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
+      Markdown.configure({
+        html: true,
+        transformPastedText: true,
+        transformCopiedText: true,
+        breaks: true,
+      }),
       StarterKit.configure({
         heading: {
           levels: [1, 2, 3],
@@ -44,11 +50,6 @@ export function RichTextEditor({
         emptyEditorClass:
           'is-editor-empty before:content-[attr(data-placeholder)] before:text-muted-foreground/50 before:float-left before:h-0 before:pointer-events-none',
       }),
-      Markdown.configure({
-        html: false,
-        transformPastedText: true,
-        transformCopiedText: true,
-      }),
     ],
     content,
     editable,
@@ -58,9 +59,8 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm max-w-none focus:outline-none min-h-[150px]',
+          'prose max-w-none focus:outline-none min-h-[150px] whitespace-pre-wrap',
           'prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground',
-          'prose-p:text-foreground/90 prose-p:leading-relaxed',
           'prose-strong:font-semibold prose-strong:text-foreground',
           'prose-ul:list-disc prose-ul:pl-6 prose-ul:text-foreground/90',
           'prose-ol:list-decimal prose-ol:pl-6 prose-ol:text-foreground/90',
