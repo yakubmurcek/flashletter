@@ -1,6 +1,6 @@
 'use client'
 
-import { useEditor, EditorContent } from '@tiptap/react'
+import { useEditor, EditorContent, type Editor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -14,6 +14,7 @@ interface RichTextEditorProps {
   className?: string
   placeholder?: string
   editable?: boolean
+  onEditorCreated?: (editor: Editor) => void
 }
 
 export function RichTextEditor({
@@ -22,6 +23,7 @@ export function RichTextEditor({
   className,
   placeholder = 'Start writing...',
   editable = true,
+  onEditorCreated,
 }: RichTextEditorProps) {
   const editor = useEditor({
     immediatelyRender: false,
@@ -50,6 +52,9 @@ export function RichTextEditor({
     ],
     content,
     editable,
+    onCreate: ({ editor }) => {
+      onEditorCreated?.(editor)
+    },
     editorProps: {
       attributes: {
         class: cn(
@@ -102,5 +107,9 @@ export function RichTextEditor({
     return null
   }
 
-  return <EditorContent editor={editor} />
+  return (
+    <div className="flex flex-col gap-2">
+      <EditorContent editor={editor} />
+    </div>
+  )
 }

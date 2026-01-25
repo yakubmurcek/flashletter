@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, memo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Save } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
 import { EmailPreviewContent } from './email-preview-content'
 import { cn } from '@/lib/utils'
@@ -13,13 +13,19 @@ interface EmailPreviewProps {
   onUpdate: (updates: Partial<Email>) => void
   onTextSelected?: (text: string, action: string, meta?: { shouldFocus?: boolean }) => void
   showChat?: boolean
+  isSaving?: boolean
 }
+
+// ... imports will be handled in separate call or combined if I use multi-replace. I'll use replace_file_content for the main body first or do imports and body together.
+// Let's do imports and body separately to be safe with line numbers, or I can replace the whole file content block if I am careful.
+// I will reuse "EmailPreviewComponent" signature and update its body.
 
 function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
   showChat = false,
+  isSaving = false,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject || '')
   const [editedContent, setEditedContent] = useState(email.content || '')
@@ -28,6 +34,10 @@ function EmailPreviewComponent({
     x: number
     y: number
   } | null>(null)
+
+  const [editor, setEditor] = useState<import('@tiptap/react').Editor | null>(null)
+  const [isCopied, setIsCopied] = useState(false)
+
   const lastAutoSelectionRef = useRef<{
     text: string
     startContainer: Node
@@ -47,12 +57,19 @@ function EmailPreviewComponent({
     return editedSubject !== email.subject || editedContent !== email.content
   }, [editedSubject, editedContent, email.subject, email.content])
 
-  const handleSave = () => {
-    onUpdate({
-      subject: editedSubject,
-      content: editedContent,
-    })
-  }
+  // Auto-save when changes occur
+  useEffect(() => {
+    if (hasChanges) {
+      const timeoutId = setTimeout(() => {
+        onUpdate({
+          subject: editedSubject,
+          content: editedContent,
+        })
+      }, 1000)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [hasChanges, editedSubject, editedContent, onUpdate])
 
   const selectionsMatch = (
     range: Range | null,
@@ -156,6 +173,15 @@ function EmailPreviewComponent({
     lastAutoSelectionRef.current = null
   }
 
+  const handleCopy = () => {
+    if (!editor) return
+
+    const html = editor.getHTML()
+    navigator.clipboard.writeText(html)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.4)]">
@@ -166,14 +192,24 @@ function EmailPreviewComponent({
               Review and edit your campaign email
             </p>
           </div>
-          <div className={cn('flex items-center gap-2', showChat ? 'mr-4' : 'mr-0')}>
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
+              {!isSaving && <Check className="w-3 h-3 text-muted-foreground" />}
+              {isSaving ? 'Saving...' : 'Saved'}
+            </span>
             <Button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className="gap-2 rounded-full shadow-[0_15px_45px_-25px_rgba(249,115,22,0.4)]"
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="gap-2"
+              disabled={!editor}
             >
-              <Save className="w-4 h-4" />
-              {hasChanges ? 'Save Changes' : 'Saved'}
+              {isCopied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              Copy HTML
             </Button>
           </div>
         </div>
@@ -187,6 +223,7 @@ function EmailPreviewComponent({
             onSubjectChange={setEditedSubject}
             onContentChange={setEditedContent}
             onMouseUp={handleTextSelection}
+            onEditorCreated={setEditor}
           />
         </div>
       </div>

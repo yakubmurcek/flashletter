@@ -21,6 +21,7 @@ interface EmailPreviewContentProps {
   onSubjectChange?: (subject: string) => void
   onContentChange?: (content: string) => void
   onMouseUp?: () => void
+  onEditorCreated?: (editor: import('@tiptap/react').Editor) => void
 }
 
 function EmailPreviewContentComponent({
@@ -29,6 +30,7 @@ function EmailPreviewContentComponent({
   onSubjectChange,
   onContentChange,
   onMouseUp,
+  onEditorCreated,
 }: EmailPreviewContentProps) {
   return (
     <div
@@ -54,6 +56,7 @@ function EmailPreviewContentComponent({
               content={content}
               onChange={(newContent) => onContentChange?.(newContent)}
               className="prose-lg"
+              onEditorCreated={onEditorCreated}
             />
           </div>
         </div>

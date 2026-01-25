@@ -39,7 +39,7 @@ function EditorPageContent() {
   const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } = useEmailState()
   const { versionCounts, restoreVersion } = useVersionTracking(emails)
   const { currentCampaignId } = useCampaignData()
-  const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+  const { saveEmail, isSaving } = useEmailAutosave(emails, currentCampaignId, updateEmail)
 
   const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
 
@@ -281,6 +281,7 @@ function EditorPageContent() {
               onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
               onTextSelected={handleTextSelected}
               showChat={showChat}
+              isSaving={isSaving}
             />
           )}
         </main>
