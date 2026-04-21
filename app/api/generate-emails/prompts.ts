@@ -1,3 +1,5 @@
+import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+
 /**
  * Email Generation Prompts
  *
@@ -39,17 +41,53 @@ export function getToneGuidelines(tone: string): string {
   return tones[tone] || tones.friendly
 }
 
+function formatList(items: string[] | undefined, prefix: string, emptyNote: string): string {
+  if (!items || items.length === 0) return `${prefix}: ${emptyNote}`
+  return `${prefix}:\n${items.map((item) => `- ${item}`).join('\n')}`
+}
+
+function buildAnalysisBlock(analysis: LandingPageAnalysis | undefined): string {
+  if (!analysis) return ''
+
+  return `
+LANDING PAGE ANALYSIS (use this directly in the copy — do not ignore):
+
+Value proposition: ${analysis.valueProp}
+Target audience: ${analysis.targetAudience}
+Primary CTA (every email must drive toward this same action): ${analysis.primaryCTA}
+Voice fingerprint to match: ${analysis.toneFingerprint}
+
+${formatList(analysis.proofPoints, 'Proof points (cite these verbatim — do NOT fabricate numbers or customer names)', 'No concrete proof on the page. Do NOT invent stats or testimonials.')}
+
+${formatList(analysis.objections, 'Objections the page pre-addresses (echo these in the sequence to lower resistance)', 'None detected.')}
+
+${formatList(analysis.angles, 'Distinct selling angles (vary these across emails — do not repeat the same angle)', 'Use your judgement but vary the angle across emails.')}
+
+${formatList(analysis.opportunities, 'Gaps the email sequence should fill (things the page does NOT address)', 'None.')}
+
+Rules derived from the analysis:
+- Every subject line + CTA in the sequence must be consistent with the primary CTA.
+- Match the voice fingerprint exactly — pronouns, sentence length, jargon level, formality.
+- Cite proof points verbatim. If no proof exists, do NOT make any up; lean on specifics from the content instead.
+- Rotate through the distinct angles — do not ship 5 emails that all hit the same benefit.
+- Where gaps exist, position specific emails to fill them (pricing, risk, timing, etc.).`
+}
+
 export function buildInstructions(
   config: { days: number; campaignType: string; tone: string },
   landingUrl: string,
   landingContent?: string,
+  analysis?: LandingPageAnalysis,
 ): string {
+  const analysisBlock = buildAnalysisBlock(analysis)
+
   return `You are an expert email marketing copywriter. Generate a ${
     config.days
   }-day ${config.campaignType} email campaign with a ${config.tone} tone.
 
 Landing Page URL: ${landingUrl}
 ${landingContent ? `Landing Page Content:\n${landingContent.substring(0, 2000)}` : ''}
+${analysisBlock}
 
 For each email, provide:
 1. A compelling subject line (under 60 characters)
@@ -59,7 +97,7 @@ For each email, provide:
 Email campaign structure for ${config.campaignType}:
 ${getCampaignStructure(config.campaignType, config.days)}
 
-Tone guidelines for ${config.tone}:
+Tone guidelines for ${config.tone} (apply in addition to the voice fingerprint above if analysis is present):
 ${getToneGuidelines(config.tone)}
 
 IMPORTANT: Return ONLY valid JSON (no markdown, no code blocks) with this exact structure:
@@ -74,5 +112,5 @@ IMPORTANT: Return ONLY valid JSON (no markdown, no code blocks) with this exact 
   ]
 }
 
-Make sure the content is engaging, actionable, and aligned with best email marketing practices.`
+Do NOT invent statistics, testimonials, or customer names that are not provided in the proof points. Ground concrete claims in the proof points only. Generic claims without proof should be phrased generally (no made-up numbers).`
 }

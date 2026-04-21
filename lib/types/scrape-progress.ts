@@ -1,69 +1,83 @@
+import type { ScrapeLandingResponse } from '../schemas/api'
+
+export type ProgressStageId =
+  | 'connecting'
+  | 'fetching'
+  | 'extracting'
+  | 'analyzing'
+  | 'synthesizing'
+  | 'completed'
+
+/**
+ * Wire format for NDJSON events sent from /api/scrape-landing/stream.
+ * Each line of the response body parses into one of these objects.
+ */
+export type ScrapeStreamEvent =
+  | {
+      type: 'stage'
+      stageId: Exclude<ProgressStageId, 'completed'>
+      context?: {
+        title?: string
+        siteName?: string
+        domain?: string
+        cached?: boolean
+      }
+    }
+  | { type: 'complete'; data: ScrapeLandingResponse }
+  | { type: 'error'; message: string }
+
 export interface ProgressStage {
-  id: string
+  id: ProgressStageId
   messageTemplate: string
-  minDuration: number
   icon?: 'check' | 'loader' | 'brain' | 'search' | 'chart' | 'sparkles'
 }
 
 export interface ProgressState {
-  currentStageId: string
-  completedStageIds: string[]
+  currentStageId: ProgressStageId
+  completedStageIds: ProgressStageId[]
   dynamicContext: {
     domain?: string
     title?: string
     siteName?: string
+    cached?: boolean
   }
 }
 
+/**
+ * Real stages matching events emitted by POST /api/scrape-landing/stream.
+ * Each stage corresponds to actual work on the server — no simulated timers.
+ */
 export const SCRAPE_PROGRESS_STAGES: ProgressStage[] = [
   {
     id: 'connecting',
-    messageTemplate: 'Connecting to {domain}...',
-    minDuration: 600,
+    messageTemplate: 'Connecting to {domain}…',
     icon: 'search',
   },
   {
     id: 'fetching',
-    messageTemplate: 'Fetching live page content...',
-    minDuration: 800,
+    messageTemplate: 'Fetching landing page…',
     icon: 'loader',
   },
   {
-    id: 'analyzing',
-    messageTemplate: 'Analyzing "{title}"...',
-    minDuration: 1200,
-    icon: 'brain',
-  },
-  {
-    id: 'understanding',
-    messageTemplate: 'Understanding offer & target audience...',
-    minDuration: 1000,
-    icon: 'sparkles',
-  },
-  {
-    id: 'scoring',
-    messageTemplate: 'Scoring clarity, trust & conversion...',
-    minDuration: 800,
-    icon: 'chart',
-  },
-  {
-    id: 'finding',
-    messageTemplate: 'Identifying strengths & opportunities...',
-    minDuration: 800,
+    id: 'extracting',
+    messageTemplate: 'Reading "{title}"…',
     icon: 'search',
   },
   {
-    id: 'generating',
-    messageTemplate: 'Preparing campaign insights...',
-    minDuration: 800,
+    id: 'analyzing',
+    messageTemplate: 'Analyzing offer, audience & proof…',
+    icon: 'brain',
+  },
+  {
+    id: 'synthesizing',
+    messageTemplate: 'Building campaign insights…',
     icon: 'sparkles',
   },
 ]
 
 export function getCleanDomain(url: string): string {
   try {
-    const domain = new URL(url).hostname.replace('www.', '')
-    return domain
+    return new URL(url).hostname.replace(/^www\./, '')
   } catch {
     return 'page'
   }
@@ -74,8 +88,6 @@ export function formatProgressMessage(
   context: ProgressState['dynamicContext'],
 ): string {
   let message = template
-
-  // Replace tokens with context or fallback values
   message = message.replace('{domain}', context.domain || 'page')
 
   if (message.includes('{title}')) {
@@ -84,7 +96,7 @@ export function formatProgressMessage(
     } else if (context.siteName) {
       message = message.replace('{title}', context.siteName)
     } else {
-      message = message.replace('{title}', 'page content') // specific fallback for title
+      message = message.replace('{title}', 'page content')
     }
   }
 

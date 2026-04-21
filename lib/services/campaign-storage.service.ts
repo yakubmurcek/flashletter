@@ -7,13 +7,16 @@ import {
   type Campaign,
   type CampaignWithEmails,
   type Email,
-  type LandingPageData,
 } from '../schemas'
 
 // Re-export for backwards compatibility
 export type { Campaign, CampaignWithEmails }
 
-type LandingPageMetadata = LandingPageData['metadata']
+/**
+ * `landing_page_metadata` is a jsonb column — it holds both the scraped OG metadata
+ * and the AI-generated `analysis` under an `analysis` key. Keep this type permissive.
+ */
+type LandingPageMetadata = Record<string, unknown>
 
 const dbEmailRowSchema = z.object({
   id: z.string().uuid(),

@@ -4,9 +4,40 @@ import { useState, useMemo, useRef, useCallback, type ReactNode } from 'react'
 import { createClient } from '../supabase/client'
 import { CampaignStorageService } from '../services/campaign-storage.service'
 import type { CampaignConfig, LandingPageData, Email } from '../types'
+import type { LandingPageAnalysis } from '../schemas/analysis'
 import { debounce } from '../utils/debounce'
 import { logError } from '../utils/error-handling'
 import { CampaignActionsContext, CampaignDataContext } from './contexts'
+
+/**
+ * Storage layout: `landing_page_metadata` is a JSON column that holds both
+ * the scraped OG metadata AND the AI-generated `analysis` under a single key.
+ * This keeps analysis persisted without requiring a separate DB column.
+ */
+function packMetadataForStorage(data: LandingPageData): Record<string, unknown> | undefined {
+  const hasMetadata = !!data.metadata
+  const hasAnalysis = !!data.analysis
+  if (!hasMetadata && !hasAnalysis) return undefined
+  return {
+    ...(data.metadata ?? {}),
+    ...(hasAnalysis ? { analysis: data.analysis } : {}),
+  }
+}
+
+function unpackMetadataFromStorage(raw: unknown): {
+  metadata: LandingPageData['metadata']
+  analysis: LandingPageAnalysis | undefined
+} {
+  if (!raw || typeof raw !== 'object') {
+    return { metadata: undefined, analysis: undefined }
+  }
+  const record = raw as Record<string, unknown>
+  const { analysis, ...rest } = record
+  return {
+    metadata: rest as LandingPageData['metadata'],
+    analysis: (analysis as LandingPageAnalysis | undefined) ?? undefined,
+  }
+}
 
 function extractTitleFromContent(html?: string | null): string | null {
   if (!html || typeof window === 'undefined' || !('DOMParser' in window)) {
@@ -70,7 +101,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         await campaignService.updateCampaign(campaignId, {
           landingPageUrl: data.url,
           landingPageContent: data.content,
-          landingPageMetadata: data.metadata,
+          landingPageMetadata: packMetadataForStorage(data),
         })
       } catch (error) {
         logError(error, {
@@ -120,7 +151,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         name: derivedName,
         landingPageUrl: dataToUse?.url,
         landingPageContent: dataToUse?.content,
-        landingPageMetadata: dataToUse?.metadata,
+        landingPageMetadata: dataToUse ? packMetadataForStorage(dataToUse) : undefined,
       })
 
       setCurrentCampaignId(campaign.id)
@@ -140,11 +171,14 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
         }
 
         setCurrentCampaignId(campaign.id)
+        const { metadata: unpackedMetadata, analysis: unpackedAnalysis } =
+          unpackMetadataFromStorage(campaign.landing_page_metadata)
         const landingData: LandingPageData = campaign.landing_page_url
           ? {
               url: campaign.landing_page_url,
               content: campaign.landing_page_content || undefined,
-              metadata: campaign.landing_page_metadata,
+              metadata: unpackedMetadata,
+              analysis: unpackedAnalysis,
             }
           : {
               url: 'https://example.com',
@@ -204,7 +238,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     await campaignService.updateCampaign(currentCampaignId, {
       landingPageUrl: landingPageData?.url,
       landingPageContent: landingPageData?.content,
-      landingPageMetadata: landingPageData?.metadata,
+      landingPageMetadata: landingPageData ? packMetadataForStorage(landingPageData) : undefined,
       tone: config?.tone,
       campaignType: config?.campaignType,
       days: config?.days,

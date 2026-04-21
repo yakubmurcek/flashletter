@@ -67,6 +67,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
         landingPageData.content || '',
         config,
         currentCampaignId || undefined,
+        landingPageData.analysis,
       )
 
       if (result) {

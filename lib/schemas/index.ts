@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { landingPageAnalysisSchema } from './analysis'
 
 /**
  * Core domain schemas
@@ -35,6 +36,7 @@ export const landingPageDataSchema = z.object({
       ogSiteName: z.string().optional(),
     })
     .optional(),
+  analysis: landingPageAnalysisSchema.optional(),
 })
 
 // Campaign schema (from database)
@@ -119,6 +121,8 @@ export const emailsResponseSchema = z.object({
 export type Email = z.infer<typeof emailSchema>
 export type CampaignConfig = z.infer<typeof campaignConfigSchema>
 export type LandingPageData = z.infer<typeof landingPageDataSchema>
+export type { LandingPageAnalysis } from './analysis'
+export { landingPageAnalysisSchema } from './analysis'
 export type Campaign = z.infer<typeof campaignSchema>
 export type CampaignWithEmails = z.infer<typeof campaignWithEmailsSchema>
 export type Message = z.infer<typeof messageSchema>

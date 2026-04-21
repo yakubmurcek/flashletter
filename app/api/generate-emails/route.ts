@@ -47,10 +47,10 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { landingUrl, landingContent, config, campaignId } =
+    const { landingUrl, landingContent, landingAnalysis, config, campaignId } =
       generateEmailsRequestSchema.parse(body)
 
-    const instructions = buildInstructions(config, landingUrl, landingContent)
+    const instructions = buildInstructions(config, landingUrl, landingContent, landingAnalysis)
 
     const userInput = `Generate ${config.days} emails for this ${config.campaignType} campaign. Return only valid JSON.`
 

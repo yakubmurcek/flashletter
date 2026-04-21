@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { campaignConfigSchema, emailSchema } from './index'
+import { landingPageAnalysisSchema } from './analysis'
 
 /**
  * API-specific request/response schemas
@@ -10,6 +11,7 @@ import { campaignConfigSchema, emailSchema } from './index'
 export const generateEmailsRequestSchema = z.object({
   landingUrl: z.string().url(),
   landingContent: z.string().optional(),
+  landingAnalysis: landingPageAnalysisSchema.optional(),
   config: campaignConfigSchema,
   campaignId: z.string().uuid().optional(),
 })
@@ -76,6 +78,7 @@ export const scrapeLandingResponseSchema = z.object({
   metadata: enhancedMetadataSchema,
   url: z.string(),
   stats: scrapeStatsSchema,
+  analysis: landingPageAnalysisSchema.optional(),
 })
 
 /**

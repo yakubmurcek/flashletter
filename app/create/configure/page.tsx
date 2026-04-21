@@ -7,9 +7,12 @@ import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { CampaignConfigForm } from '@/components/campaign/campaign-config-form'
+import { AnalysisCard } from '@/components/campaign/analysis-card'
 import { useCampaignConfig } from '@/lib/hooks/use-campaign-config'
+import { useCampaign } from '@/lib/campaign-context'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { isValidCampaignId } from '@/lib/utils/validation'
+import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
 
 function ConfigurePageContent() {
   const searchParams = useSearchParams()
@@ -32,8 +35,15 @@ function ConfigurePageContent() {
     handleSubmit,
   } = useCampaignConfig(validCampaignId)
 
+  const { setLandingPageData } = useCampaign()
+
   if (!isReady) {
     return null
+  }
+
+  const handleAnalysisChange = (next: LandingPageAnalysis) => {
+    if (!landingPageData) return
+    setLandingPageData({ ...landingPageData, analysis: next })
   }
 
   return (
@@ -45,11 +55,18 @@ function ConfigurePageContent() {
         </div>
       }
     >
-      <div className="w-full max-w-2xl py-8">
+      <div className="w-full max-w-2xl py-8 space-y-6">
         <ProgressIndicator
           currentStep={2}
           steps={CAMPAIGN_STEPS}
         />
+
+        {landingPageData?.analysis && (
+          <AnalysisCard
+            analysis={landingPageData.analysis}
+            onChange={handleAnalysisChange}
+          />
+        )}
 
         <FormCard
           icon={Settings}

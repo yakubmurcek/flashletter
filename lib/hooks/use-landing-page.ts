@@ -3,9 +3,13 @@
 import { useState, useRef, useEffect } from 'react'
 import { CampaignService } from '../services/campaign.service'
 import type { LandingPageData } from '../types'
-import { ProgressState, SCRAPE_PROGRESS_STAGES, getCleanDomain } from '../types/scrape-progress'
-
-const FALLBACK_TITLE = 'Landing Page'
+import {
+  ProgressState,
+  ProgressStageId,
+  SCRAPE_PROGRESS_STAGES,
+  ScrapeStreamEvent,
+  getCleanDomain,
+} from '../types/scrape-progress'
 
 interface UseLandingPageReturn {
   isAnalyzing: boolean
@@ -15,93 +19,93 @@ interface UseLandingPageReturn {
   clearError: () => void
 }
 
+const initialState: ProgressState = {
+  currentStageId: SCRAPE_PROGRESS_STAGES[0].id,
+  completedStageIds: [],
+  dynamicContext: {},
+}
+
 export function useLandingPage(): UseLandingPageReturn {
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [progressState, setProgressState] = useState<ProgressState>({
-    currentStageId: SCRAPE_PROGRESS_STAGES[0].id,
-    completedStageIds: [],
-    dynamicContext: {},
-  })
+  const [progressState, setProgressState] = useState<ProgressState>(initialState)
+  const abortRef = useRef<AbortController | null>(null)
 
-  // Refs for tracking timeouts to allow cleanup
-  const timeoutsRef = useRef<NodeJS.Timeout[]>([])
-
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
-      timeoutsRef.current.forEach(clearTimeout)
+      abortRef.current?.abort()
     }
   }, [])
 
-  const startProgressSimulation = (url: string) => {
-    // Reset state
-    const domain = getCleanDomain(url)
+  const analyzeLandingPage = async (url: string): Promise<LandingPageData | null> => {
+    abortRef.current?.abort()
+    const controller = new AbortController()
+    abortRef.current = controller
 
+    setIsAnalyzing(true)
+    setError(null)
     setProgressState({
       currentStageId: SCRAPE_PROGRESS_STAGES[0].id,
       completedStageIds: [],
-      dynamicContext: { domain },
+      dynamicContext: { domain: getCleanDomain(url) },
     })
 
-    let accumulatedTime = 0
-    timeoutsRef.current.forEach(clearTimeout)
-    timeoutsRef.current = []
-
-    // Schedule stage transitions
-    SCRAPE_PROGRESS_STAGES.forEach((stage, index) => {
-      // Don't schedule the last one automatically (it waits for completion)
-      if (index === SCRAPE_PROGRESS_STAGES.length - 1) return
-
-      const nextStage = SCRAPE_PROGRESS_STAGES[index + 1]
-      accumulatedTime += stage.minDuration
-
-      const timeout = setTimeout(() => {
-        setProgressState((prev) => ({
+    const advanceTo = (nextStageId: Exclude<ProgressStageId, 'completed'>) => {
+      setProgressState((prev) => {
+        if (prev.currentStageId === nextStageId) return prev
+        const completed = prev.completedStageIds.includes(prev.currentStageId)
+          ? prev.completedStageIds
+          : [...prev.completedStageIds, prev.currentStageId]
+        return {
           ...prev,
-          completedStageIds: [...prev.completedStageIds, stage.id],
-          currentStageId: nextStage.id,
-        }))
-      }, accumulatedTime)
+          currentStageId: nextStageId,
+          completedStageIds: completed,
+        }
+      })
+    }
 
-      timeoutsRef.current.push(timeout)
-    })
-  }
-
-  const analyzeLandingPage = async (url: string): Promise<LandingPageData | null> => {
-    setIsAnalyzing(true)
-    setError(null)
-    startProgressSimulation(url)
+    const mergeContext = (patch: ProgressState['dynamicContext']) => {
+      setProgressState((prev) => ({
+        ...prev,
+        dynamicContext: { ...prev.dynamicContext, ...patch },
+      }))
+    }
 
     try {
-      const data = await CampaignService.scrapeLandingPage(url)
-
-      // Update context with real data once available
-      if (data?.metadata?.title) {
-        setProgressState((prev) => ({
-          ...prev,
-          dynamicContext: {
-            ...prev.dynamicContext,
-            title: data.metadata?.title || FALLBACK_TITLE,
-          },
-        }))
+      const handleEvent = (event: ScrapeStreamEvent) => {
+        if (event.type === 'stage') {
+          if (event.context) mergeContext(event.context)
+          advanceTo(event.stageId)
+        } else if (event.type === 'error') {
+          setError(event.message)
+        }
       }
 
-      // Fast-forward to completion
-      timeoutsRef.current.forEach(clearTimeout)
+      const data = await CampaignService.scrapeLandingPageStream(
+        url,
+        handleEvent,
+        controller.signal,
+      )
 
-      // Complete all stages rapidly
       setProgressState((prev) => ({
         ...prev,
         completedStageIds: SCRAPE_PROGRESS_STAGES.map((s) => s.id),
         currentStageId: 'completed',
+        dynamicContext: {
+          ...prev.dynamicContext,
+          title: data.metadata?.title || prev.dynamicContext.title,
+          siteName: data.metadata?.ogSiteName || prev.dynamicContext.siteName,
+        },
       }))
 
-      // Small delay to let user see "completed" state before navigating
-      await new Promise((resolve) => setTimeout(resolve, 800))
+      // Brief pause so the user sees the "complete" state before navigation.
+      await new Promise((resolve) => setTimeout(resolve, 400))
 
       return data
     } catch (err) {
+      if ((err as Error)?.name === 'AbortError') {
+        return null
+      }
       const message =
         err instanceof Error
           ? err.message
