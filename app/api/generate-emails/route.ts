@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
     // Wrap OpenAI call with retry logic
     const response = await retryWithBackoff(() =>
       openai.responses.parse({
-        model: 'gpt-4o',
+        model: 'gpt-5',
         input: [
           { role: 'system', content: instructions },
           { role: 'user', content: userInput },

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     // Wrap OpenAI call with retry logic
     const response = await retryWithBackoff(() =>
       openai.responses.create({
-        model: 'gpt-4o',
+        model: 'gpt-5-mini',
         instructions,
         input: userInput,
         temperature: 0.7,

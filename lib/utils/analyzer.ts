@@ -45,7 +45,7 @@ Analyze this page for email-campaign copywriting. Return structured JSON matchin
 
   const response = await retryWithBackoff(() =>
     openai.responses.parse({
-      model: 'gpt-4o',
+      model: 'gpt-5-mini',
       input: [
         { role: 'system', content: SYSTEM_INSTRUCTIONS },
         { role: 'user', content: userInput },
