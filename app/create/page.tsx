@@ -12,6 +12,7 @@ import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { ErrorMessage } from '@/components/campaign/error-message'
+import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { useAnonymousLimit } from '@/lib/hooks/use-anonymous-limit'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
@@ -19,7 +20,7 @@ import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 export default function CreatePage() {
   const router = useRouter()
   const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
-  const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
+  const { isAnalyzing, progressState, error, analyzeLandingPage } = useLandingPage()
   const { isLoading: isCheckingLimit, isAnonymous, canCreate, campaignCount } = useAnonymousLimit()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -71,6 +72,11 @@ export default function CreatePage() {
         <ProgressIndicator
           currentStep={1}
           steps={CAMPAIGN_STEPS}
+        />
+
+        <ScrapeProgressOverlay
+          isOpen={isAnalyzing}
+          progressState={progressState}
         />
 
         <FormCard

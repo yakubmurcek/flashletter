@@ -9,6 +9,7 @@ import Link from 'next/link'
 import { AnimatedSection, GradientText, FloatingElement } from '@/components/ui/animations'
 import { createClient, signInAnonymously } from '@/lib/supabase/client'
 import { useLandingPage } from '@/lib/hooks/use-landing-page'
+import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { useCampaign } from '@/lib/campaign-context'
 
 function HeroUrlForm() {
@@ -18,7 +19,7 @@ function HeroUrlForm() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
-  const { analyzeLandingPage, isAnalyzing, error: analyzeError } = useLandingPage()
+  const { analyzeLandingPage, isAnalyzing, progressState, error: analyzeError } = useLandingPage()
   const { setLandingPageData, createNewCampaign, clearAll } = useCampaign()
 
   useEffect(() => {
@@ -84,45 +85,53 @@ function HeroUrlForm() {
   const displayError = error || analyzeError
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full max-w-xl mx-auto"
-    >
-      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-        <Input
-          type="text"
-          placeholder="https://your-landing-page.com"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          className="h-12 text-base flex-1 border-border/60 focus:border-primary bg-background/80 backdrop-blur-sm"
-          required
-          autoFocus
-          disabled={isLoading}
-        />
-        <Button
-          type="submit"
-          size="lg"
-          disabled={isLoading || isAuthenticated === null}
-          className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-6 h-12 text-base font-semibold transition-transform duration-300 whitespace-nowrap"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-              Analyzing...
-            </>
-          ) : (
-            <>
-              Generate My Campaign
-              <ArrowRight className="w-5 h-5 ml-2" />
-            </>
-          )}
-        </Button>
-      </div>
-      {displayError && <p className="text-sm text-destructive mt-2 text-center">{displayError}</p>}
-      <p className="text-sm text-muted-foreground mt-3 text-center">
-        No sign up required — try it free
-      </p>
-    </form>
+    <>
+      <ScrapeProgressOverlay
+        isOpen={isAnalyzing}
+        progressState={progressState}
+      />
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-xl mx-auto"
+      >
+        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+          <Input
+            type="text"
+            placeholder="https://your-landing-page.com"
+            value={url}
+            onChange={(e) => setUrl(e.target.value)}
+            className="h-12 text-base flex-1 border-border/60 focus:border-primary bg-background/80 backdrop-blur-sm"
+            required
+            autoFocus
+            disabled={isLoading}
+          />
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isLoading || isAuthenticated === null}
+            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-6 h-12 text-base font-semibold transition-transform duration-300 whitespace-nowrap"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                Analyzing...
+              </>
+            ) : (
+              <>
+                Generate My Campaign
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </>
+            )}
+          </Button>
+        </div>
+        {displayError && (
+          <p className="text-sm text-destructive mt-2 text-center">{displayError}</p>
+        )}
+        <p className="text-sm text-muted-foreground mt-3 text-center">
+          No sign up required — try it free
+        </p>
+      </form>
+    </>
   )
 }
 
