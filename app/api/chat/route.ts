@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
         model: 'gpt-5-mini',
         instructions,
         input: userInput,
-        temperature: 0.7,
+        // Note: GPT-5 family does not accept `temperature` on responses.create.
         max_output_tokens: 2000,
       }),
     )

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
           { role: 'system', content: instructions },
           { role: 'user', content: userInput },
         ],
-        temperature: 0.75,
+        // Note: GPT-5 family does not accept `temperature` on responses.parse.
         text: {
           format: zodTextFormat(emailsResponseSchema, 'emails_response'),
         },

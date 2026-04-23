@@ -130,10 +130,10 @@ describe('analyzeLandingPage', () => {
     expect(systemInput.toLowerCase()).toMatch(/never invent/)
   })
 
-  it('uses low temperature for deterministic extraction', async () => {
+  it('does not pass temperature (GPT-5 family rejects it on structured output)', async () => {
     parseMock.mockResolvedValue({ output_parsed: validAnalysis })
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
-    const callArg = parseMock.mock.calls[0][0] as { temperature: number }
-    expect(callArg.temperature).toBeLessThanOrEqual(0.3)
+    const callArg = parseMock.mock.calls[0][0] as Record<string, unknown>
+    expect('temperature' in callArg).toBe(false)
   })
 })

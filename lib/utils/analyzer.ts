@@ -50,7 +50,9 @@ Analyze this page for email-campaign copywriting. Return structured JSON matchin
         { role: 'system', content: SYSTEM_INSTRUCTIONS },
         { role: 'user', content: userInput },
       ],
-      temperature: 0.2,
+      // Note: GPT-5 family does not accept `temperature` on responses.parse;
+      // it uses `reasoning_effort` instead. Structured output already gives us
+      // deterministic extraction, so no sampling knob is needed here.
       text: {
         format: zodTextFormat(landingPageAnalysisSchema, 'landing_page_analysis'),
       },
