@@ -5,14 +5,12 @@ import { Button } from '@/components/ui/button'
 import { Check, Copy } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
 import { EmailPreviewContent } from './email-preview-content'
-import { cn } from '@/lib/utils'
 import type { Email } from '@/lib/types'
 
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
   onTextSelected?: (text: string, action: string, meta?: { shouldFocus?: boolean }) => void
-  showChat?: boolean
   isSaving?: boolean
 }
 
@@ -24,7 +22,6 @@ function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
-  showChat = false,
   isSaving = false,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject || '')

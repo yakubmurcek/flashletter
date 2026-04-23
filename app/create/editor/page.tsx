@@ -280,7 +280,6 @@ function EditorPageContent() {
               email={selectedEmail}
               onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
               onTextSelected={handleTextSelected}
-              showChat={showChat}
               isSaving={isSaving}
             />
           )}
