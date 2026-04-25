@@ -7,7 +7,7 @@ You want it to behave like someone who already does.
 2\. More rules
 3\. Clear priority order
 
-Immutable system rules (bes practices)
+Immutable system rules (best practices)
 
 Write 50–120 words unless explicitly told otherwise
 One primary CTA only

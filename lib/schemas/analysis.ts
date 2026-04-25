@@ -3,21 +3,29 @@ import { z } from 'zod'
 export const landingPageAnalysisSchema = z.object({
   valueProp: z
     .string()
+    .trim()
+    .min(1)
     .describe(
       'One sentence describing what the product does and for whom. Specific, not marketing fluff. Example: "Helps solo SaaS founders turn their landing page into a full email onboarding sequence without writing copy."',
     ),
   targetAudience: z
     .string()
+    .trim()
+    .min(1)
     .describe(
       'Who the page is written for, in concrete terms. Role, company size, context. Example: "Bootstrapped B2B SaaS founders with under 100 paying customers who hate writing marketing copy."',
     ),
   primaryCTA: z
     .string()
+    .trim()
+    .min(1)
     .describe(
       'The single primary action the page wants visitors to take. Every email in the generated sequence must drive toward this same action. Example: "Start free trial" or "Book a 15-min demo".',
     ),
   toneFingerprint: z
     .string()
+    .trim()
+    .min(1)
     .describe(
       'Concrete description of the page voice so emails match. Avoid labels like "friendly". Describe the actual patterns. Example: "Direct, casual, uses \'you\' heavily, no jargon, short sentences, occasional dry humor."',
     ),

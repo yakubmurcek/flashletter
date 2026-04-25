@@ -99,7 +99,21 @@ export function useLandingPage(): UseLandingPageReturn {
       }))
 
       // Brief pause so the user sees the "complete" state before navigation.
-      await new Promise((resolve) => setTimeout(resolve, 400))
+      // Resolves early on abort so the caller doesn't keep working after unmount.
+      await new Promise<void>((resolve) => {
+        if (controller.signal.aborted) return resolve()
+        const timeout = setTimeout(resolve, 400)
+        controller.signal.addEventListener(
+          'abort',
+          () => {
+            clearTimeout(timeout)
+            resolve()
+          },
+          { once: true },
+        )
+      })
+
+      if (controller.signal.aborted) return null
 
       return data
     } catch (err) {

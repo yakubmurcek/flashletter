@@ -46,7 +46,7 @@ import { retryWithBackoff } from '@/lib/utils/openai-retry'
 // Wrap OpenAI calls
 const response = await retryWithBackoff(() =>
   openai.responses.create({
-    model: 'gpt-4o',
+    model: 'gpt-5',
     input: 'Hello!',
   }),
 )

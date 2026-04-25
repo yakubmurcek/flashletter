@@ -42,7 +42,7 @@ function FAQItemComponent({ item, isOpen, onToggle }: FAQItemProps) {
       <div
         id={`faq-answer-${item.id}`}
         className={cn(
-          'overflow-hidden transition-[max-height,opacity] duration-400 ease-in-out',
+          'overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out',
           isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
         )}
       >
