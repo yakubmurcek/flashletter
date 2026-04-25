@@ -33,19 +33,16 @@ export default function PrivacyPolicyPage() {
             <CardContent className="space-y-4">
               <div>
                 <h3 className="font-semibold mb-2">Waitlist Information</h3>
-                <p className="text-muted-foreground">
-                  When you join our waitlist, we collect:
-                </p>
+                <p className="text-muted-foreground">When you join our waitlist, we collect:</p>
                 <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
                   <li>Email address (required)</li>
                   <li>Name (optional)</li>
                   <li>Timestamp of signup</li>
                 </ul>
                 <p className="mt-3 text-muted-foreground text-sm">
-                  We do not store your IP address. We only receive coarse region
-                  information through our hosting provider so we can show the
-                  right consent options (for example, GDPR prompts in the EU),
-                  and we discard that information after the consent decision.
+                  We do not store your IP address. We only receive coarse region information through
+                  our hosting provider so we can show the right consent options (for example, GDPR
+                  prompts in the EU), and we discard that information after the consent decision.
                 </p>
               </div>
 
@@ -75,22 +72,21 @@ export default function PrivacyPolicyPage() {
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>To notify you when Flashletter becomes available</li>
                 <li>
-                  To send service or operational updates about our product
-                  development and waitlist status
+                  To send service or operational updates about our product development and waitlist
+                  status
                 </li>
                 <li>
-                  To send additional marketing updates, tips, or promotions—but
-                  only if you have explicitly opted in. Every marketing message
-                  includes an unsubscribe link so you can withdraw consent at
-                  any time.
+                  To send additional marketing updates, tips, or promotions—but only if you have
+                  explicitly opted in. Every marketing message includes an unsubscribe link so you
+                  can withdraw consent at any time.
                 </li>
                 <li>To improve our website and services</li>
                 <li>To prevent fraud and ensure security</li>
                 <li>To comply with legal obligations</li>
               </ul>
               <p className="mt-4 text-muted-foreground">
-                We honor the selections you make in the waitlist form. If you do
-                not opt in to marketing communications, we will not send them.
+                We honor the selections you make in the waitlist form. If you do not opt in to
+                marketing communications, we will not send them.
               </p>
             </CardContent>
           </Card>
@@ -105,14 +101,13 @@ export default function PrivacyPolicyPage() {
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>
-                  <strong>Consent:</strong> You have given clear consent for us
-                  to process your personal data for the specific purpose of
-                  joining our waitlist and, where selected, to receive optional
-                  marketing communications
+                  <strong>Consent:</strong> You have given clear consent for us to process your
+                  personal data for the specific purpose of joining our waitlist and, where
+                  selected, to receive optional marketing communications
                 </li>
                 <li>
-                  <strong>Legitimate Interest:</strong> We have a legitimate
-                  interest in improving our services and preventing fraud
+                  <strong>Legitimate Interest:</strong> We have a legitimate interest in improving
+                  our services and preventing fraud
                 </li>
               </ul>
             </CardContent>
@@ -125,9 +120,7 @@ export default function PrivacyPolicyPage() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <h3 className="font-semibold mb-2">
-                    GDPR Rights (EU Residents)
-                  </h3>
+                  <h3 className="font-semibold mb-2">GDPR Rights (EU Residents)</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
                     <li>Right to access your personal data</li>
                     <li>Right to rectification of inaccurate data</li>
@@ -138,26 +131,18 @@ export default function PrivacyPolicyPage() {
                     <li>Right to withdraw consent at any time</li>
                   </ul>
                   <p className="mt-2 text-muted-foreground text-sm">
-                    You can unsubscribe at any time using the link provided in
-                    our emails or by contacting us directly.
+                    You can unsubscribe at any time using the link provided in our emails or by
+                    contacting us directly.
                   </p>
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-2">
-                    CCPA Rights (California Residents)
-                  </h3>
+                  <h3 className="font-semibold mb-2">CCPA Rights (California Residents)</h3>
                   <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                    <li>
-                      Right to know what personal information is collected
-                    </li>
+                    <li>Right to know what personal information is collected</li>
                     <li>Right to delete personal information</li>
-                    <li>
-                      Right to opt-out of the sale of personal information
-                    </li>
-                    <li>
-                      Right to non-discrimination for exercising privacy rights
-                    </li>
+                    <li>Right to opt-out of the sale of personal information</li>
+                    <li>Right to non-discrimination for exercising privacy rights</li>
                   </ul>
                 </div>
               </div>
@@ -170,40 +155,38 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                We do not sell, trade, or rent your personal information to
-                third parties. We may share your information only in the
-                following circumstances:
+                We do not sell, trade, or rent your personal information to third parties. We may
+                share your information only in the following circumstances:
               </p>
               <ul className="list-disc list-inside space-y-2 text-muted-foreground">
                 <li>With your explicit consent</li>
                 <li>To comply with legal obligations</li>
                 <li>To protect our rights and prevent fraud</li>
                 <li>
-                  With service providers who assist us in operating our website
-                  (under strict data protection agreements)
+                  With service providers who assist us in operating our website (under strict data
+                  protection agreements)
                 </li>
               </ul>
               <div className="mt-4 space-y-2 text-muted-foreground text-sm">
                 <p>
-                  In particular, we rely on the following processors to deliver
-                  the waitlist experience:
+                  In particular, we rely on the following processors to deliver the waitlist
+                  experience:
                 </p>
                 <ul className="list-disc list-inside space-y-1">
                   <li>
-                    <strong>Supabase:</strong> Cloud database and auth provider
-                    we use to store waitlist submissions and related metadata.
+                    <strong>Supabase:</strong> Cloud database and auth provider we use to store
+                    waitlist submissions and related metadata.
                   </li>
                   <li>
-                    <strong>Sentry:</strong> Error monitoring service that helps
-                    us diagnose and fix issues. Sentry receives technical error
-                    details and may include the email address you entered if an
-                    error occurs during signup.
+                    <strong>Sentry:</strong> Error monitoring service that helps us diagnose and fix
+                    issues. Sentry receives technical error details and may include the email
+                    address you entered if an error occurs during signup.
                   </li>
                 </ul>
                 <p>
-                  These providers only process data on our behalf and in
-                  accordance with their data protection addenda. We regularly
-                  review them to ensure they maintain appropriate safeguards.
+                  These providers only process data on our behalf and in accordance with their data
+                  protection addenda. We regularly review them to ensure they maintain appropriate
+                  safeguards.
                 </p>
               </div>
             </CardContent>
@@ -215,10 +198,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                We implement appropriate technical and organizational measures
-                to protect your personal data against unauthorized access,
-                alteration, disclosure, or destruction. This includes
-                encryption, secure servers, and regular security assessments.
+                We implement appropriate technical and organizational measures to protect your
+                personal data against unauthorized access, alteration, disclosure, or destruction.
+                This includes encryption, secure servers, and regular security assessments.
               </p>
             </CardContent>
           </Card>
@@ -229,11 +211,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                We retain your waitlist information until you request its
-                deletion or until it&rsquo;s no longer necessary for the
-                purposes
-                outlined in this policy. You can request deletion at any time by
-                contacting us.
+                We retain your waitlist information until you request its deletion or until
+                it&rsquo;s no longer necessary for the purposes outlined in this policy. You can
+                request deletion at any time by contacting us.
               </p>
             </CardContent>
           </Card>
@@ -244,19 +224,15 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Your data may be transferred to and processed in countries other
-                than your own. We ensure appropriate safeguards are in place to
-                protect your data in accordance with applicable data protection
-                laws.
+                Your data may be transferred to and processed in countries other than your own. We
+                ensure appropriate safeguards are in place to protect your data in accordance with
+                applicable data protection laws.
               </p>
               <p className="text-muted-foreground mt-4 text-sm">
-                We host our core waitlist data in Supabase&rsquo;s EU region
-                and use Sentry&rsquo;s EU data residency option for error
-                monitoring. They
-                commit to appropriate transfer safeguards. You can review their
-                individual data protection terms via Supabase&rsquo;s and
-                Sentry&rsquo;s
-                privacy policies.
+                We host our core waitlist data in Supabase&rsquo;s EU region and use Sentry&rsquo;s
+                EU data residency option for error monitoring. They commit to appropriate transfer
+                safeguards. You can review their individual data protection terms via
+                Supabase&rsquo;s and Sentry&rsquo;s privacy policies.
               </p>
             </CardContent>
           </Card>
@@ -267,10 +243,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                Our service is not intended for children under 16. We do not
-                knowingly collect personal information from children under 16.
-                If you are a parent or guardian and believe your child has
-                provided us with personal information, please contact us.
+                Our service is not intended for children under 16. We do not knowingly collect
+                personal information from children under 16. If you are a parent or guardian and
+                believe your child has provided us with personal information, please contact us.
               </p>
             </CardContent>
           </Card>
@@ -281,10 +256,9 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground">
-                We may update this privacy policy from time to time. We will
-                notify you of any changes by posting the new privacy policy on
-                this page and updating the &ldquo;Last updated&rdquo; date. We
-                encourage you to review this privacy policy periodically.
+                We may update this privacy policy from time to time. We will notify you of any
+                changes by posting the new privacy policy on this page and updating the &ldquo;Last
+                updated&rdquo; date. We encourage you to review this privacy policy periodically.
               </p>
             </CardContent>
           </Card>
@@ -295,8 +269,8 @@ export default function PrivacyPolicyPage() {
             </CardHeader>
             <CardContent>
               <p className="text-muted-foreground mb-4">
-                If you have any questions about this privacy policy or wish to
-                exercise your rights, please contact us:
+                If you have any questions about this privacy policy or wish to exercise your rights,
+                please contact us:
               </p>
               <div className="space-y-2 text-muted-foreground">
                 <p>

@@ -13,16 +13,19 @@ interface CampaignTypeSelectorProps {
   onChange: (value: string) => void
 }
 
-export function CampaignTypeSelector({
-  value,
-  onChange,
-}: CampaignTypeSelectorProps) {
+export function CampaignTypeSelector({ value, onChange }: CampaignTypeSelectorProps) {
   return (
     <div className="space-y-3">
-      <Label htmlFor="campaign-type" className="text-base font-semibold">
+      <Label
+        htmlFor="campaign-type"
+        className="text-base font-semibold"
+      >
         Campaign Type
       </Label>
-      <Select value={value} onValueChange={onChange}>
+      <Select
+        value={value}
+        onValueChange={onChange}
+      >
         <SelectTrigger
           id="campaign-type"
           className="h-12 border-border/60 focus:border-primary/50 transition-colors"
@@ -31,15 +34,16 @@ export function CampaignTypeSelector({
         </SelectTrigger>
         <SelectContent>
           {CAMPAIGN_TYPES.map((t) => (
-            <SelectItem key={t.value} value={t.value}>
+            <SelectItem
+              key={t.value}
+              value={t.value}
+            >
               {t.label}
             </SelectItem>
           ))}
         </SelectContent>
       </Select>
-      <p className="text-sm text-muted-foreground">
-        Select the goal of your email campaign
-      </p>
+      <p className="text-sm text-muted-foreground">Select the goal of your email campaign</p>
     </div>
   )
 }

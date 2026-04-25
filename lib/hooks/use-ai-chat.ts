@@ -162,35 +162,23 @@ export function useAIChat({
     }
 
     const discussedTopics = new Set(
-      messages
-        .filter((m) => m.role === 'user')
-        .map((m) => m.content.toLowerCase())
+      messages.filter((m) => m.role === 'user').map((m) => m.content.toLowerCase()),
     )
 
     const dynamicActions: string[] = []
     const { subject = '', content = '', campaignType = '' } = emailContext
     const contentLength = content.length
     const hasCtaKeywords =
-      /click|buy|shop|get|download|sign up|register|join|try|start|learn more/i.test(
-        content
-      )
+      /click|buy|shop|get|download|sign up|register|join|try|start|learn more/i.test(content)
     const hasUrgency = /now|today|limited|hurry|don't miss/i.test(content)
     const hasPersonalization = /\{name\}|\{first_name\}/i.test(content)
     const subjectLength = subject.length
 
-    if (
-      subjectLength > 60 &&
-      !discussedTopics.has('subject') &&
-      !discussedTopics.has('shorten')
-    ) {
+    if (subjectLength > 60 && !discussedTopics.has('subject') && !discussedTopics.has('shorten')) {
       dynamicActions.push('Subject line is too long')
     }
 
-    if (
-      !hasCtaKeywords &&
-      !discussedTopics.has('cta') &&
-      !discussedTopics.has('call to action')
-    ) {
+    if (!hasCtaKeywords && !discussedTopics.has('cta') && !discussedTopics.has('call to action')) {
       dynamicActions.push('Missing clear call-to-action')
     }
 
@@ -208,17 +196,11 @@ export function useAIChat({
       dynamicActions.push('Make it more personal')
     }
 
-    if (
-      campaignType?.toLowerCase().includes('welcome') &&
-      !discussedTopics.has('onboard')
-    ) {
+    if (campaignType?.toLowerCase().includes('welcome') && !discussedTopics.has('onboard')) {
       dynamicActions.push('Improve onboarding flow')
     }
 
-    if (
-      campaignType?.toLowerCase().includes('nurture') &&
-      !discussedTopics.has('value')
-    ) {
+    if (campaignType?.toLowerCase().includes('nurture') && !discussedTopics.has('value')) {
       dynamicActions.push('Add educational content')
     }
 
@@ -228,9 +210,7 @@ export function useAIChat({
 
     const combined = [...dynamicActions.slice(0, 2), ...basicActions]
 
-    return combined
-      .filter((action, index, self) => self.indexOf(action) === index)
-      .slice(0, 4)
+    return combined.filter((action, index, self) => self.indexOf(action) === index).slice(0, 4)
   }, [messages, emailContext])
 
   return {

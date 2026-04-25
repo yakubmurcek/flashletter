@@ -42,7 +42,10 @@ export function Header() {
   return (
     <header className="border-b border-border backdrop-blur-sm bg-background/80 fixed top-0 left-0 right-0 z-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-2 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
+        <Link
+          href="/"
+          className="flex items-center gap-2 group"
+        >
           <Image
             src="/icon-192.webp"
             alt="Flashletter"
@@ -63,7 +66,7 @@ export function Header() {
             <a
               key={item.href}
               href={item.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               {item.label}
             </a>
@@ -76,7 +79,7 @@ export function Header() {
                 variant="ghost"
                 size="sm"
                 asChild
-                className="hover:scale-105 transition-transform"
+                className="hover:scale-105 transition"
               >
                 <Link href="/campaigns">My Campaigns</Link>
               </Button>
@@ -89,7 +92,7 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   asChild
-                  className="hover:scale-105 transition-transform"
+                  className="hover:scale-105 transition"
                 >
                   <Link href="/login">Sign In</Link>
                 </Button>
@@ -98,7 +101,7 @@ export function Header() {
                 <Button
                   size="sm"
                   asChild
-                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
                 >
                   {LANDING_PAGE_CONFIG.showProductFeatures ? (
                     <Link href="/signup">Get Started</Link>

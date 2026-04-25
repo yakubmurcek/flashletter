@@ -55,11 +55,7 @@ export function getPreviewForDay(day: number, type: string): string {
   return `This is email ${day} of your ${type} campaign. Click to edit and customize the content.`
 }
 
-export function getContentForDay(
-  day: number,
-  type: string,
-  tone: string
-): string {
+export function getContentForDay(day: number, type: string, tone: string): string {
   return `# Welcome to Day ${day}
 
 Hi there,

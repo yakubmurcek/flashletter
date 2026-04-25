@@ -17,7 +17,6 @@ pnpm install
    ```
 
 2. Get your OpenAI API key:
-
    - Visit [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
    - Click "Create new secret key"
    - Copy the key

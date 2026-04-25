@@ -3,6 +3,7 @@
 import { useState, useRef } from 'react'
 import { CampaignService } from '../services/campaign.service'
 import type { CampaignConfig, GenerateEmailsResponse } from '../types'
+import type { LandingPageAnalysis } from '../schemas/analysis'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
 
 interface UseEmailGenerationReturn {
@@ -13,7 +14,8 @@ interface UseEmailGenerationReturn {
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
-    campaignId?: string
+    campaignId?: string,
+    landingAnalysis?: LandingPageAnalysis,
   ) => Promise<GenerateEmailsResponse | null>
   clearError: () => void
   clearWarning: () => void
@@ -29,7 +31,8 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
-    campaignId?: string
+    campaignId?: string,
+    landingAnalysis?: LandingPageAnalysis,
   ): Promise<GenerateEmailsResponse | null> => {
     // Abort any existing request
     if (abortControllerRef.current) {
@@ -49,7 +52,8 @@ export function useEmailGeneration(): UseEmailGenerationReturn {
         landingContent,
         config,
         campaignId,
-        abortControllerRef.current.signal
+        abortControllerRef.current.signal,
+        landingAnalysis,
       )
       setWarning(result.warning ?? null)
       return result

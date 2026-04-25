@@ -2,41 +2,39 @@
 
 import { useState, useEffect, useMemo, useRef, memo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Save, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
+import { Check, Copy } from 'lucide-react'
 import { TextSelectionPopup } from './text-selection-popup'
-import { EmailEditorSidebar } from './email-editor-sidebar'
 import { EmailPreviewContent } from './email-preview-content'
-import { cn } from '@/lib/utils'
 import type { Email } from '@/lib/types'
 
 interface EmailPreviewProps {
   email: Email
   onUpdate: (updates: Partial<Email>) => void
-  onTextSelected?: (
-    text: string,
-    action: string,
-    meta?: { shouldFocus?: boolean }
-  ) => void
-  showChat?: boolean
+  onTextSelected?: (text: string, action: string, meta?: { shouldFocus?: boolean }) => void
+  isSaving?: boolean
 }
+
+// ... imports will be handled in separate call or combined if I use multi-replace. I'll use replace_file_content for the main body first or do imports and body together.
+// Let's do imports and body separately to be safe with line numbers, or I can replace the whole file content block if I am careful.
+// I will reuse "EmailPreviewComponent" signature and update its body.
 
 function EmailPreviewComponent({
   email,
   onUpdate,
   onTextSelected,
-  showChat = false,
+  isSaving = false,
 }: EmailPreviewProps) {
-  const [editedSubject, setEditedSubject] = useState(email.subject)
-  const [editedContent, setEditedContent] = useState(email.content)
-  const [editorMode, setEditorMode] = useState<'markdown' | 'richtext'>(
-    'markdown'
-  )
-  const [showEditor, setShowEditor] = useState(false)
+  const [editedSubject, setEditedSubject] = useState(email.subject || '')
+  const [editedContent, setEditedContent] = useState(email.content || '')
   const [selectedText, setSelectedText] = useState<string>('')
   const [popupPosition, setPopupPosition] = useState<{
     x: number
     y: number
   } | null>(null)
+
+  const [editor, setEditor] = useState<import('@tiptap/react').Editor | null>(null)
+  const [isCopied, setIsCopied] = useState(false)
+
   const lastAutoSelectionRef = useRef<{
     text: string
     startContainer: Node
@@ -45,11 +43,10 @@ function EmailPreviewComponent({
     endOffset: number
   } | null>(null)
 
-  // Combine both effects into one - more efficient
+  // Update local state when prop changes
   useEffect(() => {
-    // Reset edited content when email changes
-    setEditedSubject(email.subject)
-    setEditedContent(email.content)
+    setEditedSubject(email.subject || '')
+    setEditedContent(email.content || '')
   }, [email.id, email.subject, email.content])
 
   // Memoize hasChanges to avoid recalculation
@@ -57,12 +54,19 @@ function EmailPreviewComponent({
     return editedSubject !== email.subject || editedContent !== email.content
   }, [editedSubject, editedContent, email.subject, email.content])
 
-  const handleSave = () => {
-    onUpdate({
-      subject: editedSubject,
-      content: editedContent,
-    })
-  }
+  // Auto-save when changes occur
+  useEffect(() => {
+    if (hasChanges) {
+      const timeoutId = setTimeout(() => {
+        onUpdate({
+          subject: editedSubject,
+          content: editedContent,
+        })
+      }, 1000)
+
+      return () => clearTimeout(timeoutId)
+    }
+  }, [hasChanges, editedSubject, editedContent, onUpdate])
 
   const selectionsMatch = (
     range: Range | null,
@@ -72,17 +76,11 @@ function EmailPreviewComponent({
       startOffset: number | null
       endContainer: Node | null
       endOffset: number | null
-    }
+    },
   ) => {
     if (!range) return false
 
-    const {
-      startContainer,
-      startOffset,
-      endContainer,
-      endOffset,
-      text,
-    } = selectionDetails
+    const { startContainer, startOffset, endContainer, endOffset, text } = selectionDetails
 
     if (!lastAutoSelectionRef.current) return false
 
@@ -100,10 +98,7 @@ function EmailPreviewComponent({
     const text = selection?.toString().trim()
 
     if (text && text.length > 0) {
-      const range =
-        selection && selection.rangeCount > 0
-          ? selection.getRangeAt(0)
-          : null
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
       const rect = range?.getBoundingClientRect()
 
       if (rect) {
@@ -138,10 +133,7 @@ function EmailPreviewComponent({
   const handleActionSelected = (action: string, text: string) => {
     if (action === 'Ask AI about this') {
       const selection = window.getSelection()
-      const range =
-        selection && selection.rangeCount > 0
-          ? selection.getRangeAt(0)
-          : null
+      const range = selection && selection.rangeCount > 0 ? selection.getRangeAt(0) : null
 
       const matchesExisting = selectionsMatch(range, {
         text,
@@ -178,77 +170,57 @@ function EmailPreviewComponent({
     lastAutoSelectionRef.current = null
   }
 
+  const handleCopy = () => {
+    if (!editor) return
+
+    const html = editor.getHTML()
+    navigator.clipboard.writeText(html)
+    setIsCopied(true)
+    setTimeout(() => setIsCopied(false), 2000)
+  }
+
   return (
     <div className="h-full flex flex-col">
       <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.4)]">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-semibold tracking-tight">
-              Day {email.day}
-            </h2>
+            <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
             <p className="text-sm text-muted-foreground/80 truncate">
-              {showEditor
-                ? 'Edit content on the left, see preview on the right'
-                : 'Preview mode'}
+              Review and edit your campaign email
             </p>
           </div>
-          <div
-            className={cn(
-              'flex items-center gap-2',
-              showChat ? 'mr-4' : 'mr-0'
-            )}
-          >
+          <div className="flex items-center gap-4">
+            <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
+              {!isSaving && <Check className="w-3 h-3 text-muted-foreground" />}
+              {isSaving ? 'Saving...' : 'Saved'}
+            </span>
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setShowEditor(!showEditor)}
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/12 hover:border-border/60 transition-colors"
+              onClick={handleCopy}
+              className="gap-2"
+              disabled={!editor}
             >
-              {showEditor ? (
-                <>
-                  <PanelLeftClose className="w-4 h-4" />
-                  <span className="hidden sm:inline">Hide Editor</span>
-                </>
+              {isCopied ? (
+                <Check className="h-4 w-4 text-green-500" />
               ) : (
-                <>
-                  <PanelLeftOpen className="w-4 h-4" />
-                  <span className="hidden sm:inline">Show Editor</span>
-                </>
+                <Copy className="h-4 w-4" />
               )}
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={!hasChanges}
-              className="gap-2 rounded-full shadow-[0_15px_45px_-25px_rgba(249,115,22,0.4)]"
-            >
-              <Save className="w-4 h-4" />
-              {hasChanges ? 'Save Changes' : 'Saved'}
+              Copy HTML
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden gap-6 px-6 pb-6 pt-4 min-h-0">
-        {showEditor && (
-          <div className="flex-1 overflow-hidden transition-all duration-300">
-            <div className="h-full overflow-y-auto rounded-3xl bg-white/[0.04] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]">
-              <EmailEditorSidebar
-                subject={editedSubject}
-                content={editedContent}
-                editorMode={editorMode}
-                onSubjectChange={setEditedSubject}
-                onContentChange={setEditedContent}
-                onEditorModeChange={setEditorMode}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className={cn('flex-[1.35] min-w-0 h-full flex flex-col min-h-0')}>
+      <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0 flex flex-col items-center">
+        <div className="w-full max-w-4xl h-full flex flex-col min-h-0">
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}
+            onSubjectChange={setEditedSubject}
+            onContentChange={setEditedContent}
             onMouseUp={handleTextSelection}
+            onEditorCreated={setEditor}
           />
         </div>
       </div>

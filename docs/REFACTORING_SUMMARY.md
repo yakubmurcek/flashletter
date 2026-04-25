@@ -95,10 +95,7 @@ export const storage = {
 ```typescript
 // Repeated sessionStorage logic
 const current = JSON.parse(sessionStorage.getItem('campaign-data') || '{}')
-sessionStorage.setItem(
-  'campaign-data',
-  JSON.stringify({ ...current, landingPageData: data })
-)
+sessionStorage.setItem('campaign-data', JSON.stringify({ ...current, landingPageData: data }))
 ```
 
 **After:**

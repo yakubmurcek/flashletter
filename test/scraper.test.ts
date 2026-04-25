@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import * as cheerio from 'cheerio'
 import { extractTextFromHTML, isContentMeaningful } from '@/lib/utils/scraper'
-import {
-  extractMetadata,
-  getBestTitle,
-  getBestDescription,
-} from '@/lib/utils/metadata-extractor'
+import { extractMetadata, getBestTitle, getBestDescription } from '@/lib/utils/metadata-extractor'
 import { shouldUseDynamicScraping } from '@/lib/utils/playwright-scraper'
 
 describe('Content Extraction', () => {
@@ -28,12 +24,8 @@ describe('Content Extraction', () => {
     const result = extractTextFromHTML(html)
 
     expect(result.content).toContain('<h1>Main Title</h1>')
-    expect(result.content).toContain(
-      '<p>This is the main content of the page.</p>'
-    )
-    expect(result.content).toContain(
-      '<p>Another paragraph with more content.</p>'
-    )
+    expect(result.content).toContain('<p>This is the main content of the page.</p>')
+    expect(result.content).toContain('<p>Another paragraph with more content.</p>')
     expect(result.content).not.toContain('Navigation')
     expect(result.content).not.toContain('Footer content')
     expect(result.wordCount).toBeGreaterThan(0)
@@ -90,10 +82,7 @@ describe('Content Extraction', () => {
 
     const textContent = cheerio.load(result.content).text()
     expect(textContent.length).toBeLessThanOrEqual(10000)
-    expect(
-      textContent.length < longContent.length ||
-        textContent.trim().endsWith('...')
-    ).toBe(true)
+    expect(textContent.length < longContent.length || textContent.trim().endsWith('...')).toBe(true)
   })
 
   it('should detect meaningful content', () => {
@@ -278,9 +267,7 @@ describe('Dynamic Scraping Detection', () => {
   it('should detect known SPA domains', () => {
     const html = '<html><body>Minimal content</body></html>'
 
-    expect(shouldUseDynamicScraping('https://reactjs.org/docs', html)).toBe(
-      true
-    )
+    expect(shouldUseDynamicScraping('https://reactjs.org/docs', html)).toBe(true)
     expect(shouldUseDynamicScraping('https://vuejs.org/guide', html)).toBe(true)
     expect(shouldUseDynamicScraping('https://nextjs.org/docs', html)).toBe(true)
   })

@@ -36,10 +36,7 @@ export function logError(error: unknown, context: ErrorContext): void {
 /**
  * Standardized error message for user display
  */
-export function getUserFriendlyMessage(
-  error: unknown,
-  operation: string
-): string {
+export function getUserFriendlyMessage(error: unknown, operation: string): string {
   if (error instanceof Error) {
     // Handle specific error types
     if (error.name === 'AbortError') {
@@ -54,10 +51,7 @@ export function getUserFriendlyMessage(
       return 'Configuration error. Please contact support.'
     }
 
-    if (
-      error.message.includes('permission') ||
-      error.message.includes('unauthorized')
-    ) {
+    if (error.message.includes('permission') || error.message.includes('unauthorized')) {
       return 'You do not have permission to perform this action.'
     }
 
@@ -74,7 +68,7 @@ export function getUserFriendlyMessage(
  */
 export async function withErrorHandling<T>(
   operation: () => Promise<T>,
-  context: ErrorContext
+  context: ErrorContext,
 ): Promise<T | null> {
   try {
     return await operation()
@@ -89,7 +83,7 @@ export async function withErrorHandling<T>(
  */
 export async function withErrorLogging<T>(
   operation: () => Promise<T>,
-  context: ErrorContext
+  context: ErrorContext,
 ): Promise<T> {
   try {
     return await operation()
@@ -107,7 +101,7 @@ export function handleComponentError(
   component: string,
   operation: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  additionalData?: Record<string, any>
+  additionalData?: Record<string, any>,
 ): string {
   logError(error, {
     operation,

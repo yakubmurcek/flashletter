@@ -9,10 +9,7 @@ import { useRef, useCallback } from 'react'
  * @returns Debounced function
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function useDebounce<T extends (...args: any[]) => any>(
-  callback: T,
-  delay: number
-): T {
+export function useDebounce<T extends (...args: any[]) => any>(callback: T, delay: number): T {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   const debouncedCallback = useCallback(
@@ -27,7 +24,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
         callback(...args)
       }, delay)
     },
-    [callback, delay]
+    [callback, delay],
   ) as T
 
   // Cleanup on unmount
@@ -50,7 +47,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  delay: number
+  delay: number,
 ): T & { cancel: () => void } {
   let timeoutId: NodeJS.Timeout | null = null
 

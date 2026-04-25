@@ -40,7 +40,10 @@ export default async function CampaignsPage() {
       <header className="border-b border-border backdrop-blur-sm bg-background/80 sticky top-0 z-50">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto py-4 flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link
+              href="/"
+              className="flex items-center gap-2 group"
+            >
               <Image
                 src="/icon-192.webp"
                 alt="Flashletter"
@@ -69,9 +72,12 @@ export default async function CampaignsPage() {
             <Button
               asChild
               size="lg"
-              className="gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300 w-full md:w-auto"
+              className="gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300 w-full md:w-auto"
             >
-              <Link href="/create" prefetch>
+              <Link
+                href="/create"
+                prefetch
+              >
                 <Plus className="w-5 h-5" />
                 New Campaign
               </Link>
@@ -96,9 +102,12 @@ export default async function CampaignsPage() {
                 </p>
                 <Button
                   asChild
-                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+                  className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
                 >
-                  <Link href="/create" prefetch>
+                  <Link
+                    href="/create"
+                    prefetch
+                  >
                     Create Your First Campaign
                   </Link>
                 </Button>
@@ -107,7 +116,10 @@ export default async function CampaignsPage() {
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => (
-                <CampaignCard key={campaign.id} campaign={campaign} />
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                />
               ))}
             </div>
           )}

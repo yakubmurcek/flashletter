@@ -33,7 +33,10 @@ export function FullScreenState({
           </div>
         )}
         {actionHref && actionLabel && (
-          <Button asChild className="mt-4">
+          <Button
+            asChild
+            className="mt-4"
+          >
             <Link href={actionHref}>{actionLabel}</Link>
           </Button>
         )}

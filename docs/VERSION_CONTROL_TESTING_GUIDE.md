@@ -15,14 +15,12 @@
 ### Steps:
 
 1. **Create a Campaign**
-
    - Enter any URL (e.g., `https://example.com`)
    - Click "Analyze Landing Page"
    - Configure campaign settings
    - Click "Generate Emails"
 
 2. **Make First Edit**
-
    - In editor, select "Day 1" email
    - Click "Show Editor" button
    - Change the subject to: "Test Version 1"
@@ -30,13 +28,11 @@
    - Click "Save Changes"
 
 3. **Check Version Created**
-
    - Look at the "History" button in header
    - You should see a badge with "1"
    - ✅ **PASS**: Badge shows version count
 
 4. **Make Second Edit**
-
    - Change subject to: "Test Version 2"
    - Add more content
    - Click "Save Changes"
@@ -56,18 +52,15 @@
 ### Steps:
 
 1. **Select a Version**
-
    - In history page, click on "Version 1"
    - Middle panel shows changes
 
 2. **Verify Subject Diff**
-
    - Click "Subject Line" tab
    - Should show old subject vs new subject
    - ✅ **PASS**: Diff shows correctly
 
 3. **Verify Content Diff**
-
    - Click "Content" tab
    - Green lines = added content
    - Red lines = removed content
@@ -85,7 +78,6 @@
 ### Steps:
 
 1. **Make Multiple Versions**
-
    - Edit the email 3 times with distinct content:
      - Version 1: "First edit"
      - Version 2: "Second edit"
@@ -93,7 +85,6 @@
    - You should now have 3 versions in history
 
 2. **Restore Version 2**
-
    - Go to History
    - Select "Version 2"
    - Click "Restore This Version" button
@@ -101,7 +92,6 @@
    - ✅ **PASS**: Confirmation dialog appears
 
 3. **Verify Restore**
-
    - You're redirected to editor
    - Email content should match "Version 2"
    - ✅ **PASS**: Content restored correctly
@@ -120,7 +110,6 @@
 ### Steps:
 
 1. **Save Without Changes**
-
    - In editor, click "Save Changes" WITHOUT making any edits
    - Check Console log
    - Should see: "Skipping duplicate version save - content unchanged"
@@ -138,13 +127,11 @@
 ### Steps:
 
 1. **Edit Day 1**
-
    - Select "Day 1" email
    - Make 2 edits and save each time
    - History button should show "2"
 
 2. **Edit Day 2**
-
    - Select "Day 2" email
    - Make 1 edit and save
    - History button should show "1"
@@ -161,12 +148,10 @@
 ### Steps:
 
 1. **Create Versions**
-
    - Make a few edits to any email
    - Note the version count
 
 2. **Refresh Browser**
-
    - Press F5 or Cmd+R
    - Navigate back to the same email
    - Check History button
@@ -199,13 +184,11 @@
 ### Steps:
 
 1. **Test Invalid Restore**
-
    - Go to History page
    - In URL, manually change `emailId` to 9999
    - Press Enter
 
 2. **Verify Error Handling**
-
    - Should show "Email Not Found" error page
    - "Back to Editor" button present
    - No console errors

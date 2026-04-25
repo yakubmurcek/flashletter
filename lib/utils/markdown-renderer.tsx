@@ -1,4 +1,4 @@
-import React from 'react'
+import { cn } from '@/lib/utils'
 
 export function processInlineFormattingForPreview(text: string) {
   const parts: (string | React.ReactElement)[] = []
@@ -12,7 +12,9 @@ export function processInlineFormattingForPreview(text: string) {
     url?: string
   }> = []
 
-  const boldRegex = /\*\*(.*?)\*\*/g
+  // Updated regex to handle multiline matches if necessary, though line-by-line parsing usually avoids this.
+  // Using [\s\S] ensures we match across newlines if they somehow exist in the chunk.
+  const boldRegex = /\*\*([\s\S]*?)\*\*/g
   const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
 
   let match
@@ -44,9 +46,12 @@ export function processInlineFormattingForPreview(text: string) {
 
     if (pattern.type === 'bold') {
       parts.push(
-        <strong key={`bold-${idx}`} className="font-semibold">
+        <strong
+          key={`bold-${idx}`}
+          className="font-semibold"
+        >
           {pattern.text}
-        </strong>
+        </strong>,
       )
     } else if (pattern.type === 'link') {
       parts.push(
@@ -58,7 +63,7 @@ export function processInlineFormattingForPreview(text: string) {
           className="text-primary underline hover:text-primary/80 transition-colors"
         >
           {pattern.text}
-        </a>
+        </a>,
       )
     }
 
@@ -73,74 +78,133 @@ export function processInlineFormattingForPreview(text: string) {
 }
 
 export function renderMarkdown(text: string) {
-  return text.split('\n\n').map((paragraph, i) => {
-    if (paragraph.startsWith('# ')) {
-      return (
-        <h1 key={i} className="text-2xl font-bold mb-4">
-          {paragraph.slice(2)}
-        </h1>
-      )
-    }
-    if (paragraph.startsWith('## ')) {
-      return (
-        <h2 key={i} className="text-xl font-semibold mb-3">
-          {paragraph.slice(3)}
-        </h2>
-      )
-    }
-    if (paragraph.startsWith('### ')) {
-      return (
-        <h3 key={i} className="text-lg font-semibold mb-2">
-          {paragraph.slice(4)}
-        </h3>
-      )
-    }
+  if (!text) return null
 
-    // Check for bullet lists (with • or - or *)
-    if (
-      paragraph.includes('\n• ') ||
-      paragraph.startsWith('• ') ||
-      paragraph.includes('\n- ') ||
-      paragraph.startsWith('- ') ||
-      paragraph.includes('\n* ') ||
-      paragraph.startsWith('* ')
-    ) {
-      const lines = paragraph.split('\n')
-      const listItems: React.ReactElement[] = []
-      const nonListLines: React.ReactElement[] = []
+  // Split by newline to handle content line-by-line
+  const lines = text.split('\n')
+  const elements: React.ReactNode[] = []
 
-      lines.forEach((line, idx) => {
-        const trimmedLine = line.trim()
-        if (trimmedLine.match(/^[-•*]\s/)) {
-          // It's a list item
-          const itemText = trimmedLine.substring(2).trim()
-          listItems.push(
-            <li key={idx}>{processInlineFormattingForPreview(itemText)}</li>
-          )
-        } else if (trimmedLine) {
-          // It's a non-list line (like a heading before the list)
-          nonListLines.push(
-            <div key={idx} className="mb-2">
-              {processInlineFormattingForPreview(trimmedLine)}
-            </div>
-          )
-        }
+  let currentBlockType: 'paragraph' | 'list' | null = null
+  let currentBlockLines: string[] = []
+
+  // Helper to flush valid blocks
+  const flushBlock = (keyPrefix: number) => {
+    if (currentBlockLines.length === 0) return
+
+    if (currentBlockType === 'list') {
+      const listItems = currentBlockLines.map((line, idx) => {
+        // Remove list marker
+        const content = line.replace(/^[-•*]\s+/, '')
+        return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
       })
-
-      return (
-        <div key={i} className="mb-4">
-          {nonListLines}
-          {listItems.length > 0 && (
-            <ul className="list-disc list-inside space-y-1">{listItems}</ul>
-          )}
-        </div>
+      elements.push(
+        <ul
+          key={`list-${keyPrefix}`}
+          className="list-disc list-inside space-y-1 mb-4"
+        >
+          {listItems}
+        </ul>,
       )
+    } else if (currentBlockType === 'paragraph') {
+      // Join lines with space for standard markdown behavior
+      // To support hard breaks, we could check for trailing spaces or just join with space
+      const content = currentBlockLines.join(' ')
+      if (content.trim()) {
+        elements.push(
+          <p
+            key={`p-${keyPrefix}`}
+            className="mb-4 leading-relaxed"
+          >
+            {processInlineFormattingForPreview(content)}
+          </p>,
+        )
+      }
     }
 
-    return (
-      <p key={i} className="mb-4 leading-relaxed">
-        {processInlineFormattingForPreview(paragraph)}
-      </p>
-    )
+    currentBlockLines = []
+    currentBlockType = null
+  }
+
+  lines.forEach((line, index) => {
+    const trimmed = line.trim()
+
+    // Empty lines trigger a block flush/reset
+    if (!trimmed) {
+      flushBlock(index)
+      return
+    }
+
+    // Headings
+    if (trimmed.startsWith('# ')) {
+      flushBlock(index)
+      elements.push(
+        <h1
+          key={`h1-${index}`}
+          className="text-2xl font-bold mb-4"
+        >
+          {trimmed.slice(2)}
+        </h1>,
+      )
+      return
+    }
+    if (trimmed.startsWith('## ')) {
+      flushBlock(index)
+      elements.push(
+        <h2
+          key={`h2-${index}`}
+          className="text-xl font-semibold mb-3"
+        >
+          {trimmed.slice(3)}
+        </h2>,
+      )
+      return
+    }
+    if (trimmed.startsWith('### ')) {
+      flushBlock(index)
+      elements.push(
+        <h3
+          key={`h3-${index}`}
+          className="text-lg font-semibold mb-2"
+        >
+          {trimmed.slice(4)}
+        </h3>,
+      )
+      return
+    }
+
+    // List Items
+    if (trimmed.match(/^[-•*]\s/)) {
+      if (currentBlockType !== 'list') {
+        flushBlock(index)
+        currentBlockType = 'list'
+      }
+      currentBlockLines.push(trimmed)
+    } else {
+      // Regular text
+      if (currentBlockType === 'list') {
+        // If we encounter a non-list line while in a list, close the list
+        flushBlock(index)
+        currentBlockType = 'paragraph'
+      } else if (currentBlockType === null) {
+        currentBlockType = 'paragraph'
+      }
+      currentBlockLines.push(trimmed)
+    }
   })
+
+  // Flush any remaining content
+  flushBlock(lines.length)
+
+  return elements
+}
+
+interface MarkdownRendererProps {
+  content: string
+  className?: string
+}
+
+export function MarkdownRenderer({ content, className }: MarkdownRendererProps) {
+  if (!content) return null
+
+  return <div className={cn('text-sm leading-relaxed', className)}>{renderMarkdown(content)}</div>
 }

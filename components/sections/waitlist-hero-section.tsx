@@ -1,16 +1,15 @@
 import { Sparkles, Zap, Clock, Mail } from 'lucide-react'
-import {
-  AnimatedSection,
-  FloatingElement,
-  GradientText,
-} from '@/components/ui/animations'
+import { AnimatedSection, FloatingElement, GradientText } from '@/components/ui/animations'
 import { WaitlistForm } from '@/components/waitlist-form'
 
 export function WaitlistHeroSection() {
   return (
     <div className="relative max-w-4xl mx-auto text-center pb-14 md:-mt-4 md:pb-24">
       {/* Going Live Badge */}
-      <AnimatedSection delay={0} immediate>
+      <AnimatedSection
+        delay={0}
+        immediate
+      >
         <div className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20 rounded-full text-sm font-medium text-primary mt-2 mb-2 backdrop-blur-sm">
           <Clock className="w-4 h-4" />
           <span>Launching soon</span>
@@ -46,40 +45,47 @@ export function WaitlistHeroSection() {
         </div>
       </FloatingElement>
 
-      <AnimatedSection delay={250} immediate>
+      <AnimatedSection
+        delay={250}
+        immediate
+      >
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.2]">
           Lightning-fast AI newsletter campaigns{' '}
           <GradientText className="cursor-behind">coming soon</GradientText>
         </h1>
       </AnimatedSection>
 
-      <AnimatedSection delay={500} immediate>
+      <AnimatedSection
+        delay={500}
+        immediate
+      >
         <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-          Transform your landing page into a complete email campaign. AI
-          analyzes your content and creates personalized email sequences that
-          convert.
+          Transform your landing page into a complete email campaign. AI analyzes your content and
+          creates personalized email sequences that convert.
         </p>
       </AnimatedSection>
 
       {/* Waitlist Form */}
-      <div id="waitlist" className="max-w-md mx-auto mb-12 scroll-mt-40">
+      <div
+        id="waitlist"
+        className="max-w-md mx-auto mb-12 scroll-mt-40"
+      >
         <WaitlistForm />
       </div>
 
       {/* Stats section */}
-      <AnimatedSection delay={1000} immediate>
+      <AnimatedSection
+        delay={1000}
+        immediate
+      >
         <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="text-center">
             <div className="text-3xl font-bold text-primary mb-2">10x</div>
-            <div className="text-sm text-muted-foreground">
-              Faster Campaign Creation
-            </div>
+            <div className="text-sm text-muted-foreground">Faster Campaign Creation</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-primary mb-2">25%</div>
-            <div className="text-sm text-muted-foreground">
-              Higher Open Rates
-            </div>
+            <div className="text-sm text-muted-foreground">Higher Open Rates</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-primary mb-2">65%</div>

@@ -1,4 +1,5 @@
 import * as cheerio from 'cheerio'
+import { AnyNode } from 'domhandler'
 import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 /**
@@ -37,7 +38,7 @@ export function extractTextFromHTML(html: string): ScrapedContent {
     '.section',
   ]
 
-  let mainElement: cheerio.Cheerio<any> | null = null
+  let mainElement: cheerio.Cheerio<AnyNode> | null = null
   let structuredHtml = ''
 
   for (const selector of contentSelectors) {
@@ -66,21 +67,12 @@ export function extractTextFromHTML(html: string): ScrapedContent {
   }
 
   const cleanedHtml = normalizeHtml(structuredHtml)
-  const plainText = cleanPlainText(
-    cheerio.load(`<div>${cleanedHtml}</div>`).text()
-  )
+  const plainText = cleanPlainText(cheerio.load(`<div>${cleanedHtml}</div>`).text())
 
-  const truncation = smartTruncateWithMetadata(
-    plainText,
-    LANDING_PAGE_CONTENT_LIMIT
-  )
+  const truncation = smartTruncateWithMetadata(plainText, LANDING_PAGE_CONTENT_LIMIT)
 
   const truncatedHtml = truncation.truncated
-    ? truncateHtmlByTextLength(
-        cleanedHtml,
-        truncation.cutoff,
-        truncation.appendEllipsis
-      )
+    ? truncateHtmlByTextLength(cleanedHtml, truncation.cutoff, truncation.appendEllipsis)
     : cleanedHtml
 
   const finalContent = normalizeHtml(truncatedHtml)
@@ -129,10 +121,7 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   })
 }
 
-function buildStructuredHtml(
-  element: cheerio.Cheerio<any>,
-  $: cheerio.CheerioAPI
-): string {
+function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {
   const parts: string[] = []
 
   element.contents().each((_, node) => {
@@ -200,9 +189,9 @@ function buildStructuredHtml(
 }
 
 function buildList(
-  element: cheerio.Cheerio<any>,
+  element: cheerio.Cheerio<AnyNode>,
   listTag: string,
-  $: cheerio.CheerioAPI
+  $: cheerio.CheerioAPI,
 ): string {
   const items: string[] = []
 
@@ -246,10 +235,7 @@ function buildList(
   return `<${listTag}>\n${items.join('\n')}\n</${listTag}>`
 }
 
-function sanitizeInlineContent(
-  element: cheerio.Cheerio<any>,
-  $: cheerio.CheerioAPI
-): string {
+function sanitizeInlineContent(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {
   let result = ''
 
   element.contents().each((_, node) => {
@@ -354,10 +340,7 @@ interface TruncationMetadata {
   appendEllipsis: boolean
 }
 
-function smartTruncateWithMetadata(
-  text: string,
-  maxLength: number
-): TruncationMetadata {
+function smartTruncateWithMetadata(text: string, maxLength: number): TruncationMetadata {
   if (text.length <= maxLength) {
     return {
       text,
@@ -371,7 +354,7 @@ function smartTruncateWithMetadata(
   const lastSentenceEnd = Math.max(
     truncated.lastIndexOf('.'),
     truncated.lastIndexOf('!'),
-    truncated.lastIndexOf('?')
+    truncated.lastIndexOf('?'),
   )
 
   if (lastSentenceEnd > maxLength * 0.8) {
@@ -404,11 +387,7 @@ function smartTruncateWithMetadata(
   }
 }
 
-function truncateHtmlByTextLength(
-  html: string,
-  cutoff: number,
-  appendEllipsis: boolean
-): string {
+function truncateHtmlByTextLength(html: string, cutoff: number, appendEllipsis: boolean): string {
   if (cutoff <= 0) {
     return appendEllipsis ? '...' : ''
   }
@@ -419,7 +398,7 @@ function truncateHtmlByTextLength(
   let truncated = false
   let ellipsisApplied = false
 
-  function processNodes(nodes: cheerio.Cheerio<any>): string {
+  function processNodes(nodes: cheerio.Cheerio<AnyNode>): string {
     let output = ''
 
     nodes.each((_, node) => {
@@ -458,21 +437,7 @@ function truncateHtmlByTextLength(
 
       const tagName = node.name.toLowerCase()
 
-      if (
-        ![
-          'h1',
-          'h2',
-          'h3',
-          'p',
-          'ul',
-          'ol',
-          'li',
-          'strong',
-          'em',
-          'a',
-          'br',
-        ].includes(tagName)
-      ) {
+      if (!['h1', 'h2', 'h3', 'p', 'ul', 'ol', 'li', 'strong', 'em', 'a', 'br'].includes(tagName)) {
         output += processNodes($(node).contents())
         return
       }
@@ -502,7 +467,7 @@ function truncateHtmlByTextLength(
   return truncatedHtml
 }
 
-function buildOpenTag(element: cheerio.Cheerio<any>): string {
+function buildOpenTag(element: cheerio.Cheerio<AnyNode>): string {
   const node = element.get(0)
   if (!node || node.type !== 'tag') {
     return ''
@@ -543,9 +508,7 @@ function countWords(text: string): number {
  * Check if content appears to be meaningful (not just navigation/ads)
  */
 export function isContentMeaningful(content: string): boolean {
-  const plainText = cleanPlainText(
-    cheerio.load(`<div>${content}</div>`).text() || content
-  )
+  const plainText = cleanPlainText(cheerio.load(`<div>${content}</div>`).text() || content)
   const wordCount = countWords(plainText)
 
   if (wordCount < 50) {
@@ -558,13 +521,10 @@ export function isContentMeaningful(content: string): boolean {
     /\b(how|what|why|when|where|who)\b/i,
   ]
 
-  const hasContentIndicators = contentIndicators.some((pattern) =>
-    pattern.test(plainText)
-  )
+  const hasContentIndicators = contentIndicators.some((pattern) => pattern.test(plainText))
 
-  const navWords = (
-    plainText.match(/\b(home|about|contact|menu|login|signup|search)\b/gi) || []
-  ).length
+  const navWords = (plainText.match(/\b(home|about|contact|menu|login|signup|search)\b/gi) || [])
+    .length
   const navRatio = wordCount === 0 ? 0 : navWords / wordCount
 
   return hasContentIndicators && navRatio < 0.1

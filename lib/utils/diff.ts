@@ -136,7 +136,7 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
  */
 export function collapseUnchangedLines(
   lines: DiffLine[],
-  contextLines: number = 3
+  contextLines: number = 3,
 ): (DiffLine | { type: 'collapsed'; count: number })[] {
   const result: (DiffLine | { type: 'collapsed'; count: number })[] = []
   let unchangedBuffer: DiffLine[] = []
@@ -199,4 +199,44 @@ export function formatDiffStats(stats: DiffResult['stats']): string {
   }
 
   return parts.length > 0 ? parts.join(', ') : 'No changes'
+}
+
+/**
+ * Generate a simple change summary comparing two texts
+ */
+export function extractChangeSummary(
+  oldEmail: { subject: string; content: string } | null,
+  newEmail: { subject: string; content: string },
+): string {
+  if (!oldEmail) {
+    return 'Initial version'
+  }
+
+  const changes: string[] = []
+
+  if (oldEmail.subject !== newEmail.subject) {
+    changes.push('subject')
+  }
+
+  // Use the existing diff logic for content
+  const oldLines = oldEmail.content.split('\n')
+  const newLines = newEmail.content.split('\n')
+
+  let diffCount = 0
+  const maxLen = Math.max(oldLines.length, newLines.length)
+  for (let i = 0; i < maxLen; i++) {
+    if (oldLines[i] !== newLines[i]) {
+      diffCount++
+    }
+  }
+
+  if (diffCount > 0) {
+    changes.push(`${diffCount} line${diffCount > 1 ? 's' : ''}`)
+  }
+
+  if (changes.length === 0) {
+    return 'No changes'
+  }
+
+  return changes.join(' and ') + ' changed'
 }

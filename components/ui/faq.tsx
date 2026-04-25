@@ -34,7 +34,7 @@ function FAQItemComponent({ item, isOpen, onToggle }: FAQItemProps) {
         <ChevronDown
           className={cn(
             'w-5 h-5 transition-transform duration-300 flex-shrink-0 ml-2',
-            isOpen && 'rotate-180'
+            isOpen && 'rotate-180',
           )}
           aria-hidden="true"
         />
@@ -42,8 +42,8 @@ function FAQItemComponent({ item, isOpen, onToggle }: FAQItemProps) {
       <div
         id={`faq-answer-${item.id}`}
         className={cn(
-          'overflow-hidden transition-all duration-400 ease-in-out',
-          isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
+          'overflow-hidden transition-[max-height,opacity] duration-300 ease-in-out',
+          isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0',
         )}
       >
         <div className="px-5 pt-3 pb-5">

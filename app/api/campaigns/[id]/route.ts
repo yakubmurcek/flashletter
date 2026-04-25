@@ -1,10 +1,11 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const supabase = await createClient()
@@ -36,9 +37,12 @@ export async function DELETE(
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error('Error deleting campaign:', error)
-    return NextResponse.json(
-      { error: 'Failed to delete campaign' },
-      { status: 500 }
-    )
+
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/campaigns/[id]', action: 'delete' },
+    })
+
+    return NextResponse.json({ error: 'Failed to delete campaign' }, { status: 500 })
   }
 }

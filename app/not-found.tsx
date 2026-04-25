@@ -10,11 +10,13 @@ export default function NotFound() {
           <h1 className="text-6xl font-bold text-muted-foreground">404</h1>
           <h2 className="text-2xl font-bold">Page not found</h2>
           <p className="text-sm text-muted-foreground">
-            The page you&apos;re looking for doesn&apos;t exist or has been
-            moved.
+            The page you&apos;re looking for doesn&apos;t exist or has been moved.
           </p>
         </div>
-        <Button asChild className="w-full">
+        <Button
+          asChild
+          className="w-full"
+        >
           <Link href="/">Return home</Link>
         </Button>
       </Card>

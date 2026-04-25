@@ -49,8 +49,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
         setCampaignLoaded(true)
         setLoadingState('loaded')
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to load campaign'
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load campaign'
         setError(errorMessage)
         setLoadingState('error')
 
@@ -59,7 +58,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
         router.push('/campaigns')
       }
     },
-    [contextLoadCampaign, cleanupParams, router]
+    [contextLoadCampaign, cleanupParams, router],
   )
 
   // Load campaign from URL if present

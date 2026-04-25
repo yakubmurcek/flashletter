@@ -10,14 +10,14 @@ interface ProgressIndicatorProps {
   steps: readonly Step[]
 }
 
-export function ProgressIndicator({
-  currentStep,
-  steps,
-}: ProgressIndicatorProps) {
+export function ProgressIndicator({ currentStep, steps }: ProgressIndicatorProps) {
   return (
     <div className="flex items-center justify-center gap-2 mb-8">
       {steps.map((step, index) => (
-        <div key={step.number} className="flex items-center gap-2">
+        <div
+          key={step.number}
+          className="flex items-center gap-2"
+        >
           <div className="flex items-center gap-2">
             <div
               className={cn(
@@ -25,8 +25,8 @@ export function ProgressIndicator({
                 currentStep === step.number
                   ? 'bg-primary text-primary-foreground'
                   : currentStep > step.number
-                  ? 'bg-primary/20 text-primary'
-                  : 'bg-muted text-muted-foreground'
+                    ? 'bg-primary/20 text-primary'
+                    : 'bg-muted text-muted-foreground',
               )}
             >
               {step.number}
@@ -34,9 +34,7 @@ export function ProgressIndicator({
             <span
               className={cn(
                 'text-sm transition-colors',
-                currentStep === step.number
-                  ? 'font-medium'
-                  : 'text-muted-foreground'
+                currentStep === step.number ? 'font-medium' : 'text-muted-foreground',
               )}
             >
               {step.label}
@@ -46,7 +44,7 @@ export function ProgressIndicator({
             <div
               className={cn(
                 'w-12 h-px transition-colors',
-                currentStep > step.number ? 'bg-primary' : 'bg-border'
+                currentStep > step.number ? 'bg-primary' : 'bg-border',
               )}
             />
           )}

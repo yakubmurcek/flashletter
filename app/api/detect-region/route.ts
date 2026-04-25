@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 
 // EU countries that require GDPR compliance
@@ -76,13 +77,17 @@ export async function GET(request: NextRequest) {
 
     const regionInfo = createRegionInfo(countryCode)
 
-    console.log(
-      `Detected country: ${countryCode}, Region: ${regionInfo.region}`
-    )
+    console.log(`Detected country: ${countryCode}, Region: ${regionInfo.region}`)
 
     return NextResponse.json(regionInfo)
   } catch (error) {
     console.error('Region detection error:', error)
+
+    // Report to Sentry
+    Sentry.captureException(error, {
+      level: 'warning',
+      tags: { api_route: '/api/detect-region' },
+    })
 
     // Fallback to US on error (simpler experience)
     return NextResponse.json(createRegionInfo('US'))

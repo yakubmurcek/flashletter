@@ -11,9 +11,7 @@ interface CookieConsentBannerProps {
   className?: string
 }
 
-export function CookieConsentBanner({
-  className = '',
-}: CookieConsentBannerProps) {
+export function CookieConsentBanner({ className = '' }: CookieConsentBannerProps) {
   const [isVisible, setIsVisible] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
 
@@ -38,7 +36,7 @@ export function CookieConsentBanner({
         analytics: true,
         marketing: true,
         timestamp: new Date().toISOString(),
-      })
+      }),
     )
     setIsVisible(false)
   }
@@ -51,7 +49,7 @@ export function CookieConsentBanner({
         analytics: false,
         marketing: false,
         timestamp: new Date().toISOString(),
-      })
+      }),
     )
     setIsVisible(false)
   }
@@ -64,7 +62,7 @@ export function CookieConsentBanner({
         analytics: false,
         marketing: false,
         timestamp: new Date().toISOString(),
-      })
+      }),
     )
     setIsVisible(false)
   }
@@ -88,10 +86,9 @@ export function CookieConsentBanner({
                     We use cookies to enhance your experience
                   </h3>
                   <p className="text-muted-foreground text-sm">
-                    We use essential cookies to make our site work. We&apos;d
-                    also like to set analytics cookies to help us improve it. By
-                    clicking &quot;Accept All&quot;, you consent to our use of
-                    cookies. You can manage your preferences or learn more in
+                    We use essential cookies to make our site work. We&apos;d also like to set
+                    analytics cookies to help us improve it. By clicking &quot;Accept All&quot;, you
+                    consent to our use of cookies. You can manage your preferences or learn more in
                     our{' '}
                     <Link
                       href="/privacy"
@@ -118,24 +115,21 @@ export function CookieConsentBanner({
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between items-center">
                       <span>
-                        <strong>Necessary Cookies</strong> - Required for the
-                        website to function
+                        <strong>Necessary Cookies</strong> - Required for the website to function
                       </span>
-                      <span className="text-muted-foreground">
-                        Always Active
-                      </span>
+                      <span className="text-muted-foreground">Always Active</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>
-                        <strong>Analytics Cookies</strong> - Help us understand
-                        how visitors interact with our website
+                        <strong>Analytics Cookies</strong> - Help us understand how visitors
+                        interact with our website
                       </span>
                       <span className="text-muted-foreground">Optional</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span>
-                        <strong>Marketing Cookies</strong> - Used to track
-                        visitors across websites for advertising
+                        <strong>Marketing Cookies</strong> - Used to track visitors across websites
+                        for advertising
                       </span>
                       <span className="text-muted-foreground">Optional</span>
                     </div>
@@ -150,10 +144,16 @@ export function CookieConsentBanner({
                 >
                   Accept All
                 </Button>
-                <Button onClick={handleAcceptNecessary} variant="outline">
+                <Button
+                  onClick={handleAcceptNecessary}
+                  variant="outline"
+                >
                   Accept Necessary Only
                 </Button>
-                <Button onClick={handleReject} variant="ghost">
+                <Button
+                  onClick={handleReject}
+                  variant="ghost"
+                >
                   Reject All
                 </Button>
                 <Button

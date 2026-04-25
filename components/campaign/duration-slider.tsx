@@ -13,7 +13,10 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <Label htmlFor="days" className="text-base font-semibold">
+        <Label
+          htmlFor="days"
+          className="text-base font-semibold"
+        >
           Campaign Duration
         </Label>
         <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">

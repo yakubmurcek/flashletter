@@ -165,7 +165,7 @@ const response = await retryWithBackoff(
     initialDelay: 1000,
     maxDelay: 60000,
     backoffMultiplier: 2,
-  }
+  },
 )
 ```
 

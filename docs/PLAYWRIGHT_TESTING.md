@@ -168,4 +168,3 @@ pnpm exec playwright test --headed
 - ✅ Automatic fallback to static scraping if Playwright fails
 - ✅ Production-ready with serverless Chromium
 - ✅ Comprehensive error handling and logging
-

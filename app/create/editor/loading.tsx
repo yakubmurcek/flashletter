@@ -20,7 +20,10 @@ export default function EditorLoading() {
           <Skeleton className="h-6 w-32 mb-4" />
           <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-20 w-full" />
+              <Skeleton
+                key={i}
+                className="h-20 w-full"
+              />
             ))}
           </div>
         </div>

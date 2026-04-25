@@ -1,29 +1,14 @@
+import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import {
-  scrapeLandingRequestSchema,
-  scrapeLandingResponseSchema,
-} from '@/lib/schemas/api'
+import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'
-import {
-  checkRateLimit,
-  scrapeLandingRateLimit,
-  getRateLimitHeaders,
-} from '@/lib/utils/rate-limit'
+import { checkRateLimit, scrapeLandingRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
 import { getClientIp } from '@/lib/utils/get-client-ip'
-import {
-  getCachedScrapeData,
-  setCachedScrapeData,
-} from '@/lib/utils/scraper-cache'
+import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-cache'
 import { extractTextFromHTML } from '@/lib/utils/scraper'
-import {
-  extractMetadata,
-  type ExtractedMetadata,
-} from '@/lib/utils/metadata-extractor'
-import {
-  scrapeWithPlaywright,
-  shouldUseDynamicScraping,
-} from '@/lib/utils/playwright-scraper'
+import { extractMetadata, type ExtractedMetadata } from '@/lib/utils/metadata-extractor'
+import { scrapeWithPlaywright, shouldUseDynamicScraping } from '@/lib/utils/playwright-scraper'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -39,26 +24,22 @@ export async function POST(req: NextRequest) {
     const identifier = user?.id || getClientIp(req)
 
     // Check rate limit
-    const rateLimitResult = await checkRateLimit(
-      scrapeLandingRateLimit,
-      identifier
-    )
+    const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
 
     if (!rateLimitResult.success) {
       return NextResponse.json(
         {
           error: 'Too many requests',
-          message:
-            'Landing page scraping rate limit exceeded. Please try again later.',
+          message: 'Landing page scraping rate limit exceeded. Please try again later.',
         },
         {
           status: 429,
           headers: getRateLimitHeaders(
             rateLimitResult.limit,
             rateLimitResult.remaining,
-            rateLimitResult.reset
+            rateLimitResult.reset,
           ),
-        }
+        },
       )
     }
 
@@ -85,7 +66,7 @@ export async function POST(req: NextRequest) {
           ...getRateLimitHeaders(
             rateLimitResult.limit,
             rateLimitResult.remaining,
-            rateLimitResult.reset
+            rateLimitResult.reset,
           ),
           'X-Cache-Status': 'HIT',
           'X-Cache-TTL': cacheResult.ttl?.toString() || '0',
@@ -118,7 +99,7 @@ export async function POST(req: NextRequest) {
       } catch (playwrightError) {
         console.warn(
           `Forced dynamic scraping failed for ${url}, falling back to static:`,
-          playwrightError
+          playwrightError,
         )
         // Fallback to static scraping if forced dynamic fails
         const response = await fetch(url, {
@@ -128,9 +109,7 @@ export async function POST(req: NextRequest) {
         })
 
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch: ${response.status} ${response.statusText}`
-          )
+          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
         }
 
         const html = await response.text()
@@ -155,9 +134,7 @@ export async function POST(req: NextRequest) {
       })
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch: ${response.status} ${response.statusText}`
-        )
+        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
       }
 
       const html = await response.text()
@@ -179,7 +156,7 @@ export async function POST(req: NextRequest) {
         } catch (playwrightError) {
           console.warn(
             `Dynamic scraping failed for ${url}, falling back to static:`,
-            playwrightError
+            playwrightError,
           )
           // Fallback to static scraping if Playwright fails
           const scrapedContent = extractTextFromHTML(html)
@@ -241,7 +218,7 @@ export async function POST(req: NextRequest) {
         ...getRateLimitHeaders(
           rateLimitResult.limit,
           rateLimitResult.remaining,
-          rateLimitResult.reset
+          rateLimitResult.reset,
         ),
         'X-Cache-Status': 'MISS',
         'X-Processing-Time': totalTime.toString(),
@@ -251,10 +228,15 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     console.error('Scrape Landing API Error:', error)
 
+    // Report to Sentry
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/scrape-landing' },
+    })
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request format', details: error.errors },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
@@ -263,21 +245,18 @@ export async function POST(req: NextRequest) {
       if (error.message.includes('Failed to fetch')) {
         return NextResponse.json(
           { error: 'Failed to fetch URL', message: error.message },
-          { status: 400 }
+          { status: 400 },
         )
       }
 
       if (error.message.includes('Dynamic scraping failed')) {
         return NextResponse.json(
           { error: 'Dynamic scraping failed', message: error.message },
-          { status: 500 }
+          { status: 500 },
         )
       }
     }
 
-    return NextResponse.json(
-      { error: 'Failed to scrape landing page' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: 'Failed to scrape landing page' }, { status: 500 })
   }
 }

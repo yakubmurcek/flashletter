@@ -1,0 +1,70 @@
+{
+  "structures": [
+    {
+      "id": "pain_solution_cta",
+      "label": "Pain → Solution → CTA",
+      "description": "Simple conversion-focused email linking main pain to your product + clear CTA.",
+      "steps": [
+        "State the main pain clearly.",
+        "Connect the pain to a real consequence.",
+        "Introduce the product as the solution.",
+        "Finish with one clear CTA."
+      ],
+      "goodFor": ["SaaS", "B2B", "tools"]
+    }
+  ],
+  "tones": [
+    {
+      "id": "professional",
+      "label": "Professional",
+      "description": "Formal, authoritative, and polished."
+    },
+    {
+      "id": "friendly",
+      "label": "Friendly",
+      "description": "Warm, approachable, and welcoming."
+    },
+    {
+      "id": "casual",
+      "label": "Casual",
+      "description": "Friendly, relaxed, and conversational."
+    },
+    {
+      "id": "formal",
+      "label": "Formal",
+      "description": "Strictly business, precise, and serious."
+    },
+    {
+      "id": "enthusiastic",
+      "label": "Enthusiastic",
+      "description": "Energetic, excited, and motivating."
+    }
+  ],
+  "purposes": [
+    {
+      "id": "nurture",
+      "label": "Nurture Campaign",
+      "description": "To build a relationship and trust over time."
+    },
+    {
+      "id": "onboarding",
+      "label": "Onboarding Series",
+      "description": "To help new users get started/successful."
+    },
+    {
+      "id": "promotional",
+      "label": "Promotional",
+      "description": "To drive sales or sign-ups."
+    },
+    {
+      "id": "educational",
+      "label": "Educational",
+      "description": "To teach the audience something new."
+    },
+    {
+      "id": "re-engagement",
+      "label": "Re-engagement",
+      "description": "To win back inactive users."
+    }
+  ]
+}

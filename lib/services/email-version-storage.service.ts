@@ -1,45 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { EmailVersion } from '../types'
 
-/**
- * Generate a simple change summary comparing two versions
- */
-function generateChangesSummary(
-  oldEmail: { subject: string; content: string } | null,
-  newEmail: { subject: string; content: string }
-): string {
-  if (!oldEmail) {
-    return 'Initial version'
-  }
-
-  const changes: string[] = []
-
-  if (oldEmail.subject !== newEmail.subject) {
-    changes.push('subject')
-  }
-
-  const oldLines = oldEmail.content.split('\n')
-  const newLines = newEmail.content.split('\n')
-
-  // Count actual line differences
-  let diffCount = 0
-  const maxLen = Math.max(oldLines.length, newLines.length)
-  for (let i = 0; i < maxLen; i++) {
-    if (oldLines[i] !== newLines[i]) {
-      diffCount++
-    }
-  }
-
-  if (diffCount > 0) {
-    changes.push(`${diffCount} line${diffCount > 1 ? 's' : ''}`)
-  }
-
-  if (changes.length === 0) {
-    return 'No changes'
-  }
-
-  return changes.join(' and ') + ' changed'
-}
+import { extractChangeSummary } from '@/lib/utils/diff'
 
 export class EmailVersionStorageService {
   constructor(private supabase: SupabaseClient) {}
@@ -50,12 +12,11 @@ export class EmailVersionStorageService {
   async saveVersion(
     emailUuid: string,
     emailDay: number,
-    email: { subject: string; content: string }
+    email: { subject: string; content: string },
   ): Promise<EmailVersion> {
     // Get previous versions to check for duplicates and generate summary
     const versions = await this.getVersions(emailUuid)
-    const previousVersion =
-      versions.length > 0 ? versions[versions.length - 1] : null
+    const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
 
     // Check if this version is identical to the previous one
     if (
@@ -67,7 +28,7 @@ export class EmailVersionStorageService {
       return previousVersion
     }
 
-    const changesSummary = generateChangesSummary(previousVersion, email)
+    const changesSummary = extractChangeSummary(previousVersion, email)
 
     const { data, error } = await this.supabase
       .from('email_versions')
@@ -145,10 +106,7 @@ export class EmailVersionStorageService {
    * Delete a specific version
    */
   async deleteVersion(versionId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('email_versions')
-      .delete()
-      .eq('id', versionId)
+    const { error } = await this.supabase.from('email_versions').delete().eq('id', versionId)
 
     if (error) throw error
   }
@@ -170,10 +128,7 @@ export class EmailVersionStorageService {
    * Clear all versions for an email
    */
   async clearVersions(emailUuid: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('email_versions')
-      .delete()
-      .eq('email_id', emailUuid)
+    const { error } = await this.supabase.from('email_versions').delete().eq('email_id', emailUuid)
 
     if (error) throw error
   }

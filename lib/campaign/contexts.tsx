@@ -19,20 +19,16 @@ export interface CampaignActionsContextType {
   updateEmail: (id: number, updates: Partial<Email>) => void
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
-  createNewCampaign: (
-    providedLandingPageData?: LandingPageData | null
-  ) => Promise<string>
+  createNewCampaign: (providedLandingPageData?: LandingPageData | null) => Promise<string>
   updateCampaignConfig: (config: CampaignConfig) => Promise<void>
   clearAll: () => void
 }
 
-export const CampaignDataContext = createContext<
-  CampaignDataContextType | undefined
->(undefined)
+export const CampaignDataContext = createContext<CampaignDataContextType | undefined>(undefined)
 
-export const CampaignActionsContext = createContext<
-  CampaignActionsContextType | undefined
->(undefined)
+export const CampaignActionsContext = createContext<CampaignActionsContextType | undefined>(
+  undefined,
+)
 
 export function useCampaignData() {
   const context = useContext(CampaignDataContext)

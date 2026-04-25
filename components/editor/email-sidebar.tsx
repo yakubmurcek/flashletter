@@ -32,9 +32,7 @@ function EmailSidebarComponent({
               Emails
             </h2>
           </div>
-          <span className="text-xs font-medium text-muted-foreground">
-            {emails.length} total
-          </span>
+          <span className="text-xs font-medium text-muted-foreground">{emails.length} total</span>
         </div>
         <p className="text-xs text-muted-foreground truncate">
           {campaignType || 'Unknown'} • {tone || 'Unknown tone'}

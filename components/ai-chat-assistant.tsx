@@ -44,23 +44,20 @@ export function AIChatAssistant({
   shouldFocusInput = false,
   onFocusHandled,
 }: AIChatAssistantProps) {
-  const { messages, input, setInput, isLoading, quickActions, handleSubmit } =
-    useAIChat({
-      campaignContext,
-      emailContext,
-      selectedContext,
-      onApplyEdits,
-      onClearContext,
-    })
+  const { messages, input, setInput, isLoading, quickActions, handleSubmit } = useAIChat({
+    campaignContext,
+    emailContext,
+    selectedContext,
+    onApplyEdits,
+    onClearContext,
+  })
 
   useEffect(() => {
     if (autoSubmitMessage && !isLoading) {
       setInput(autoSubmitMessage)
       // Trigger submit after setting input
       setTimeout(() => {
-        const form = document.querySelector(
-          '[data-chat-form]'
-        ) as HTMLFormElement
+        const form = document.querySelector('[data-chat-form]') as HTMLFormElement
         if (form) {
           form.requestSubmit()
         }
@@ -79,7 +76,10 @@ export function AIChatAssistant({
           onClose={onClose}
           hasCampaignContext={!!campaignContext}
         />
-        <AIChatMessageList messages={messages} isLoading={isLoading} />
+        <AIChatMessageList
+          messages={messages}
+          isLoading={isLoading}
+        />
         <AIChatQuickActions
           actions={quickActions}
           onSelect={handleQuickAction}

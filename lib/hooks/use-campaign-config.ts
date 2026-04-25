@@ -4,11 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignData, useCampaignActions } from '@/lib/campaign-context'
 import { useEmailGeneration } from '@/lib/hooks/use-email-generation'
-import {
-  CAMPAIGN_TONES,
-  CAMPAIGN_TYPES,
-  CAMPAIGN_DURATION,
-} from '@/lib/constants/campaign'
+import { CAMPAIGN_TONES, CAMPAIGN_TYPES, CAMPAIGN_DURATION } from '@/lib/constants/campaign'
 
 interface CampaignConfig {
   tone: string
@@ -20,16 +16,12 @@ export function useCampaignConfig(validCampaignId: string | null) {
   const router = useRouter()
   const { landingPageData, isLoading, currentCampaignId } = useCampaignData()
 
-  const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } =
-    useCampaignActions()
+  const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } = useCampaignActions()
 
-  const { isGenerating, error, warning, generateEmails } =
-    useEmailGeneration()
+  const { isGenerating, error, warning, generateEmails } = useEmailGeneration()
 
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
-  const [campaignType, setCampaignType] = useState<string>(
-    CAMPAIGN_TYPES[0].value
-  )
+  const [campaignType, setCampaignType] = useState<string>(CAMPAIGN_TYPES[0].value)
   const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
   const [campaignLoaded, setCampaignLoaded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -74,7 +66,8 @@ export function useCampaignConfig(validCampaignId: string | null) {
         landingPageData.url,
         landingPageData.content || '',
         config,
-        currentCampaignId || undefined
+        currentCampaignId || undefined,
+        landingPageData.analysis,
       )
 
       if (result) {
@@ -90,8 +83,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
     }
   }
 
-  const isReady =
-    !isLoading && (!validCampaignId || campaignLoaded) && !!landingPageData
+  const isReady = !isLoading && (!validCampaignId || campaignLoaded) && !!landingPageData
 
   return {
     // Form state

@@ -23,25 +23,17 @@ function HistoryPageContent() {
   const emailId = emailIdParam ? parseInt(emailIdParam, 10) : null
   const campaignId = searchParams.get('campaign')
 
-  const validCampaignId =
-    campaignId && isValidCampaignId(campaignId) ? campaignId : null
+  const validCampaignId = campaignId && isValidCampaignId(campaignId) ? campaignId : null
   const validEmailId = emailId && isValidEmailId(emailId) ? emailId : null
 
   const [versions, setVersions] = useState<EmailVersion[]>([])
-  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(
-    null
-  )
+  const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
-  const [versionToRestore, setVersionToRestore] = useState<EmailVersion | null>(
-    null
-  )
+  const [versionToRestore, setVersionToRestore] = useState<EmailVersion | null>(null)
 
   // Initialize version storage service
   const supabase = createClient()
-  const versionStorageService = useMemo(
-    () => new EmailVersionStorageService(supabase),
-    [supabase]
-  )
+  const versionStorageService = useMemo(() => new EmailVersionStorageService(supabase), [supabase])
 
   // Load versions when email ID changes
   useEffect(() => {
@@ -50,9 +42,7 @@ function HistoryPageContent() {
         const currentEmail = generatedEmails.find((e) => e.id === validEmailId)
         if (currentEmail?.uuid) {
           try {
-            const loadedVersions = await versionStorageService.getVersions(
-              currentEmail.uuid
-            )
+            const loadedVersions = await versionStorageService.getVersions(currentEmail.uuid)
             console.log('[HISTORY PAGE] Loaded versions:', {
               emailId: validEmailId,
               emailUuid: currentEmail.uuid,
@@ -131,9 +121,7 @@ function HistoryPageContent() {
     ? versions.find((v) => v.id === selectedVersionId)
     : null
 
-  const selectedIndex = selectedVersion
-    ? versions.findIndex((v) => v.id === selectedVersionId)
-    : -1
+  const selectedIndex = selectedVersion ? versions.findIndex((v) => v.id === selectedVersionId) : -1
 
   const previousVersion = selectedIndex > 0 ? versions[selectedIndex - 1] : null
 
@@ -148,14 +136,10 @@ function HistoryPageContent() {
     // Save current state as a version before restoring
     if (currentEmail.uuid) {
       try {
-        await versionStorageService.saveVersion(
-          currentEmail.uuid,
-          currentEmail.day,
-          {
-            subject: currentEmail.subject,
-            content: currentEmail.content,
-          }
-        )
+        await versionStorageService.saveVersion(currentEmail.uuid, currentEmail.day, {
+          subject: currentEmail.subject,
+          content: currentEmail.content,
+        })
       } catch (error) {
         console.error('Failed to save current version before restore:', error)
       }
@@ -168,7 +152,7 @@ function HistoryPageContent() {
         emailId: validEmailId,
         subject: versionToRestore.subject,
         content: versionToRestore.content,
-      })
+      }),
     )
 
     const editorUrl = campaignId
@@ -183,7 +167,12 @@ function HistoryPageContent() {
       <header className="border-b border-border bg-card flex-shrink-0">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2"
+            >
               <Link
                 href={
                   validCampaignId
@@ -227,9 +216,7 @@ function HistoryPageContent() {
             />
           ) : (
             <div className="flex items-center justify-center h-full">
-              <p className="text-muted-foreground">
-                Select a version to view changes
-              </p>
+              <p className="text-muted-foreground">Select a version to view changes</p>
             </div>
           )}
         </main>
@@ -244,9 +231,7 @@ function HistoryPageContent() {
             />
           ) : (
             <div className="flex items-center justify-center h-full p-8 text-center">
-              <p className="text-muted-foreground">
-                Select a version to preview
-              </p>
+              <p className="text-muted-foreground">Select a version to preview</p>
             </div>
           )}
         </aside>
@@ -262,13 +247,10 @@ function HistoryPageContent() {
             className="bg-card border border-border rounded-lg p-6 max-w-md mx-4 shadow-lg"
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-semibold mb-2">
-              Restore This Version?
-            </h3>
+            <h3 className="text-lg font-semibold mb-2">Restore This Version?</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              This will restore the email to this previous version. Your current
-              version will be saved in the history, so you can always get it
-              back.
+              This will restore the email to this previous version. Your current version will be
+              saved in the history, so you can always get it back.
             </p>
             <div className="flex gap-2 justify-end">
               <Button
@@ -299,11 +281,7 @@ function HistoryPageContent() {
 export default function HistoryPage() {
   return (
     <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center">
-          Loading...
-        </div>
-      }
+      fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}
     >
       <HistoryPageContent />
     </Suspense>

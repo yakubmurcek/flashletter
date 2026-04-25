@@ -7,10 +7,7 @@ import { Redis } from '@upstash/redis'
 let redis: Redis | undefined
 let rateLimitEnabled = false
 
-if (
-  process.env.UPSTASH_REDIS_REST_URL &&
-  process.env.UPSTASH_REDIS_REST_TOKEN
-) {
+if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
@@ -61,10 +58,7 @@ export const scrapeLandingRateLimit = rateLimitEnabled
  * @param identifier Unique identifier (e.g., user ID or IP address)
  * @returns Object with success status and rate limit info
  */
-export async function checkRateLimit(
-  ratelimit: Ratelimit | null,
-  identifier: string
-) {
+export async function checkRateLimit(ratelimit: Ratelimit | null, identifier: string) {
   if (!ratelimit) {
     // If rate limiting is not enabled, allow the request
     return {
@@ -88,11 +82,7 @@ export async function checkRateLimit(
 /**
  * Get rate limit headers for API response
  */
-export function getRateLimitHeaders(
-  limit: number,
-  remaining: number,
-  reset: number
-) {
+export function getRateLimitHeaders(limit: number, remaining: number, reset: number) {
   return {
     'X-RateLimit-Limit': limit.toString(),
     'X-RateLimit-Remaining': remaining.toString(),

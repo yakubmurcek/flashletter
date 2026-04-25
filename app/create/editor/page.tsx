@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { useRouter } from 'next/navigation'
+
 import { EmailPreview } from '@/components/email-preview'
 import { useCampaignData } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
@@ -30,26 +30,21 @@ const ChatSidebar = dynamic(
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
       </div>
     ),
-  }
+  },
 )
 
 function EditorPageContent() {
-  const router = useRouter()
   // Use new focused hooks
   const { loadingState, campaignData, error } = useCampaignLoader()
-  const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } =
-    useEmailState()
+  const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } = useEmailState()
   const { versionCounts, restoreVersion } = useVersionTracking(emails)
   const { currentCampaignId } = useCampaignData()
-  const { saveEmail } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+  const { saveEmail, isSaving } = useEmailAutosave(emails, currentCampaignId, updateEmail)
 
   const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
 
-  const [selectedContext, setSelectedContext] =
-    useState<SelectedContext | null>(null)
-  const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(
-    null
-  )
+  const [selectedContext, setSelectedContext] = useState<SelectedContext | null>(null)
+  const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(null)
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
@@ -83,14 +78,14 @@ function EditorPageContent() {
     (id: number) => {
       selectEmail(id)
     },
-    [selectEmail]
+    [selectEmail],
   )
 
   const handleUpdateEmail = useCallback(
     async (id: number, updates: Partial<Email>, skipVersioning = false) => {
       await saveEmail(id, updates, skipVersioning)
     },
-    [saveEmail]
+    [saveEmail],
   )
 
   const handleToggleChat = useCallback(() => {
@@ -109,13 +104,11 @@ function EditorPageContent() {
       action: string,
       meta?: {
         shouldFocus?: boolean
-      }
+      },
     ) => {
       setSelectedContext({ text, action })
       const shouldFocus =
-        meta?.shouldFocus !== undefined
-          ? meta.shouldFocus
-          : action !== 'Ask AI about this'
+        meta?.shouldFocus !== undefined ? meta.shouldFocus : action !== 'Ask AI about this'
       setShouldFocusChatInput(shouldFocus)
 
       if (!showChat) {
@@ -129,7 +122,7 @@ function EditorPageContent() {
         setAutoSubmitMessage(action)
       }
     },
-    [showChat, deleteParam]
+    [showChat, deleteParam],
   )
 
   const handleClearContext = useCallback(() => {
@@ -264,16 +257,13 @@ function EditorPageContent() {
         }
         versionCount={versionCounts[selectedEmailId] || 0}
         campaignName={campaignName || undefined}
-        className={cn(
-          'transition-all duration-300',
-          showChat ? 'mr-96 pr-4' : 'mr-0'
-        )}
+        className={cn('transition-all duration-300', showChat ? 'mr-96 pr-4' : 'mr-0')}
       />
 
       <div
         className={cn(
           'flex-1 flex overflow-hidden h-0 transition-all duration-300',
-          showChat ? 'mr-96' : 'mr-0'
+          showChat ? 'mr-96' : 'mr-0',
         )}
       >
         <EmailSidebar
@@ -288,11 +278,9 @@ function EditorPageContent() {
           {selectedEmail && (
             <EmailPreview
               email={selectedEmail}
-              onUpdate={(updates) =>
-                handleUpdateEmail(selectedEmail.id, updates)
-              }
+              onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
               onTextSelected={handleTextSelected}
-              showChat={showChat}
+              isSaving={isSaving}
             />
           )}
         </main>
@@ -334,11 +322,7 @@ function EditorPageContent() {
 export default function EditorPage() {
   return (
     <Suspense
-      fallback={
-        <div className="h-screen flex items-center justify-center">
-          Loading...
-        </div>
-      }
+      fallback={<div className="h-screen flex items-center justify-center">Loading...</div>}
     >
       <EditorPageContent />
     </Suspense>

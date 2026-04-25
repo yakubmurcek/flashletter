@@ -27,7 +27,7 @@ export function EditorHeader({
         'flex-shrink-0 relative z-50',
         'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/70',
         'shadow-[0_15px_60px_-35px_rgba(15,23,42,0.35)] ring-1 ring-border/10',
-        className
+        className,
       )}
     >
       <div className="w-full px-6 py-3">
@@ -71,9 +71,7 @@ export function EditorHeader({
                   {landingPageUrl}
                 </a>
               ) : (
-                <div className="text-xs sm:text-sm text-muted-foreground">
-                  No URL available
-                </div>
+                <div className="text-xs sm:text-sm text-muted-foreground">No URL available</div>
               )}
             </div>
           </div>

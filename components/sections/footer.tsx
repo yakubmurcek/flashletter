@@ -21,21 +21,21 @@ export function Footer() {
             <div>
               <span className="text-xl font-semibold">Flashletter</span>
               <p className="text-sm text-muted-foreground">
-                Lighting-fast AI powered email campaigns
+                Turn your landing page into a newsletter campaign
               </p>
             </div>
           </div>
           <nav className="flex flex-wrap items-center gap-6 text-sm">
             <a
               href="#features"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               Features
             </a>
             {LANDING_PAGE_CONFIG.showProductFeatures && (
               <a
                 href="#testimonials"
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+                className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               >
                 Testimonials
               </a>
@@ -43,14 +43,14 @@ export function Footer() {
             {LANDING_PAGE_CONFIG.showProductFeatures && (
               <a
                 href="#pricing"
-                className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+                className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               >
                 Pricing
               </a>
             )}
             <a
               href="#faq"
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
             >
               FAQ
             </a>
@@ -59,7 +59,7 @@ export function Footer() {
               <Button
                 size="sm"
                 asChild
-                className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50"
+                className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
               >
                 {LANDING_PAGE_CONFIG.showProductFeatures ? (
                   <Link href="/signup">Start Free Trial</Link>
@@ -72,40 +72,41 @@ export function Footer() {
         </div>
         <div className="mt-8 pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4 text-sm text-muted-foreground">
           <div className="flex flex-col">
-            <div>
-              © {new Date().getFullYear()} Flashletter 2025. All rights
-              reserved.
-            </div>
+            <div>© {new Date().getFullYear()} Flashletter 2025. All rights reserved.</div>
             <div className="text-xs text-muted-foreground opacity-80">
               Jakub Murcek — IČO 08294593
             </div>
           </div>
           <div className="flex items-center gap-6">
             <a
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition-all duration-300 hover:scale-105"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-black text-white text-sm font-medium hover:bg-gray-800 transition duration-300 hover:scale-105"
               href="https://x.com/ykbmck"
               target="_blank"
               rel="noopener noreferrer"
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-4 h-4"
+                fill="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
               Follow @ykbmck
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/privacy"
             >
               Privacy Policy
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/terms"
             >
               Terms of Service
             </a>
             <a
-              className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:scale-105"
+              className="text-sm text-muted-foreground hover:text-foreground transition duration-300 hover:scale-105"
               href="/unsubscribe"
             >
               Unsubscribe

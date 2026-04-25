@@ -7,13 +7,16 @@ import {
   type Campaign,
   type CampaignWithEmails,
   type Email,
-  type LandingPageData,
 } from '../schemas'
 
 // Re-export for backwards compatibility
 export type { Campaign, CampaignWithEmails }
 
-type LandingPageMetadata = LandingPageData['metadata']
+/**
+ * `landing_page_metadata` is a jsonb column — it holds both the scraped OG metadata
+ * and the AI-generated `analysis` under an `analysis` key. Keep this type permissive.
+ */
+type LandingPageMetadata = Record<string, unknown>
 
 const dbEmailRowSchema = z.object({
   id: z.string().uuid(),
@@ -56,10 +59,7 @@ type CampaignUpdateData = CampaignInsertData & {
 export class CampaignStorageService {
   constructor(private supabase: SupabaseClient) {}
 
-  async createCampaign(
-    userId: string,
-    data: CampaignInsertData
-  ): Promise<Campaign> {
+  async createCampaign(userId: string, data: CampaignInsertData): Promise<Campaign> {
     const { data: campaign, error } = await this.supabase
       .from('campaigns')
       .insert({
@@ -93,7 +93,7 @@ export class CampaignStorageService {
           created_at,
           updated_at
         )
-      `
+      `,
       )
       .eq('id', campaignId)
       .single()
@@ -106,9 +106,7 @@ export class CampaignStorageService {
     const parsedCampaign = campaignSchema.parse(campaign)
 
     const emails: Email[] = (campaign.emails || [])
-      .map((email: unknown) =>
-        mapDbEmailToDomain(dbEmailRowSchema.parse(email))
-      )
+      .map((email: unknown) => mapDbEmailToDomain(dbEmailRowSchema.parse(email)))
       .sort((a: Email, b: Email) => a.day - b.day)
 
     return campaignWithEmailsSchema.parse({
@@ -117,22 +115,17 @@ export class CampaignStorageService {
     })
   }
 
-  async updateCampaign(
-    campaignId: string,
-    data: CampaignUpdateData
-  ): Promise<Campaign> {
+  async updateCampaign(campaignId: string, data: CampaignUpdateData): Promise<Campaign> {
     const updateData: Record<string, unknown> = {}
 
     if (data.name !== undefined) updateData.name = data.name
-    if (data.landingPageUrl !== undefined)
-      updateData.landing_page_url = data.landingPageUrl
+    if (data.landingPageUrl !== undefined) updateData.landing_page_url = data.landingPageUrl
     if (data.landingPageContent !== undefined)
       updateData.landing_page_content = data.landingPageContent
     if (data.landingPageMetadata !== undefined)
       updateData.landing_page_metadata = data.landingPageMetadata
     if (data.tone !== undefined) updateData.tone = data.tone
-    if (data.campaignType !== undefined)
-      updateData.campaign_type = data.campaignType
+    if (data.campaignType !== undefined) updateData.campaign_type = data.campaignType
     if (data.days !== undefined) updateData.days = data.days
     if (data.status !== undefined) updateData.status = data.status
 
@@ -170,10 +163,7 @@ export class CampaignStorageService {
   }
 
   async deleteCampaign(campaignId: string): Promise<void> {
-    const { error } = await this.supabase
-      .from('campaigns')
-      .delete()
-      .eq('id', campaignId)
+    const { error } = await this.supabase.from('campaigns').delete().eq('id', campaignId)
 
     if (error) throw error
   }
@@ -196,22 +186,17 @@ export class CampaignStorageService {
       content: email.content,
     }))
 
-    const { data, error } = await this.supabase
-      .from('emails')
-      .insert(emailsToInsert)
-      .select()
+    const { data, error } = await this.supabase.from('emails').insert(emailsToInsert).select()
 
     if (error) throw error
 
-    return (data || []).map((email) =>
-      mapDbEmailToDomain(dbEmailRowSchema.parse(email))
-    )
+    return (data || []).map((email) => mapDbEmailToDomain(dbEmailRowSchema.parse(email)))
   }
 
   async updateEmail(
     campaignId: string,
     day: number,
-    data: { subject?: string; preview?: string; content?: string }
+    data: { subject?: string; preview?: string; content?: string },
   ): Promise<void> {
     const { error } = await this.supabase
       .from('emails')

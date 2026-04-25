@@ -28,12 +28,8 @@ function sleep(ms: number): Promise<void> {
 /**
  * Calculate delay for exponential backoff with jitter
  */
-function calculateDelay(
-  attempt: number,
-  config: Required<RetryConfig>
-): number {
-  const exponentialDelay =
-    config.initialDelay * Math.pow(config.backoffMultiplier, attempt)
+function calculateDelay(attempt: number, config: Required<RetryConfig>): number {
+  const exponentialDelay = config.initialDelay * Math.pow(config.backoffMultiplier, attempt)
   const cappedDelay = Math.min(exponentialDelay, config.maxDelay)
 
   // Add jitter to prevent thundering herd problem
@@ -61,9 +57,7 @@ function isRetryableError(error: unknown): boolean {
   if (
     'code' in error &&
     typeof error.code === 'string' &&
-    (error.code === 'ECONNRESET' ||
-      error.code === 'ETIMEDOUT' ||
-      error.code === 'ENOTFOUND')
+    (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ENOTFOUND')
   ) {
     return true
   }
@@ -81,14 +75,14 @@ function isRetryableError(error: unknown): boolean {
  * @example
  * const response = await retryWithBackoff(() =>
  *   openai.responses.create({
- *     model: 'gpt-4o',
+ *     model: 'gpt-5',
  *     input: 'Hello!',
  *   })
  * )
  */
 export async function retryWithBackoff<T>(
   fn: () => Promise<T>,
-  config: RetryConfig = {}
+  config: RetryConfig = {},
 ): Promise<T> {
   const finalConfig = { ...DEFAULT_CONFIG, ...config }
   let lastError: unknown
@@ -111,16 +105,12 @@ export async function retryWithBackoff<T>(
 
       // Log the retry attempt
       console.warn(
-        `API call failed (attempt ${attempt + 1}/${
-          finalConfig.maxRetries + 1
-        }). Retrying...`,
+        `API call failed (attempt ${attempt + 1}/${finalConfig.maxRetries + 1}). Retrying...`,
         {
           error: error instanceof Error ? error.message : 'Unknown error',
           status:
-            error && typeof error === 'object' && 'status' in error
-              ? error.status
-              : undefined,
-        }
+            error && typeof error === 'object' && 'status' in error ? error.status : undefined,
+        },
       )
 
       // Calculate and wait for the backoff delay
@@ -141,12 +131,7 @@ export function extractRateLimitInfo(error: unknown): {
   remaining?: number
   resetTime?: number
 } {
-  if (
-    !error ||
-    typeof error !== 'object' ||
-    !('headers' in error) ||
-    !error.headers
-  ) {
+  if (!error || typeof error !== 'object' || !('headers' in error) || !error.headers) {
     return {}
   }
 

@@ -11,11 +11,7 @@ Provides user-based rate limiting for API endpoints using Upstash Redis.
 **Usage:**
 
 ```typescript
-import {
-  checkRateLimit,
-  chatRateLimit,
-  getRateLimitHeaders,
-} from '@/lib/utils/rate-limit'
+import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
 
 // In your API route
 const identifier = user?.id || req.ip || 'anonymous'
@@ -26,12 +22,8 @@ if (!result.success) {
     { error: 'Too many requests' },
     {
       status: 429,
-      headers: getRateLimitHeaders(
-        result.limit,
-        result.remaining,
-        result.reset
-      ),
-    }
+      headers: getRateLimitHeaders(result.limit, result.remaining, result.reset),
+    },
   )
 }
 ```
@@ -54,9 +46,9 @@ import { retryWithBackoff } from '@/lib/utils/openai-retry'
 // Wrap OpenAI calls
 const response = await retryWithBackoff(() =>
   openai.responses.create({
-    model: 'gpt-4o',
+    model: 'gpt-5',
     input: 'Hello!',
-  })
+  }),
 )
 ```
 

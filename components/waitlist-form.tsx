@@ -52,8 +52,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
 
     // Validate required consent (only for non-US users)
     if (locationInfo?.requiresGDPR && !privacyConsent) {
-      const errorMessage =
-        'You must accept the privacy policy to join the waitlist.'
+      const errorMessage = 'You must accept the privacy policy to join the waitlist.'
       setError(errorMessage)
       setIsSubmitting(false)
 
@@ -96,12 +95,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             body: JSON.stringify({
               email,
               name: name || null,
-              privacyConsent: locationInfo?.requiresGDPR
-                ? privacyConsent
-                : true,
-              marketingConsent: locationInfo?.requiresGDPR
-                ? marketingConsent
-                : false,
+              privacyConsent: locationInfo?.requiresGDPR ? privacyConsent : true,
+              marketingConsent: locationInfo?.requiresGDPR ? marketingConsent : false,
               consentTimestamp: new Date().toISOString(),
               userRegion: locationInfo?.region || 'OTHER',
             }),
@@ -166,9 +161,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             level: 'info',
             data: {
               userRegion: locationInfo?.region || 'OTHER',
-              hasOrderInfo: !!(
-                responseData.order && responseData.totalCount !== undefined
-              ),
+              hasOrderInfo: !!(responseData.order && responseData.totalCount !== undefined),
             },
           })
 
@@ -182,8 +175,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           setPrivacyConsent(false)
           setMarketingConsent(false)
         } catch (err) {
-          const error =
-            err instanceof Error ? err : new Error('Something went wrong')
+          const error = err instanceof Error ? err : new Error('Something went wrong')
 
           // Capture the error with context
           Sentry.captureException(error, {
@@ -209,7 +201,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         } finally {
           setIsSubmitting(false)
         }
-      }
+      },
     )
   }
 
@@ -278,8 +270,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   #{orderInfo.order}
                 </div>
                 <div className="text-sm text-amber-600 dark:text-amber-400">
-                  You&apos;re #{orderInfo.order} of {orderInfo.totalCount} people on
-                  the waitlist
+                  You&apos;re #{orderInfo.order} of {orderInfo.totalCount} people on the waitlist
                 </div>
               </div>
             </div>
@@ -289,8 +280,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             className="text-green-600 dark:text-green-400 animate-fade-in-up"
             style={{ animationDelay: '1.2s' }}
           >
-            We&apos;ll notify you as soon as Flashletter is ready. Get ready for
-            lightning-fast newsletter campaigns!
+            We&apos;ll notify you as soon as Flashletter is ready. Get ready for lightning-fast
+            newsletter campaigns!
           </p>
         </div>
       </div>
@@ -298,12 +289,16 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
   }
 
   return (
-    <AnimatedSection delay={0} immediate>
-      <form onSubmit={handleSubmit} className={`space-y-6 ${className}`}>
+    <AnimatedSection
+      delay={0}
+      immediate
+    >
+      <form
+        onSubmit={handleSubmit}
+        className={`space-y-6 ${className}`}
+      >
         <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-foreground mb-4">
-            Get Early Access
-          </h2>
+          <h2 className="text-3xl font-bold text-foreground mb-4">Get Early Access</h2>
           <p className="text-muted-foreground text-lg">
             Be one of the first to experience the future
             <br />
@@ -313,7 +308,10 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium">
+            <Label
+              htmlFor="email"
+              className="text-sm font-medium"
+            >
               Email Address *
             </Label>
             <div className="relative">
@@ -343,7 +341,10 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">
+            <Label
+              htmlFor="name"
+              className="text-sm font-medium"
+            >
               Name (optional)
             </Label>
             <div className="relative">
@@ -413,8 +414,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                     >
                       Privacy Policy
                     </Link>{' '}
-                    and consent to the processing of my personal data for the
-                    purpose of joining the waitlist.
+                    and consent to the processing of my personal data for the purpose of joining the
+                    waitlist.
                   </span>
                 </label>
               </div>
@@ -443,14 +444,11 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                   htmlFor="marketing-consent"
                   className="text-sm text-foreground"
                 >
-                  <span className="font-medium">
-                    Marketing Communications (Optional)
-                  </span>
+                  <span className="font-medium">Marketing Communications (Optional)</span>
                   <br />
                   <span className="text-muted-foreground">
-                    I would like to receive additional marketing communications
-                    about Flashletter features, tips, and special offers. You
-                    can unsubscribe at any time.
+                    I would like to receive additional marketing communications about Flashletter
+                    features, tips, and special offers. You can unsubscribe at any time.
                   </span>
                 </label>
               </div>
@@ -467,10 +465,8 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
         <PulseButton>
           <Button
             type="submit"
-            disabled={
-              isSubmitting || (locationInfo?.requiresGDPR && !privacyConsent)
-            }
-            className="w-full h-12 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting || (locationInfo?.requiresGDPR && !privacyConsent)}
+            className="w-full h-12 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-300"
           >
             {isSubmitting ? (
               <>
@@ -487,11 +483,17 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           {locationInfo?.requiresGDPR ? (
             <>
               By joining, you agree to our{' '}
-              <Link href="/terms" className="text-primary hover:underline">
+              <Link
+                href="/terms"
+                className="text-primary hover:underline"
+              >
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-primary hover:underline">
+              <Link
+                href="/privacy"
+                className="text-primary hover:underline"
+              >
                 Privacy Policy
               </Link>
               . You can{' '}
@@ -506,11 +508,17 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           ) : (
             <>
               By joining, you agree to our{' '}
-              <Link href="/terms" className="text-primary hover:underline">
+              <Link
+                href="/terms"
+                className="text-primary hover:underline"
+              >
                 Terms of Service
               </Link>{' '}
               and{' '}
-              <Link href="/privacy" className="text-primary hover:underline">
+              <Link
+                href="/privacy"
+                className="text-primary hover:underline"
+              >
                 Privacy Policy
               </Link>
               . No spam, just updates about Flashletter.

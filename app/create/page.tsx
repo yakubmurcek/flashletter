@@ -12,13 +12,16 @@ import { CampaignLayout } from '@/components/layouts/campaign-layout'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { ErrorMessage } from '@/components/campaign/error-message'
+import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
+import { useAnonymousLimit } from '@/lib/hooks/use-anonymous-limit'
+import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 
 export default function CreatePage() {
   const router = useRouter()
-  const { setLandingPageData, createNewCampaign, isLoading, clearAll } =
-    useCampaign()
-  const { isAnalyzing, error, analyzeLandingPage } = useLandingPage()
+  const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
+  const { isAnalyzing, progressState, error, analyzeLandingPage } = useLandingPage()
+  const { isLoading: isCheckingLimit, isAnonymous, canCreate, campaignCount } = useAnonymousLimit()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -49,21 +52,42 @@ export default function CreatePage() {
     }
   }
 
-  if (isLoading) {
+  // Show loading while checking anonymous limit
+  if (isLoading || isCheckingLimit) {
     return null
+  }
+
+  // Show upgrade prompt if anonymous user has hit their limit
+  if (isAnonymous && !canCreate) {
+    return (
+      <CampaignLayout backHref="/">
+        <UpgradePrompt campaignCount={campaignCount} />
+      </CampaignLayout>
+    )
   }
 
   return (
     <CampaignLayout backHref="/">
       <div className="w-full max-w-2xl">
-        <ProgressIndicator currentStep={1} steps={CAMPAIGN_STEPS} />
+        <ProgressIndicator
+          currentStep={1}
+          steps={CAMPAIGN_STEPS}
+        />
+
+        <ScrapeProgressOverlay
+          isOpen={isAnalyzing}
+          progressState={progressState}
+        />
 
         <FormCard
           icon={Link2}
           title="Enter your landing page URL"
           description="We'll analyze your landing page to understand your product and create targeted email campaigns."
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6"
+          >
             <div className="space-y-2">
               <Label htmlFor="url">Landing Page URL</Label>
               <Input
@@ -75,9 +99,7 @@ export default function CreatePage() {
                 className="h-12 text-base border-border/60 focus:border-primary"
                 required
               />
-              <p className="text-sm text-muted-foreground">
-                Enter the full URL including https://
-              </p>
+              <p className="text-sm text-muted-foreground">Enter the full URL including https://</p>
             </div>
 
             {error && <ErrorMessage message={error} />}
@@ -86,7 +108,7 @@ export default function CreatePage() {
               type="submit"
               size="lg"
               disabled={isAnalyzing || isSubmitting}
-              className="w-full gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+              className="w-full sm:w-auto bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
             >
               {isAnalyzing || isSubmitting ? (
                 <>

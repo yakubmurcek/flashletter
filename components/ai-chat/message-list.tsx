@@ -24,10 +24,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
       {messages.map((message) => (
         <div
           key={message.id}
-          className={cn(
-            'flex gap-2',
-            message.role === 'user' ? 'justify-end' : 'justify-start'
-          )}
+          className={cn('flex gap-2', message.role === 'user' ? 'justify-end' : 'justify-start')}
         >
           {message.role === 'assistant' && (
             <div className="w-8 h-8 bg-gradient-to-br from-primary/20 to-amber-400/10 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -36,12 +33,12 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
           )}
           <Card
             className={cn(
-              'px-3 py-2 max-w-[85%] min-w-[120px] transition-all',
+              'px-3 py-2 max-w-[85%] min-w-[120px] transition-colors',
               message.role === 'user'
                 ? 'bg-gradient-to-r from-orange-400 to-amber-300/70 text-white border-0 shadow-sm'
                 : message.appliedEdit
-                ? 'bg-green-500/10 border border-green-500/20'
-                : 'bg-primary/5 border border-border/40 hover:border-primary/20'
+                  ? 'bg-green-500/10 border border-green-500/20'
+                  : 'bg-primary/5 border border-border/40 hover:border-primary/20',
             )}
           >
             {message.appliedEdit && (
@@ -70,16 +67,12 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
             {message.role === 'assistant' ? (
               <MarkdownRenderer content={message.content} />
             ) : (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {message.content}
-              </p>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
             )}
             <p
               className={cn(
                 'text-xs mt-1',
-                message.role === 'user'
-                  ? 'text-primary-foreground/70'
-                  : 'text-muted-foreground'
+                message.role === 'user' ? 'text-primary-foreground/70' : 'text-muted-foreground',
               )}
             >
               {message.timestamp.toLocaleTimeString([], {

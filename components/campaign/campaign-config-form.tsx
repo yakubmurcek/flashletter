@@ -37,15 +37,24 @@ export function CampaignConfigForm({
   const isLoading = isGenerating || isSubmitting
 
   return (
-    <form onSubmit={onSubmit} className="space-y-8">
-      <ToneSelector value={tone} onChange={onToneChange} />
+    <form
+      onSubmit={onSubmit}
+      className="space-y-8"
+    >
+      <ToneSelector
+        value={tone}
+        onChange={onToneChange}
+      />
 
       <CampaignTypeSelector
         value={campaignType}
         onChange={onCampaignTypeChange}
       />
 
-      <DurationSlider value={days} onChange={onDaysChange} />
+      <DurationSlider
+        value={days}
+        onChange={onDaysChange}
+      />
 
       <ConfigPreviewCard
         tone={tone}
@@ -60,7 +69,7 @@ export function CampaignConfigForm({
         type="submit"
         size="lg"
         disabled={isLoading}
-        className="w-full gap-2 bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-all duration-300"
+        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 shadow-md hover:shadow-lg transition-transform duration-300"
       >
         {isLoading ? (
           <>
