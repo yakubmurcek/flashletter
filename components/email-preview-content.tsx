@@ -34,16 +34,14 @@ function EmailPreviewContentComponent({
 }: EmailPreviewContentProps) {
   return (
     <div
-      className="flex-1 overflow-y-auto rounded-3xl bg-white/[0.03] ring-1 ring-border/10 shadow-[0_30px_80px_-55px_rgba(15,23,42,0.4)]"
+      className="flex-1 overflow-y-auto rounded-lg bg-card border border-border"
       onMouseUp={onMouseUp}
     >
       <div className="p-10">
         <div className="max-w-2xl mx-auto space-y-8">
-          <div className="rounded-3xl bg-white/[0.08] p-10 min-h-[500px]">
+          <div className="rounded-lg bg-background border border-border p-10 min-h-[500px]">
             <div className="space-y-2 mb-8">
-              <div className="text-xs text-muted-foreground/80 uppercase tracking-[0.35em]">
-                Subject
-              </div>
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">Subject</div>
               <Input
                 value={subject}
                 onChange={(e) => onSubjectChange?.(e.target.value)}

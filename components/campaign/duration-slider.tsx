@@ -19,9 +19,7 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
         >
           Campaign Duration
         </Label>
-        <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-          {days} days
-        </span>
+        <span className="text-2xl font-semibold text-primary tabular">{days} days</span>
       </div>
       <Slider
         id="days"

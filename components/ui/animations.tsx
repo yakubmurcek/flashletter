@@ -1,6 +1,7 @@
+'use client'
+
 import { useEffect, useRef } from 'react'
 
-// Animated components - simple CSS-based approach
 export const AnimatedSection = ({
   children,
   className = '',
@@ -19,7 +20,6 @@ export const AnimatedSection = ({
     if (!element) return
 
     if (immediate) {
-      // Trigger visibility on next frame so CSS transitions run
       const id = requestAnimationFrame(() => {
         element.classList.add('is-visible')
       })
@@ -53,75 +53,12 @@ export const AnimatedSection = ({
   )
 }
 
-export const FloatingElement = ({
-  children,
-  delay = 0,
-  variant = 'default',
-  className = '',
-}: {
-  children: React.ReactNode
-  delay?: number
-  variant?: 'default' | 'gentle' | 'bouncy' | 'sway'
-  className?: string
-}) => {
-  const animationClass = {
-    default: 'animate-float',
-    gentle: 'animate-float-gentle',
-    bouncy: 'animate-float-bouncy',
-    sway: 'animate-float-sway',
-  }[variant]
-
-  const combinedClassName = className ? `${animationClass} ${className}` : animationClass
-
-  return (
-    <div
-      className={combinedClassName}
-      style={{
-        animationDelay: `${delay}s, ${delay + 0.3}s`,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
+// Passthrough — still consumed by WaitlistForm. Kept as a no-op until the
+// form itself is restyled to match the editorial direction.
 export const PulseButton = ({
   children,
   className = '',
 }: {
   children: React.ReactNode
   className?: string
-}) => {
-  return (
-    <div className={`relative ${className}`}>
-      <div
-        className="absolute -inset-0.5 bg-primary/20 rounded-full blur-sm"
-        style={{
-          animation: 'pulseButton 3s ease-in-out infinite',
-        }}
-      ></div>
-      <div
-        className="relative"
-        style={{
-          animation: 'scaleButton 4s ease-in-out infinite',
-        }}
-      >
-        {children}
-      </div>
-    </div>
-  )
-}
-
-export const GradientText = ({
-  children,
-  className = '',
-}: {
-  children: React.ReactNode
-  className?: string
-}) => (
-  <span
-    className={`bg-gradient-to-r from-orange-500 via-orange-400 to-amber-300 bg-clip-text text-transparent animate-gradient ${className}`}
-  >
-    {children}
-  </span>
-)
+}) => <div className={className}>{children}</div>

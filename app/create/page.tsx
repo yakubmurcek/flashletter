@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { ArrowRight, Link2, Loader2 } from 'lucide-react'
 import { useCampaign } from '@/lib/campaign-context'
 import { useLandingPage } from '@/lib/hooks/use-landing-page'
-import { CampaignLayout } from '@/components/layouts/campaign-layout'
+import { AppShell } from '@/components/layouts/app-shell'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { ErrorMessage } from '@/components/campaign/error-message'
@@ -60,71 +60,75 @@ export default function CreatePage() {
   // Show upgrade prompt if anonymous user has hit their limit
   if (isAnonymous && !canCreate) {
     return (
-      <CampaignLayout backHref="/">
+      <AppShell
+        chrome="centered"
+        backHref="/"
+      >
         <UpgradePrompt campaignCount={campaignCount} />
-      </CampaignLayout>
+      </AppShell>
     )
   }
 
   return (
-    <CampaignLayout backHref="/">
-      <div className="w-full max-w-2xl">
-        <ProgressIndicator
-          currentStep={1}
-          steps={CAMPAIGN_STEPS}
-        />
+    <AppShell
+      chrome="narrow"
+      backHref="/"
+    >
+      <ProgressIndicator
+        currentStep={1}
+        steps={CAMPAIGN_STEPS}
+      />
 
-        <ScrapeProgressOverlay
-          isOpen={isAnalyzing}
-          progressState={progressState}
-        />
+      <ScrapeProgressOverlay
+        isOpen={isAnalyzing}
+        progressState={progressState}
+      />
 
-        <FormCard
-          icon={Link2}
-          title="Enter your landing page URL"
-          description="We'll analyze your landing page to understand your product and create targeted email campaigns."
+      <FormCard
+        icon={Link2}
+        title="Enter your landing page URL"
+        description="We'll analyze your landing page to understand your product and create targeted email campaigns."
+      >
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-6"
         >
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6"
+          <div className="space-y-2">
+            <Label htmlFor="url">Landing Page URL</Label>
+            <Input
+              id="url"
+              type="url"
+              placeholder="https://example.com/landing-page"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="h-12 text-base"
+              required
+            />
+            <p className="text-sm text-muted-foreground">Enter the full URL including https://</p>
+          </div>
+
+          {error && <ErrorMessage message={error} />}
+
+          <Button
+            type="submit"
+            size="lg"
+            disabled={isAnalyzing || isSubmitting}
+            className="w-full sm:w-auto"
           >
-            <div className="space-y-2">
-              <Label htmlFor="url">Landing Page URL</Label>
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://example.com/landing-page"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                className="h-12 text-base border-border/60 focus:border-primary"
-                required
-              />
-              <p className="text-sm text-muted-foreground">Enter the full URL including https://</p>
-            </div>
-
-            {error && <ErrorMessage message={error} />}
-
-            <Button
-              type="submit"
-              size="lg"
-              disabled={isAnalyzing || isSubmitting}
-              className="w-full sm:w-auto bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
-            >
-              {isAnalyzing || isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Analyzing Page...
-                </>
-              ) : (
-                <>
-                  Continue
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        </FormCard>
-      </div>
-    </CampaignLayout>
+            {isAnalyzing || isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Analyzing Page...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </form>
+      </FormCard>
+    </AppShell>
   )
 }

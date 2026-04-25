@@ -14,10 +14,6 @@ interface EmailPreviewProps {
   isSaving?: boolean
 }
 
-// ... imports will be handled in separate call or combined if I use multi-replace. I'll use replace_file_content for the main body first or do imports and body together.
-// Let's do imports and body separately to be safe with line numbers, or I can replace the whole file content block if I am careful.
-// I will reuse "EmailPreviewComponent" signature and update its body.
-
 function EmailPreviewComponent({
   email,
   onUpdate,
@@ -181,7 +177,7 @@ function EmailPreviewComponent({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.4)]">
+      <div className="px-6 py-4 bg-background border-b border-border">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
@@ -201,11 +197,7 @@ function EmailPreviewComponent({
               className="gap-2"
               disabled={!editor}
             >
-              {isCopied ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
+              {isCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
               Copy HTML
             </Button>
           </div>

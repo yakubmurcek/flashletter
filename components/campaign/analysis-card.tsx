@@ -113,7 +113,7 @@ export function AnalysisCard({ analysis, onChange }: AnalysisCardProps) {
   }
 
   return (
-    <Card className="p-6 md:p-8 border-border/60 bg-gradient-to-br from-primary/3 via-transparent to-amber-500/3">
+    <Card className="p-6 md:p-8">
       <div className="flex items-start justify-between gap-4 mb-5">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft, Download, History } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandMark } from '@/components/brand/brand-mark'
 
 interface EditorHeaderProps {
   landingPageUrl?: string
@@ -23,12 +23,7 @@ export function EditorHeader({
 }: EditorHeaderProps) {
   return (
     <header
-      className={cn(
-        'flex-shrink-0 relative z-50',
-        'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/70',
-        'shadow-[0_15px_60px_-35px_rgba(15,23,42,0.35)] ring-1 ring-border/10',
-        className,
-      )}
+      className={cn('flex-shrink-0 relative z-50 bg-background border-b border-border', className)}
     >
       <div className="w-full px-6 py-3">
         <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
@@ -36,7 +31,7 @@ export function EditorHeader({
             variant="ghost"
             size="sm"
             asChild
-            className="gap-2 rounded-full bg-white/5 px-3 py-2 hover:bg-white/10 transition-colors"
+            className="gap-2"
           >
             <Link href="/campaigns">
               <ArrowLeft className="w-4 h-4" />
@@ -45,17 +40,9 @@ export function EditorHeader({
           </Button>
 
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-              <Image
-                src="/icon-192.webp"
-                alt="Flashletter"
-                width={20}
-                height={20}
-                className="h-5 w-5"
-              />
-            </span>
+            <BrandMark href="/campaigns" />
             <div className="min-w-0">
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground tracking-[0.18em]">
+              <div className="text-xs uppercase tracking-widest text-muted-foreground">
                 Active campaign
               </div>
               <div className="text-base font-semibold leading-snug truncate">
@@ -80,7 +67,7 @@ export function EditorHeader({
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/10 hover:border-border/60 transition-colors relative"
+              className="gap-2 relative"
               asChild
             >
               <Link href={historyHref}>
@@ -96,7 +83,7 @@ export function EditorHeader({
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/10 hover:border-border/60 transition-colors"
+              className="gap-2"
             >
               <Download className="w-4 h-4" />
               <span className="hidden sm:inline">Export</span>

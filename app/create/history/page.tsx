@@ -3,6 +3,16 @@
 import { useState, useEffect, useMemo, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { ArrowLeft, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useCampaign } from '@/lib/campaign-context'
@@ -237,43 +247,36 @@ function HistoryPageContent() {
         </aside>
       </div>
 
-      {/* Restore Confirmation Dialog */}
-      {showRestoreConfirm && versionToRestore && (
-        <div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center"
-          onClick={() => setShowRestoreConfirm(false)}
-        >
-          <div
-            className="bg-card border border-border rounded-lg p-6 max-w-md mx-4 shadow-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 className="text-lg font-semibold mb-2">Restore This Version?</h3>
-            <p className="text-sm text-muted-foreground mb-4">
+      <AlertDialog
+        open={showRestoreConfirm && !!versionToRestore}
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowRestoreConfirm(false)
+            setVersionToRestore(null)
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Restore this version?</AlertDialogTitle>
+            <AlertDialogDescription>
               This will restore the email to this previous version. Your current version will be
               saved in the history, so you can always get it back.
-            </p>
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowRestoreConfirm(false)
-                  setVersionToRestore(null)
-                }}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={() => {
-                  confirmRestore()
-                  setShowRestoreConfirm(false)
-                }}
-              >
-                Restore Version
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                confirmRestore()
+                setShowRestoreConfirm(false)
+              }}
+            >
+              Restore version
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

@@ -67,7 +67,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
 
   return (
     <>
-      <Card className="flex flex-col group border-border/60 hover:border-primary/30 hover:shadow-lg hover:shadow-primary/8 transition duration-300 hover:-translate-y-1">
+      <Card className="flex flex-col group hover:border-primary/40 hover:-translate-y-0.5 hover:shadow-md hover:shadow-primary/10 transition duration-200">
         <CardHeader>
           <CardTitle className="line-clamp-2 leading-tight group-hover:text-primary transition-colors">
             {campaign.name || 'Untitled Campaign'}
@@ -95,10 +95,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
               <span
                 className={`capitalize px-2 py-0.5 rounded-full text-xs font-medium ${
                   campaign.status === 'active'
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-primary/10 text-primary'
                     : campaign.status === 'completed'
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-primary/10 text-primary'
+                      ? 'bg-secondary text-secondary-foreground'
+                      : 'bg-muted text-muted-foreground'
                 }`}
               >
                 {campaign.status}
@@ -106,7 +106,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             </div>
           </div>
         </CardContent>
-        <CardFooter className="flex items-center justify-between border-t border-border/40 pt-4">
+        <CardFooter className="flex items-center justify-between border-t border-border pt-4">
           <span className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(campaign.updated_at), {
               addSuffix: true,

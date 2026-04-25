@@ -69,11 +69,11 @@ function InputFormBase({
   return (
     <form
       onSubmit={onSubmit}
-      className="p-4 border-t border-border/40 bg-gradient-to-t from-primary/5 to-transparent"
+      className="p-4 border-t border-border bg-card"
       data-chat-form
     >
       {selectedContext && (
-        <div className="mb-3 p-3 bg-gradient-to-r from-primary/10 to-amber-400/5 border border-primary/20 rounded-lg">
+        <div className="mb-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
           <div className="flex items-start justify-between gap-2 mb-2">
             <div className="flex items-center gap-2">
               <div className="w-5 h-5 bg-primary/20 rounded-full flex items-center justify-center">
@@ -93,7 +93,7 @@ function InputFormBase({
               </Button>
             )}
           </div>
-          <div className="text-xs text-muted-foreground bg-background/50 p-2 rounded border border-border/40 max-h-24 overflow-y-auto">
+          <div className="text-xs text-muted-foreground bg-background p-2 rounded border border-border max-h-24 overflow-y-auto">
             &quot;{selectedContext.text}&quot;
           </div>
         </div>
@@ -104,7 +104,7 @@ function InputFormBase({
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Ask me anything..."
-          className="flex-1 border-border/60 focus:border-primary/50 transition-colors"
+          className="flex-1"
           disabled={isLoading}
           data-ai-chat-input
         />
@@ -112,7 +112,6 @@ function InputFormBase({
           type="submit"
           size="icon"
           disabled={isLoading || !input.trim()}
-          className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
         >
           <Send className="w-4 h-4" />
         </Button>

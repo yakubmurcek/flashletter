@@ -44,15 +44,15 @@ export function UpgradePrompt({ campaignCount = 1 }: UpgradePromptProps) {
 
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <Card className="max-w-md w-full border-border/60 shadow-xl">
+      <Card className="max-w-md w-full bg-card border border-border shadow-sm rounded-xl">
         <CardHeader className="text-center pb-4">
-          <div className="mx-auto mb-4 w-16 h-16 bg-gradient-to-br from-orange-400/20 to-amber-300/20 rounded-full flex items-center justify-center">
+          <div className="mx-auto mb-4 w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center">
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
-          <CardTitle className="text-2xl font-bold">
-            You&apos;ve created your first campaign! 🎉
+          <CardTitle className="text-display text-2xl md:text-3xl">
+            You&apos;ve created your first campaign!
           </CardTitle>
-          <CardDescription className="text-base mt-2">
+          <CardDescription className="mt-2">
             Sign up to save your work and create unlimited campaigns.
           </CardDescription>
         </CardHeader>
@@ -66,7 +66,7 @@ export function UpgradePrompt({ campaignCount = 1 }: UpgradePromptProps) {
           </div>
 
           {error && (
-            <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md">
               {error}
             </div>
           )}
@@ -74,7 +74,8 @@ export function UpgradePrompt({ campaignCount = 1 }: UpgradePromptProps) {
           <Button
             onClick={handleGoogleSignUp}
             disabled={loading}
-            className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white py-3 text-lg font-semibold"
+            size="lg"
+            className="w-full"
           >
             {loading ? (
               <>
