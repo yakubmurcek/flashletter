@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   check:
-    name: lint · typecheck · test
+    name: format · lint · typecheck · test
     runs-on: ubuntu-latest
 
     steps:
@@ -29,6 +29,11 @@ jobs:
 
       - name: Install
         run: pnpm install --frozen-lockfile
+
+      # Globs match the lint-staged config in the repo, so what CI rejects is
+      # exactly what the local pre-commit hook would have auto-formatted.
+      - name: Format check
+        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
 
       - name: Lint
         run: pnpm lint
