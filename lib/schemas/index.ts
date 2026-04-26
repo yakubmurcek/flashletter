@@ -107,9 +107,25 @@ export const emailEditSchema = z.object({
 
 /**
  * OpenAI response schemas
+ *
+ * The AI doesn't see (and shouldn't have to invent) `id` / `uuid` — those are
+ * server/database concerns. We use a stripped-down schema for the structured-
+ * output call, then map to the full domain `Email` after parsing.
  */
 
-// Email generation response from OpenAI
+export const aiEmailOutputSchema = z.object({
+  day: z.number().int().min(1),
+  subject: z.string(),
+  preview: z.string().default(''),
+  content: z.string(),
+})
+
+export const aiEmailsResponseSchema = z.object({
+  emails: z.array(aiEmailOutputSchema).min(1),
+})
+
+// Backward-compatible alias for any callers that already validate full-shape
+// emails (includes id + uuid). Prefer `aiEmailsResponseSchema` for new code.
 export const emailsResponseSchema = z.object({
   emails: z.array(emailSchema).min(1),
 })
@@ -132,3 +148,5 @@ export type CampaignContext = z.infer<typeof campaignContextSchema>
 export type ChatRequest = z.infer<typeof chatRequestSchema>
 export type EmailEdit = z.infer<typeof emailEditSchema>
 export type EmailsResponse = z.infer<typeof emailsResponseSchema>
+export type AiEmailOutput = z.infer<typeof aiEmailOutputSchema>
+export type AiEmailsResponse = z.infer<typeof aiEmailsResponseSchema>

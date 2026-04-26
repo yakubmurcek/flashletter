@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
-import { emailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
+import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
 import {
   checkRateLimit,
   generateEmailsRateLimit,
@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
               },
               { role: 'user', content: 'Generate Day 1 only. Return only valid JSON.' },
             ],
-            text: { format: zodTextFormat(emailsResponseSchema, 'emails_response') },
+            text: { format: zodTextFormat(aiEmailsResponseSchema, 'emails_response') },
           }),
         )
 
@@ -139,7 +139,7 @@ export async function POST(req: NextRequest) {
                   content: `Generate Days 2 through ${config.days}. Return only valid JSON.`,
                 },
               ],
-              text: { format: zodTextFormat(emailsResponseSchema, 'emails_response') },
+              text: { format: zodTextFormat(aiEmailsResponseSchema, 'emails_response') },
             }),
           )
 
@@ -148,9 +148,14 @@ export async function POST(req: NextRequest) {
             throw new Error('No remaining emails returned from OpenAI')
           }
 
-          for (let i = 0; i < remainingParsed.emails.length; i++) {
-            const raw = remainingParsed.emails[i]
-            const day = raw.day || i + 2
+          // Force the day number from the index — never trust the model. Phase 2
+          // is asked for Days 2..N, so position i (0-based) maps to day i + 2.
+          // We also cap at config.days so an over-long response can't clobber.
+          const slots = config.days - 1
+          const usable = remainingParsed.emails.slice(0, slots)
+          for (let i = 0; i < usable.length; i++) {
+            const raw = usable[i]
+            const day = i + 2
             const email: Email = {
               id: day,
               uuid: null,

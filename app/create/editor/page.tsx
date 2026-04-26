@@ -98,6 +98,7 @@ function EditorPageContent() {
       loadingState !== 'loaded' ||
       !landingPageData ||
       !config ||
+      !campaignIdFromUrl ||
       emails.length > 0 ||
       isStreaming
     ) {
@@ -105,10 +106,9 @@ function EditorPageContent() {
     }
     hasTriggeredAutogenRef.current = true
     deleteParam('autogen')
-    // Use the URL-validated id rather than the context state — `currentCampaignId`
-    // can still be null right after `loadCampaign` resolves (state propagation is
-    // async). Without an id the stream route skips persistence and the returned
-    // emails have no UUIDs, breaking version tracking.
+    // Pass the URL-validated id (guaranteed non-null by the guard above) so the
+    // stream route persists emails and the client gets back UUIDs for version
+    // tracking. `currentCampaignId` is React state and can lag behind here.
     generateEmailsStream(landingPageData, config, campaignIdFromUrl)
   }, [
     autogenFlag,
