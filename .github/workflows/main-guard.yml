@@ -1,0 +1,25 @@
+name: Main guard
+
+# Only fires on PRs whose base is `main`. PRs targeting `dev` never see this
+# workflow and don't need to satisfy its check.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  enforce-base:
+    # Job name = check context. Referenced verbatim in main's branch protection.
+    name: PR base must be dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Verify PR source is dev
+        run: |
+          if [ "${{ github.head_ref }}" != "dev" ]; then
+            echo "::error::PRs to main must come from dev (got '${{ github.head_ref }}')."
+            exit 1
+          fi
+          echo "OK: PR head is dev."
