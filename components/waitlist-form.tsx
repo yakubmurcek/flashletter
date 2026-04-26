@@ -262,7 +262,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           {/* Show order information only if there are more than 9 users */}
           {orderInfo && orderInfo.totalCount > 9 && (
             <div
-              className="mb-4 p-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20 rounded-lg border border-amber-200 dark:border-amber-800 animate-fade-in-up"
+              className="mb-4 p-4 bg-primary/10 rounded-lg border border-primary/30 animate-fade-in-up"
               style={{ animationDelay: '1s' }}
             >
               <div className="text-center">
@@ -466,7 +466,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
           <Button
             type="submit"
             disabled={isSubmitting || (locationInfo?.requiresGDPR && !privacyConsent)}
-            className="w-full h-12 text-base bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 disabled:opacity-50 disabled:cursor-not-allowed transition-transform duration-300"
+            className="w-full h-12 text-base"
           >
             {isSubmitting ? (
               <>

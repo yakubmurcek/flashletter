@@ -46,13 +46,9 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4"
         >
           <div className="w-full max-w-lg">
-            <div className="bg-card border border-border/50 shadow-2xl rounded-2xl p-6 md:p-8 space-y-8 overflow-hidden relative">
-              {/* Decorative background glow */}
-              <div className="absolute -top-20 -right-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
-              <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl opacity-50 pointer-events-none" />
-
+            <div className="bg-card border border-border shadow-xl rounded-2xl p-6 md:p-8 space-y-8 relative">
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold text-center mb-2 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+                <h3 className="text-display text-2xl text-center mb-2 text-foreground">
                   Analyzing Landing Page
                 </h3>
                 <p className="text-center text-muted-foreground mb-8 text-sm">
@@ -113,7 +109,7 @@ function ProgressStep({
         className={cn(
           'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
           state === 'completed'
-            ? 'bg-green-500 text-white scale-100'
+            ? 'bg-primary text-primary-foreground scale-100'
             : state === 'current'
               ? 'bg-primary text-primary-foreground scale-110'
               : 'bg-muted text-muted-foreground',

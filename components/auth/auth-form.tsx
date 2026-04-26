@@ -179,13 +179,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+        <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md">
           {error}
         </div>
       )}
 
       {message && (
-        <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+        <div className="p-3 text-sm text-foreground bg-primary/10 border border-primary/30 rounded-md">
           {message}
         </div>
       )}
@@ -193,13 +193,13 @@ export function AuthForm({ mode }: AuthFormProps) {
       {mode === 'signup' && (
         <div className="space-y-3">
           {!isLoading && locationInfo?.requiresGDPR ? (
-            <div className="flex items-start space-x-3 rounded-md border border-border/40 p-3 bg-muted/30">
+            <div className="flex items-start space-x-3 rounded-md border border-border p-3 bg-muted/30">
               <input
                 type="checkbox"
                 id="legal-consent"
                 checked={legalConsent}
                 onChange={(e) => setLegalConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                className="mt-1 h-4 w-4 text-primary focus:ring-primary border-border rounded"
                 required
               />
               <label
@@ -209,14 +209,14 @@ export function AuthForm({ mode }: AuthFormProps) {
                 I agree to the{' '}
                 <Link
                   href="/terms"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   Terms of Service
                 </Link>{' '}
                 and{' '}
                 <Link
                   href="/privacy"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                  className="font-medium text-primary hover:text-primary/80 transition-colors"
                 >
                   Privacy Policy
                 </Link>{' '}
@@ -228,14 +228,14 @@ export function AuthForm({ mode }: AuthFormProps) {
               By creating an account, you agree to our{' '}
               <Link
                 href="/terms"
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                className="font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 Terms of Service
               </Link>{' '}
               and{' '}
               <Link
                 href="/privacy"
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
+                className="font-medium text-primary hover:text-primary/80 transition-colors"
               >
                 Privacy Policy
               </Link>
@@ -248,7 +248,7 @@ export function AuthForm({ mode }: AuthFormProps) {
       <Button
         type="submit"
         disabled={loading || oauthLoading || needsConsentConfirmation}
-        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
+        className="w-full"
       >
         {loading ? (
           <>
@@ -263,9 +263,9 @@ export function AuthForm({ mode }: AuthFormProps) {
       </Button>
 
       <div className="relative">
-        <Separator className="bg-border/60" />
-        <span className="absolute inset-x-0 -top-2 flex justify-center text-xs uppercase text-muted-foreground">
-          <span className="bg-background px-2">Or continue with</span>
+        <Separator />
+        <span className="absolute inset-x-0 -top-2 flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
+          <span className="bg-card px-2">Or continue with</span>
         </span>
       </div>
 

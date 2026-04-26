@@ -60,7 +60,7 @@ export function TextSelectionPopup({
   return (
     <Card
       ref={popupRef}
-      className="fixed z-[70] shadow-2xl border border-border bg-card/98 backdrop-blur-sm p-1"
+      className="fixed z-[70] shadow-md border border-border bg-popover rounded-lg p-1"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,

@@ -3,7 +3,7 @@
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Settings } from 'lucide-react'
-import { CampaignLayout } from '@/components/layouts/campaign-layout'
+import { AppShell } from '@/components/layouts/app-shell'
 import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 import { CampaignConfigForm } from '@/components/campaign/campaign-config-form'
@@ -47,15 +47,16 @@ function ConfigurePageContent() {
   }
 
   return (
-    <CampaignLayout
+    <AppShell
+      chrome="narrow"
       backHref="/create"
-      headerContent={
+      headerRight={
         <div className="text-sm text-muted-foreground truncate max-w-md">
           {landingPageData?.url}
         </div>
       }
     >
-      <div className="w-full max-w-2xl py-8 space-y-6">
+      <div className="space-y-6">
         <ProgressIndicator
           currentStep={2}
           steps={CAMPAIGN_STEPS}
@@ -88,7 +89,7 @@ function ConfigurePageContent() {
           />
         </FormCard>
       </div>
-    </CampaignLayout>
+    </AppShell>
   )
 }
 

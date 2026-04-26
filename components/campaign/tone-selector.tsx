@@ -28,7 +28,7 @@ export function ToneSelector({ value, onChange }: ToneSelectorProps) {
       >
         <SelectTrigger
           id="tone"
-          className="h-12 border-border/60 focus:border-primary/50 transition-colors"
+          className="h-12"
         >
           <SelectValue />
         </SelectTrigger>

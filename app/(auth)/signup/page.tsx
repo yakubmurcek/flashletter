@@ -16,10 +16,10 @@ export const metadata = {
 
 export default function SignupPage() {
   return (
-    <Card className="border-border/60 shadow-lg">
+    <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="text-3xl font-bold">Create an account</CardTitle>
-        <CardDescription className="text-base">
+        <CardTitle className="text-display text-2xl md:text-3xl">Create an account</CardTitle>
+        <CardDescription>
           Enter your email and password to get started
           <br />
           with AI-powered email campaigns
@@ -33,7 +33,7 @@ export default function SignupPage() {
           Already have an account?{' '}
           <Link
             href="/login"
-            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+            className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Sign in
           </Link>
