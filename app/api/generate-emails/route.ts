@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
-import { emailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
+import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
 import {
   checkRateLimit,
   generateEmailsRateLimit,
@@ -64,7 +64,7 @@ export async function POST(req: NextRequest) {
         ],
         // Note: GPT-5 family does not accept `temperature` on responses.parse.
         text: {
-          format: zodTextFormat(emailsResponseSchema, 'emails_response'),
+          format: zodTextFormat(aiEmailsResponseSchema, 'emails_response'),
         },
       }),
     )
@@ -74,22 +74,25 @@ export async function POST(req: NextRequest) {
       throw new Error('No response from OpenAI')
     }
 
-    const emailsArray = parsed.emails
+    // Normalize AI output (no id/uuid) into the full Email domain shape. Force
+    // the day number from the index so a flaky model can't return duplicates
+    // or out-of-range days that would clobber persistence.
+    const emailsToSave = parsed.emails.slice(0, config.days).map((email, index) => {
+      const day = index + 1
+      return {
+        id: day,
+        uuid: null,
+        day,
+        subject: email.subject || '',
+        preview: email.preview || '',
+        content: email.content || '',
+      }
+    })
 
     // If campaignId is provided, attempt to save emails to database
     if (campaignId) {
       const supabase = await createClient()
       const campaignService = new CampaignStorageService(supabase)
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const emailsToSave = emailsArray.map((email: any, index: number) => ({
-        id: email.day || index + 1,
-        uuid: email.uuid || null,
-        day: email.day || index + 1,
-        subject: email.subject || '',
-        preview: email.preview || '',
-        content: email.content || '',
-      }))
 
       try {
         const savedEmails = await campaignService.saveEmails(campaignId, emailsToSave)
@@ -111,7 +114,7 @@ export async function POST(req: NextRequest) {
         // Fall back to returning unsaved emails so the user can proceed
         return NextResponse.json(
           {
-            emails: emailsArray,
+            emails: emailsToSave,
             usage: response.usage,
             warning: 'Could not save emails; returned without persistence',
           },
@@ -128,7 +131,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
-        emails: emailsArray,
+        emails: emailsToSave,
         usage: response.usage,
       },
       {

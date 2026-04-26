@@ -34,3 +34,13 @@ export const CAMPAIGN_DURATION = {
   MAX: 30,
   DEFAULT: 7,
 }
+
+// Smart defaults applied when an anonymous user pastes a URL on the landing
+// page. Chosen so the user can land directly in the editor without picking a
+// tone/type/length first — they can still tweak from the editor sidebar.
+// Kept short (3) so first-paste users see the full sequence quickly.
+export const SMART_DEFAULT_CAMPAIGN_CONFIG = {
+  tone: 'friendly',
+  campaignType: 'nurture',
+  days: 3,
+} as const

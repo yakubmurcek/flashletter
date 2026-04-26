@@ -9,6 +9,7 @@ import { createClient, signInAnonymously } from '@/lib/supabase/client'
 import { useLandingPage } from '@/lib/hooks/use-landing-page'
 import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { useCampaign } from '@/lib/campaign-context'
+import { SMART_DEFAULT_CAMPAIGN_CONFIG } from '@/lib/constants/campaign'
 
 export function HeroUrlForm() {
   const router = useRouter()
@@ -18,7 +19,7 @@ export function HeroUrlForm() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
   const { analyzeLandingPage, isAnalyzing, progressState, error: analyzeError } = useLandingPage()
-  const { setLandingPageData, createNewCampaign, clearAll } = useCampaign()
+  const { setLandingPageData, createNewCampaign, clearAll, applyConfigToCampaign } = useCampaign()
 
   useEffect(() => {
     async function checkAuth() {
@@ -64,7 +65,13 @@ export function HeroUrlForm() {
       setLandingPageData(data)
       const campaignId = await createNewCampaign(data)
 
-      router.push(`/create/configure?campaign=${campaignId}`)
+      // Apply smart defaults so the editor has a config to render against —
+      // skips the Configure page entirely. User can tweak in the editor sidebar
+      // and regenerate. Use the id-explicit variant because `currentCampaignId`
+      // state may not have propagated to the hook closure yet.
+      await applyConfigToCampaign(campaignId, { ...SMART_DEFAULT_CAMPAIGN_CONFIG })
+
+      router.push(`/create/editor?campaign=${campaignId}&email=1&autogen=1`)
     } catch (err) {
       console.error('Failed to start campaign:', err)
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
