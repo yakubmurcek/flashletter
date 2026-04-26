@@ -1,0 +1,38 @@
+version: 2
+updates:
+  # npm/pnpm dependencies — weekly so the PR queue stays manageable.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: Europe/Prague
+    open-pull-requests-limit: 5
+    target-branch: dev
+    labels:
+      - dependencies
+    groups:
+      # Group minor + patch updates so unrelated bumps don't each open a PR.
+      # Major bumps still get their own PR for individual review.
+      minor-and-patch:
+        update-types:
+          - minor
+          - patch
+    # Ignore Next.js majors here — they need a dedicated upgrade PR with
+    # codemods (see vercel:next-upgrade skill); minor/patch still flow through.
+    ignore:
+      - dependency-name: next
+        update-types:
+          - version-update:semver-major
+
+  # GitHub Actions versions in workflow files.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    target-branch: dev
+    labels:
+      - dependencies
+      - github-actions

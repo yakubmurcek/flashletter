@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Least-privilege token: this workflow only reads code and runs local tooling.
+permissions:
+  contents: read
+
+# Cancel in-progress runs when a new commit lands on the same branch/PR.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: format · lint · typecheck · test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # pnpm version comes from package.json#packageManager — single source of
+      # truth for CI and local.
+      - uses: pnpm/action-setup@v4
+
+      # Node version comes from .nvmrc — same idea.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Globs match the lint-staged config in the repo, so what CI rejects is
+      # exactly what the local pre-commit hook would have auto-formatted.
+      - name: Format check
+        run: pnpm exec prettier --check "**/*.{ts,tsx,js,jsx,json,css,md}"
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm tsc --noEmit
+
+      - name: Test
+        run: pnpm test
