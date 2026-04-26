@@ -3,7 +3,7 @@ name: CI
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, dev]
 
 # Least-privilege token: this workflow only reads code and runs local tooling.
 permissions:
@@ -16,7 +16,9 @@ concurrency:
 
 jobs:
   check:
-    name: format · lint · typecheck · test
+    # Display name is what shows up as the GitHub check context. Branch
+    # protection on main and dev requires exactly this string.
+    name: format · lint · typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -47,5 +49,8 @@ jobs:
       - name: Typecheck
         run: pnpm tsc --noEmit
 
+      # Tests still run inside this job — a failure here fails the whole job
+      # and blocks the merge via branch protection. The display name above
+      # omits "· test" only to keep the check label short; tests still gate.
       - name: Test
         run: pnpm test
