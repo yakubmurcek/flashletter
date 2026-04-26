@@ -125,6 +125,35 @@ export class EmailVersionStorageService {
   }
 
   /**
+   * Get version counts for multiple emails in a single query
+   */
+  async getBatchVersionCounts(emailUuids: string[]): Promise<Record<string, number>> {
+    if (emailUuids.length === 0) return {}
+
+    const { data, error } = await this.supabase
+      .from('email_versions')
+      .select('email_id')
+      .in('email_id', emailUuids)
+
+    if (error) throw error
+
+    const counts: Record<string, number> = {}
+    // Initialize counts for all requested UUIDs to 0
+    emailUuids.forEach((uuid) => {
+      counts[uuid] = 0
+    })
+
+    // Aggregate counts
+    data?.forEach((row: { email_id: string }) => {
+      if (counts[row.email_id] !== undefined) {
+        counts[row.email_id]++
+      }
+    })
+
+    return counts
+  }
+
+  /**
    * Clear all versions for an email
    */
   async clearVersions(emailUuid: string): Promise<void> {
