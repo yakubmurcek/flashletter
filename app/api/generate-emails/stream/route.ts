@@ -19,7 +19,7 @@ import type { Email } from '@/lib/schemas'
 type StreamEvent =
   | { type: 'start'; total: number }
   | { type: 'email'; email: Email }
-  | { type: 'complete'; emails: Email[] }
+  | { type: 'complete'; emails: Email[]; warning?: string }
   | { type: 'error'; message: string }
 
 export async function POST(req: NextRequest) {
@@ -166,6 +166,7 @@ export async function POST(req: NextRequest) {
 
         // Persist the full batch once generation is complete.
         let saved = allEmails
+        let saveWarning: string | undefined
         if (campaignId) {
           try {
             const campaignService = new CampaignStorageService(supabase)
@@ -178,10 +179,14 @@ export async function POST(req: NextRequest) {
                 api_route: '/api/generate-emails/stream',
               },
             })
+            // Surface the failure to the client so the UI can react. Emails are
+            // still returned (without UUIDs) so the user doesn't lose generated
+            // content, but version tracking won't work until they re-save.
+            saveWarning = 'Could not persist emails; returned without persistence'
           }
         }
 
-        send({ type: 'complete', emails: saved })
+        send({ type: 'complete', emails: saved, warning: saveWarning })
       } catch (error) {
         console.error('Generate Emails Stream Error:', error)
 

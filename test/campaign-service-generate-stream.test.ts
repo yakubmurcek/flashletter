@@ -275,6 +275,29 @@ describe('CampaignService.generateEmailsStream', () => {
     expect(body.campaignId).toBeUndefined()
   })
 
+  it('exposes the optional warning from a complete event', async () => {
+    const events: GenerateEmailsStreamEvent[] = [
+      { type: 'start', total: 1 },
+      { type: 'email', email: { ...email1, uuid: null } },
+      { type: 'complete', emails: [email1], warning: 'Could not persist emails' },
+    ]
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(makeStreamResponse(events.map(serializeEvent)))
+
+    const received: GenerateEmailsStreamEvent[] = []
+    await CampaignService.generateEmailsStream(
+      'https://example.com',
+      'page',
+      { ...config, days: 1 },
+      (e) => received.push(e),
+    )
+
+    const completeEvent = received.find((e) => e.type === 'complete')
+    expect(completeEvent).toBeDefined()
+    if (completeEvent && completeEvent.type === 'complete') {
+      expect(completeEvent.warning).toBe('Could not persist emails')
+    }
+  })
+
   it('forwards AbortSignal to fetch', async () => {
     const fetchMock = vi
       .spyOn(global, 'fetch')

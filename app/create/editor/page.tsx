@@ -50,6 +50,8 @@ function EditorPageContent() {
     streamedCount,
     totalExpected,
     error: streamError,
+    warning: streamWarning,
+    clearWarning: clearStreamWarning,
     generateEmailsStream,
   } = useEmailStreaming()
 
@@ -103,7 +105,11 @@ function EditorPageContent() {
     }
     hasTriggeredAutogenRef.current = true
     deleteParam('autogen')
-    generateEmailsStream(landingPageData, config, currentCampaignId)
+    // Use the URL-validated id rather than the context state — `currentCampaignId`
+    // can still be null right after `loadCampaign` resolves (state propagation is
+    // async). Without an id the stream route skips persistence and the returned
+    // emails have no UUIDs, breaking version tracking.
+    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
   }, [
     autogenFlag,
     loadingState,
@@ -113,7 +119,7 @@ function EditorPageContent() {
     isStreaming,
     deleteParam,
     generateEmailsStream,
-    currentCampaignId,
+    campaignIdFromUrl,
   ])
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
@@ -191,8 +197,10 @@ function EditorPageContent() {
 
   const handleRegenerate = useCallback(() => {
     if (!landingPageData || !config || isStreaming) return
-    generateEmailsStream(landingPageData, config, currentCampaignId)
-  }, [landingPageData, config, isStreaming, generateEmailsStream, currentCampaignId])
+    // Same reason as the autogen effect: prefer the URL-validated id so the
+    // server can persist emails and the client gets back UUIDs for versioning.
+    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
+  }, [landingPageData, config, isStreaming, generateEmailsStream, campaignIdFromUrl])
 
   useEffect(() => {
     if (showChat && !prevShowChatRef.current) {
@@ -341,6 +349,18 @@ function EditorPageContent() {
         />
 
         <main className="flex-1 overflow-y-auto">
+          {streamWarning && (
+            <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm flex items-center justify-between gap-3">
+              <span className="text-destructive">⚠️ {streamWarning}</span>
+              <button
+                type="button"
+                onClick={clearStreamWarning}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Dismiss
+              </button>
+            </div>
+          )}
           {selectedEmail ? (
             <EmailPreview
               email={selectedEmail}
@@ -348,7 +368,7 @@ function EditorPageContent() {
               onTextSelected={handleTextSelected}
               isSaving={isSaving}
             />
-          ) : isStreaming || (autogenFlag && emails.length === 0) ? (
+          ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
             <GeneratingState
               streamedCount={streamedCount}
               totalExpected={totalExpected}

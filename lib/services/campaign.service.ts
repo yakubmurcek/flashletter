@@ -8,7 +8,11 @@ import type { ScrapeStreamEvent } from '../types/scrape-progress'
 const generateEmailsStreamEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('start'), total: z.number() }),
   z.object({ type: z.literal('email'), email: emailSchema }),
-  z.object({ type: z.literal('complete'), emails: z.array(emailSchema) }),
+  z.object({
+    type: z.literal('complete'),
+    emails: z.array(emailSchema),
+    warning: z.string().optional(),
+  }),
   z.object({ type: z.literal('error'), message: z.string() }),
 ])
 

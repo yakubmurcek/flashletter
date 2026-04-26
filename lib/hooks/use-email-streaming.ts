@@ -11,12 +11,14 @@ interface UseEmailStreamingReturn {
   streamedCount: number
   totalExpected: number | null
   error: string | null
+  warning: string | null
   generateEmailsStream: (
     landingPageData: LandingPageData,
     config: CampaignConfig,
     campaignId: string | null,
   ) => Promise<Email[] | null>
   clearError: () => void
+  clearWarning: () => void
 }
 
 export function useEmailStreaming(): UseEmailStreamingReturn {
@@ -26,6 +28,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
   const [streamedCount, setStreamedCount] = useState(0)
   const [totalExpected, setTotalExpected] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [warning, setWarning] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
   const generateEmailsStream = useCallback(
@@ -42,6 +45,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
       setStreamedCount(0)
       setTotalExpected(config.days)
       setError(null)
+      setWarning(null)
 
       // Clear any prior emails locally so the stream renders cleanly.
       replaceGeneratedEmailsLocal([])
@@ -53,6 +57,8 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           } else if (event.type === 'email') {
             appendGeneratedEmail(event.email)
             setStreamedCount((n) => n + 1)
+          } else if (event.type === 'complete') {
+            if (event.warning) setWarning(event.warning)
           } else if (event.type === 'error') {
             setError(event.message)
           }
@@ -96,13 +102,16 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
   )
 
   const clearError = useCallback(() => setError(null), [])
+  const clearWarning = useCallback(() => setWarning(null), [])
 
   return {
     isStreaming,
     streamedCount,
     totalExpected,
     error,
+    warning,
     generateEmailsStream,
     clearError,
+    clearWarning,
   }
 }
