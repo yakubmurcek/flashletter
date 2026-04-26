@@ -1,7 +1,18 @@
 import { generateEmailsResponseSchema, scrapeLandingResponseSchema } from '../schemas/api'
+import { emailSchema } from '../schemas'
+import { z } from 'zod'
 import type { CampaignConfig, Email, GenerateEmailsResponse, LandingPageData } from '../types'
 import type { LandingPageAnalysis } from '../schemas/analysis'
 import type { ScrapeStreamEvent } from '../types/scrape-progress'
+
+const generateEmailsStreamEventSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('start'), total: z.number() }),
+  z.object({ type: z.literal('email'), email: emailSchema }),
+  z.object({ type: z.literal('complete'), emails: z.array(emailSchema) }),
+  z.object({ type: z.literal('error'), message: z.string() }),
+])
+
+export type GenerateEmailsStreamEvent = z.infer<typeof generateEmailsStreamEventSchema>
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -195,5 +206,90 @@ export class CampaignService {
       warning: parsed.warning,
       usage: parsed.usage,
     }
+  }
+
+  static async generateEmailsStream(
+    landingUrl: string,
+    landingContent: string,
+    config: CampaignConfig,
+    onEvent: (event: GenerateEmailsStreamEvent) => void,
+    options?: {
+      campaignId?: string
+      signal?: AbortSignal
+      landingAnalysis?: LandingPageAnalysis
+    },
+  ): Promise<Email[]> {
+    const response = await fetch('/api/generate-emails/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        landingUrl,
+        landingContent,
+        landingAnalysis: options?.landingAnalysis,
+        config,
+        campaignId: options?.campaignId,
+      }),
+      signal: options?.signal,
+    })
+
+    if (!response.ok) {
+      const raw = await response.json().catch(() => null)
+      throw new Error(extractErrorMessage(raw, 'Failed to generate emails'))
+    }
+    if (!response.body) {
+      throw new Error('Stream not supported in this environment')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+    let buffer = ''
+    let completedEmails: Email[] | null = null
+    let streamError: string | null = null
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read()
+        if (done) break
+
+        buffer += decoder.decode(value, { stream: true })
+        let newlineIndex: number
+        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+          const line = buffer.slice(0, newlineIndex).trim()
+          buffer = buffer.slice(newlineIndex + 1)
+          if (!line) continue
+
+          let raw: unknown
+          try {
+            raw = JSON.parse(line)
+          } catch {
+            // Malformed JSON line — skip and keep reading the stream.
+            continue
+          }
+
+          const parsed = generateEmailsStreamEventSchema.safeParse(raw)
+          if (!parsed.success) {
+            continue
+          }
+
+          onEvent(parsed.data)
+
+          if (parsed.data.type === 'complete') {
+            completedEmails = parsed.data.emails
+          } else if (parsed.data.type === 'error') {
+            streamError = parsed.data.message
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock()
+    }
+
+    if (streamError) {
+      throw new Error(streamError)
+    }
+    if (!completedEmails) {
+      throw new Error('Stream closed before completion')
+    }
+    return completedEmails
   }
 }

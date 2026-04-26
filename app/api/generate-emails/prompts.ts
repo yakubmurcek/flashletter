@@ -114,3 +114,92 @@ IMPORTANT: Return ONLY valid JSON (no markdown, no code blocks) with this exact 
 
 Do NOT invent statistics, testimonials, or customer names that are not provided in the proof points. Ground concrete claims in the proof points only. Generic claims without proof should be phrased generally (no made-up numbers).`
 }
+
+export function buildFirstEmailInstructions(
+  config: { days: number; campaignType: string; tone: string },
+  landingUrl: string,
+  landingContent?: string,
+  analysis?: LandingPageAnalysis,
+): string {
+  const analysisBlock = buildAnalysisBlock(analysis)
+
+  return `You are an expert email marketing copywriter. You are writing **only Day 1** of a ${
+    config.days
+  }-day ${config.campaignType} email campaign with a ${config.tone} tone. Days 2-${
+    config.days
+  } will be generated next, so day 1 must set the hook for the rest of the sequence.
+
+Landing Page URL: ${landingUrl}
+${landingContent ? `Landing Page Content:\n${landingContent.substring(0, 2000)}` : ''}
+${analysisBlock}
+
+Provide:
+1. A compelling subject line (under 60 characters)
+2. Preview text (under 100 characters)
+3. Email body content in Markdown format
+
+Day 1 should match the opening of this campaign structure for ${config.campaignType}:
+${getCampaignStructure(config.campaignType, config.days)}
+
+Tone guidelines for ${config.tone} (apply in addition to the voice fingerprint above if analysis is present):
+${getToneGuidelines(config.tone)}
+
+IMPORTANT: Return ONLY valid JSON with this exact structure (a single-element array):
+{
+  "emails": [
+    { "day": 1, "subject": "...", "preview": "...", "content": "..." }
+  ]
+}
+
+Do NOT invent statistics, testimonials, or customer names. Ground concrete claims in the proof points only.`
+}
+
+export function buildRemainingEmailsInstructions(
+  config: { days: number; campaignType: string; tone: string },
+  landingUrl: string,
+  firstEmail: { subject: string; preview: string; content: string },
+  landingContent?: string,
+  analysis?: LandingPageAnalysis,
+): string {
+  const analysisBlock = buildAnalysisBlock(analysis)
+
+  return `You are an expert email marketing copywriter. Day 1 of a ${
+    config.days
+  }-day ${config.campaignType} email campaign (${
+    config.tone
+  } tone) has already been written. Generate **Days 2 through ${config.days}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.
+
+Landing Page URL: ${landingUrl}
+${landingContent ? `Landing Page Content:\n${landingContent.substring(0, 2000)}` : ''}
+${analysisBlock}
+
+Day 1 (already written, for reference — do NOT regenerate it):
+Subject: ${firstEmail.subject}
+Preview: ${firstEmail.preview}
+Body:
+${firstEmail.content}
+
+For each remaining day, provide:
+1. A compelling subject line (under 60 characters)
+2. Preview text (under 100 characters)
+3. Email body content in Markdown format
+
+Email campaign structure for ${config.campaignType}:
+${getCampaignStructure(config.campaignType, config.days)}
+
+Tone guidelines for ${config.tone} (apply in addition to the voice fingerprint above if analysis is present):
+${getToneGuidelines(config.tone)}
+
+IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${
+    config.days - 1
+  } emails, days 2 through ${config.days} in order:
+{
+  "emails": [
+    { "day": 2, "subject": "...", "preview": "...", "content": "..." },
+    ...
+    { "day": ${config.days}, "subject": "...", "preview": "...", "content": "..." }
+  ]
+}
+
+Do NOT invent statistics, testimonials, or customer names. Ground concrete claims in the proof points only.`
+}

@@ -10,11 +10,15 @@ import { useCampaignLoader } from '@/lib/hooks/use-campaign-loader'
 import { useEmailState } from '@/lib/hooks/use-email-state'
 import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
+import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 import type { Email, SelectedContext } from '@/lib/types'
 import { EditorHeader } from '@/components/editor/editor-header'
 import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
+import { GeneratingState } from '@/components/editor/generating-state'
+import { CampaignConfigPanel } from '@/components/editor/campaign-config-panel'
+import { useCampaignActions } from '@/lib/campaign-context'
 import { cn } from '@/lib/utils'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
@@ -39,12 +43,21 @@ function EditorPageContent() {
   const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } = useEmailState()
   const { versionCounts, restoreVersion } = useVersionTracking(emails)
   const { currentCampaignId } = useCampaignData()
+  const { updateCampaignConfig } = useCampaignActions()
   const { saveEmail, isSaving } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+  const {
+    isStreaming,
+    streamedCount,
+    totalExpected,
+    error: streamError,
+    generateEmailsStream,
+  } = useEmailStreaming()
 
   const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
 
   const [selectedContext, setSelectedContext] = useState<SelectedContext | null>(null)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(null)
+  const hasTriggeredAutogenRef = useRef(false)
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
@@ -71,6 +84,37 @@ function EditorPageContent() {
   const landingPageData = campaignData?.landingPageData
   const config = campaignData?.config
   const campaignName = campaignData?.name
+
+  // Auto-generate the sequence when arriving from the streamlined hero flow
+  // (`autogen=1`). Single-shot per mount; clears the URL flag so a refresh
+  // doesn't re-trigger generation.
+  const autogenFlag = getParam('autogen') === '1'
+  useEffect(() => {
+    if (
+      !autogenFlag ||
+      hasTriggeredAutogenRef.current ||
+      loadingState !== 'loaded' ||
+      !landingPageData ||
+      !config ||
+      emails.length > 0 ||
+      isStreaming
+    ) {
+      return
+    }
+    hasTriggeredAutogenRef.current = true
+    deleteParam('autogen')
+    generateEmailsStream(landingPageData, config, currentCampaignId)
+  }, [
+    autogenFlag,
+    loadingState,
+    landingPageData,
+    config,
+    emails.length,
+    isStreaming,
+    deleteParam,
+    generateEmailsStream,
+    currentCampaignId,
+  ])
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Define all callbacks before any early returns
@@ -137,6 +181,18 @@ function EditorPageContent() {
   const handleAutoSubmitComplete = useCallback(() => {
     setAutoSubmitMessage(null)
   }, [])
+
+  const handleConfigChange = useCallback(
+    (next: import('@/lib/types').CampaignConfig) => {
+      updateCampaignConfig(next)
+    },
+    [updateCampaignConfig],
+  )
+
+  const handleRegenerate = useCallback(() => {
+    if (!landingPageData || !config || isStreaming) return
+    generateEmailsStream(landingPageData, config, currentCampaignId)
+  }, [landingPageData, config, isStreaming, generateEmailsStream, currentCampaignId])
 
   useEffect(() => {
     if (showChat && !prevShowChatRef.current) {
@@ -228,8 +284,10 @@ function EditorPageContent() {
     )
   }
 
-  // Show error state if we have no essential data after loading is complete
-  if (loadingState === 'loaded' && !config && emails.length === 0) {
+  // Show error state if we have no essential data after loading is complete.
+  // Skip while we're auto-generating from the hero flow (config exists but
+  // emails are still streaming in).
+  if (loadingState === 'loaded' && !config && emails.length === 0 && !isStreaming && !autogenFlag) {
     return (
       <FullScreenState
         title="Campaign Data Missing"
@@ -270,19 +328,33 @@ function EditorPageContent() {
           emails={emails}
           selectedId={selectedEmailId}
           onSelect={handleSelectEmail}
-          campaignType={config?.campaignType}
-          tone={config?.tone}
+          configPanel={
+            <CampaignConfigPanel
+              config={config ?? null}
+              onConfigChange={handleConfigChange}
+              onRegenerate={handleRegenerate}
+              isStreaming={isStreaming}
+              streamedCount={streamedCount}
+              totalExpected={totalExpected}
+            />
+          }
         />
 
         <main className="flex-1 overflow-y-auto">
-          {selectedEmail && (
+          {selectedEmail ? (
             <EmailPreview
               email={selectedEmail}
               onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
               onTextSelected={handleTextSelected}
               isSaving={isSaving}
             />
-          )}
+          ) : isStreaming || (autogenFlag && emails.length === 0) ? (
+            <GeneratingState
+              streamedCount={streamedCount}
+              totalExpected={totalExpected}
+              error={streamError}
+            />
+          ) : null}
         </main>
 
         <ChatSidebar

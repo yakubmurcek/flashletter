@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
   buildInstructions,
+  buildFirstEmailInstructions,
+  buildRemainingEmailsInstructions,
   getCampaignStructure,
   getToneGuidelines,
 } from '@/app/api/generate-emails/prompts'
@@ -181,6 +183,127 @@ describe('buildInstructions (with analysis)', () => {
 
   it('explicitly forbids making up stats', () => {
     expect(prompt.toLowerCase()).toMatch(/do not.*(make|invent)/)
+  })
+})
+
+describe('buildFirstEmailInstructions', () => {
+  const config = { days: 5, campaignType: 'nurture', tone: 'friendly' }
+  const prompt = buildFirstEmailInstructions(config, 'https://example.com', 'page text', analysis)
+
+  it('signals to write Day 1 only', () => {
+    expect(prompt.toLowerCase()).toMatch(/only.*day 1|day 1.*only/i)
+  })
+
+  it('mentions that days 2..N will be generated next so day 1 sets the hook', () => {
+    expect(prompt.toLowerCase()).toMatch(/days?\s*2-?5|will be generated next|set the hook/i)
+  })
+
+  it('includes the landing URL', () => {
+    expect(prompt).toContain('https://example.com')
+  })
+
+  it('includes the analysis block when analysis is provided', () => {
+    expect(prompt).toContain('LANDING PAGE ANALYSIS')
+    expect(prompt).toContain(analysis.valueProp)
+    expect(prompt).toContain(analysis.primaryCTA)
+  })
+
+  it('asks for the single-element array shape', () => {
+    expect(prompt).toContain('"day": 1')
+    expect(prompt).toContain('"emails"')
+  })
+
+  it('forbids invented stats/testimonials', () => {
+    expect(prompt.toLowerCase()).toMatch(/do not invent/i)
+  })
+
+  it('truncates landing content at 2000 chars', () => {
+    const sentinel = '☃'
+    const longContent = sentinel.repeat(3000)
+    const p = buildFirstEmailInstructions(config, 'https://e.com', longContent)
+    const count = (p.match(/☃/g) || []).length
+    expect(count).toBe(2000)
+  })
+
+  it('omits the analysis block when analysis is undefined', () => {
+    const p = buildFirstEmailInstructions(config, 'https://e.com', 'content')
+    expect(p).not.toContain('LANDING PAGE ANALYSIS')
+  })
+
+  it('preserves the campaign structure for the chosen type', () => {
+    expect(prompt).toContain(getCampaignStructure('nurture', 5))
+  })
+})
+
+describe('buildRemainingEmailsInstructions', () => {
+  const config = { days: 5, campaignType: 'nurture', tone: 'friendly' }
+  const firstEmail = {
+    subject: 'Welcome to Flashletter',
+    preview: "You're in.",
+    content: 'Hi there — thanks for joining.',
+  }
+  const prompt = buildRemainingEmailsInstructions(
+    config,
+    'https://example.com',
+    firstEmail,
+    'page content',
+    analysis,
+  )
+
+  it('says day 1 is already written and not to regenerate it', () => {
+    expect(prompt.toLowerCase()).toMatch(/day 1.*(already|not regenerate|do not)/i)
+  })
+
+  it('asks for days 2 through N', () => {
+    expect(prompt).toMatch(/Days?\s*2\s*(through|to|–|-)\s*5/i)
+  })
+
+  it('includes the day-1 subject, preview, and body for context', () => {
+    expect(prompt).toContain(firstEmail.subject)
+    expect(prompt).toContain(firstEmail.preview)
+    expect(prompt).toContain(firstEmail.content)
+  })
+
+  it('produces a JSON shape ranging from day 2 to day N', () => {
+    expect(prompt).toContain('"day": 2')
+    expect(prompt).toContain(`"day": ${config.days}`)
+  })
+
+  it('explicitly asks for exactly days-1 emails (one per remaining day)', () => {
+    expect(prompt).toMatch(new RegExp(`exactly\\s*${config.days - 1}\\s*emails`, 'i'))
+  })
+
+  it('forbids invented stats', () => {
+    expect(prompt.toLowerCase()).toMatch(/do not invent/i)
+  })
+
+  it('preserves coherence guidance (escalate / match voice)', () => {
+    expect(prompt.toLowerCase()).toMatch(
+      /coherent|do not repeat its hook|voice should match|escalate/i,
+    )
+  })
+
+  it('omits analysis block when analysis is undefined', () => {
+    const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, 'content')
+    expect(p).not.toContain('LANDING PAGE ANALYSIS')
+  })
+
+  it('truncates landing content at 2000 chars', () => {
+    const sentinel = '☃'
+    const longContent = sentinel.repeat(3000)
+    const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, longContent)
+    const count = (p.match(/☃/g) || []).length
+    expect(count).toBe(2000)
+  })
+
+  it('handles a 2-day campaign (only day 2 to write)', () => {
+    const p = buildRemainingEmailsInstructions(
+      { days: 2, campaignType: 'nurture', tone: 'friendly' },
+      'https://e.com',
+      firstEmail,
+    )
+    expect(p).toMatch(/Days?\s*2\s*(through|to|–|-)\s*2/i)
+    expect(p).toMatch(/exactly\s*1\s*emails?/i)
   })
 })
 

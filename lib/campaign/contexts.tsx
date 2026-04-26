@@ -17,10 +17,13 @@ export interface CampaignActionsContextType {
   setConfig: (config: CampaignConfig | null) => void
   setGeneratedEmails: (emails: Email[]) => Promise<void>
   updateEmail: (id: number, updates: Partial<Email>) => void
+  appendGeneratedEmail: (email: Email) => void
+  replaceGeneratedEmailsLocal: (emails: Email[]) => void
   loadCampaign: (campaignId: string) => Promise<void>
   saveCampaign: () => Promise<void>
   createNewCampaign: (providedLandingPageData?: LandingPageData | null) => Promise<string>
   updateCampaignConfig: (config: CampaignConfig) => Promise<void>
+  applyConfigToCampaign: (campaignId: string, config: CampaignConfig) => Promise<void>
   clearAll: () => void
 }
 
