@@ -5,6 +5,10 @@ on:
   push:
     branches: [main]
 
+# Least-privilege token: this workflow only reads code and runs local tooling.
+permissions:
+  contents: read
+
 # Cancel in-progress runs when a new commit lands on the same branch/PR.
 concurrency:
   group: ci-${{ github.ref }}
@@ -14,17 +18,19 @@ jobs:
   check:
     name: format · lint · typecheck · test
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from package.json#packageManager — single source of
+      # truth for CI and local.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
+      # Node version comes from .nvmrc — same idea.
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install
@@ -42,4 +48,4 @@ jobs:
         run: pnpm tsc --noEmit
 
       - name: Test
-        run: pnpm vitest run
+        run: pnpm test
