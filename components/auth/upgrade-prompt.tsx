@@ -8,11 +8,17 @@ import { useState } from 'react'
 
 interface UpgradePromptProps {
   campaignCount?: number
+  redirectTo?: string
+  initialError?: string | null
 }
 
-export function UpgradePrompt({ campaignCount = 1 }: UpgradePromptProps) {
+export function UpgradePrompt({
+  campaignCount = 1,
+  redirectTo = '/create',
+  initialError = null,
+}: UpgradePromptProps) {
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(initialError)
 
   const handleGoogleSignUp = async () => {
     setLoading(true)
@@ -20,12 +26,13 @@ export function UpgradePrompt({ campaignCount = 1 }: UpgradePromptProps) {
 
     try {
       const supabase = createClient()
+      const callbackUrl = `${window.location.origin}/auth/callback?redirectTo=${encodeURIComponent(redirectTo)}`
 
       // Link anonymous account to Google identity
       const { data, error } = await supabase.auth.linkIdentity({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?redirectTo=/create`,
+          redirectTo: callbackUrl,
         },
       })
 
