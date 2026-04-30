@@ -49,6 +49,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // If a campaignId is provided, the caller must own it. Defence-in-depth
+  // on top of RLS — a misconfigured policy would otherwise let any
+  // authenticated user wipe another user's emails.
+  if (parsedBody.campaignId) {
+    const ownershipService = new CampaignStorageService(supabase)
+    const owned = await ownershipService.isOwnedBy(parsedBody.campaignId, user.id)
+    if (!owned) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+  }
+
   const identifier = user.id || getClientIp(req)
   const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
 

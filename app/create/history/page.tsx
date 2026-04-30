@@ -155,19 +155,15 @@ function HistoryPageContent() {
       }
     }
 
-    // Navigate back to editor with the restored content
-    // We'll pass the restore data via URL params
-    const restoreData = encodeURIComponent(
-      JSON.stringify({
-        emailId: validEmailId,
-        subject: versionToRestore.subject,
-        content: versionToRestore.content,
-      }),
-    )
-
+    // Navigate back to editor with only the version's UUID — the editor will
+    // fetch the actual subject/content from Supabase, which RLS-checks the
+    // chain back to the user. Previously the URL carried JSON with arbitrary
+    // subject/content, which an attacker could craft to overwrite an email
+    // via a shared link.
+    const restoreVersionId = encodeURIComponent(versionToRestore.id)
     const editorUrl = campaignId
-      ? `/create/editor?email=${emailId}&campaign=${campaignId}&restore=${restoreData}`
-      : `/create/editor?email=${emailId}&restore=${restoreData}`
+      ? `/create/editor?email=${emailId}&campaign=${campaignId}&restoreVersion=${restoreVersionId}`
+      : `/create/editor?email=${emailId}&restoreVersion=${restoreVersionId}`
     router.push(editorUrl)
   }
 

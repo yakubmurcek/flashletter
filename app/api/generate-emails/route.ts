@@ -56,6 +56,18 @@ export async function POST(req: NextRequest) {
     const { landingUrl, landingContent, landingAnalysis, config, campaignId } =
       generateEmailsRequestSchema.parse(body)
 
+    // If the caller wants emails persisted, they must own the target campaign.
+    // RLS would also block the underlying delete/insert, but checking here
+    // turns a misconfigured RLS into an explicit 403 + avoids burning OpenAI
+    // tokens on a request that can't possibly persist.
+    if (campaignId) {
+      const ownershipService = new CampaignStorageService(supabase)
+      const owned = await ownershipService.isOwnedBy(campaignId, user.id)
+      if (!owned) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+      }
+    }
+
     const instructions = buildInstructions(config, landingUrl, landingContent, landingAnalysis)
 
     const userInput = `Generate ${config.days} emails for this ${config.campaignType} campaign. Return only valid JSON.`

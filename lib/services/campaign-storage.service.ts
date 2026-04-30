@@ -168,6 +168,24 @@ export class CampaignStorageService {
     if (error) throw error
   }
 
+  /**
+   * Verify the given user owns the campaign. Returns true on match, false on
+   * mismatch or not-found. Used as defence-in-depth on routes that mutate
+   * campaign data — RLS should already cover this, but the application-layer
+   * check makes mis-configured RLS surface as a 403 instead of a silent wipe.
+   */
+  async isOwnedBy(campaignId: string, userId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .from('campaigns')
+      .select('user_id')
+      .eq('id', campaignId)
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data) return false
+    return data.user_id === userId
+  }
+
   async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
     // Delete existing emails for this campaign
     const { error: deleteError } = await this.supabase
