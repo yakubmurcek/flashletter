@@ -16,9 +16,15 @@ export const emailSchema = z.object({
 })
 
 // Campaign configuration schema
+//
+// `tone` and `campaignType` are kept as strings rather than enums for now —
+// the prompt-builder already falls back to a default when it sees an unknown
+// value, and existing DB rows may carry historical labels we don't want to
+// reject on load. The .max(64) caps still close the unbounded-string DoS
+// vector flagged in the audit.
 export const campaignConfigSchema = z.object({
-  tone: z.string(),
-  campaignType: z.string(),
+  tone: z.string().max(64),
+  campaignType: z.string().max(64),
   days: z.number().min(1).max(30),
 })
 

@@ -47,10 +47,11 @@ vi.mock('@/lib/utils/get-client-ip', () => ({
   getClientIp: () => '127.0.0.1',
 }))
 
+const getUserMock = vi.fn()
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
     auth: {
-      getUser: async () => ({ data: { user: null } }),
+      getUser: () => getUserMock(),
     },
   }),
 }))
@@ -100,6 +101,9 @@ const validAnalysis = {
 describe('POST /api/scrape-landing/stream', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    // Default to an authenticated user so the route's auth gate doesn't
+    // short-circuit every test; specific tests can override to test 401.
+    getUserMock.mockReset().mockResolvedValue({ data: { user: { id: 'user-123' } } })
     getCachedScrapeDataMock.mockReset().mockResolvedValue({ fromCache: false, data: null })
     setCachedScrapeDataMock.mockReset().mockResolvedValue(true)
     extractTextMock.mockReset().mockReturnValue({
@@ -135,6 +139,13 @@ describe('POST /api/scrape-landing/stream', () => {
   it('returns 400 for invalid body', async () => {
     const response = await POST(buildRequest({ url: 'not-a-url' }) as never)
     expect(response.status).toBe(400)
+    expect(response.headers.get('Content-Type')).toContain('application/json')
+  })
+
+  it('returns 401 when the caller has no Supabase session', async () => {
+    getUserMock.mockResolvedValueOnce({ data: { user: null } })
+    const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
+    expect(response.status).toBe(401)
     expect(response.headers.get('Content-Type')).toContain('application/json')
   })
 

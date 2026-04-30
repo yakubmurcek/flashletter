@@ -55,7 +55,12 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const identifier = user?.id || getClientIp(req)
+  // Require auth. Anonymous Supabase users (signInAnonymously) still pass.
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const identifier = user.id || getClientIp(req)
   const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
 
   if (!rateLimitResult.success) {

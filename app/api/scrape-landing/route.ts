@@ -15,16 +15,20 @@ export async function POST(req: NextRequest) {
   const startTime = Date.now()
 
   try {
-    // Get user ID for rate limiting
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Use user ID or IP address as identifier
-    const identifier = user?.id || getClientIp(req)
+    // Require auth. The marketing-page hero calls signInAnonymously() before
+    // hitting this route, so anonymous Supabase users (with a real `user.id`)
+    // still pass — but a fully unauth'd caller can't burn our scrape budget.
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Check rate limit
+    const identifier = user.id || getClientIp(req)
+
     const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
 
     if (!rateLimitResult.success) {

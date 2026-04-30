@@ -8,9 +8,14 @@ import { landingPageAnalysisSchema } from './analysis'
  */
 
 // Generate emails API request
+//
+// `landingContent` is capped well above what our prompt actually consumes
+// (it's truncated to 2_000 chars before being handed to the model) — the cap
+// just exists so a malicious payload can't spend memory + Zod cycles parsing
+// a megabyte string before we get to the truncation step.
 export const generateEmailsRequestSchema = z.object({
-  landingUrl: z.string().url(),
-  landingContent: z.string().optional(),
+  landingUrl: z.string().url().max(2048),
+  landingContent: z.string().max(50_000).optional(),
   landingAnalysis: landingPageAnalysisSchema.optional(),
   config: campaignConfigSchema,
   campaignId: z.string().uuid().optional(),
@@ -34,7 +39,7 @@ export const generateEmailsResponseSchema = z.object({
 
 // Scrape landing page API request
 export const scrapeLandingRequestSchema = z.object({
-  url: z.string().url(),
+  url: z.string().url().max(2048),
   useDynamic: z.boolean().optional().default(false),
 })
 

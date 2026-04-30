@@ -1,3 +1,6 @@
+import { z } from 'zod'
+import { emailEditSchema } from '@/lib/schemas'
+
 interface OpenAIResponse {
   output_text?: string
   usage?: {
@@ -7,14 +10,11 @@ interface OpenAIResponse {
   }
 }
 
-interface ParsedChatResponse {
-  shouldEdit: boolean
-  message: string
-  edits?: {
-    subject?: string
-    content?: string
-  }
-}
+const parsedChatSchema = z.object({
+  message: z.string(),
+  shouldEdit: z.boolean().optional(),
+  edits: emailEditSchema.optional(),
+})
 
 export interface ChatResponse {
   message: string
@@ -35,30 +35,41 @@ export function parseOpenAIResponse(response: OpenAIResponse): ChatResponse {
     throw new Error('No response from OpenAI')
   }
 
-  // Log response for debugging in development
   if (process.env.NODE_ENV === 'development') {
     console.log('OpenAI Response:', response.output_text)
   }
 
-  let parsedResponse: ParsedChatResponse
-
+  // Two failure modes to handle: (1) the model returned non-JSON prose, and
+  // (2) the model returned JSON but with the wrong shape (extra/missing keys,
+  // wrong types). For both we fall back to treating output_text as the
+  // assistant message and dropping `edits` so we can never apply a
+  // model-controlled object straight into the user's email state.
+  let raw: unknown
   try {
-    parsedResponse = JSON.parse(response.output_text)
-  } catch (parseError) {
-    console.error('JSON Parse Error:', parseError)
-    console.error('Raw response:', response.output_text)
-
-    // If parsing fails, wrap the response as a message
-    parsedResponse = {
-      shouldEdit: false,
+    raw = JSON.parse(response.output_text)
+  } catch {
+    return {
       message: response.output_text,
+      shouldEdit: false,
+      usage: response.usage,
     }
   }
 
+  const parsed = parsedChatSchema.safeParse(raw)
+  if (!parsed.success) {
+    console.error('Chat response shape mismatch:', parsed.error.flatten())
+    return {
+      message: response.output_text,
+      shouldEdit: false,
+      usage: response.usage,
+    }
+  }
+
+  const shouldEdit = parsed.data.shouldEdit ?? false
   return {
-    message: parsedResponse.message,
-    shouldEdit: parsedResponse.shouldEdit || false,
-    edits: parsedResponse.shouldEdit ? parsedResponse.edits : undefined,
+    message: parsed.data.message,
+    shouldEdit,
+    edits: shouldEdit ? parsed.data.edits : undefined,
     usage: response.usage,
   }
 }

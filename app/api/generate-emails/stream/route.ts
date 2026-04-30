@@ -43,7 +43,13 @@ export async function POST(req: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const identifier = user?.id || getClientIp(req)
+  // Require auth before opening the stream — anonymous callers shouldn't
+  // be able to spend OpenAI tokens.
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const identifier = user.id || getClientIp(req)
   const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
 
   if (!rateLimitResult.success) {

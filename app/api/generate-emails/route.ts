@@ -17,16 +17,22 @@ import { buildInstructions } from './prompts'
 
 export async function POST(req: NextRequest) {
   try {
-    // Get user ID for rate limiting
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Use user ID or IP address as identifier
-    const identifier = user?.id || getClientIp(req)
+    // Require auth — rate-limit-by-IP alone is too easy to bypass and this
+    // route spends OpenAI credits on every call. Anonymous Supabase users
+    // (signInAnonymously) are still accepted because they have a `user.id`.
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Check rate limit
+    // Now-redundant fallback to IP, kept as defense in depth in case auth
+    // ever gets relaxed for a public-demo endpoint.
+    const identifier = user.id || getClientIp(req)
+
     const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
 
     if (!rateLimitResult.success) {
