@@ -15,8 +15,21 @@ const waitlistSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, name, privacyConsent, marketingConsent, consentTimestamp, userRegion } =
-      waitlistSchema.parse(body)
+    const {
+      email: rawEmail,
+      name,
+      privacyConsent,
+      marketingConsent,
+      consentTimestamp,
+      userRegion,
+    } = waitlistSchema.parse(body)
+
+    // Store emails in canonical form so the dedup check, unsubscribe-token
+    // verification, and bare-email unsubscribe lookups all line up. Without
+    // this `Foo@Bar.com` and `foo@bar.com` are different rows, and a token
+    // that round-trips through `normalizeEmail` (lowercased) wouldn't match
+    // the stored mixed-case row.
+    const email = rawEmail.trim().toLowerCase()
 
     const supabase = await createClient()
 

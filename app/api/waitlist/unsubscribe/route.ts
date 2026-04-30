@@ -38,6 +38,8 @@ export async function POST(request: NextRequest) {
 
     let resolvedEmail: string | null = null
     if (token) {
+      // verifyUnsubscribeToken returns the canonical (lowercased+trimmed)
+      // email, which matches how the signup route stores it.
       resolvedEmail = verifyUnsubscribeToken(token)
       // Invalid/expired token → succeed silently. Returning 401/400 here
       // would let an attacker probe which tokens were ever valid.
@@ -45,7 +47,10 @@ export async function POST(request: NextRequest) {
         return successResponse
       }
     } else if (email) {
-      resolvedEmail = email
+      // Normalize the bare-email path the same way so a casual unsubscribe
+      // attempt for `Foo@Bar.com` matches the canonical row stored as
+      // `foo@bar.com`.
+      resolvedEmail = email.trim().toLowerCase()
     }
 
     if (!resolvedEmail) {
