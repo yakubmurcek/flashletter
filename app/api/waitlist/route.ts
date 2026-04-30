@@ -40,8 +40,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert new waitlist entry - let Supabase handle order assignment
-    // We'll use a database function to ensure atomic order assignment
+    // Insert new waitlist entry. We deliberately *omit* the `order` field so
+    // the column's DEFAULT (waitlist_order_seq) kicks in — passing NULL
+    // explicitly would override the default and we'd be back to the racy
+    // trigger path.
     const { data, error } = await supabase
       .from('waitlist')
       .insert({
@@ -53,7 +55,6 @@ export async function POST(request: NextRequest) {
         marketing_consent: marketingConsent || false,
         consent_timestamp: consentTimestamp || new Date().toISOString(),
         user_region: userRegion || 'OTHER',
-        order: null, // Let database assign order
       })
       .select()
       .single()
