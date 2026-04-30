@@ -7,12 +7,26 @@ import { Redis } from '@upstash/redis'
 let redis: Redis | undefined
 let rateLimitEnabled = false
 
+const isProductionEnv = process.env.NODE_ENV === 'production' || !!process.env.VERCEL
+
 if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
   redis = new Redis({
     url: process.env.UPSTASH_REDIS_REST_URL,
     token: process.env.UPSTASH_REDIS_REST_TOKEN,
   })
   rateLimitEnabled = true
+} else if (isProductionEnv) {
+  // Don't crash the import — but make every checkRateLimit() fail closed below.
+  // We log loudly so the missing config is obvious in production logs.
+  console.error(
+    '[rate-limit] FATAL: UPSTASH_REDIS_REST_URL/_TOKEN missing in production. ' +
+      'All rate-limited routes will refuse requests until Redis is configured.',
+  )
+} else {
+  console.warn(
+    '[rate-limit] Redis not configured — rate limiting is DISABLED. ' +
+      'Dev only; set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN before deploying.',
+  )
 }
 
 /**
@@ -60,7 +74,16 @@ export const scrapeLandingRateLimit = rateLimitEnabled
  */
 export async function checkRateLimit(ratelimit: Ratelimit | null, identifier: string) {
   if (!ratelimit) {
-    // If rate limiting is not enabled, allow the request
+    // Fail closed in production — silent unrestricted access to OpenAI-spending
+    // routes is far worse than a 429 while Redis is being wired up.
+    if (isProductionEnv) {
+      return {
+        success: false,
+        limit: 0,
+        remaining: 0,
+        reset: 0,
+      }
+    }
     return {
       success: true,
       limit: 0,
