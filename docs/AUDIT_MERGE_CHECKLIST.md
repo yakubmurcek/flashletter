@@ -55,26 +55,26 @@ practice.
 
 ## Audit-finding → PR mapping
 
-| # | Issue | PR |
-|---|---|---|
-| 1 | Public PII leak (`GET /api/waitlist`, `/admin/waitlist`) | #26 |
-| 2 | SSRF in `/api/scrape-landing(/stream)` + Playwright | #26 |
-| 3 | Email-generation routes don't verify campaign ownership | #28 |
-| 4 | Open redirect via `?redirectTo=` in auth-form | #26 |
-| 5 | Rate-limit silently disabled when Redis env missing | #26 |
-| 6 | IP-spoofable `x-forwarded-for[0]` rate-limit identifier | #26 |
-| 7 | `saveEmails` delete-then-insert wipes version history | #29 |
-| 8 | `MAX(order)+1` waitlist trigger races under concurrency | #30 |
-| 9 | Waitlist email enumeration via signup + unsubscribe responses | #26 |
-| 10 | Anyone-can-unsubscribe-anyone with just an email | #30 |
-| 11 | No size cap on `landingContent` / `tone` / `campaignType` | #27 |
-| 12 | `email_versions` row inserted per keystroke | #29 |
-| 13 | Restore-from-history accepted JSON content via URL | #28 |
-| 14 | `getUserFriendlyMessage` leaks raw `error.message` | #27 |
-| 15 | Tiptap Markdown `html: true` → potential stored XSS | #31 |
-| 16 | `redis.keys('*')` blocks Redis under load | #31 |
-| 17 | `parseOpenAIResponse` doesn't validate model JSON | #27 |
-| 18 | `useCampaignLoader` doesn't reload on URL id change | #31 |
-| 19 | AI/scrape routes accepted unauthenticated callers | #27 |
-| 20 | Unsubscribe was a soft-flag, not real GDPR erasure | #30 |
-| 21 | `eslint.ignoreDuringBuilds: true` hid lint regressions | #31 |
+| #   | Issue                                                         | PR  |
+| --- | ------------------------------------------------------------- | --- |
+| 1   | Public PII leak (`GET /api/waitlist`, `/admin/waitlist`)      | #26 |
+| 2   | SSRF in `/api/scrape-landing(/stream)` + Playwright           | #26 |
+| 3   | Email-generation routes don't verify campaign ownership       | #28 |
+| 4   | Open redirect via `?redirectTo=` in auth-form                 | #26 |
+| 5   | Rate-limit silently disabled when Redis env missing           | #26 |
+| 6   | IP-spoofable `x-forwarded-for[0]` rate-limit identifier       | #26 |
+| 7   | `saveEmails` delete-then-insert wipes version history         | #29 |
+| 8   | `MAX(order)+1` waitlist trigger races under concurrency       | #30 |
+| 9   | Waitlist email enumeration via signup + unsubscribe responses | #26 |
+| 10  | Anyone-can-unsubscribe-anyone with just an email              | #30 |
+| 11  | No size cap on `landingContent` / `tone` / `campaignType`     | #27 |
+| 12  | `email_versions` row inserted per keystroke                   | #29 |
+| 13  | Restore-from-history accepted JSON content via URL            | #28 |
+| 14  | `getUserFriendlyMessage` leaks raw `error.message`            | #27 |
+| 15  | Tiptap Markdown `html: true` → potential stored XSS           | #31 |
+| 16  | `redis.keys('*')` blocks Redis under load                     | #31 |
+| 17  | `parseOpenAIResponse` doesn't validate model JSON             | #27 |
+| 18  | `useCampaignLoader` doesn't reload on URL id change           | #31 |
+| 19  | AI/scrape routes accepted unauthenticated callers             | #27 |
+| 20  | Unsubscribe was a soft-flag, not real GDPR erasure            | #30 |
+| 21  | `eslint.ignoreDuringBuilds: true` hid lint regressions        | #31 |
