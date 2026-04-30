@@ -12,6 +12,9 @@ import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 import type { Email, SelectedContext } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
+import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
+import { isValidCampaignId } from '@/lib/utils/validation'
 import { EditorHeader } from '@/components/editor/editor-header'
 import { EmailSidebar } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
@@ -64,7 +67,8 @@ function EditorPageContent() {
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
   const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
-  const restoreParam = getParam('restore')
+  const restoreVersionParam = getParam('restoreVersion')
+  const hasProcessedRestoreRef = useRef(false)
   const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
   const openedViaAutoSelectionRef = useRef(false)
   const prevShowChatRef = useRef(showChat)
@@ -213,48 +217,54 @@ function EditorPageContent() {
     prevShowChatRef.current = showChat
   }, [showChat])
 
-  // Handle restoration from history page
+  // Handle restoration from history page. The URL only carries an opaque
+  // version UUID — we resolve subject/content server-side via Supabase, so
+  // RLS enforces that the version belongs to a campaign owned by this user.
+  // (The previous flow accepted JSON in the URL and applied it directly,
+  // letting a crafted link overwrite arbitrary email content.) Single-shot
+  // ref guard so updateEmail's state churn doesn't re-fire the effect.
   useEffect(() => {
-    if (restoreParam) {
-      const handleRestore = async () => {
-        try {
-          // Safe JSON parsing with validation
-          let restoreData
-          try {
-            restoreData = JSON.parse(decodeURIComponent(restoreParam))
-          } catch (parseError) {
-            console.error('Failed to parse restore data:', parseError)
-            return
-          }
+    if (!restoreVersionParam || hasProcessedRestoreRef.current) return
+    hasProcessedRestoreRef.current = true
 
-          // Validate restore data structure
-          if (
-            restoreData &&
-            typeof restoreData.emailId === 'number' &&
-            typeof restoreData.subject === 'string' &&
-            typeof restoreData.content === 'string'
-          ) {
-            // Update the email directly (versioning already handled by history page)
-            updateEmail(restoreData.emailId, {
-              subject: restoreData.subject,
-              content: restoreData.content,
-            })
-
-            // Update version count for this email
-            await restoreVersion(restoreData)
-
-            // Clean up restore param to prevent re-processing on refresh
-            deleteParam('restore')
-          } else {
-            console.error('Invalid restore data structure:', restoreData)
-          }
-        } catch (error) {
-          console.error('Failed to restore version:', error)
-        }
+    const handleRestore = async () => {
+      const decoded = decodeURIComponent(restoreVersionParam)
+      if (!isValidCampaignId(decoded)) {
+        // versionId shares the UUID v4 shape with campaignId — reject anything else.
+        console.error('Invalid restoreVersion id, refusing to apply')
+        deleteParam('restoreVersion')
+        return
       }
-      handleRestore()
+
+      try {
+        const supabase = createClient()
+        const versionService = new EmailVersionStorageService(supabase)
+        const version = await versionService.getVersion(decoded)
+        if (!version) {
+          console.error('Version not found or not accessible:', decoded)
+          deleteParam('restoreVersion')
+          return
+        }
+
+        updateEmail(version.emailId, {
+          subject: version.subject,
+          content: version.content,
+        })
+
+        await restoreVersion({
+          emailId: version.emailId,
+          subject: version.subject,
+          content: version.content,
+        })
+
+        deleteParam('restoreVersion')
+      } catch (error) {
+        console.error('Failed to restore version:', error)
+        deleteParam('restoreVersion')
+      }
     }
-  }, [restoreParam, updateEmail, restoreVersion, deleteParam])
+    handleRestore()
+  }, [restoreVersionParam, updateEmail, restoreVersion, deleteParam])
 
   // Show loading state
   if (loadingState === 'loading') {
