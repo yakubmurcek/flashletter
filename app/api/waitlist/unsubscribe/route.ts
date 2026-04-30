@@ -21,43 +21,42 @@ export async function POST(request: NextRequest) {
       .eq('email', email)
       .single()
 
+    // Always return the same success response — never reveal whether the
+    // address was actually on the waitlist. Lets us close the enumeration
+    // hole without breaking the UX path.
+    const successResponse = NextResponse.json(
+      {
+        message:
+          'If that email is on our waitlist, it has been removed. You will no longer receive updates.',
+      },
+      { status: 200 },
+    )
+
     if (!existingEntry) {
-      return NextResponse.json({ error: 'Email not found in our waitlist.' }, { status: 404 })
+      return successResponse
     }
 
     // Update privacy consent to false (unsubscribe)
-    const { data: updateData, error } = await supabase
+    const { error } = await supabase
       .from('waitlist')
       .update({
         privacy_consent: false,
         marketing_consent: false,
       })
       .eq('email', email)
-      .select()
 
     if (error) {
       console.error('Unsubscribe error:', error)
-
-      // Report to Sentry
       Sentry.captureException(error, {
         tags: { api_route: '/api/waitlist/unsubscribe' },
       })
-
       return NextResponse.json(
         { error: 'Failed to unsubscribe. Please try again.' },
         { status: 500 },
       )
     }
 
-    console.log('Unsubscribe successful:', { email, updateData })
-
-    return NextResponse.json(
-      {
-        message: 'Successfully unsubscribed from waitlist. You will no longer receive updates.',
-        email: email,
-      },
-      { status: 200 },
-    )
+    return successResponse
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })

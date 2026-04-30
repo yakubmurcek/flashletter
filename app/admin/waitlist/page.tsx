@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { redirect } from 'next/navigation'
+import { redirect, notFound } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppShell } from '@/components/layouts/app-shell'
 import { Mail, User, Calendar, Hash } from 'lucide-react'
@@ -9,15 +9,29 @@ export const metadata = {
   description: 'View waitlist entries',
 }
 
+function getAdminEmails(): string[] {
+  return (process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 export default async function WaitlistAdminPage() {
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Simple auth check - you might want to add proper admin role checking
   if (!user) {
     redirect('/login')
+  }
+
+  // Gate by an explicit allow-list. With no list configured we 404 the page
+  // entirely rather than expose waitlist PII to every authenticated user.
+  const adminEmails = getAdminEmails()
+  const userEmail = user.email?.toLowerCase() ?? ''
+  if (adminEmails.length === 0 || !adminEmails.includes(userEmail)) {
+    notFound()
   }
 
   const { data: waitlistEntries, error } = await supabase

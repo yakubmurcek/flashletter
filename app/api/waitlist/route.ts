@@ -28,7 +28,16 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingEntry) {
-      return NextResponse.json({ error: 'This email is already on the waitlist!' }, { status: 400 })
+      // Return 200 with the same shape as a fresh signup so callers can't
+      // enumerate which addresses are already on the waitlist.
+      return NextResponse.json(
+        {
+          message: 'Successfully joined the waitlist!',
+          id: existingEntry.id,
+          alreadyJoined: true,
+        },
+        { status: 200 },
+      )
     }
 
     // Insert new waitlist entry - let Supabase handle order assignment
@@ -90,39 +99,5 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
-  }
-}
-
-// Optional: Add GET endpoint to check waitlist status (for admin)
-export async function GET() {
-  try {
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-      .from('waitlist')
-      .select('id, email, name, status, created_at')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Waitlist fetch error:', error)
-
-      // Report to Sentry
-      Sentry.captureException(error, {
-        tags: { api_route: '/api/waitlist', action: 'fetch' },
-      })
-
-      return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
-    }
-
-    return NextResponse.json({ waitlist: data })
-  } catch (error) {
-    console.error('Waitlist GET error:', error)
-
-    // Report to Sentry
-    Sentry.captureException(error, {
-      tags: { api_route: '/api/waitlist', action: 'fetch' },
-    })
-
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

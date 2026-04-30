@@ -15,6 +15,18 @@ interface AuthFormProps {
   mode: 'login' | 'signup'
 }
 
+/**
+ * Allow only same-origin paths starting with a single `/`. Blocks
+ * `https://evil.com`, `//evil.com`, and `/\evil.com` flavors of open-redirect
+ * payloads carried in `?redirectTo=...`.
+ */
+function safeRedirectPath(target: string | null, fallback = '/campaigns'): string {
+  if (!target) return fallback
+  if (!target.startsWith('/')) return fallback
+  if (target.startsWith('//') || target.startsWith('/\\')) return fallback
+  return target
+}
+
 export function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -74,8 +86,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         }
 
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/campaigns'
-        router.push(redirectTo)
+        router.push(safeRedirectPath(params.get('redirectTo')))
         return
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -87,8 +98,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         // Get redirect URL from query params or default to home
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/campaigns'
-        router.push(redirectTo)
+        router.push(safeRedirectPath(params.get('redirectTo')))
         // Don't reset loading state - let the page navigation handle it
       }
     } catch (err) {
@@ -111,10 +121,10 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       const params = new URLSearchParams(window.location.search)
-      const redirectTo = params.get('redirectTo')
+      const redirectTo = safeRedirectPath(params.get('redirectTo'))
       const callbackUrl = new URL('/auth/callback', window.location.origin)
 
-      if (redirectTo) {
+      if (redirectTo !== '/campaigns') {
         callbackUrl.searchParams.set('redirectTo', redirectTo)
       }
 
