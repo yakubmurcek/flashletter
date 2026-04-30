@@ -1,13 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppShell } from '@/components/layouts/app-shell'
 import { CheckCircle, AlertCircle, Mail, Trash2 } from 'lucide-react'
-export default function UnsubscribePage() {
+
+const SUCCESS_MESSAGE =
+  'You have been successfully removed from our waitlist. You will no longer receive updates from us.'
+
+async function submitUnsubscribe(payload: { email?: string; token?: string }): Promise<void> {
+  const response = await fetch('/api/waitlist/unsubscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new Error(
+      (data && typeof data === 'object' && 'error' in data && (data as { error: string }).error) ||
+        'Something went wrong',
+    )
+  }
+}
+
+function UnsubscribePageContent() {
+  const searchParams = useSearchParams()
+  const tokenFromUrl = searchParams.get('token')
+
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
@@ -15,31 +38,33 @@ export default function UnsubscribePage() {
     message: string
   } | null>(null)
 
+  // When the user arrives via a signed link, auto-submit once. Single-shot
+  // so a re-render or React Strict Mode double-mount doesn't fire it twice.
+  const autoSubmittedRef = useRef(false)
+  useEffect(() => {
+    if (!tokenFromUrl || autoSubmittedRef.current) return
+    autoSubmittedRef.current = true
+
+    setIsSubmitting(true)
+    submitUnsubscribe({ token: tokenFromUrl })
+      .then(() => setResult({ type: 'success', message: SUCCESS_MESSAGE }))
+      .catch((err) =>
+        setResult({
+          type: 'error',
+          message: err instanceof Error ? err.message : 'Something went wrong',
+        }),
+      )
+      .finally(() => setIsSubmitting(false))
+  }, [tokenFromUrl])
+
   const handleUnsubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setResult(null)
 
     try {
-      const response = await fetch('/api/waitlist/unsubscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong')
-      }
-
-      setResult({
-        type: 'success',
-        message:
-          'You have been successfully removed from our waitlist. You will no longer receive updates from us.',
-      })
+      await submitUnsubscribe({ email })
+      setResult({ type: 'success', message: SUCCESS_MESSAGE })
       setEmail('')
     } catch (err) {
       setResult({
@@ -137,5 +162,13 @@ export default function UnsubscribePage() {
         </div>
       </div>
     </AppShell>
+  )
+}
+
+export default function UnsubscribePage() {
+  return (
+    <Suspense fallback={null}>
+      <UnsubscribePageContent />
+    </Suspense>
   )
 }

@@ -2,28 +2,32 @@ import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
+import { verifyUnsubscribeToken } from '@/lib/utils/unsubscribe-token'
 
-const unsubscribeSchema = z.object({
-  email: z.string().email('Please enter a valid email address'),
-})
+/**
+ * Accepts EITHER a signed token (preferred — proves the caller had access
+ * to the email link we sent) OR a bare email (fallback for users who arrive
+ * at /unsubscribe directly and remember their address). The response shape
+ * is identical regardless of input or whether the address actually exists,
+ * so callers can't enumerate the waitlist.
+ */
+const unsubscribeSchema = z
+  .object({
+    email: z.string().email('Please enter a valid email address').optional(),
+    token: z.string().optional(),
+  })
+  .refine((d) => d.email || d.token, {
+    message: 'Provide an email address or unsubscribe token',
+  })
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email } = unsubscribeSchema.parse(body)
+    const { email, token } = unsubscribeSchema.parse(body)
 
-    const supabase = await createClient()
-
-    // Check if email exists in waitlist
-    const { data: existingEntry } = await supabase
-      .from('waitlist')
-      .select('id, email, privacy_consent')
-      .eq('email', email)
-      .single()
-
-    // Always return the same success response — never reveal whether the
-    // address was actually on the waitlist. Lets us close the enumeration
-    // hole without breaking the UX path.
+    // Uniform success response — never reveals whether the address was on
+    // the list, whether the token verified, or whether the row was actually
+    // deleted. Treats unsubscribe as idempotent from the caller's view.
     const successResponse = NextResponse.json(
       {
         message:
@@ -32,18 +36,33 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     )
 
-    if (!existingEntry) {
+    let resolvedEmail: string | null = null
+    if (token) {
+      // verifyUnsubscribeToken returns the canonical (lowercased+trimmed)
+      // email, which matches how the signup route stores it.
+      resolvedEmail = verifyUnsubscribeToken(token)
+      // Invalid/expired token → succeed silently. Returning 401/400 here
+      // would let an attacker probe which tokens were ever valid.
+      if (!resolvedEmail) {
+        return successResponse
+      }
+    } else if (email) {
+      // Normalize the bare-email path the same way so a casual unsubscribe
+      // attempt for `Foo@Bar.com` matches the canonical row stored as
+      // `foo@bar.com`.
+      resolvedEmail = email.trim().toLowerCase()
+    }
+
+    if (!resolvedEmail) {
       return successResponse
     }
 
-    // Update privacy consent to false (unsubscribe)
-    const { error } = await supabase
-      .from('waitlist')
-      .update({
-        privacy_consent: false,
-        marketing_consent: false,
-      })
-      .eq('email', email)
+    const supabase = await createClient()
+
+    // Actual erasure (GDPR right-to-be-forgotten) rather than the previous
+    // soft-flag (privacy_consent: false). The waitlist is a marketing
+    // signup, so we have no reason to keep the row once the user opts out.
+    const { error } = await supabase.from('waitlist').delete().eq('email', resolvedEmail)
 
     if (error) {
       console.error('Unsubscribe error:', error)
@@ -63,8 +82,6 @@ export async function POST(request: NextRequest) {
     }
 
     console.error('Unsubscribe API error:', error)
-
-    // Report to Sentry
     Sentry.captureException(error, {
       tags: { api_route: '/api/waitlist/unsubscribe' },
     })

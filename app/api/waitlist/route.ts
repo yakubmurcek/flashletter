@@ -15,8 +15,21 @@ const waitlistSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, name, privacyConsent, marketingConsent, consentTimestamp, userRegion } =
-      waitlistSchema.parse(body)
+    const {
+      email: rawEmail,
+      name,
+      privacyConsent,
+      marketingConsent,
+      consentTimestamp,
+      userRegion,
+    } = waitlistSchema.parse(body)
+
+    // Store emails in canonical form so the dedup check, unsubscribe-token
+    // verification, and bare-email unsubscribe lookups all line up. Without
+    // this `Foo@Bar.com` and `foo@bar.com` are different rows, and a token
+    // that round-trips through `normalizeEmail` (lowercased) wouldn't match
+    // the stored mixed-case row.
+    const email = rawEmail.trim().toLowerCase()
 
     const supabase = await createClient()
 
@@ -40,8 +53,10 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Insert new waitlist entry - let Supabase handle order assignment
-    // We'll use a database function to ensure atomic order assignment
+    // Insert new waitlist entry. We deliberately *omit* the `order` field so
+    // the column's DEFAULT (waitlist_order_seq) kicks in — passing NULL
+    // explicitly would override the default and we'd be back to the racy
+    // trigger path.
     const { data, error } = await supabase
       .from('waitlist')
       .insert({
@@ -53,7 +68,6 @@ export async function POST(request: NextRequest) {
         marketing_consent: marketingConsent || false,
         consent_timestamp: consentTimestamp || new Date().toISOString(),
         user_region: userRegion || 'OTHER',
-        order: null, // Let database assign order
       })
       .select()
       .single()
