@@ -29,7 +29,10 @@ export function RichTextEditor({
     immediatelyRender: false,
     extensions: [
       Markdown.configure({
-        html: true,
+        // Disallow raw HTML in Markdown so a paste containing
+        // <script>/<img onerror=...>/etc. can't be persisted into an email
+        // and re-rendered for someone else (e.g. when collab/sharing ships).
+        html: false,
         transformPastedText: true,
         transformCopiedText: true,
         breaks: true,
