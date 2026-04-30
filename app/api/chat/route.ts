@@ -12,16 +12,18 @@ import { getClientIp } from '@/lib/utils/get-client-ip'
 
 export async function POST(req: NextRequest) {
   try {
-    // Get user ID for rate limiting
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Use user ID or IP address as identifier
-    const identifier = user?.id || getClientIp(req)
+    // Require auth — same money-leak concern as the generate-emails routes.
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Check rate limit
+    const identifier = user.id || getClientIp(req)
+
     const rateLimitResult = await checkRateLimit(chatRateLimit, identifier)
 
     if (!rateLimitResult.success) {
