@@ -20,7 +20,10 @@ async function submitUnsubscribe(payload: { email?: string; token?: string }): P
   })
   if (!response.ok) {
     const data = await response.json().catch(() => null)
-    throw new Error((data && typeof data === 'object' && 'error' in data && (data as { error: string }).error) || 'Something went wrong')
+    throw new Error(
+      (data && typeof data === 'object' && 'error' in data && (data as { error: string }).error) ||
+        'Something went wrong',
+    )
   }
 }
 

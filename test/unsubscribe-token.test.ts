@@ -16,25 +16,22 @@ describe('unsubscribe-token', () => {
   })
 
   it('round-trips a signed email', async () => {
-    const { signUnsubscribeToken, verifyUnsubscribeToken } = await import(
-      '@/lib/utils/unsubscribe-token'
-    )
+    const { signUnsubscribeToken, verifyUnsubscribeToken } =
+      await import('@/lib/utils/unsubscribe-token')
     const token = signUnsubscribeToken('user@example.com')
     expect(verifyUnsubscribeToken(token)).toBe('user@example.com')
   })
 
   it('normalizes email casing and whitespace before signing', async () => {
-    const { signUnsubscribeToken, verifyUnsubscribeToken } = await import(
-      '@/lib/utils/unsubscribe-token'
-    )
+    const { signUnsubscribeToken, verifyUnsubscribeToken } =
+      await import('@/lib/utils/unsubscribe-token')
     const token = signUnsubscribeToken('  USER@Example.com  ')
     expect(verifyUnsubscribeToken(token)).toBe('user@example.com')
   })
 
   it('rejects a tampered email', async () => {
-    const { signUnsubscribeToken, verifyUnsubscribeToken } = await import(
-      '@/lib/utils/unsubscribe-token'
-    )
+    const { signUnsubscribeToken, verifyUnsubscribeToken } =
+      await import('@/lib/utils/unsubscribe-token')
     const token = signUnsubscribeToken('user@example.com')
     // Replace the email portion with a base64url of a different address.
     const [, sig] = token.split('.')
@@ -44,9 +41,8 @@ describe('unsubscribe-token', () => {
   })
 
   it('rejects a tampered signature', async () => {
-    const { signUnsubscribeToken, verifyUnsubscribeToken } = await import(
-      '@/lib/utils/unsubscribe-token'
-    )
+    const { signUnsubscribeToken, verifyUnsubscribeToken } =
+      await import('@/lib/utils/unsubscribe-token')
     const token = signUnsubscribeToken('user@example.com')
     const [encodedEmail] = token.split('.')
     const garbageSig = Buffer.from('not-the-real-signature-zz').toString('base64url')
