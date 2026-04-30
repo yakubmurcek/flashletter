@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
     // hole without breaking the UX path.
     const successResponse = NextResponse.json(
       {
-        message: 'If that email is on our waitlist, it has been removed. You will no longer receive updates.',
+        message:
+          'If that email is on our waitlist, it has been removed. You will no longer receive updates.',
       },
       { status: 200 },
     )

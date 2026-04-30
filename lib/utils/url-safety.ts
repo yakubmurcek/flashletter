@@ -47,7 +47,12 @@ function isPrivateIPv4(ip: string): boolean {
 function isPrivateIPv6(ip: string): boolean {
   const lower = ip.toLowerCase()
   if (lower === '::' || lower === '::1') return true
-  if (lower.startsWith('fe80:') || lower.startsWith('fe9') || lower.startsWith('fea') || lower.startsWith('feb')) {
+  if (
+    lower.startsWith('fe80:') ||
+    lower.startsWith('fe9') ||
+    lower.startsWith('fea') ||
+    lower.startsWith('feb')
+  ) {
     return true // fe80::/10 link-local
   }
   if (lower.startsWith('fc') || lower.startsWith('fd')) {
