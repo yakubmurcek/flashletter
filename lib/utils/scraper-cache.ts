@@ -1,6 +1,28 @@
+import type { Redis } from '@upstash/redis'
 import { getRedisClient, withRedisFallback, CacheKeys } from './redis-client'
 import { SCRAPE_CACHE_TTL } from '@/lib/constants/app'
 import type { ExtractedMetadata } from './metadata-extractor'
+
+// Per Upstash docs, this is roughly the page size SCAN visits per round-trip.
+// Bigger pages reduce round trips at the cost of one larger response.
+const SCAN_PAGE_SIZE = 500
+
+/**
+ * Stream all keys matching a pattern via SCAN. Avoids `KEYS *`, which is
+ * O(N) and blocks the Redis instance — fine for a 100-key dev DB, lethal
+ * once the cache fills up.
+ */
+async function* scanKeys(redis: Redis, match: string): AsyncGenerator<string> {
+  let cursor: string | number = 0
+  do {
+    const [nextCursor, keys] = (await redis.scan(cursor, {
+      match,
+      count: SCAN_PAGE_SIZE,
+    })) as [string | number, string[]]
+    for (const key of keys) yield key
+    cursor = nextCursor
+  } while (String(cursor) !== '0')
+}
 
 /**
  * Redis-based caching layer for scraped content
@@ -114,12 +136,14 @@ export async function getCacheStats(): Promise<{
   memoryUsage: string
 } | null> {
   return await withRedisFallback(async (redis) => {
-    // Get basic statistics
-    const keys = await redis.keys('*')
-    const scrapeKeys = keys.filter((key) => key.startsWith('scrape:')).length
-
+    let totalKeys = 0
+    let scrapeKeys = 0
+    for await (const key of scanKeys(redis, '*')) {
+      totalKeys++
+      if (key.startsWith('scrape:')) scrapeKeys++
+    }
     return {
-      totalKeys: keys.length,
+      totalKeys,
       scrapeKeys,
       memoryUsage: 'unknown', // Simplified for compatibility
     }
@@ -132,11 +156,22 @@ export async function getCacheStats(): Promise<{
  */
 export async function clearAllScrapeCache(): Promise<number> {
   return await withRedisFallback(async (redis) => {
-    const keys = await redis.keys('scrape:*')
-    if (keys.length > 0) {
-      await redis.del(...keys)
+    let cleared = 0
+    let batch: string[] = []
+    for await (const key of scanKeys(redis, 'scrape:*')) {
+      batch.push(key)
+      // Flush in chunks so a huge cache doesn't blow the request body limit.
+      if (batch.length >= SCAN_PAGE_SIZE) {
+        await redis.del(...batch)
+        cleared += batch.length
+        batch = []
+      }
     }
-    return keys.length
+    if (batch.length > 0) {
+      await redis.del(...batch)
+      cleared += batch.length
+    }
+    return cleared
   }, 0)
 }
 

@@ -2,9 +2,12 @@ import { withSentryConfig } from '@sentry/nextjs'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
-    ignoreDuringBuilds: true,
+    // Lint must pass for a build to succeed. CI already runs lint as a gate,
+    // and the codebase is currently clean, so blocking on it locally too
+    // catches regressions at the developer's terminal instead of on Vercel.
+    ignoreDuringBuilds: false,
   },
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config) => {
     // Disable webpack caching to avoid large string warnings
     config.cache = false
     return config
