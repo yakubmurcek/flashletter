@@ -240,6 +240,13 @@ export class CampaignStorageService {
       }
     }
 
+    // NOTE on FK behavior: this DELETE assumes `email_versions.email_id` has
+    // ON DELETE CASCADE — versions of removed days are dropped along with
+    // their email. That matches user intent (the user shrank the campaign,
+    // they no longer want history for the removed days), and matches the
+    // pre-fix behavior (which did `DELETE FROM emails WHERE campaign_id = $1`
+    // on every save). If the FK is RESTRICT, this DELETE will throw — which
+    // would also have broken the previous code path on every save.
     const idsToDelete = ((existingRows ?? []) as Array<{ id: string; day: number }>)
       .filter((row) => !incomingDays.has(row.day))
       .map((row) => row.id)
