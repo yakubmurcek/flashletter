@@ -1,0 +1,253 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import type { Email } from '@/lib/types'
+
+// Stable supabase reference so the hook's useMemo over `supabase` doesn't
+// invalidate every render and re-create the service instances.
+const stableClient = {} as unknown
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => stableClient,
+}))
+
+const saveVersionMock = vi.fn()
+vi.mock('@/lib/services/email-version-storage.service', () => ({
+  // Class wrapper survives vi.restoreAllMocks(); a vi.fn().mockImplementation
+  // gets stripped between tests.
+  EmailVersionStorageService: class {
+    saveVersion = (...args: unknown[]) => saveVersionMock(...args)
+  },
+}))
+
+const updateEmailDbMock = vi.fn()
+vi.mock('@/lib/services/campaign-storage.service', () => ({
+  CampaignStorageService: class {
+    updateEmail = (...args: unknown[]) => updateEmailDbMock(...args)
+  },
+}))
+
+import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
+import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
+
+const makeEmail = (id: number, uuid: string | null = `uuid-${id}`): Email =>
+  ({
+    id,
+    uuid,
+    day: id,
+    subject: `S${id}`,
+    preview: `P${id}`,
+    content: `C${id}`,
+  }) as Email
+
+describe('useEmailAutosave', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    saveVersionMock.mockReset().mockResolvedValue({})
+    updateEmailDbMock.mockReset().mockResolvedValue(undefined)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+    vi.restoreAllMocks()
+  })
+
+  it('initializes clean', () => {
+    const { result } = renderHook(() => useEmailAutosave([], null, vi.fn()))
+    expect(result.current.isSaving).toBe(false)
+    expect(result.current.lastSaved).toBeNull()
+  })
+
+  it('saves a snapshot version inside the same debounce as the DB write', async () => {
+    // Audit-fix: saveVersion is no longer fired synchronously from saveEmail;
+    // it's deferred into the same setTimeout(EMAIL_SAVE_DEBOUNCE_MS) as the
+    // DB write, and persists the *previous* snapshot (so the version row
+    // captures the state the user was in BEFORE this typing burst). For
+    // the snapshot diff to fire we need the emails array to actually reflect
+    // the new subject when the timer runs (the hook reads emailsRef inside
+    // setTimeout). So drive a re-render with the updated email.
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+
+    const { result, rerender } = renderHook(
+      ({ list }: { list: Email[] }) => useEmailAutosave(list, 'camp', updateEmail),
+      { initialProps: { list: emails } },
+    )
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'New' })
+    })
+
+    // Local update is sync; saveVersion + DB write are deferred.
+    expect(updateEmail).toHaveBeenCalledWith(1, { subject: 'New' })
+    expect(saveVersionMock).not.toHaveBeenCalled()
+
+    // Simulate parent applying the update so emailsRef in the hook sees it.
+    rerender({ list: [{ ...emails[0], subject: 'New' } as Email] })
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(saveVersionMock).toHaveBeenCalledWith('uuid-1', 1, {
+      subject: 'S1',
+      content: 'C1',
+    })
+  })
+
+  it('skips versioning when skipVersioning=true', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' }, true)
+    })
+    expect(saveVersionMock).not.toHaveBeenCalled()
+    expect(updateEmail).toHaveBeenCalledWith(1, { subject: 'X' })
+  })
+
+  it('does NOT call DB update when no campaign id', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, null, updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    await act(async () => {
+      vi.advanceTimersByTime(EMAIL_SAVE_DEBOUNCE_MS + 100)
+    })
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+  })
+
+  it('debounces DB writes — multiple saves within window collapse to one', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result, rerender } = renderHook(
+      ({ list }: { list: Email[] }) => useEmailAutosave(list, 'camp', updateEmail),
+      { initialProps: { list: emails } },
+    )
+
+    // Three rapid saves — only the last should hit the DB after debounce
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'A' })
+    })
+    rerender({ list: [{ ...emails[0], subject: 'A' } as Email] })
+    await act(async () => {
+      vi.advanceTimersByTime(200)
+      await result.current.saveEmail(1, { subject: 'B' })
+    })
+    rerender({ list: [{ ...emails[0], subject: 'B' } as Email] })
+    await act(async () => {
+      vi.advanceTimersByTime(200)
+      await result.current.saveEmail(1, { subject: 'C' })
+    })
+    rerender({ list: [{ ...emails[0], subject: 'C' } as Email] })
+
+    // Before debounce elapses
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    // The persisted payload reads from emailsRef (latest array) — subject should be 'C'
+    expect(updateEmailDbMock).toHaveBeenCalledWith('camp', 1, {
+      subject: 'C',
+      content: 'C1',
+      preview: 'P1',
+    })
+  })
+
+  it('sets lastSaved after successful DB write', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(result.current.lastSaved).toBeInstanceOf(Date)
+  })
+
+  it('continues update flow even if version save fails', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    saveVersionMock.mockRejectedValue(new Error('version err'))
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    expect(updateEmail).toHaveBeenCalled()
+    errSpy.mockRestore()
+  })
+
+  it('skips versioning when email lacks a uuid', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1, null)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    expect(saveVersionMock).not.toHaveBeenCalled()
+    expect(updateEmail).toHaveBeenCalled()
+    errSpy.mockRestore()
+  })
+
+  it('cleanup() clears pending debounced write', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    act(() => {
+      result.current.cleanup()
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
+    })
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+  })
+
+  it('unmounting cancels pending debounced write', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    unmount()
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
+    })
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+  })
+
+  it('swallows DB errors and resets isSaving', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    updateEmailDbMock.mockRejectedValue(new Error('db err'))
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+    expect(result.current.isSaving).toBe(false)
+    expect(result.current.lastSaved).toBeNull()
+    errSpy.mockRestore()
+  })
+})
