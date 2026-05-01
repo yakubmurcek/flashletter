@@ -12,7 +12,27 @@ import {
 } from '@/lib/utils/scraper-cache'
 import * as redisClientModule from '@/lib/utils/redis-client'
 
-vi.mock('@/lib/utils/redis-client')
+// Provide an explicit factory: auto-mock would replace withRedisFallback with
+// a stub returning undefined, which breaks every function that delegates to it.
+vi.mock('@/lib/utils/redis-client', () => ({
+  getRedisClient: vi.fn(),
+  isRedisAvailable: vi.fn(() => true),
+  withRedisFallback: vi.fn(async <T>(op: (client: unknown) => Promise<T>, fallback: T) => {
+    const client = (
+      vi.mocked(redisClientModule.getRedisClient) as unknown as () => unknown | undefined
+    )()
+    if (!client) return fallback
+    try {
+      return await op(client)
+    } catch {
+      return fallback
+    }
+  }),
+  CacheKeys: {
+    scrape: (url: string) => `scrape:${Buffer.from(url).toString('base64')}`,
+    metadata: (url: string) => `metadata:${Buffer.from(url).toString('base64')}`,
+  },
+}))
 
 describe('getCachedScrapeData', () => {
   beforeEach(() => {
@@ -182,8 +202,11 @@ describe('getCacheStats', () => {
   })
 
   it('returns cache stats when redis available', async () => {
+    // Source uses SCAN (not KEYS); SCAN returns [nextCursor, keys] tuples and
+    // the loop terminates when cursor returns to '0'. One round-trip suffices
+    // when cursor === '0' on the first response.
     const mockRedis = {
-      keys: vi.fn().mockResolvedValue(['scrape:key1', 'scrape:key2', 'other:key']),
+      scan: vi.fn().mockResolvedValue(['0', ['scrape:key1', 'scrape:key2', 'other:key']]),
     }
 
     vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
@@ -203,7 +226,7 @@ describe('clearAllScrapeCache', () => {
 
   it('returns 0 when no scrape keys exist', async () => {
     const mockRedis = {
-      keys: vi.fn().mockResolvedValue([]),
+      scan: vi.fn().mockResolvedValue(['0', []]),
     }
 
     vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
@@ -216,7 +239,7 @@ describe('clearAllScrapeCache', () => {
   it('deletes all scrape keys and returns count', async () => {
     const mockDel = vi.fn().mockResolvedValue(2)
     const mockRedis = {
-      keys: vi.fn().mockResolvedValue(['scrape:url1', 'scrape:url2']),
+      scan: vi.fn().mockResolvedValue(['0', ['scrape:url1', 'scrape:url2']]),
       del: mockDel,
     }
 

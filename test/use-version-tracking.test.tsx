@@ -2,19 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderHook, waitFor, act } from '@testing-library/react'
 import type { Email } from '@/lib/types'
 
-// Mock supabase client (instance is irrelevant — service is mocked)
+// Mock supabase client (instance is irrelevant — service is mocked).
+// Return the SAME object on every call so the hook's useMemo on the supabase
+// reference stays stable; otherwise the effect re-fires every render and we
+// see an infinite refetch loop.
+const stableClient = {} as unknown
 vi.mock('@/lib/supabase/client', () => ({
-  createClient: () => ({}) as unknown,
+  createClient: () => stableClient,
 }))
 
 // Mock the EmailVersionStorageService class — capture instances so we can assert
 const getBatchVersionCountsMock = vi.fn()
 const getVersionCountMock = vi.fn()
 vi.mock('@/lib/services/email-version-storage.service', () => ({
-  EmailVersionStorageService: vi.fn().mockImplementation(() => ({
-    getBatchVersionCounts: getBatchVersionCountsMock,
-    getVersionCount: getVersionCountMock,
-  })),
+  // Class wrapper survives vi.clearAllMocks() (which would otherwise wipe the
+  // implementation off the constructor and leave callers with `undefined`).
+  EmailVersionStorageService: class {
+    getBatchVersionCounts = (...args: unknown[]) => getBatchVersionCountsMock(...args)
+    getVersionCount = (...args: unknown[]) => getVersionCountMock(...args)
+  },
 }))
 
 import { useVersionTracking } from '@/lib/hooks/use-version-tracking'

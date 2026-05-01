@@ -35,10 +35,14 @@ vi.mock('@/lib/utils/get-client-ip', () => ({
 }))
 
 const saveEmailsMock = vi.fn()
+const isOwnedByMock = vi.fn()
 vi.mock('@/lib/services/campaign-storage.service', () => ({
-  CampaignStorageService: vi.fn().mockImplementation(() => ({
-    saveEmails: (...args: unknown[]) => saveEmailsMock(...args),
-  })),
+  // Use a class wrapper so vi.restoreAllMocks() can't strip the
+  // implementation between tests.
+  CampaignStorageService: class {
+    saveEmails = (...args: unknown[]) => saveEmailsMock(...args)
+    isOwnedBy = (...args: unknown[]) => isOwnedByMock(...args)
+  },
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -64,6 +68,8 @@ function buildRequest(body: unknown): Request {
   })
 }
 
+const VALID_CAMPAIGN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+
 const validRequestBody = {
   landingUrl: 'https://example.com',
   landingContent: 'Example content',
@@ -77,7 +83,9 @@ const validRequestBody = {
     angles: ['angle1'],
     opportunities: [],
   },
+  // campaignConfigSchema requires tone (max 64), campaignType (max 64), days
   config: {
+    tone: 'professional',
     days: 3,
     campaignType: 'nurture',
   },
@@ -115,10 +123,34 @@ describe('POST /api/generate-emails', () => {
       usage: { prompt_tokens: 100, completion_tokens: 200 },
     })
     saveEmailsMock.mockReset().mockResolvedValue([
-      { id: 1, uuid: 'uuid-1', day: 1, subject: 'Subject 1', preview: 'Preview 1', content: 'Content 1' },
-      { id: 2, uuid: 'uuid-2', day: 2, subject: 'Subject 2', preview: 'Preview 2', content: 'Content 2' },
-      { id: 3, uuid: 'uuid-3', day: 3, subject: 'Subject 3', preview: 'Preview 3', content: 'Content 3' },
+      {
+        id: 1,
+        uuid: 'uuid-1',
+        day: 1,
+        subject: 'Subject 1',
+        preview: 'Preview 1',
+        content: 'Content 1',
+      },
+      {
+        id: 2,
+        uuid: 'uuid-2',
+        day: 2,
+        subject: 'Subject 2',
+        preview: 'Preview 2',
+        content: 'Content 2',
+      },
+      {
+        id: 3,
+        uuid: 'uuid-3',
+        day: 3,
+        subject: 'Subject 3',
+        preview: 'Preview 3',
+        content: 'Content 3',
+      },
     ])
+    // Audit-fix: routes call CampaignStorageService.isOwnedBy() before
+    // saving. Default to true so happy-path tests don't 403.
+    isOwnedByMock.mockReset().mockResolvedValue(true)
   })
 
   it('returns 400 for invalid request format', async () => {
@@ -163,21 +195,21 @@ describe('POST /api/generate-emails', () => {
 
   it('happy path: generates and saves emails with campaignId', async () => {
     const response = await POST(
-      buildRequest({ ...validRequestBody, campaignId: 'campaign-123' }) as never,
+      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
     )
     expect(response.status).toBe(200)
 
     const body = await response.json()
     expect(body.emails).toBeDefined()
     expect(body.emails.length).toBe(3)
-    expect(saveEmailsMock).toHaveBeenCalledWith('campaign-123', expect.any(Array))
+    expect(saveEmailsMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, expect.any(Array))
   })
 
   it('returns unsaved emails when save fails', async () => {
     saveEmailsMock.mockRejectedValue(new Error('Database error'))
 
     const response = await POST(
-      buildRequest({ ...validRequestBody, campaignId: 'campaign-123' }) as never,
+      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
     )
     expect(response.status).toBe(200)
 
@@ -221,7 +253,10 @@ describe('POST /api/generate-emails', () => {
     })
 
     const response = await POST(
-      buildRequest({ ...validRequestBody, config: { ...validRequestBody.config, days: 3 } }) as never,
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 3 },
+      }) as never,
     )
     const body = await response.json()
     expect(body.emails.length).toBe(3)

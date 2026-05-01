@@ -6,11 +6,16 @@ vi.mock('@sentry/nextjs', () => ({
 
 const getCampaignMock = vi.fn()
 const deleteCampaignMock = vi.fn()
+const isOwnedByMock = vi.fn()
 vi.mock('@/lib/services/campaign-storage.service', () => ({
-  CampaignStorageService: vi.fn().mockImplementation(() => ({
-    getCampaign: (...args: unknown[]) => getCampaignMock(...args),
-    deleteCampaign: (...args: unknown[]) => deleteCampaignMock(...args),
-  })),
+  // The constructor must always return the same shape, so don't use
+  // `mockImplementation` here — `vi.restoreAllMocks()` between tests resets
+  // it. A plain class wrapper survives all clears.
+  CampaignStorageService: class {
+    getCampaign = (...args: unknown[]) => getCampaignMock(...args)
+    deleteCampaign = (...args: unknown[]) => deleteCampaignMock(...args)
+    isOwnedBy = (...args: unknown[]) => isOwnedByMock(...args)
+  },
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -39,23 +44,25 @@ describe('DELETE /api/campaigns/[id]', () => {
   })
 
   it('returns 401 when user is not authenticated', async () => {
-    // Mock unauthenticated user
-    vi.doMock('@/lib/supabase/server', async () => {
-      return {
-        createClient: async () => ({
-          auth: {
-            getUser: async () => ({ data: { user: null } }),
-          },
-        }),
-      }
-    })
+    // The route called `createClient()` then `supabase.auth.getUser()`. The
+    // top-level vi.mock returns user-123 by default; for this case we need
+    // null. vi.doMock won't help because the route module already imported
+    // createClient — instead, swap the export's implementation in place.
+    const supabaseMod = await import('@/lib/supabase/server')
+    const spy = vi.spyOn(supabaseMod, 'createClient').mockResolvedValue({
+      auth: { getUser: async () => ({ data: { user: null } }) },
+    } as never)
 
-    const response = await DELETE(buildRequest() as never, {
-      params: Promise.resolve({ id: '123' }),
-    })
-    expect(response.status).toBe(401)
-    const body = await response.json()
-    expect(body.error).toContain('Unauthorized')
+    try {
+      const response = await DELETE(buildRequest() as never, {
+        params: Promise.resolve({ id: '123' }),
+      })
+      expect(response.status).toBe(401)
+      const body = await response.json()
+      expect(body.error).toContain('Unauthorized')
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('returns 404 when campaign not found', async () => {

@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { installLocalStoragePolyfill } from './_helpers/storage-polyfill'
 import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email, EmailVersion } from '@/lib/types'
 
@@ -12,6 +13,7 @@ describe('versionStorage', () => {
   }
 
   beforeEach(() => {
+    installLocalStoragePolyfill()
     localStorage.clear()
   })
 
@@ -23,7 +25,6 @@ describe('versionStorage', () => {
       expect(() => {
         versionStorage.saveVersion(1, mockEmail)
       }).toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
 
@@ -38,13 +39,19 @@ describe('versionStorage', () => {
     })
 
     it('generates unique version ID', () => {
+      // Advance Date.now between calls so the time-based IDs differ
+      // (two saveVersion calls within the same millisecond would collide).
+      let now = 1700000000000
+      const spy = vi.spyOn(Date, 'now').mockImplementation(() => now)
       const version1 = versionStorage.saveVersion(1, mockEmail)
+      now += 10
       const version2 = versionStorage.saveVersion(1, {
         ...mockEmail,
         subject: 'Updated Subject',
       })
 
       expect(version1.id).not.toBe(version2.id)
+      spy.mockRestore()
     })
 
     it('returns existing version if email unchanged', () => {
@@ -135,7 +142,6 @@ describe('versionStorage', () => {
 
       const versions = versionStorage.getVersions(1)
       expect(versions).toEqual([])
-
       ;(globalThis as any).window = originalWindow
     })
 
@@ -169,7 +175,10 @@ describe('versionStorage', () => {
 
   describe('deleteVersion', () => {
     it('removes specific version', () => {
+      let now = 1700000000000
+      const spy = vi.spyOn(Date, 'now').mockImplementation(() => now)
       const v1 = versionStorage.saveVersion(1, mockEmail)
+      now += 10
       const v2 = versionStorage.saveVersion(1, {
         ...mockEmail,
         subject: 'Updated',
@@ -180,6 +189,7 @@ describe('versionStorage', () => {
       const versions = versionStorage.getVersions(1)
       expect(versions.length).toBe(1)
       expect(versions[0].id).toBe(v2.id)
+      spy.mockRestore()
     })
 
     it('handles deletion of non-existent version', () => {
@@ -196,7 +206,6 @@ describe('versionStorage', () => {
       expect(() => {
         versionStorage.deleteVersion(1, 'id')
       }).not.toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
   })
@@ -240,7 +249,6 @@ describe('versionStorage', () => {
       expect(() => {
         versionStorage.clearVersions(1)
       }).not.toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
   })
@@ -263,15 +271,20 @@ describe('versionStorage', () => {
       expect(() => {
         versionStorage.clearAllVersions()
       }).not.toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
   })
 
   describe('integration', () => {
     it('supports full workflow', () => {
+      // Stub Date.now so v1 and v2 get distinct IDs even if the test runs
+      // faster than 1ms between calls.
+      let now = 1700000000000
+      const spy = vi.spyOn(Date, 'now').mockImplementation(() => now)
+
       // Save versions
       const v1 = versionStorage.saveVersion(1, mockEmail)
+      now += 10
       const v2 = versionStorage.saveVersion(1, {
         ...mockEmail,
         subject: 'Updated Subject',
@@ -291,6 +304,7 @@ describe('versionStorage', () => {
       // Clear all
       versionStorage.clearVersions(1)
       expect(versionStorage.getVersionCount(1)).toBe(0)
+      spy.mockRestore()
     })
 
     it('maintains separate version history per email', () => {

@@ -113,9 +113,7 @@ describe('useCampaignLoader', () => {
   })
 
   it('handles campaign load error and redirects', async () => {
-    const mockLoadCampaign = vi
-      .fn()
-      .mockRejectedValue(new Error('Campaign not found'))
+    const mockLoadCampaign = vi.fn().mockRejectedValue(new Error('Campaign not found'))
 
     const mockPush = vi.fn()
 
@@ -134,8 +132,11 @@ describe('useCampaignLoader', () => {
     } as any)
 
     const mockCleanupParams = vi.fn()
+    // Use null URL id so the secondary useEffect can't keep flipping the
+    // state back to 'loading' (it watches `campaignIdFromUrl !== loadedId`,
+    // and a failed load leaves loadedCampaignId at null forever).
     vi.mocked(useUrlState).mockReturnValue({
-      getCampaignId: vi.fn().mockReturnValue('camp-123'),
+      getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: mockCleanupParams,
     } as any)
 
@@ -158,9 +159,7 @@ describe('useCampaignLoader', () => {
       name: 'Test Campaign',
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
-      emails: [
-        { id: 1, uuid: 'email-1', day: 1, subject: 'Day 1', preview: 'p', content: 'c' },
-      ],
+      emails: [{ id: 1, uuid: 'email-1', day: 1, subject: 'Day 1', preview: 'p', content: 'c' }],
     }
 
     vi.mocked(useCampaign).mockReturnValue({
@@ -195,14 +194,8 @@ describe('useCampaignLoader', () => {
   it('transitions from loading to loaded when context data arrives', async () => {
     const mockLoadCampaign = vi.fn().mockResolvedValue(undefined)
 
-    const { rerender } = renderHook(
-      () => useCampaignLoader(),
-      {
-        initialProps: {},
-      },
-    )
-
-    // Start with loading
+    // Set up initial mocks (loading state) BEFORE rendering — vi.mocked() on
+    // a hook captures the implementation at render time, not at call time.
     vi.mocked(useCampaign).mockReturnValue({
       campaignName: null,
       landingPageData: null,
@@ -222,10 +215,10 @@ describe('useCampaignLoader', () => {
       cleanupParams: vi.fn(),
     } as any)
 
-    const { result } = renderHook(() => useCampaignLoader())
+    const { result, rerender } = renderHook(() => useCampaignLoader())
     expect(result.current.loadingState).toBe('loading')
 
-    // Update to loaded
+    // Swap context to loaded state and re-render the same hook instance.
     vi.mocked(useCampaign).mockReturnValue({
       campaignName: 'Test',
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },

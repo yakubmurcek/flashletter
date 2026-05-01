@@ -59,7 +59,9 @@ describe('storage', () => {
     })
 
     it('overwrites matching keys', () => {
-      const initial: StorageData = { config: { tone: 'formal', campaignType: 'promotional', days: 5 } }
+      const initial: StorageData = {
+        config: { tone: 'formal', campaignType: 'promotional', days: 5 },
+      }
       storage.set(initial)
 
       const update: StorageData = { config: { tone: 'casual', campaignType: 'nurture', days: 7 } }
@@ -76,7 +78,6 @@ describe('storage', () => {
       expect(() => {
         storage.set({ generatedEmails: [] })
       }).not.toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
   })
@@ -98,7 +99,6 @@ describe('storage', () => {
       expect(() => {
         storage.clear()
       }).not.toThrow()
-
       ;(globalThis as any).window = originalWindow
     })
   })

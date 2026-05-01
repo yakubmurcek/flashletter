@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { middleware } from '@/middleware'
-import type { NextRequest } from 'next/server'
+import { middleware, config as middlewareConfig } from '@/middleware'
+import { NextRequest } from 'next/server'
 
 // Mock the supabase middleware
 vi.mock('@/lib/supabase/middleware')
@@ -103,26 +103,27 @@ describe('middleware', () => {
   })
 
   it('exports config with matcher', () => {
-    // The middleware module should export config
-    const { config } = require('@/middleware')
-    expect(config).toBeDefined()
-    expect(config.matcher).toBeDefined()
-    expect(Array.isArray(config.matcher)).toBe(true)
+    expect(middlewareConfig).toBeDefined()
+    expect(middlewareConfig.matcher).toBeDefined()
+    expect(Array.isArray(middlewareConfig.matcher)).toBe(true)
   })
 
   it('config matcher excludes static files', () => {
-    const { config } = require('@/middleware')
-    expect(config.matcher.some((pattern: string) => pattern.includes('_next/static'))).toBe(true)
+    expect(
+      middlewareConfig.matcher.some((pattern: string) => pattern.includes('_next/static')),
+    ).toBe(true)
   })
 
   it('config matcher excludes image optimization', () => {
-    const { config } = require('@/middleware')
-    expect(config.matcher.some((pattern: string) => pattern.includes('_next/image'))).toBe(true)
+    expect(
+      middlewareConfig.matcher.some((pattern: string) => pattern.includes('_next/image')),
+    ).toBe(true)
   })
 
   it('config matcher excludes favicon', () => {
-    const { config } = require('@/middleware')
-    expect(config.matcher.some((pattern: string) => pattern.includes('favicon.ico'))).toBe(true)
+    expect(
+      middlewareConfig.matcher.some((pattern: string) => pattern.includes('favicon.ico')),
+    ).toBe(true)
   })
 
   it('handles URL with query parameters', async () => {

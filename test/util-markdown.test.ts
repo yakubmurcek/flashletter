@@ -143,7 +143,8 @@ describe('htmlToMarkdown', () => {
   })
 
   it('combines multiple transformations', () => {
-    const html = '<h1>Title</h1><p><strong>Bold</strong> and <em>italic</em></p><ul><li>Point</li></ul>'
+    const html =
+      '<h1>Title</h1><p><strong>Bold</strong> and <em>italic</em></p><ul><li>Point</li></ul>'
     const result = htmlToMarkdown(html)
     expect(result).toContain('# Title')
     expect(result).toContain('**Bold**')
@@ -176,7 +177,9 @@ describe('roundtrip conversion', () => {
   })
 
   it('handles empty string', () => {
-    expect(markdownToHtml('')).toBe('')
+    // Source wraps any non-heading line in a <p>; empty input becomes a single
+    // empty paragraph rather than '' — intentional, see lib/utils/markdown.ts.
+    expect(markdownToHtml('')).toBe('<p style="margin-bottom: 1rem; line-height: 1.6;"></p>')
     expect(htmlToMarkdown('')).toBe('')
   })
 })

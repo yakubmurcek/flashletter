@@ -45,9 +45,7 @@ describe('EmailVersionStorageService', () => {
       // Mock insert
       const insertMock = vi.fn().mockReturnThis()
       const selectMock = vi.fn().mockReturnThis()
-      const singleMock = vi
-        .fn()
-        .mockResolvedValue({ data: mockData, error: null })
+      const singleMock = vi.fn().mockResolvedValue({ data: mockData, error: null })
 
       mockSupabase.from.mockReturnValueOnce({
         select: vi.fn().mockReturnThis(),
@@ -71,6 +69,8 @@ describe('EmailVersionStorageService', () => {
     })
 
     it('deduplicates identical content and returns previous version', async () => {
+      // Source joins email_versions with emails!inner(day), so each row needs
+      // an `emails: { day }` shape for the mapping in getVersions to work.
       const previousVersion = {
         id: 'ver-1',
         email_id: 'email-uuid',
@@ -78,6 +78,7 @@ describe('EmailVersionStorageService', () => {
         content: 'Test Content',
         changes_summary: 'initial',
         created_at: new Date().toISOString(),
+        emails: { day: 1 },
       }
 
       // Mock getVersions to return the previous version
@@ -95,9 +96,7 @@ describe('EmailVersionStorageService', () => {
       })
 
       expect(result.id).toBe('ver-1')
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'Skipping duplicate version save - content unchanged',
-      )
+      expect(consoleSpy).toHaveBeenCalledWith('Skipping duplicate version save - content unchanged')
       consoleSpy.mockRestore()
     })
 
@@ -109,6 +108,7 @@ describe('EmailVersionStorageService', () => {
         content: 'Old Content',
         changes_summary: 'initial',
         created_at: new Date().toISOString(),
+        emails: { day: 1 },
       }
 
       const newVersionData = {
@@ -118,6 +118,7 @@ describe('EmailVersionStorageService', () => {
         content: 'New Content',
         changes_summary: 'subject changed',
         created_at: new Date().toISOString(),
+        emails: { day: 1 },
       }
 
       // Mock getVersions
@@ -131,9 +132,7 @@ describe('EmailVersionStorageService', () => {
       mockSupabase.from.mockReturnValueOnce({
         insert: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: newVersionData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: newVersionData, error: null }),
       })
 
       const result = await service.saveVersion('email-uuid', 1, {
@@ -221,9 +220,7 @@ describe('EmailVersionStorageService', () => {
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
       })
 
       const result = await service.getVersion('ver-1')
@@ -346,11 +343,7 @@ describe('EmailVersionStorageService', () => {
         in: vi.fn().mockResolvedValue({ data: [], error: null }),
       })
 
-      const result = await service.getBatchVersionCounts([
-        'email-1',
-        'email-2',
-        'email-3',
-      ])
+      const result = await service.getBatchVersionCounts(['email-1', 'email-2', 'email-3'])
 
       expect(result['email-1']).toBe(0)
       expect(result['email-2']).toBe(0)
@@ -365,9 +358,9 @@ describe('EmailVersionStorageService', () => {
         in: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      await expect(
-        service.getBatchVersionCounts(['email-1', 'email-2']),
-      ).rejects.toThrow('Query failed')
+      await expect(service.getBatchVersionCounts(['email-1', 'email-2'])).rejects.toThrow(
+        'Query failed',
+      )
     })
 
     it('ignores counts for UUIDs not in original request', async () => {

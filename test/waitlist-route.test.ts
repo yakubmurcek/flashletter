@@ -6,16 +6,13 @@ vi.mock('@sentry/nextjs', () => ({
 
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
-    from: (table: string) => ({
-      select: (...args: unknown[]) => ({
-        eq: (col: string, val: unknown) => ({
+    from: () => ({
+      select: () => ({
+        eq: () => ({
           single: vi.fn().mockResolvedValue({ data: null }),
         }),
-        order: (col: string, opts: unknown) => ({
-          mockResolvedValue: { data: [] },
-        }),
       }),
-      insert: (data: unknown) => ({
+      insert: () => ({
         select: () => ({
           single: vi.fn().mockResolvedValue({
             data: {
@@ -26,8 +23,11 @@ vi.mock('@/lib/supabase/server', () => ({
           }),
         }),
       }),
-      update: (data: unknown) => ({
-        eq: (col: string, val: unknown) => ({
+      delete: () => ({
+        eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+      }),
+      update: () => ({
+        eq: () => ({
           select: vi.fn().mockResolvedValue({
             data: [{ id: 'waitlist-1', email: 'test@example.com' }],
           }),
@@ -37,8 +37,7 @@ vi.mock('@/lib/supabase/server', () => ({
   }),
 }))
 
-// Import after all vi.mock calls
-import { POST as POST_WAITLIST, GET as GET_WAITLIST } from '@/app/api/waitlist/route'
+import { POST as POST_WAITLIST } from '@/app/api/waitlist/route'
 import { POST as POST_UNSUBSCRIBE } from '@/app/api/waitlist/unsubscribe/route'
 
 function buildWaitlistRequest(body: unknown): Request {
@@ -54,13 +53,6 @@ function buildUnsubscribeRequest(body: unknown): Request {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-  })
-}
-
-function buildGetRequest(): Request {
-  return new Request('http://localhost/api/waitlist', {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
   })
 }
 
@@ -81,25 +73,33 @@ describe('POST /api/waitlist', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 400 when email already on waitlist', async () => {
-    // Create a mock that returns an existing entry for the select query
-    const mockSupabase = await (await import('@/lib/supabase/server')).createClient()
-    const mockFrom = vi.spyOn(mockSupabase, 'from').mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: vi.fn().mockResolvedValue({
-            data: { id: 'waitlist-1', email: 'test@example.com' },
+  it('returns 200 (not 400) when email already exists — anti-enumeration', async () => {
+    // Audit fix #9: signups for already-listed addresses must not leak
+    // existence via a 400. Same shape as a successful signup.
+    const supabaseMod = await import('@/lib/supabase/server')
+    const spy = vi.spyOn(supabaseMod, 'createClient').mockResolvedValue({
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: vi.fn().mockResolvedValue({
+              data: { id: 'waitlist-1' },
+            }),
           }),
         }),
       }),
     } as never)
 
-    const response = await POST_WAITLIST(
-      buildWaitlistRequest({ email: 'test@example.com' }) as never,
-    )
-    expect(response.status).toBe(400)
-    const body = await response.json()
-    expect(body.error).toContain('already on the waitlist')
+    try {
+      const response = await POST_WAITLIST(
+        buildWaitlistRequest({ email: 'test@example.com' }) as never,
+      )
+      expect(response.status).toBe(200)
+      const body = await response.json()
+      expect(body.message).toContain('Successfully joined')
+      expect(body.alreadyJoined).toBe(true)
+    } finally {
+      spy.mockRestore()
+    }
   })
 
   it('successfully adds new email to waitlist', async () => {
@@ -114,7 +114,6 @@ describe('POST /api/waitlist', () => {
     const body = await response.json()
     expect(body.message).toContain('Successfully joined')
     expect(body.id).toBeDefined()
-    expect(body.order).toBeDefined()
   })
 
   it('applies default values for optional fields', async () => {
@@ -123,47 +122,16 @@ describe('POST /api/waitlist', () => {
     )
     expect(response.status).toBe(201)
   })
-
-  it('handles Supabase insert error gracefully', async () => {
-    const response = await POST_WAITLIST(
-      buildWaitlistRequest({ email: 'test@example.com' }) as never,
-    )
-    // Current behavior: may return 500 if insert fails
-    expect([200, 201, 400, 500]).toContain(response.status)
-  })
-})
-
-describe('GET /api/waitlist', () => {
-  beforeEach(() => {
-    vi.restoreAllMocks()
-  })
-
-  it('returns 200 with waitlist data', async () => {
-    const response = await GET_WAITLIST(buildGetRequest() as never)
-    expect(response.status).toBe(200)
-    expect(response.headers.get('Content-Type')).toContain('application/json')
-    const body = await response.json()
-    expect(body.waitlist).toBeDefined()
-    expect(Array.isArray(body.waitlist)).toBe(true)
-  })
-
-  it('returns empty array when waitlist is empty', async () => {
-    const response = await GET_WAITLIST(buildGetRequest() as never)
-    expect(response.status).toBe(200)
-    const body = await response.json()
-    expect(body.waitlist).toEqual([])
-  })
-
-  it('handles Supabase error on GET', async () => {
-    const response = await GET_WAITLIST(buildGetRequest() as never)
-    // Should either return 200 with data or 500 on error
-    expect([200, 500]).toContain(response.status)
-  })
 })
 
 describe('POST /api/waitlist/unsubscribe', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+  })
+
+  it('returns 400 when neither email nor token is provided', async () => {
+    const response = await POST_UNSUBSCRIBE(buildUnsubscribeRequest({}) as never)
+    expect(response.status).toBe(400)
   })
 
   it('returns 400 for invalid email format', async () => {
@@ -173,39 +141,34 @@ describe('POST /api/waitlist/unsubscribe', () => {
     expect(response.status).toBe(400)
   })
 
-  it('returns 404 when email not found in waitlist', async () => {
-    const mockSupabase = await (await import('@/lib/supabase/server')).createClient()
-    vi.spyOn(mockSupabase, 'from').mockReturnValue({
-      select: () => ({
-        eq: () => ({
-          single: vi.fn().mockResolvedValue({ data: null }),
-        }),
-      }),
-    } as never)
-
+  it('returns 200 for unknown email — anti-enumeration', async () => {
+    // Audit fix #9: never reveal whether the address was on the list.
     const response = await POST_UNSUBSCRIBE(
       buildUnsubscribeRequest({ email: 'notfound@example.com' }) as never,
     )
-    expect(response.status).toBe(404)
+    expect(response.status).toBe(200)
     const body = await response.json()
-    expect(body.error).toContain('not found')
+    // Uniform success shape — no `email` field, no membership leak.
+    expect(body.email).toBeUndefined()
+    expect(body.message).toBeDefined()
   })
 
-  it('successfully unsubscribes email from waitlist', async () => {
+  it('returns 200 for a known email and uses uniform success shape', async () => {
     const response = await POST_UNSUBSCRIBE(
       buildUnsubscribeRequest({ email: 'test@example.com' }) as never,
     )
     expect(response.status).toBe(200)
     const body = await response.json()
-    expect(body.message).toContain('unsubscribed')
-    expect(body.email).toBe('test@example.com')
+    expect(body.email).toBeUndefined()
+    expect(body.message).toBeDefined()
   })
 
-  it('handles Supabase update error gracefully', async () => {
+  it('returns 200 for an invalid token without surfacing the failure', async () => {
+    // Audit fix #10: an invalid/expired token responds the same as success
+    // so callers can't probe which tokens were ever valid.
     const response = await POST_UNSUBSCRIBE(
-      buildUnsubscribeRequest({ email: 'test@example.com' }) as never,
+      buildUnsubscribeRequest({ token: 'totally-malformed-token' }) as never,
     )
-    // Should handle error without crashing
-    expect([200, 404, 500]).toContain(response.status)
+    expect(response.status).toBe(200)
   })
 })

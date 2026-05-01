@@ -2,15 +2,48 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
+// Real-shaped UUIDs so the Zod schemas (id: uuid, user_id: uuid, …) accept the
+// mocked rows. Audit-fix #X added strict UUID validation in the service layer
+// so any test data that previously got away with `'camp-123'` now needs to
+// look like a real ID.
+const CAMPAIGN_ID = '11111111-1111-4111-8111-111111111111'
+const USER_ID = '22222222-2222-4222-8222-222222222222'
+const EMAIL_ID = '33333333-3333-4333-8333-333333333333'
+const EMAIL_ID_2 = '44444444-4444-4444-8444-444444444444'
+
+const baseCampaignRow = {
+  id: CAMPAIGN_ID,
+  user_id: USER_ID,
+  name: 'Test Campaign',
+  landing_page_url: 'https://example.com',
+  landing_page_content: '<p>hi</p>',
+  landing_page_metadata: {},
+  tone: null,
+  campaign_type: null,
+  days: null,
+  status: 'draft' as const,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+}
+
+const baseEmailRow = {
+  id: EMAIL_ID,
+  campaign_id: CAMPAIGN_ID,
+  day: 1,
+  subject: 'Day 1',
+  preview: 'p',
+  content: 'c',
+}
+
 describe('CampaignStorageService', () => {
   let service: CampaignStorageService
-  let mockSupabase: any
+  let mockSupabase: { from: ReturnType<typeof vi.fn> }
 
   beforeEach(() => {
     mockSupabase = {
       from: vi.fn(),
     }
-    service = new CampaignStorageService(mockSupabase as SupabaseClient)
+    service = new CampaignStorageService(mockSupabase as unknown as SupabaseClient)
   })
 
   afterEach(() => {
@@ -19,31 +52,18 @@ describe('CampaignStorageService', () => {
 
   describe('createCampaign', () => {
     it('creates a campaign successfully', async () => {
-      const mockData = {
-        id: 'camp-123',
-        user_id: 'user-456',
-        name: 'Test Campaign',
-        landing_page_url: 'https://example.com',
-        landing_page_content: '<p>hi</p>',
-        landing_page_metadata: {},
-        status: 'draft',
-        created_at: new Date().toISOString(),
-      }
-
       mockSupabase.from.mockReturnValue({
         insert: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: baseCampaignRow, error: null }),
       })
 
-      const result = await service.createCampaign('user-456', {
+      const result = await service.createCampaign(USER_ID, {
         name: 'Test Campaign',
         landingPageUrl: 'https://example.com',
       })
 
-      expect(result.id).toBe('camp-123')
+      expect(result.id).toBe(CAMPAIGN_ID)
       expect(result.name).toBe('Test Campaign')
     })
 
@@ -56,47 +76,29 @@ describe('CampaignStorageService', () => {
         single: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      await expect(
-        service.createCampaign('user-456', { name: 'Test Campaign' }),
-      ).rejects.toThrow('Insert failed')
+      await expect(service.createCampaign(USER_ID, { name: 'Test Campaign' })).rejects.toThrow(
+        'Insert failed',
+      )
     })
   })
 
   describe('getCampaign', () => {
     it('returns campaign with emails', async () => {
       const mockData = {
-        id: 'camp-123',
-        user_id: 'user-456',
-        name: 'Test Campaign',
-        landing_page_url: 'https://example.com',
-        landing_page_content: '<p>hi</p>',
-        landing_page_metadata: {},
-        status: 'draft',
-        created_at: new Date().toISOString(),
-        emails: [
-          {
-            id: 'email-1',
-            campaign_id: 'camp-123',
-            day: 1,
-            subject: 'Day 1',
-            preview: 'p',
-            content: 'c',
-          },
-        ],
+        ...baseCampaignRow,
+        emails: [baseEmailRow],
       }
 
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
       })
 
-      const result = await service.getCampaign('camp-123')
+      const result = await service.getCampaign(CAMPAIGN_ID)
 
       expect(result).not.toBeNull()
-      expect(result?.id).toBe('camp-123')
+      expect(result?.id).toBe(CAMPAIGN_ID)
       expect(result?.emails.length).toBe(1)
     })
 
@@ -109,7 +111,7 @@ describe('CampaignStorageService', () => {
         single: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      const result = await service.getCampaign('nonexistent')
+      const result = await service.getCampaign(CAMPAIGN_ID)
 
       expect(result).toBeNull()
     })
@@ -123,33 +125,22 @@ describe('CampaignStorageService', () => {
         single: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      await expect(service.getCampaign('camp-123')).rejects.toThrow('Database error')
+      await expect(service.getCampaign(CAMPAIGN_ID)).rejects.toThrow('Database error')
     })
   })
 
   describe('updateCampaign', () => {
     it('updates campaign successfully', async () => {
-      const mockData = {
-        id: 'camp-123',
-        user_id: 'user-456',
-        name: 'Updated Campaign',
-        landing_page_url: 'https://example.com',
-        landing_page_content: '<p>hi</p>',
-        landing_page_metadata: {},
-        status: 'draft',
-        created_at: new Date().toISOString(),
-      }
+      const mockData = { ...baseCampaignRow, name: 'Updated Campaign' }
 
       mockSupabase.from.mockReturnValue({
         update: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         select: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: mockData, error: null }),
       })
 
-      const result = await service.updateCampaign('camp-123', {
+      const result = await service.updateCampaign(CAMPAIGN_ID, {
         name: 'Updated Campaign',
       })
 
@@ -166,63 +157,43 @@ describe('CampaignStorageService', () => {
         single: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      await expect(
-        service.updateCampaign('camp-123', { name: 'New Name' }),
-      ).rejects.toThrow('Update failed')
+      await expect(service.updateCampaign(CAMPAIGN_ID, { name: 'New Name' })).rejects.toThrow(
+        'Update failed',
+      )
     })
 
     it('handles empty update data', async () => {
-      const mockData = {
-        id: 'camp-123',
-        user_id: 'user-456',
-        name: 'Existing Campaign',
-        status: 'draft',
-        created_at: new Date().toISOString(),
-      }
-
+      // Empty update goes down a separate `select().eq().single()` path that
+      // fetches the existing row instead of doing a no-op UPDATE.
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: baseCampaignRow, error: null }),
       })
 
-      const result = await service.updateCampaign('camp-123', {})
+      const result = await service.updateCampaign(CAMPAIGN_ID, {})
 
-      expect(result.id).toBe('camp-123')
+      expect(result.id).toBe(CAMPAIGN_ID)
     })
   })
 
   describe('listCampaigns', () => {
     it('lists all campaigns for user', async () => {
       const mockData = [
-        {
-          id: 'camp-1',
-          user_id: 'user-456',
-          name: 'Campaign 1',
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: 'camp-2',
-          user_id: 'user-456',
-          name: 'Campaign 2',
-          created_at: new Date().toISOString(),
-        },
+        { ...baseCampaignRow, id: CAMPAIGN_ID, name: 'Campaign 1' },
+        { ...baseCampaignRow, id: EMAIL_ID, name: 'Campaign 2' },
       ]
 
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        order: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        order: vi.fn().mockResolvedValue({ data: mockData, error: null }),
       })
 
-      const result = await service.listCampaigns('user-456')
+      const result = await service.listCampaigns(USER_ID)
 
       expect(result).toHaveLength(2)
-      expect(result[0].id).toBe('camp-1')
+      expect(result[0].id).toBe(CAMPAIGN_ID)
     })
 
     it('throws error on list failure', async () => {
@@ -234,7 +205,7 @@ describe('CampaignStorageService', () => {
         order: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      await expect(service.listCampaigns('user-456')).rejects.toThrow('Query failed')
+      await expect(service.listCampaigns(USER_ID)).rejects.toThrow('Query failed')
     })
   })
 
@@ -245,7 +216,7 @@ describe('CampaignStorageService', () => {
         eq: vi.fn().mockResolvedValue({ error: null }),
       })
 
-      await expect(service.deleteCampaign('camp-123')).resolves.not.toThrow()
+      await expect(service.deleteCampaign(CAMPAIGN_ID)).resolves.not.toThrow()
     })
 
     it('throws error on delete failure', async () => {
@@ -256,77 +227,83 @@ describe('CampaignStorageService', () => {
         eq: vi.fn().mockResolvedValue({ error }),
       })
 
-      await expect(service.deleteCampaign('camp-123')).rejects.toThrow('Delete failed')
+      await expect(service.deleteCampaign(CAMPAIGN_ID)).rejects.toThrow('Delete failed')
     })
   })
 
   describe('saveEmails', () => {
-    it('saves emails for campaign', async () => {
-      const mockData = [
-        {
-          id: 'email-1',
-          campaign_id: 'camp-123',
-          day: 1,
-          subject: 'Day 1',
-          preview: 'p',
-          content: 'c',
-        },
-      ]
+    it('updates an existing row in place when day matches and inserts new ones', async () => {
+      // Audit-fix #X rewrite: read existing → UPDATE-by-day → INSERT-missing →
+      // DELETE-removed. We need to simulate three different from() responses:
+      //   1. select().eq()        → existingRows lookup
+      //   2. update().eq().select().single() → for day 1 (already exists)
+      //   3. insert(...).select().single()   → for day 2 (new)
+      // No DELETE call because all incoming days match or are added.
+      const existingRows = [{ id: EMAIL_ID, day: 1 }]
 
-      mockSupabase.from.mockReturnValue({
-        delete: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        insert: vi.fn().mockReturnThis(),
-        select: vi.fn().mockResolvedValue({ data: mockData, error: null }),
-      })
+      // Order matters: from() is called once for the read, then once per email.
+      mockSupabase.from
+        // 1. read existing
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({ data: existingRows, error: null }),
+        })
+        // 2. update day 1 (existing)
+        .mockReturnValueOnce({
+          update: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          select: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({ data: { ...baseEmailRow, day: 1 }, error: null }),
+        })
+        // 3. insert day 2 (new)
+        .mockReturnValueOnce({
+          insert: vi.fn().mockReturnThis(),
+          select: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: { ...baseEmailRow, id: EMAIL_ID_2, day: 2, subject: 'Day 2' },
+            error: null,
+          }),
+        })
 
       const emails = [
-        { id: 1, uuid: 'email-1', day: 1, subject: 'Day 1', preview: 'p', content: 'c' },
+        { id: 1, uuid: EMAIL_ID, day: 1, subject: 'Day 1', preview: 'p', content: 'c' },
+        { id: 2, uuid: EMAIL_ID_2, day: 2, subject: 'Day 2', preview: 'p', content: 'c' },
       ]
 
-      const result = await service.saveEmails('camp-123', emails)
+      const result = await service.saveEmails(CAMPAIGN_ID, emails)
 
-      expect(result).toHaveLength(1)
+      expect(result).toHaveLength(2)
       expect(result[0].day).toBe(1)
+      expect(result[1].day).toBe(2)
     })
   })
 
   describe('updateEmail', () => {
     it('updates email successfully', async () => {
+      // updateEmail chains update().eq('campaign_id', …).eq('day', …); the
+      // second .eq() is the call that actually awaits, so it has to resolve.
+      const secondEq = vi.fn().mockResolvedValue({ error: null })
+      const firstEq = vi.fn().mockReturnValue({ eq: secondEq })
+
       mockSupabase.from.mockReturnValue({
-        update: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
+        update: vi.fn().mockReturnValue({ eq: firstEq }),
       })
 
-      const eqMock = mockSupabase.from().update().eq
-      eqMock.mockResolvedValue({ error: null })
-
       await expect(
-        service.updateEmail('camp-123', 1, { subject: 'Updated' }),
+        service.updateEmail(CAMPAIGN_ID, 1, { subject: 'Updated' }),
       ).resolves.not.toThrow()
     })
   })
 
   describe('getEmail', () => {
     it('gets email by campaign and day', async () => {
-      const mockData = {
-        id: 'email-1',
-        campaign_id: 'camp-123',
-        day: 1,
-        subject: 'Day 1',
-        preview: 'p',
-        content: 'c',
-      }
-
       mockSupabase.from.mockReturnValue({
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
-        single: vi
-          .fn()
-          .mockResolvedValue({ data: mockData, error: null }),
+        single: vi.fn().mockResolvedValue({ data: baseEmailRow, error: null }),
       })
 
-      const result = await service.getEmail('camp-123', 1)
+      const result = await service.getEmail(CAMPAIGN_ID, 1)
 
       expect(result).not.toBeNull()
       expect(result?.day).toBe(1)
@@ -341,7 +318,7 @@ describe('CampaignStorageService', () => {
         single: vi.fn().mockResolvedValue({ data: null, error }),
       })
 
-      const result = await service.getEmail('camp-123', 999)
+      const result = await service.getEmail(CAMPAIGN_ID, 999)
 
       expect(result).toBeNull()
     })

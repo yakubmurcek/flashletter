@@ -35,10 +35,14 @@ vi.mock('@/lib/utils/get-client-ip', () => ({
 }))
 
 const saveEmailsMock = vi.fn()
+const isOwnedByMock = vi.fn()
 vi.mock('@/lib/services/campaign-storage.service', () => ({
-  CampaignStorageService: vi.fn().mockImplementation(() => ({
-    saveEmails: (...args: unknown[]) => saveEmailsMock(...args),
-  })),
+  // Use a class wrapper so vi.restoreAllMocks() can't strip the
+  // implementation between tests.
+  CampaignStorageService: class {
+    saveEmails = (...args: unknown[]) => saveEmailsMock(...args)
+    isOwnedBy = (...args: unknown[]) => isOwnedByMock(...args)
+  },
 }))
 
 vi.mock('@/lib/supabase/server', () => ({
@@ -57,12 +61,14 @@ vi.mock('@/app/api/generate-emails/prompts', () => ({
 // Import after all vi.mock calls
 import { POST } from '@/app/api/generate-emails/stream/route'
 
-async function readStreamEvents(response: Response) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type StreamEvent = any
+async function readStreamEvents(response: Response): Promise<StreamEvent[]> {
   if (!response.body) return []
   const reader = response.body.getReader()
   const decoder = new TextDecoder()
   let buffer = ''
-  const events: unknown[] = []
+  const events: StreamEvent[] = []
   while (true) {
     const { value, done } = await reader.read()
     if (done) break
@@ -85,6 +91,8 @@ function buildRequest(body: unknown): Request {
   })
 }
 
+const VALID_CAMPAIGN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+
 const validRequestBody = {
   landingUrl: 'https://example.com',
   landingContent: 'Example content',
@@ -98,7 +106,9 @@ const validRequestBody = {
     angles: ['angle1'],
     opportunities: [],
   },
+  // campaignConfigSchema requires tone (max 64), campaignType (max 64), days
   config: {
+    tone: 'professional',
     days: 2,
     campaignType: 'nurture',
   },
@@ -114,9 +124,26 @@ describe('POST /api/generate-emails/stream', () => {
       reset: 0,
     })
     saveEmailsMock.mockReset().mockResolvedValue([
-      { id: 1, uuid: 'uuid-1', day: 1, subject: 'Subject 1', preview: 'Preview 1', content: 'Content 1' },
-      { id: 2, uuid: 'uuid-2', day: 2, subject: 'Subject 2', preview: 'Preview 2', content: 'Content 2' },
+      {
+        id: 1,
+        uuid: 'uuid-1',
+        day: 1,
+        subject: 'Subject 1',
+        preview: 'Preview 1',
+        content: 'Content 1',
+      },
+      {
+        id: 2,
+        uuid: 'uuid-2',
+        day: 2,
+        subject: 'Subject 2',
+        preview: 'Preview 2',
+        content: 'Content 2',
+      },
     ])
+    // Audit-fix: routes call CampaignStorageService.isOwnedBy() before
+    // saving. Default to true so happy-path tests don't 403.
+    isOwnedByMock.mockReset().mockResolvedValue(true)
   })
 
   it('returns 400 for invalid body', async () => {
@@ -251,7 +278,7 @@ describe('POST /api/generate-emails/stream', () => {
     saveEmailsMock.mockRejectedValue(new Error('Save failed'))
 
     const response = await POST(
-      buildRequest({ ...validRequestBody, campaignId: 'campaign-123' }) as never,
+      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
     )
     const events = await readStreamEvents(response)
     const completeEvent = events.find((e: any) => e.type === 'complete')
@@ -265,7 +292,10 @@ describe('POST /api/generate-emails/stream', () => {
     })
 
     const response = await POST(
-      buildRequest({ ...validRequestBody, config: { ...validRequestBody.config, days: 1 } }) as never,
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 1 },
+      }) as never,
     )
     expect(response.status).toBe(200)
 

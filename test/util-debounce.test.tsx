@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { renderHook } from '@testing-library/react'
 import { debounce, useDebounce } from '@/lib/utils/debounce'
 
 describe('debounce', () => {
@@ -87,34 +88,35 @@ describe('useDebounce (React hook)', () => {
   afterEach(() => vi.useRealTimers())
 
   it('provides debounced function in React context', () => {
-    // Note: Full testing of React hooks requires React Testing Library
-    // This tests basic timing behavior without component context
     const fn = vi.fn()
-    const debounced = useDebounce(fn, 100)
-    
+    const { result } = renderHook(() => useDebounce(fn, 100))
+    const debounced = result.current
+
     // Call the debounced function
     debounced('test')
     expect(fn).not.toHaveBeenCalled()
-    
+
     vi.advanceTimersByTime(100)
     expect(fn).toHaveBeenCalledWith('test')
   })
 
   it('debounced hook has cleanup method', () => {
     const fn = vi.fn()
-    const debounced = useDebounce(fn, 100)
-    
+    const { result } = renderHook(() => useDebounce(fn, 100))
+    const debounced = result.current
+
     debounced('a')
-    expect((debounced as any).cleanup).toBeDefined()
-    expect(typeof (debounced as any).cleanup).toBe('function')
+    expect((debounced as unknown as { cleanup?: () => void }).cleanup).toBeDefined()
+    expect(typeof (debounced as unknown as { cleanup?: () => void }).cleanup).toBe('function')
   })
 
   it('cleanup cancels pending call', () => {
     const fn = vi.fn()
-    const debounced = useDebounce(fn, 100)
-    
+    const { result } = renderHook(() => useDebounce(fn, 100))
+    const debounced = result.current
+
     debounced('a')
-    ;(debounced as any).cleanup()
+    ;(debounced as unknown as { cleanup: () => void }).cleanup()
     vi.advanceTimersByTime(100)
     expect(fn).not.toHaveBeenCalled()
   })

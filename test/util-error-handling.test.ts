@@ -9,11 +9,16 @@ import {
 } from '@/lib/utils/error-handling'
 
 describe('logError', () => {
+  let originalEnv: string | undefined
   beforeEach(() => {
+    originalEnv = process.env.NODE_ENV
+    // Source only logs when NODE_ENV === 'development'
+    vi.stubEnv('NODE_ENV', 'development')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 
@@ -103,9 +108,11 @@ describe('getUserFriendlyMessage', () => {
     expect(result).toMatch(/permission/i)
   })
 
-  it('returns original message for other errors', () => {
+  it('returns generic fallback for other errors (no error.message leak)', () => {
+    // Source intentionally does NOT echo error.message in the catch-all so DB
+    // / library internals never reach the UI.
     const result = getUserFriendlyMessage(new Error('specific failure'), 'foo')
-    expect(result).toBe('specific failure')
+    expect(result).toBe('Failed to foo. Please try again.')
   })
 
   it('returns fallback message for non-Error values', () => {
@@ -126,10 +133,12 @@ describe('getUserFriendlyMessage', () => {
 
 describe('withErrorHandling', () => {
   beforeEach(() => {
+    vi.stubEnv('NODE_ENV', 'development')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 
@@ -174,10 +183,12 @@ describe('withErrorHandling', () => {
 
 describe('withErrorLogging', () => {
   beforeEach(() => {
+    vi.stubEnv('NODE_ENV', 'development')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 
@@ -188,9 +199,12 @@ describe('withErrorLogging', () => {
 
   it('logs error but still throws', async () => {
     const error = new Error('boom')
-    const promise = withErrorLogging(async () => {
-      throw error
-    }, { operation: 'test' })
+    const promise = withErrorLogging(
+      async () => {
+        throw error
+      },
+      { operation: 'test' },
+    )
 
     expect(console.error).not.toHaveBeenCalled() // Not yet, called after error
 
@@ -202,9 +216,12 @@ describe('withErrorLogging', () => {
     const error = new Error('test error')
     const originalStack = error.stack
 
-    const promise = withErrorLogging(async () => {
-      throw error
-    }, { operation: 'test' })
+    const promise = withErrorLogging(
+      async () => {
+        throw error
+      },
+      { operation: 'test' },
+    )
 
     try {
       await promise
@@ -216,10 +233,12 @@ describe('withErrorLogging', () => {
 
 describe('handleComponentError', () => {
   beforeEach(() => {
+    vi.stubEnv('NODE_ENV', 'development')
     vi.spyOn(console, 'error').mockImplementation(() => {})
   })
 
   afterEach(() => {
+    vi.unstubAllEnvs()
     vi.restoreAllMocks()
   })
 

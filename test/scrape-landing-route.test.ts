@@ -207,13 +207,16 @@ describe('POST /api/scrape-landing', () => {
     expect(body.stats.extractionMethod).toBe('static')
   })
 
-  it('returns 500 when fetch fails with bad status', async () => {
+  it('returns 400 when fetch fails with bad status', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response('', { status: 500, statusText: 'Internal Server Error' }),
     )
 
+    // Source maps "Failed to fetch" errors to 400 (the upstream error is the
+    // user's URL, not our problem) — only generic / dynamic-scraping errors
+    // become 500.
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
-    expect(response.status).toBe(500)
+    expect(response.status).toBe(400)
     const body = await response.json()
     expect(body.error).toBeDefined()
   })

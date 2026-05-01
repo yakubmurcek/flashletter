@@ -96,7 +96,8 @@ describe('POST /api/chat', () => {
     const response = await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: {},
+        // campaignContext is optional in the schema; passing {} would fail
+        // strict-shape validation. Omit it for tests that just hit the route.
       }) as never,
     )
     expect(response.status).toBe(429)
@@ -108,7 +109,8 @@ describe('POST /api/chat', () => {
     const response = await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: {},
+        // campaignContext is optional in the schema; passing {} would fail
+        // strict-shape validation. Omit it for tests that just hit the route.
       }) as never,
     )
     expect(response.headers.get('X-RateLimit-Limit')).toBeDefined()
@@ -120,7 +122,7 @@ describe('POST /api/chat', () => {
     const response = await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: { name: 'Test Campaign' },
+        // campaignContext is optional; omit it.
       }) as never,
     )
     expect(response.status).toBe(200)
@@ -136,7 +138,8 @@ describe('POST /api/chat', () => {
     const response = await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: {},
+        // campaignContext is optional in the schema; passing {} would fail
+        // strict-shape validation. Omit it for tests that just hit the route.
       }) as never,
     )
     expect(response.status).toBe(429)
@@ -151,7 +154,8 @@ describe('POST /api/chat', () => {
     const response = await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: {},
+        // campaignContext is optional in the schema; passing {} would fail
+        // strict-shape validation. Omit it for tests that just hit the route.
       }) as never,
     )
     expect(response.status).toBe(500)
@@ -159,22 +163,18 @@ describe('POST /api/chat', () => {
     expect(body.error).toBeDefined()
   })
 
-  it('handles missing required fields', async () => {
-    const response = await POST(
-      buildRequest({
-        messages: [{ role: 'user', content: 'Hello' }],
-        // campaignContext is required by schema
-      }) as never,
-    )
-    // Should fail validation
-    expect([400, 500]).toContain(response.status)
+  it('rejects request without messages array', async () => {
+    // Schema requires `messages`; without it Zod throws and we return 400.
+    const response = await POST(buildRequest({}) as never)
+    expect(response.status).toBe(400)
   })
 
   it('calls retry logic with correct parameters', async () => {
     await POST(
       buildRequest({
         messages: [{ role: 'user', content: 'Hello' }],
-        campaignContext: {},
+        // campaignContext is optional in the schema; passing {} would fail
+        // strict-shape validation. Omit it for tests that just hit the route.
       }) as never,
     )
     expect(retryWithBackoffMock).toHaveBeenCalled()
