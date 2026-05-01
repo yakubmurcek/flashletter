@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,14 +19,28 @@ import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 
 export default function CreatePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
   const { isAnalyzing, progressState, error, analyzeLandingPage } = useLandingPage()
   const { isLoading: isCheckingLimit, isAnonymous, canCreate, campaignCount } = useAnonymousLimit()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     clearAll()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    const err = searchParams.get('authError')
+    if (err) {
+      setAuthError(err)
+      const next = new URLSearchParams(searchParams.toString())
+      next.delete('authError')
+      const qs = next.toString()
+      router.replace(qs ? `/create?${qs}` : '/create', { scroll: false })
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -64,7 +78,10 @@ export default function CreatePage() {
         chrome="centered"
         backHref="/"
       >
-        <UpgradePrompt campaignCount={campaignCount} />
+        <UpgradePrompt
+          campaignCount={campaignCount}
+          initialError={authError}
+        />
       </AppShell>
     )
   }
