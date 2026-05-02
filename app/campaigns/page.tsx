@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
@@ -8,7 +7,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Mail, Plus } from 'lucide-react'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 import { AppShell } from '@/components/layouts/app-shell'
-import { SignupTracker } from '@/components/analytics/signup-tracker'
 
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
@@ -35,11 +33,6 @@ export default async function CampaignsPage() {
       headerRight={<SignOutButton />}
       withFooter={false}
     >
-      {/* SignupTracker reads useSearchParams, which requires a Suspense
-          boundary in App Router server pages. */}
-      <Suspense fallback={null}>
-        <SignupTracker />
-      </Suspense>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div>
           <h1 className="text-display text-3xl md:text-5xl mb-3">My Campaigns</h1>

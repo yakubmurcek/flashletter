@@ -20,7 +20,13 @@ export function HeroUrlForm() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
-  const { analyzeLandingPage, isAnalyzing, progressState, error: analyzeError } = useLandingPage()
+  const {
+    analyzeLandingPage,
+    isAnalyzing,
+    progressState,
+    error: analyzeError,
+    lastResultRef,
+  } = useLandingPage()
   const { setLandingPageData, createNewCampaign, clearAll, applyConfigToCampaign } = useCampaign()
 
   useEffect(() => {
@@ -63,9 +69,12 @@ export function HeroUrlForm() {
 
       const data = await analyzeLandingPage(finalUrl)
       if (!data) {
-        // analyzeLandingPage swallows the error into hook state; if data is
-        // null and the hook reports no abort/cancel, that's a scrape failure.
-        track('scrape_failed', { domain })
+        // analyzeLandingPage returns null for both real failures AND user
+        // aborts (component unmount, repeat-submit). Only count the former
+        // — aborted scrapes aren't drop-offs in any funnel sense.
+        if (lastResultRef.current === 'failure') {
+          track('scrape_failed', { domain, stage: 'scrape' })
+        }
         setIsSubmitting(false)
         return
       }
@@ -84,6 +93,15 @@ export function HeroUrlForm() {
       router.push(`/create/editor?campaign=${campaignId}&email=1&autogen=1`)
     } catch (err) {
       console.error('Failed to start campaign:', err)
+      // Track failures that happen outside the scrape itself (signInAnonymously,
+      // createNewCampaign, applyConfigToCampaign) so the funnel doesn't show
+      // a stranded `url_pasted` with no follow-up event. `stage` discriminates
+      // between scrape and pre/post-scrape failures so analytics can split.
+      track('scrape_failed', {
+        domain,
+        stage: 'pre_scrape_or_post_scrape',
+        error: err instanceof Error ? err.message : 'unknown',
+      })
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setIsSubmitting(false)
     }
