@@ -28,8 +28,7 @@ export function EditorHeader({
   selectedEmailDay,
   selectedEmailSubject,
 }: EditorHeaderProps) {
-  const canSendTest =
-    !!campaignId && typeof selectedEmailDay === 'number' && !!selectedEmailSubject
+  const canSendTest = !!campaignId && typeof selectedEmailDay === 'number' && !!selectedEmailSubject
   return (
     <header
       className={cn('flex-shrink-0 relative z-50 bg-background border-b border-border', className)}

@@ -139,8 +139,7 @@ export function SendTestDialog({
             </div>
           ) : userState.status === 'authed' ? (
             <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
-              Sending to{' '}
-              <span className="font-medium text-foreground">{userState.email}</span>
+              Sending to <span className="font-medium text-foreground">{userState.email}</span>
             </div>
           ) : (
             <div className="space-y-2">

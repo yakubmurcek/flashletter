@@ -205,9 +205,7 @@ describe('POST /api/send-test-email', () => {
       data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
     })
 
-    const res = await POST(
-      buildRequest({ ...validBody, recipientEmail: 'new@user.com' }) as never,
-    )
+    const res = await POST(buildRequest({ ...validBody, recipientEmail: 'new@user.com' }) as never)
 
     expect(res.status).toBe(200)
     expect(resendSendMock).toHaveBeenCalledTimes(1)

@@ -48,10 +48,10 @@ describe('<SendTestDialog />', () => {
       data: { user: { id: 'u', email: 'real@user.com', is_anonymous: false } },
     })
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({ ok: true, sentTo: 'real@user.com', upgradeStarted: false }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ ok: true, sentTo: 'real@user.com', upgradeStarted: false }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
     )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -85,10 +85,10 @@ describe('<SendTestDialog />', () => {
       data: { user: { id: 'anon', email: undefined, is_anonymous: true } },
     })
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(
-        JSON.stringify({ ok: true, sentTo: 'new@user.com', upgradeStarted: true }),
-        { status: 200, headers: { 'Content-Type': 'application/json' } },
-      ),
+      new Response(JSON.stringify({ ok: true, sentTo: 'new@user.com', upgradeStarted: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
     )
     vi.stubGlobal('fetch', fetchMock)
 
@@ -110,9 +110,7 @@ describe('<SendTestDialog />', () => {
     // upgrade-aware branch so the anon user actually sees the "save your
     // campaign" hint that justifies the email capture.
     await waitFor(() =>
-      expect(toastSuccessMock).toHaveBeenCalledWith(
-        expect.stringMatching(/confirmation link/i),
-      ),
+      expect(toastSuccessMock).toHaveBeenCalledWith(expect.stringMatching(/confirmation link/i)),
     )
   })
 

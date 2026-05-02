@@ -66,10 +66,7 @@ export async function POST(req: NextRequest) {
     const isAnonymous = user.is_anonymous ?? false
     const targetEmail = isAnonymous ? recipientEmail : user.email
     if (!targetEmail) {
-      return NextResponse.json(
-        { error: 'Recipient email required' },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'Recipient email required' }, { status: 400 })
     }
 
     const apiKey = process.env.RESEND_API_KEY
@@ -80,10 +77,7 @@ export async function POST(req: NextRequest) {
           'Cannot send test emails until these are configured.',
       )
       Sentry.captureMessage('send-test-email: Resend env vars missing', { level: 'error' })
-      return NextResponse.json(
-        { error: 'Email sending not configured' },
-        { status: 500 },
-      )
+      return NextResponse.json({ error: 'Email sending not configured' }, { status: 500 })
     }
 
     const campaignService = new CampaignStorageService(supabase)
@@ -161,10 +155,7 @@ export async function POST(req: NextRequest) {
     Sentry.captureException(error, { tags: { api_route: '/api/send-test-email' } })
 
     if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid request', details: error.errors },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: 'Invalid request', details: error.errors }, { status: 400 })
     }
 
     return NextResponse.json({ error: 'Failed to send test email' }, { status: 500 })
