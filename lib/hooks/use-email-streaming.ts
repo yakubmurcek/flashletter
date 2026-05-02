@@ -5,6 +5,7 @@ import { CampaignService, type GenerateEmailsStreamEvent } from '../services/cam
 import { useCampaignActions } from '../campaign-context'
 import type { CampaignConfig, Email, LandingPageData } from '../types'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
+import { track } from '../analytics'
 
 interface UseEmailStreamingReturn {
   isStreaming: boolean
@@ -50,11 +51,23 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
       // Clear any prior emails locally so the stream renders cleanly.
       replaceGeneratedEmailsLocal([])
 
+      // One-shot per stream session: fire on the *first* email arriving so
+      // the funnel can measure time-to-first-email separately from total
+      // generation time. Reset on each new stream invocation (the closure
+      // is fresh per call).
+      let firstEmailFired = false
+
       try {
         const handleEvent = (event: GenerateEmailsStreamEvent) => {
           if (event.type === 'start') {
             setTotalExpected(event.total)
           } else if (event.type === 'email') {
+            if (!firstEmailFired) {
+              firstEmailFired = true
+              track('first_email_streamed', {
+                campaignId: campaignId ?? undefined,
+              })
+            }
             appendGeneratedEmail(event.email)
             setStreamedCount((n) => n + 1)
           } else if (event.type === 'complete') {

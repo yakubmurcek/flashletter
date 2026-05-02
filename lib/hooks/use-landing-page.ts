@@ -11,12 +11,20 @@ import {
   getCleanDomain,
 } from '../types/scrape-progress'
 
+export type AnalyzeStatus = 'success' | 'failure' | 'aborted' | null
+
 interface UseLandingPageReturn {
   isAnalyzing: boolean
   progressState: ProgressState
   error: string | null
   analyzeLandingPage: (url: string) => Promise<LandingPageData | null>
   clearError: () => void
+  // Synchronous status of the most recent analyzeLandingPage call. Callers
+  // (e.g. the hero form) read this immediately after the await to distinguish
+  // a real scrape failure from a user-initiated abort — both return null from
+  // analyzeLandingPage but only the former should fire `scrape_failed`
+  // analytics. Ref so the caller doesn't have to wait for a re-render.
+  lastResultRef: React.MutableRefObject<AnalyzeStatus>
 }
 
 const initialState: ProgressState = {
@@ -30,6 +38,7 @@ export function useLandingPage(): UseLandingPageReturn {
   const [error, setError] = useState<string | null>(null)
   const [progressState, setProgressState] = useState<ProgressState>(initialState)
   const abortRef = useRef<AbortController | null>(null)
+  const lastResultRef = useRef<AnalyzeStatus>(null)
 
   useEffect(() => {
     return () => {
@@ -42,6 +51,7 @@ export function useLandingPage(): UseLandingPageReturn {
     const controller = new AbortController()
     abortRef.current = controller
 
+    lastResultRef.current = null
     setIsAnalyzing(true)
     setError(null)
     setProgressState({
@@ -113,11 +123,16 @@ export function useLandingPage(): UseLandingPageReturn {
         )
       })
 
-      if (controller.signal.aborted) return null
+      if (controller.signal.aborted) {
+        lastResultRef.current = 'aborted'
+        return null
+      }
 
+      lastResultRef.current = 'success'
       return data
     } catch (err) {
       if ((err as Error)?.name === 'AbortError') {
+        lastResultRef.current = 'aborted'
         return null
       }
       const message =
@@ -125,6 +140,7 @@ export function useLandingPage(): UseLandingPageReturn {
           ? err.message
           : 'Failed to analyze landing page. Please check the URL and try again.'
       setError(message)
+      lastResultRef.current = 'failure'
       return null
     } finally {
       setIsAnalyzing(false)
@@ -133,5 +149,5 @@ export function useLandingPage(): UseLandingPageReturn {
 
   const clearError = () => setError(null)
 
-  return { isAnalyzing, progressState, error, analyzeLandingPage, clearError }
+  return { isAnalyzing, progressState, error, analyzeLandingPage, clearError, lastResultRef }
 }

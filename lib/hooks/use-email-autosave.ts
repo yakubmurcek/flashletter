@@ -6,6 +6,7 @@ import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 import type { Email } from '@/lib/types'
+import { track } from '@/lib/analytics'
 
 interface EmailAutosaveReturn {
   saveEmail: (id: number, updates: Partial<Email>, skipVersioning?: boolean) => Promise<void>
@@ -37,6 +38,10 @@ export function useEmailAutosave(
 ): EmailAutosaveReturn {
   const saveTimerRef = useRef<Map<number, NodeJS.Timeout>>(new Map())
   const previousSnapshotRef = useRef<Map<number, Snapshot>>(new Map())
+  // Tracks which email ids have already fired `email_edited` this hook
+  // lifetime. Persists across re-renders without triggering them, and
+  // resets naturally if the user navigates away and back.
+  const trackedEditsRef = useRef<Set<number>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
@@ -115,6 +120,15 @@ export function useEmailAutosave(
             preview: currentEmail.preview,
           })
           setLastSaved(new Date())
+
+          // Fire once per (email id, hook lifetime). The funnel cares about
+          // "did the user actually engage with the editor for this day," not
+          // raw keystroke volume, and the snapshot guard above means we only
+          // get here when the content genuinely changed.
+          if (!trackedEditsRef.current.has(id) && !skipVersioning) {
+            trackedEditsRef.current.add(id)
+            track('email_edited', { day: currentEmail.day })
+          }
         } catch (error) {
           console.error('Failed to save email to database:', error)
         } finally {

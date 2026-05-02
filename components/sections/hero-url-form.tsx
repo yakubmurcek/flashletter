@@ -10,6 +10,8 @@ import { useLandingPage } from '@/lib/hooks/use-landing-page'
 import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { useCampaign } from '@/lib/campaign-context'
 import { SMART_DEFAULT_CAMPAIGN_CONFIG } from '@/lib/constants/campaign'
+import { track } from '@/lib/analytics'
+import { getCleanDomain } from '@/lib/types/scrape-progress'
 
 export function HeroUrlForm() {
   const router = useRouter()
@@ -18,7 +20,13 @@ export function HeroUrlForm() {
   const [error, setError] = useState<string | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
 
-  const { analyzeLandingPage, isAnalyzing, progressState, error: analyzeError } = useLandingPage()
+  const {
+    analyzeLandingPage,
+    isAnalyzing,
+    progressState,
+    error: analyzeError,
+    lastResultRef,
+  } = useLandingPage()
   const { setLandingPageData, createNewCampaign, clearAll, applyConfigToCampaign } = useCampaign()
 
   useEffect(() => {
@@ -50,6 +58,9 @@ export function HeroUrlForm() {
     setIsSubmitting(true)
     setError(null)
 
+    const domain = getCleanDomain(finalUrl)
+    track('url_pasted', { domain })
+
     try {
       if (!isAuthenticated) {
         await signInAnonymously()
@@ -58,9 +69,17 @@ export function HeroUrlForm() {
 
       const data = await analyzeLandingPage(finalUrl)
       if (!data) {
+        // analyzeLandingPage returns null for both real failures AND user
+        // aborts (component unmount, repeat-submit). Only count the former
+        // — aborted scrapes aren't drop-offs in any funnel sense.
+        if (lastResultRef.current === 'failure') {
+          track('scrape_failed', { domain, stage: 'scrape' })
+        }
         setIsSubmitting(false)
         return
       }
+
+      track('scrape_succeeded', { domain })
 
       setLandingPageData(data)
       const campaignId = await createNewCampaign(data)
@@ -74,6 +93,15 @@ export function HeroUrlForm() {
       router.push(`/create/editor?campaign=${campaignId}&email=1&autogen=1`)
     } catch (err) {
       console.error('Failed to start campaign:', err)
+      // Track failures that happen outside the scrape itself (signInAnonymously,
+      // createNewCampaign, applyConfigToCampaign) so the funnel doesn't show
+      // a stranded `url_pasted` with no follow-up event. `stage` discriminates
+      // between scrape and pre/post-scrape failures so analytics can split.
+      track('scrape_failed', {
+        domain,
+        stage: 'pre_scrape_or_post_scrape',
+        error: err instanceof Error ? err.message : 'unknown',
+      })
       setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
       setIsSubmitting(false)
     }

@@ -204,6 +204,34 @@ describe('useLandingPage', () => {
     expect(result.current.error).toBe('from stream')
   })
 
+  it('lastResultRef tracks success / failure / aborted independently', async () => {
+    // Success path.
+    vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockResolvedValueOnce(validData)
+    const { result } = renderHook(() => useLandingPage())
+    await act(async () => {
+      await result.current.analyzeLandingPage('https://example.com')
+    })
+    expect(result.current.lastResultRef.current).toBe('success')
+
+    // Real failure (non-Abort throw).
+    vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockRejectedValueOnce(new Error('boom'))
+    await act(async () => {
+      await result.current.analyzeLandingPage('https://example.com')
+    })
+    expect(result.current.lastResultRef.current).toBe('failure')
+
+    // Aborted.
+    const abortErr = new Error('cancelled')
+    abortErr.name = 'AbortError'
+    vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockRejectedValueOnce(abortErr)
+    await act(async () => {
+      await result.current.analyzeLandingPage('https://example.com')
+    })
+    // The form uses this to gate the `scrape_failed` analytics event — if
+    // 'aborted' starts coming back as 'failure', we'll over-count the funnel.
+    expect(result.current.lastResultRef.current).toBe('aborted')
+  })
+
   it('aborts prior request when a new analyze call fires', async () => {
     const abortedSignals: AbortSignal[] = []
     vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockImplementation(

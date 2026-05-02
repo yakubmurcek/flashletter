@@ -38,6 +38,19 @@ Without both set, `/api/send-test-email` returns 500 with a clear server log
 and the UI shows a generic "couldn't send right now" toast — the rest of the
 app still works.
 
+### `NEXT_PUBLIC_POSTHOG_KEY` and (optional) `NEXT_PUBLIC_POSTHOG_HOST`
+
+Powers the funnel analytics. Without `NEXT_PUBLIC_POSTHOG_KEY` the analytics
+wrapper no-ops silently — the app still works, you just lose the funnel.
+`NEXT_PUBLIC_POSTHOG_HOST` defaults to `https://us.i.posthog.com`; override it
+if your project lives in the EU instance.
+
+Events fired (all client-side via `posthog-js`): `url_pasted`,
+`scrape_succeeded`, `scrape_failed`, `first_email_streamed`, `email_edited`,
+`signup_completed`. The `signup_completed` event piggybacks on a
+`?signedUp=1` marker the auth callback adds to its redirect; the
+`/campaigns` page reads it once, fires the event, then strips the param.
+
 ### `ADMIN_EMAILS`
 
 Comma-separated list of email addresses allowed to view `/admin/waitlist`.
