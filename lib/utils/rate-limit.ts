@@ -66,6 +66,27 @@ export const scrapeLandingRateLimit = rateLimitEnabled
     })
   : null
 
+// Test-send: 5/hr/user keeps a curious user from spamming themselves; the
+// route also applies a 20/day/IP cap separately to slow shared-IP abuse and
+// keep us under Resend's free-tier 3k/mo with headroom.
+export const sendTestEmailRateLimit = rateLimitEnabled
+  ? new Ratelimit({
+      redis: redis!,
+      limiter: Ratelimit.slidingWindow(5, '1 h'),
+      analytics: true,
+      prefix: 'ratelimit:send-test',
+    })
+  : null
+
+export const sendTestEmailIpRateLimit = rateLimitEnabled
+  ? new Ratelimit({
+      redis: redis!,
+      limiter: Ratelimit.slidingWindow(20, '1 d'),
+      analytics: true,
+      prefix: 'ratelimit:send-test-ip',
+    })
+  : null
+
 /**
  * Helper function to check rate limit for a given identifier
  * @param ratelimit The rate limiter instance to use

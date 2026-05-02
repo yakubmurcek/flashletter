@@ -27,6 +27,17 @@ hammer anything, check these two first.
 
 ## Required for specific features
 
+### `RESEND_API_KEY` and `RESEND_FROM_ADDRESS`
+
+Powers the "Send to my inbox" button in the editor. `RESEND_API_KEY` comes from
+the Resend dashboard. `RESEND_FROM_ADDRESS` is the verified-domain sender (e.g.
+`Flashletter <hi@flashletter.app>`); for early testing, Resend's
+`onboarding@resend.dev` works but only sends to the account-owner inbox.
+
+Without both set, `/api/send-test-email` returns 500 with a clear server log
+and the UI shows a generic "couldn't send right now" toast — the rest of the
+app still works.
+
 ### `ADMIN_EMAILS`
 
 Comma-separated list of email addresses allowed to view `/admin/waitlist`.
