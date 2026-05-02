@@ -10,6 +10,8 @@ import { useLandingPage } from '@/lib/hooks/use-landing-page'
 import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
 import { useCampaign } from '@/lib/campaign-context'
 import { SMART_DEFAULT_CAMPAIGN_CONFIG } from '@/lib/constants/campaign'
+import { track } from '@/lib/analytics'
+import { getCleanDomain } from '@/lib/types/scrape-progress'
 
 export function HeroUrlForm() {
   const router = useRouter()
@@ -50,6 +52,9 @@ export function HeroUrlForm() {
     setIsSubmitting(true)
     setError(null)
 
+    const domain = getCleanDomain(finalUrl)
+    track('url_pasted', { domain })
+
     try {
       if (!isAuthenticated) {
         await signInAnonymously()
@@ -58,9 +63,14 @@ export function HeroUrlForm() {
 
       const data = await analyzeLandingPage(finalUrl)
       if (!data) {
+        // analyzeLandingPage swallows the error into hook state; if data is
+        // null and the hook reports no abort/cancel, that's a scrape failure.
+        track('scrape_failed', { domain })
         setIsSubmitting(false)
         return
       }
+
+      track('scrape_succeeded', { domain })
 
       setLandingPageData(data)
       const campaignId = await createNewCampaign(data)

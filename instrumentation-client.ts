@@ -3,6 +3,12 @@
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
 import * as Sentry from '@sentry/nextjs'
+import { initPostHog } from '@/lib/analytics'
+
+// PostHog runs alongside Sentry on the client. initPostHog() is a no-op when
+// NEXT_PUBLIC_POSTHOG_KEY isn't set, so dev environments without analytics
+// stay silent.
+initPostHog()
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,

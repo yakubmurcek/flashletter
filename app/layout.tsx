@@ -6,6 +6,7 @@ import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CampaignProvider } from '@/lib/campaign-context'
 import { RegionProvider } from '@/lib/utils/location-detection'
+import { PostHogIdentifier } from '@/components/analytics/posthog-identifier'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -130,6 +131,7 @@ export default function RootLayout({
             richColors
             closeButton
           />
+          <PostHogIdentifier />
           <Analytics />
         </ThemeProvider>
       </body>

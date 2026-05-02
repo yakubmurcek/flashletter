@@ -11,6 +11,12 @@ export async function GET(request: Request) {
   const redirectToParam = requestUrl.searchParams.get('redirectTo')
 
   let errorMessage: string | null = null
+  // Marker for the client to fire `signup_completed` exactly once after a
+  // successful OAuth round-trip. We can't capture server-side without
+  // posthog-node, and the next page load is the natural place to identify
+  // and emit. The /campaigns mount handler is responsible for stripping
+  // this param after consuming it.
+  let signedUp = false
 
   if (providerError) {
     errorMessage = providerErrorDescription || providerError
@@ -27,6 +33,8 @@ export async function GET(request: Request) {
       Sentry.captureException(error, {
         tags: { auth_route: '/auth/callback', stage: 'exchange_code' },
       })
+    } else {
+      signedUp = true
     }
   }
 
@@ -39,6 +47,9 @@ export async function GET(request: Request) {
   const redirectUrl = new URL(basePath, origin)
   if (errorMessage) {
     redirectUrl.searchParams.set('authError', errorMessage)
+  }
+  if (signedUp) {
+    redirectUrl.searchParams.set('signedUp', '1')
   }
 
   return NextResponse.redirect(redirectUrl)

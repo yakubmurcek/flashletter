@@ -12,6 +12,11 @@ vi.mock('@/lib/campaign-context', () => ({
   }),
 }))
 
+const trackMock = vi.fn()
+vi.mock('@/lib/analytics', () => ({
+  track: (...args: unknown[]) => trackMock(...args),
+}))
+
 import { CampaignService } from '@/lib/services/campaign.service'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 
@@ -36,6 +41,7 @@ describe('useEmailStreaming', () => {
     vi.restoreAllMocks()
     appendGeneratedEmailMock.mockReset()
     replaceGeneratedEmailsLocalMock.mockReset()
+    trackMock.mockReset()
   })
 
   it('initializes clean', () => {
@@ -145,6 +151,52 @@ describe('useEmailStreaming', () => {
     })
     expect(returned).toBeNull()
     expect(result.current.error).toBeNull()
+  })
+
+  it('fires first_email_streamed exactly once per stream session', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+      async (_url, _content, _cfg, onEvent) => {
+        onEvent({ type: 'start', total: 3 })
+        onEvent({ type: 'email', email: makeEmail(1) })
+        onEvent({ type: 'email', email: makeEmail(2) })
+        onEvent({ type: 'email', email: makeEmail(3) })
+        onEvent({ type: 'complete', emails: [] })
+        return []
+      },
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+    })
+
+    // 3 email events but only one funnel event — the metric is "did the user
+    // ever see an email arrive," not raw count. Re-fires would inflate the
+    // funnel and double-count time-to-first-email downstream.
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
+    expect(fired).toHaveLength(1)
+    expect(fired[0][1]).toEqual({ campaignId: 'camp-id' })
+  })
+
+  it('first_email_streamed re-arms across separate stream invocations', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+      async (_u, _c, _cfg, onEvent) => {
+        onEvent({ type: 'email', email: makeEmail(1) })
+        onEvent({ type: 'complete', emails: [] })
+        return []
+      },
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'a')
+    })
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'b')
+    })
+
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
+    expect(fired).toHaveLength(2)
   })
 
   it('aborts previous stream when called again', async () => {

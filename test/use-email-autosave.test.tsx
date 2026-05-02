@@ -25,6 +25,11 @@ vi.mock('@/lib/services/campaign-storage.service', () => ({
   },
 }))
 
+const trackMock = vi.fn()
+vi.mock('@/lib/analytics', () => ({
+  track: (...args: unknown[]) => trackMock(...args),
+}))
+
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 
@@ -43,6 +48,7 @@ describe('useEmailAutosave', () => {
     vi.useFakeTimers()
     saveVersionMock.mockReset().mockResolvedValue({})
     updateEmailDbMock.mockReset().mockResolvedValue(undefined)
+    trackMock.mockReset()
   })
 
   afterEach(() => {
@@ -199,6 +205,64 @@ describe('useEmailAutosave', () => {
     expect(saveVersionMock).not.toHaveBeenCalled()
     expect(updateEmail).toHaveBeenCalled()
     errSpy.mockRestore()
+  })
+
+  it('fires email_edited once per email id, even across multiple saves to the same id', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1), makeEmail(2)]
+    const { result, rerender } = renderHook(
+      ({ list }: { list: Email[] }) => useEmailAutosave(list, 'camp', updateEmail),
+      { initialProps: { list: emails } },
+    )
+
+    // First save on email 1 — should fire once.
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'A' })
+    })
+    rerender({ list: [{ ...emails[0], subject: 'A' } as Email, emails[1]] })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    // Second save on email 1 — must NOT fire again.
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'B' })
+    })
+    rerender({ list: [{ ...emails[0], subject: 'B' } as Email, emails[1]] })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    // Save on email 2 — distinct id, must fire its own event.
+    await act(async () => {
+      await result.current.saveEmail(2, { subject: 'C' })
+    })
+    rerender({
+      list: [{ ...emails[0], subject: 'B' } as Email, { ...emails[1], subject: 'C' } as Email],
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'email_edited')
+    expect(fired).toHaveLength(2)
+    expect(fired.map((c) => c[1])).toEqual([{ day: 1 }, { day: 2 }])
+  })
+
+  it('does not fire email_edited when skipVersioning=true (e.g. version restore)', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'restored' }, true)
+    })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'email_edited')
+    expect(fired).toHaveLength(0)
   })
 
   it('cleanup() clears pending debounced write', async () => {
