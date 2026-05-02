@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Download, History } from 'lucide-react'
+import { ArrowLeft, History, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/brand/brand-mark'
+import { SendTestDialog } from '@/components/editor/send-test-dialog'
 
 interface EditorHeaderProps {
   landingPageUrl?: string
@@ -12,6 +13,9 @@ interface EditorHeaderProps {
   versionCount: number
   campaignName?: string
   className?: string
+  campaignId?: string
+  selectedEmailDay?: number
+  selectedEmailSubject?: string
 }
 
 export function EditorHeader({
@@ -20,7 +24,12 @@ export function EditorHeader({
   versionCount,
   campaignName,
   className,
+  campaignId,
+  selectedEmailDay,
+  selectedEmailSubject,
 }: EditorHeaderProps) {
+  const canSendTest =
+    !!campaignId && typeof selectedEmailDay === 'number' && !!selectedEmailSubject
   return (
     <header
       className={cn('flex-shrink-0 relative z-50 bg-background border-b border-border', className)}
@@ -80,14 +89,31 @@ export function EditorHeader({
                 )}
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+            {canSendTest ? (
+              <SendTestDialog
+                campaignId={campaignId!}
+                emailDay={selectedEmailDay!}
+                emailSubject={selectedEmailSubject!}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Inbox className="w-4 h-4" />
+                    <span className="hidden sm:inline">Send to my inbox</span>
+                  </Button>
+                }
+              />
+            ) : (
+              <Button
+                size="sm"
+                className="gap-2"
+                disabled
+              >
+                <Inbox className="w-4 h-4" />
+                <span className="hidden sm:inline">Send to my inbox</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

@@ -86,6 +86,23 @@ export const scrapeLandingResponseSchema = z.object({
   analysis: landingPageAnalysisSchema.optional(),
 })
 
+// Send-test-email API
+//
+// `recipientEmail` is required for anonymous Supabase users (who have no
+// auth.users.email yet); for authenticated users we ignore it and send to
+// their registered address so a typo in the dialog can't redirect the test.
+export const sendTestEmailRequestSchema = z.object({
+  campaignId: z.string().uuid(),
+  emailDay: z.number().int().min(1).max(30),
+  recipientEmail: z.string().email().max(254).optional(),
+})
+
+export const sendTestEmailResponseSchema = z.object({
+  ok: z.literal(true),
+  sentTo: z.string().email(),
+  upgradeStarted: z.boolean(),
+})
+
 /**
  * Exported types
  */
@@ -96,3 +113,5 @@ export type ScrapeLandingResponse = z.infer<typeof scrapeLandingResponseSchema>
 export type EnhancedMetadata = z.infer<typeof enhancedMetadataSchema>
 export type ScrapeStats = z.infer<typeof scrapeStatsSchema>
 export type GenerateEmailsResponse = z.infer<typeof generateEmailsResponseSchema>
+export type SendTestEmailRequest = z.infer<typeof sendTestEmailRequestSchema>
+export type SendTestEmailResponse = z.infer<typeof sendTestEmailResponseSchema>

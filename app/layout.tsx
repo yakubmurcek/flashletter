@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { GeistSans } from 'geist/font/sans'
 import { GeistMono } from 'geist/font/mono'
 import { Analytics } from '@vercel/analytics/next'
+import { Toaster } from 'sonner'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CampaignProvider } from '@/lib/campaign-context'
 import { RegionProvider } from '@/lib/utils/location-detection'
@@ -124,6 +125,11 @@ export default function RootLayout({
           <RegionProvider>
             <CampaignProvider>{children}</CampaignProvider>
           </RegionProvider>
+          <Toaster
+            position="bottom-right"
+            richColors
+            closeButton
+          />
           <Analytics />
         </ThemeProvider>
       </body>

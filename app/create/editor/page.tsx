@@ -333,6 +333,9 @@ function EditorPageContent() {
         }
         versionCount={versionCounts[selectedEmailId] || 0}
         campaignName={campaignName || undefined}
+        campaignId={campaignIdFromUrl ?? undefined}
+        selectedEmailDay={selectedEmail?.day}
+        selectedEmailSubject={selectedEmail?.subject}
         className={cn('transition-all duration-300', showChat ? 'mr-96 pr-4' : 'mr-0')}
       />
 
