@@ -2,8 +2,12 @@
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
 interface UpgradePromptProps {
@@ -17,12 +21,20 @@ export function UpgradePrompt({
   redirectTo = '/create',
   initialError = null,
 }: UpgradePromptProps) {
-  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const [oauthLoading, setOauthLoading] = useState(false)
+  const [emailLoading, setEmailLoading] = useState(false)
   const [error, setError] = useState<string | null>(initialError)
+  const [pendingMessage, setPendingMessage] = useState<string | null>(null)
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+
+  const anyLoading = oauthLoading || emailLoading
 
   const handleGoogleSignUp = async () => {
-    setLoading(true)
+    setOauthLoading(true)
     setError(null)
+    setPendingMessage(null)
 
     try {
       const supabase = createClient()
@@ -45,7 +57,47 @@ export function UpgradePrompt({
     } catch (err) {
       console.error('Error linking identity:', err)
       setError(err instanceof Error ? err.message : 'Failed to connect Google account')
-      setLoading(false)
+      setOauthLoading(false)
+    }
+  }
+
+  // Upgrades the current anonymous user to a real email-credentialed account
+  // by attaching email + password via `updateUser`. Same `user.id` is preserved
+  // (that's the whole point — campaigns stay linked), no OAuth round-trip
+  // required, which makes the flow scriptable end-to-end for testing.
+  //
+  // If the project has email confirmations enabled, `updateUser` returns
+  // success but leaves the session in a pending state until the confirmation
+  // link is clicked. We detect this via `data.user?.is_anonymous` still being
+  // true and surface a clear message rather than redirecting into the
+  // post-signup experience prematurely.
+  const handleEmailUpgrade = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailLoading(true)
+    setError(null)
+    setPendingMessage(null)
+
+    try {
+      const supabase = createClient()
+      const { data, error } = await supabase.auth.updateUser({ email, password })
+
+      if (error) throw error
+
+      const upgraded = data.user && data.user.is_anonymous === false
+      if (upgraded) {
+        router.push(redirectTo)
+        return
+      }
+
+      // Confirmation flow — auth completes when the user clicks the email link.
+      setPendingMessage(
+        'Check your inbox for a confirmation link to finish setting up your account. Your campaigns are saved.',
+      )
+    } catch (err) {
+      console.error('Error upgrading anonymous user with email:', err)
+      setError(err instanceof Error ? err.message : 'Failed to create account')
+    } finally {
+      setEmailLoading(false)
     }
   }
 
@@ -78,13 +130,19 @@ export function UpgradePrompt({
             </div>
           )}
 
+          {pendingMessage && (
+            <div className="p-3 text-sm text-foreground bg-primary/10 border border-primary/30 rounded-md">
+              {pendingMessage}
+            </div>
+          )}
+
           <Button
             onClick={handleGoogleSignUp}
-            disabled={loading}
+            disabled={anyLoading}
             size="lg"
             className="w-full"
           >
-            {loading ? (
+            {oauthLoading ? (
               <>
                 <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                 Connecting...
@@ -97,6 +155,59 @@ export function UpgradePrompt({
               </>
             )}
           </Button>
+
+          <div className="relative">
+            <Separator />
+            <span className="absolute inset-x-0 -top-2 flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
+              <span className="bg-card px-2">Or with email</span>
+            </span>
+          </div>
+
+          <form
+            onSubmit={handleEmailUpgrade}
+            className="space-y-3"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="upgrade-email">Email</Label>
+              <Input
+                id="upgrade-email"
+                type="email"
+                placeholder="you@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                disabled={anyLoading}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="upgrade-password">Password</Label>
+              <Input
+                id="upgrade-password"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                disabled={anyLoading}
+                minLength={6}
+              />
+            </div>
+            <Button
+              type="submit"
+              variant="outline"
+              disabled={anyLoading}
+              className="w-full"
+            >
+              {emailLoading ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Creating account...
+                </>
+              ) : (
+                'Create account'
+              )}
+            </Button>
+          </form>
 
           <p className="text-xs text-center text-muted-foreground">
             Your campaign will be saved and linked to your new account.
