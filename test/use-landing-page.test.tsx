@@ -214,9 +214,7 @@ describe('useLandingPage', () => {
     expect(result.current.lastResultRef.current).toBe('success')
 
     // Real failure (non-Abort throw).
-    vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockRejectedValueOnce(
-      new Error('boom'),
-    )
+    vi.spyOn(CampaignService, 'scrapeLandingPageStream').mockRejectedValueOnce(new Error('boom'))
     await act(async () => {
       await result.current.analyzeLandingPage('https://example.com')
     })

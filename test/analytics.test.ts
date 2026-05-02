@@ -17,12 +17,7 @@ vi.mock('posthog-js', () => ({
   },
 }))
 
-import {
-  initPostHog,
-  track,
-  identify,
-  _resetAnalyticsForTests,
-} from '@/lib/analytics'
+import { initPostHog, track, identify, _resetAnalyticsForTests } from '@/lib/analytics'
 
 beforeEach(() => {
   initMock.mockReset()
@@ -156,9 +151,7 @@ describe('lib/analytics', () => {
       // First conversion in this browser.
       identify('anon-1', { is_anonymous: true })
       identify('user-1', { is_anonymous: false })
-      expect(
-        captureMock.mock.calls.filter((c) => c[0] === 'signup_completed'),
-      ).toHaveLength(1)
+      expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(1)
 
       // User signs out and a fresh anon session begins. They sign in again.
       // Funnel-grade semantics: this browser already converted; don't count
@@ -166,9 +159,7 @@ describe('lib/analytics', () => {
       identify('anon-2', { is_anonymous: true })
       identify('user-2', { is_anonymous: false })
 
-      expect(
-        captureMock.mock.calls.filter((c) => c[0] === 'signup_completed'),
-      ).toHaveLength(1)
+      expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(1)
     })
 
     it('treats undefined traits as identified (does not set anon marker)', () => {
