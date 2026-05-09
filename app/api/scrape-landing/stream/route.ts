@@ -156,7 +156,10 @@ export async function POST(req: NextRequest) {
                   category: 'scraper',
                   message: `Dynamic scraping failed for ${url}, falling back to static`,
                   level: 'warning',
-                  data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+                  data: {
+                    error:
+                      playwrightError instanceof Error ? playwrightError.message : playwrightError,
+                  },
                 })
                 const scraped = extractTextFromHTML(html)
                 metadata = extractMetadata(html, fetchedUrl)

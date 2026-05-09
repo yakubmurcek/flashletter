@@ -128,9 +128,9 @@ export async function POST(req: NextRequest) {
           },
         )
       } catch (saveError) {
-          Sentry.captureException(saveError, {
-            tags: { api_route: '/api/generate-emails', action: 'save_emails' },
-          })
+        Sentry.captureException(saveError, {
+          tags: { api_route: '/api/generate-emails', action: 'save_emails' },
+        })
         // Fall back to returning unsaved emails so the user can proceed
         return NextResponse.json(
           {

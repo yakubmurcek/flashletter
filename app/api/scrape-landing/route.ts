@@ -110,7 +110,9 @@ export async function POST(req: NextRequest) {
           category: 'scraper',
           message: `Forced dynamic scraping failed for ${url}, falling back to static`,
           level: 'warning',
-          data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+          data: {
+            error: playwrightError instanceof Error ? playwrightError.message : playwrightError,
+          },
         })
         // Fallback to static scraping if forced dynamic fails
         const response = await safeFetch(url, {
@@ -173,7 +175,9 @@ export async function POST(req: NextRequest) {
             category: 'scraper',
             message: `Dynamic scraping failed for ${url}, falling back to static`,
             level: 'warning',
-            data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+            data: {
+              error: playwrightError instanceof Error ? playwrightError.message : playwrightError,
+            },
           })
           // Fallback to static scraping if Playwright fails
           const scrapedContent = extractTextFromHTML(html)
