@@ -209,35 +209,29 @@ export class CampaignStorageService {
     }
     const incomingDays = new Set(emails.map((e) => e.day))
 
-    const result: Email[] = []
+    let result: Email[] = []
 
-    for (const email of emails) {
-      const existingId = existingIdByDay.get(email.day)
-      const payload = {
-        day: email.day,
-        subject: email.subject,
-        preview: email.preview,
-        content: email.content,
-      }
+    if (emails.length > 0) {
+      const upsertData = emails.map((email) => {
+        const existingId = existingIdByDay.get(email.day)
+        return {
+          ...(existingId ? { id: existingId } : {}),
+          campaign_id: campaignId,
+          day: email.day,
+          subject: email.subject,
+          preview: email.preview,
+          content: email.content,
+        }
+      })
 
-      if (existingId) {
-        const { data, error } = await this.supabase
-          .from('emails')
-          .update(payload)
-          .eq('id', existingId)
-          .select()
-          .single()
-        if (error) throw error
-        result.push(mapDbEmailToDomain(dbEmailRowSchema.parse(data)))
-      } else {
-        const { data, error } = await this.supabase
-          .from('emails')
-          .insert({ ...payload, campaign_id: campaignId })
-          .select()
-          .single()
-        if (error) throw error
-        result.push(mapDbEmailToDomain(dbEmailRowSchema.parse(data)))
-      }
+      const { data, error: upsertError } = await this.supabase
+        .from('emails')
+        .upsert(upsertData)
+        .select()
+
+      if (upsertError) throw upsertError
+
+      result = (data || []).map((row) => mapDbEmailToDomain(dbEmailRowSchema.parse(row)))
     }
 
     // NOTE on FK behavior: this DELETE assumes `email_versions.email_id` has

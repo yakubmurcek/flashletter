@@ -232,37 +232,28 @@ describe('CampaignStorageService', () => {
   })
 
   describe('saveEmails', () => {
-    it('updates an existing row in place when day matches and inserts new ones', async () => {
-      // Audit-fix #X rewrite: read existing → UPDATE-by-day → INSERT-missing →
-      // DELETE-removed. We need to simulate three different from() responses:
+    it('updates an existing row in place when day matches and inserts new ones using batch upsert', async () => {
+      // Strategy: read existing → batch UPSERT → DELETE-removed.
+      // We need to simulate two different from() responses:
       //   1. select().eq()        → existingRows lookup
-      //   2. update().eq().select().single() → for day 1 (already exists)
-      //   3. insert(...).select().single()   → for day 2 (new)
+      //   2. upsert().select()    → batch upsert
       // No DELETE call because all incoming days match or are added.
       const existingRows = [{ id: EMAIL_ID, day: 1 }]
+      const upsertResult = [
+        { ...baseEmailRow, id: EMAIL_ID, day: 1 },
+        { ...baseEmailRow, id: EMAIL_ID_2, day: 2, subject: 'Day 2' },
+      ]
 
-      // Order matters: from() is called once for the read, then once per email.
       mockSupabase.from
         // 1. read existing
         .mockReturnValueOnce({
           select: vi.fn().mockReturnThis(),
           eq: vi.fn().mockResolvedValue({ data: existingRows, error: null }),
         })
-        // 2. update day 1 (existing)
+        // 2. batch upsert
         .mockReturnValueOnce({
-          update: vi.fn().mockReturnThis(),
-          eq: vi.fn().mockReturnThis(),
-          select: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: { ...baseEmailRow, day: 1 }, error: null }),
-        })
-        // 3. insert day 2 (new)
-        .mockReturnValueOnce({
-          insert: vi.fn().mockReturnThis(),
-          select: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({
-            data: { ...baseEmailRow, id: EMAIL_ID_2, day: 2, subject: 'Day 2' },
-            error: null,
-          }),
+          upsert: vi.fn().mockReturnThis(),
+          select: vi.fn().mockResolvedValue({ data: upsertResult, error: null }),
         })
 
       const emails = [
@@ -275,6 +266,7 @@ describe('CampaignStorageService', () => {
       expect(result).toHaveLength(2)
       expect(result[0].day).toBe(1)
       expect(result[1].day).toBe(2)
+      expect(mockSupabase.from).toHaveBeenCalledWith('emails')
     })
   })
 
