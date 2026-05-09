@@ -65,7 +65,6 @@ export async function POST(request: NextRequest) {
     const { error } = await supabase.from('waitlist').delete().eq('email', resolvedEmail)
 
     if (error) {
-      console.error('Unsubscribe error:', error)
       Sentry.captureException(error, {
         tags: { api_route: '/api/waitlist/unsubscribe' },
       })
@@ -81,7 +80,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
 
-    console.error('Unsubscribe API error:', error)
     Sentry.captureException(error, {
       tags: { api_route: '/api/waitlist/unsubscribe' },
     })

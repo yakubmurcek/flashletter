@@ -78,8 +78,6 @@ export async function POST(request: NextRequest) {
       .select('*', { count: 'exact', head: true })
 
     if (error) {
-      console.error('Waitlist signup error:', error)
-
       // Report to Sentry
       Sentry.captureException(error, {
         tags: { api_route: '/api/waitlist', action: 'signup' },
@@ -104,8 +102,6 @@ export async function POST(request: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
     }
-
-    console.error('Waitlist API error:', error)
 
     // Report to Sentry
     Sentry.captureException(error, {

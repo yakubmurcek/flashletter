@@ -36,8 +36,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error deleting campaign:', error)
-
     // Report to Sentry
     Sentry.captureException(error, {
       tags: { api_route: '/api/campaigns/[id]', action: 'delete' },

@@ -71,18 +71,24 @@ export async function GET(request: NextRequest) {
 
     // For local development, default to US (simpler experience)
     if (!countryCode || countryCode === 'XX') {
-      console.log('No country code detected, defaulting to US for development')
+      Sentry.addBreadcrumb({
+        category: 'region-detection',
+        message: 'No country code detected, defaulting to US for development',
+        level: 'info',
+      })
       return NextResponse.json(createRegionInfo('US'))
     }
 
     const regionInfo = createRegionInfo(countryCode)
 
-    console.log(`Detected country: ${countryCode}, Region: ${regionInfo.region}`)
+    Sentry.addBreadcrumb({
+      category: 'region-detection',
+      message: `Detected country: ${countryCode}, Region: ${regionInfo.region}`,
+      level: 'info',
+    })
 
     return NextResponse.json(regionInfo)
   } catch (error) {
-    console.error('Region detection error:', error)
-
     // Report to Sentry
     Sentry.captureException(error, {
       level: 'warning',

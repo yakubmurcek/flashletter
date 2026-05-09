@@ -194,7 +194,6 @@ export async function POST(req: NextRequest) {
             const campaignService = new CampaignStorageService(supabase)
             saved = await campaignService.saveEmails(campaignId, allEmails)
           } catch (saveError) {
-            console.error('Failed to save streamed emails:', saveError)
             Sentry.captureException(saveError, {
               tags: {
                 error_type: 'save_streamed_emails',
@@ -210,8 +209,6 @@ export async function POST(req: NextRequest) {
 
         send({ type: 'complete', emails: saved, warning: saveWarning })
       } catch (error) {
-        console.error('Generate Emails Stream Error:', error)
-
         let message = 'Failed to generate emails'
         if (error && typeof error === 'object' && 'status' in error && error.status === 429) {
           message = 'Too many requests to AI service. Please try again later.'

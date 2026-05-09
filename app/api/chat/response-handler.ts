@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { z } from 'zod'
 import { emailEditSchema } from '@/lib/schemas'
 
@@ -36,7 +37,12 @@ export function parseOpenAIResponse(response: OpenAIResponse): ChatResponse {
   }
 
   if (process.env.NODE_ENV === 'development') {
-    console.log('OpenAI Response:', response.output_text)
+    Sentry.addBreadcrumb({
+      category: 'openai',
+      message: 'OpenAI Response received',
+      level: 'debug',
+      data: { response: response.output_text },
+    })
   }
 
   // Two failure modes to handle: (1) the model returned non-JSON prose, and
@@ -57,7 +63,13 @@ export function parseOpenAIResponse(response: OpenAIResponse): ChatResponse {
 
   const parsed = parsedChatSchema.safeParse(raw)
   if (!parsed.success) {
-    console.error('Chat response shape mismatch:', parsed.error.flatten())
+    Sentry.captureMessage('Chat response shape mismatch', {
+      level: 'error',
+      extra: {
+        errors: parsed.error.flatten(),
+        responseText: response.output_text,
+      },
+    })
     return {
       message: response.output_text,
       shouldEdit: false,

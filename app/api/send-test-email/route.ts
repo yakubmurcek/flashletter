@@ -72,11 +72,13 @@ export async function POST(req: NextRequest) {
     const apiKey = process.env.RESEND_API_KEY
     const fromAddress = process.env.RESEND_FROM_ADDRESS
     if (!apiKey || !fromAddress) {
-      console.error(
-        '[send-test-email] FATAL: RESEND_API_KEY or RESEND_FROM_ADDRESS missing. ' +
-          'Cannot send test emails until these are configured.',
-      )
-      Sentry.captureMessage('send-test-email: Resend env vars missing', { level: 'error' })
+      Sentry.captureMessage('send-test-email: Resend env vars missing', {
+        level: 'error',
+        extra: {
+          message:
+            'FATAL: RESEND_API_KEY or RESEND_FROM_ADDRESS missing. Cannot send test emails until these are configured.',
+        },
+      })
       return NextResponse.json({ error: 'Email sending not configured' }, { status: 500 })
     }
 
@@ -104,7 +106,6 @@ export async function POST(req: NextRequest) {
     })
 
     if (sendError) {
-      console.error('[send-test-email] Resend error:', sendError)
       Sentry.captureMessage('send-test-email: Resend rejected send', {
         level: 'error',
         extra: { sendError, targetEmail, campaignId, emailDay },
@@ -127,7 +128,6 @@ export async function POST(req: NextRequest) {
       if (updateError) {
         // Don't fail the request — the test send already succeeded. Log so we
         // notice if the upgrade path is consistently broken.
-        console.warn('[send-test-email] updateUser failed:', updateError.message)
         Sentry.captureMessage('send-test-email: anon upgrade updateUser failed', {
           level: 'warning',
           extra: { error: updateError.message },
@@ -151,7 +151,6 @@ export async function POST(req: NextRequest) {
       ),
     })
   } catch (error) {
-    console.error('[send-test-email] Unhandled error:', error)
     Sentry.captureException(error, { tags: { api_route: '/api/send-test-email' } })
 
     if (error instanceof z.ZodError) {

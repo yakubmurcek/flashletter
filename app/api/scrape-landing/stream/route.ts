@@ -152,10 +152,12 @@ export async function POST(req: NextRequest) {
                 finalUrl = result.finalUrl
                 loadTime = result.loadTime
               } catch (playwrightError) {
-                console.warn(
-                  `Dynamic scraping failed for ${url}, falling back to static:`,
-                  playwrightError,
-                )
+                Sentry.addBreadcrumb({
+                  category: 'scraper',
+                  message: `Dynamic scraping failed for ${url}, falling back to static`,
+                  level: 'warning',
+                  data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+                })
                 const scraped = extractTextFromHTML(html)
                 metadata = extractMetadata(html, fetchedUrl)
                 content = scraped.content
@@ -204,7 +206,6 @@ export async function POST(req: NextRequest) {
         try {
           analysis = await analyzeLandingPage({ url: finalUrl, content, metadata })
         } catch (analysisError) {
-          console.error('Landing page analysis failed:', analysisError)
           Sentry.captureException(analysisError, {
             tags: { api_route: '/api/scrape-landing/stream', stage: 'analysis' },
           })
@@ -230,7 +231,6 @@ export async function POST(req: NextRequest) {
 
         send({ type: 'complete', data: validated })
       } catch (error) {
-        console.error('Scrape Landing Stream Error:', error)
         Sentry.captureException(error, {
           tags: { api_route: '/api/scrape-landing/stream' },
         })

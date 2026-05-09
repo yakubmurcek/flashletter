@@ -71,8 +71,9 @@ export async function POST(req: NextRequest) {
       ),
     })
   } catch (error) {
-    console.error('Chat API Error:', error)
-    console.error('Error details:', error instanceof Error ? error.message : error)
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/chat' },
+    })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

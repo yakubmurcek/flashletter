@@ -128,7 +128,9 @@ export async function POST(req: NextRequest) {
           },
         )
       } catch (saveError) {
-        console.error('Failed to save emails to Supabase:', saveError)
+          Sentry.captureException(saveError, {
+            tags: { api_route: '/api/generate-emails', action: 'save_emails' },
+          })
         // Fall back to returning unsaved emails so the user can proceed
         return NextResponse.json(
           {
@@ -161,7 +163,9 @@ export async function POST(req: NextRequest) {
       },
     )
   } catch (error) {
-    console.error('Generate Emails API Error:', error)
+    Sentry.captureException(error, {
+      tags: { api_route: '/api/generate-emails' },
+    })
 
     if (error instanceof z.ZodError) {
       return NextResponse.json(

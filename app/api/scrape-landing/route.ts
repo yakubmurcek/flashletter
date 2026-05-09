@@ -106,10 +106,12 @@ export async function POST(req: NextRequest) {
           loadTime: playwrightResult.loadTime,
         }
       } catch (playwrightError) {
-        console.warn(
-          `Forced dynamic scraping failed for ${url}, falling back to static:`,
-          playwrightError,
-        )
+        Sentry.addBreadcrumb({
+          category: 'scraper',
+          message: `Forced dynamic scraping failed for ${url}, falling back to static`,
+          level: 'warning',
+          data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+        })
         // Fallback to static scraping if forced dynamic fails
         const response = await safeFetch(url, {
           headers: {
@@ -151,7 +153,11 @@ export async function POST(req: NextRequest) {
 
       // Check if we should use dynamic scraping instead
       if (shouldUseDynamicScraping(url, html)) {
-        console.log(`Switching to dynamic scraping for ${url}`)
+        Sentry.addBreadcrumb({
+          category: 'scraper',
+          message: `Switching to dynamic scraping for ${url}`,
+          level: 'info',
+        })
         try {
           const playwrightResult = await scrapeWithPlaywright(url)
           scrapeResult = {
@@ -163,10 +169,12 @@ export async function POST(req: NextRequest) {
             loadTime: playwrightResult.loadTime,
           }
         } catch (playwrightError) {
-          console.warn(
-            `Dynamic scraping failed for ${url}, falling back to static:`,
-            playwrightError,
-          )
+          Sentry.addBreadcrumb({
+            category: 'scraper',
+            message: `Dynamic scraping failed for ${url}, falling back to static`,
+            level: 'warning',
+            data: { error: playwrightError instanceof Error ? playwrightError.message : playwrightError },
+          })
           // Fallback to static scraping if Playwright fails
           const scrapedContent = extractTextFromHTML(html)
           const metadata = extractMetadata(html, finalUrl)
@@ -235,8 +243,6 @@ export async function POST(req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error('Scrape Landing API Error:', error)
-
     // Report to Sentry
     Sentry.captureException(error, {
       tags: { api_route: '/api/scrape-landing' },
