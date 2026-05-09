@@ -115,7 +115,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // For anon users, kick off the email-link upgrade in parallel with the
+    // For anon users, kick off the email-link upgrade after the successful
     // test send. updateUser({ email }) sends a confirmation magic link to the
     // address — clicking it links the email to the existing user.id, so all
     // their work persists. We don't await success/failure of the link signal

@@ -247,13 +247,28 @@ describe('POST /api/send-test-email', () => {
   })
 
   it('returns 502 when Resend rejects the send', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
+    })
     resendSendMock.mockResolvedValue({ error: { message: 'invalid from domain' } })
 
-    const res = await POST(buildRequest(validBody) as never)
+    const res = await POST(buildRequest({ ...validBody, recipientEmail: 'new@user.com' }) as never)
 
     expect(res.status).toBe(502)
     // Bug guard: do not start the upgrade signal when the actual send failed —
     // otherwise an anon user's email gets linked despite no test ever arriving.
+    expect(updateUserMock).not.toHaveBeenCalled()
+  })
+
+  it('returns 500 when Resend throws', async () => {
+    getUserMock.mockResolvedValue({
+      data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
+    })
+    resendSendMock.mockRejectedValue(new Error('Resend down'))
+
+    const res = await POST(buildRequest({ ...validBody, recipientEmail: 'new@user.com' }) as never)
+
+    expect(res.status).toBe(500)
     expect(updateUserMock).not.toHaveBeenCalled()
   })
 
