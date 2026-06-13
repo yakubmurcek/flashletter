@@ -4,6 +4,7 @@
 around Flashletter (not necessarily self-serve SaaS revenue).
 
 **Decided context (2026-06-13):**
+
 - Reachable audience today: **basically none** (<500 followers, no list, thin network).
 - This document is the strategy of record; supporting assets (sales page, outreach
   templates, delivery spec) to be built when execution begins.
@@ -12,7 +13,7 @@ around Flashletter (not necessarily self-serve SaaS revenue).
 
 ## TL;DR
 
-You can't sell a half-built SaaS to strangers for $1k in 30 days, but you *can*
+You can't sell a half-built SaaS to strangers for $1k in 30 days, but you _can_
 sell ~4 founders a done-for-you email sequence that Flashletter 80%-writes for
 them. **Stop building billing. Create a Stripe Payment Link today. DM 50 founders
 this week.**
@@ -30,7 +31,7 @@ Links / Lemon Squeezy / Gumroad) and sell a **service**, not a login.
 ## Why self-serve SaaS fails the 30-day test (the math)
 
 Pro is $19/mo; you only collect month-1 cash → need **53 paying subs in 30 days**.
-Cold visitor → paid is generously 0.5–1% → **5,300–10,000 targeted visitors**, *after*
+Cold visitor → paid is generously 0.5–1% → **5,300–10,000 targeted visitors**, _after_
 building Stripe + paywall logic. With no audience, this is near-impossible. Rejected.
 
 ---
@@ -40,7 +41,7 @@ building Stripe + paywall logic. With no audience, this is near-impossible. Reje
 - **Realistic?** Yes — but only by switching vehicles from SaaS to a founder-led
   productized service. As DFY, $1k is ~50/50 and $500 is the base case.
 - **Biggest obstacles:** (1) no payment rail exists → solve week 1 with no-code;
-  (2) no audience → revenue comes from *you reaching out*, not inbound;
+  (2) no audience → revenue comes from _you reaching out_, not inbound;
   (3) solo time → every dollar is labor-bound → use high-ticket/low-volume.
 - **Assumptions that must hold:** you send 30–50 personalized outreach/week and get
   on calls; output is good enough that a $299 buyer says "worth it" (audit confirms
@@ -52,15 +53,16 @@ building Stripe + paywall logic. With no audience, this is near-impossible. Reje
 ## 2. Revenue scenarios
 
 Offers, all collected via **no-code payment links** (zero billing code):
+
 - **DFY** — done-for-you 5-email sequence, delivered in 48h: **$299**
 - **DFY Premium** — 2 sequences / full launch pack: **$499**
 - **Founding Member LTD** — lifetime Pro access (Gumroad/Lemon Squeezy): **$79 one-time**
 
-| Scenario | Mix | Cash | Customers | Requires |
-|---|---|---|---|---|
-| **Conservative** | 4 × DFY | **$1,196** | 4 | ~150–250 targeted outreach → ~15–20 convos → 25% close. No virality needed. Most controllable. |
-| **Expected** | 2 × DFY + 6 × LTD | **$1,072** | 8 | ~100 outreach (→2 DFY) + one community launch (~400–600 visits @ ~1.5% LTD). |
-| **Aggressive** | 3 × DFY + 1 × Premium + 15 × LTD | **$2,581** | 19 | A launch that pops (~2,000+ visits) + sustained outreach. High variance, audience-dependent. |
+| Scenario         | Mix                              | Cash       | Customers | Requires                                                                                       |
+| ---------------- | -------------------------------- | ---------- | --------- | ---------------------------------------------------------------------------------------------- |
+| **Conservative** | 4 × DFY                          | **$1,196** | 4         | ~150–250 targeted outreach → ~15–20 convos → 25% close. No virality needed. Most controllable. |
+| **Expected**     | 2 × DFY + 6 × LTD                | **$1,072** | 8         | ~100 outreach (→2 DFY) + one community launch (~400–600 visits @ ~1.5% LTD).                   |
+| **Aggressive**   | 3 × DFY + 1 × Premium + 15 × LTD | **$2,581** | 19        | A launch that pops (~2,000+ visits) + sustained outreach. High variance, audience-dependent.   |
 
 **With no audience, lean on the Conservative (pure-outreach) path** — it needs only
 ~1 customer every 7 days and depends on nothing you don't control.
@@ -79,12 +81,13 @@ touches**. Launch visitor → $79 LTD: 1–2%.
 > $79 Founding Member lifetime deal in parallel as a secondary volume play.**
 
 **Why it beats the alternatives:**
+
 1. Sidesteps the #1 blocker — no Stripe code, no paywall logic. A Payment Link
    collects real cash this week. Week 1 = selling, not coding billing.
 2. Needs only 3–5 customers → robust to low conversion.
 3. The product does the hard 80% (scrape → analyze → generate → test-send all work).
    You add polish and hit send → ~2 hrs/fulfillment, high margin.
-4. You *are* the ICP's solution — "for founders who hate writing from scratch,"
+4. You _are_ the ICP's solution — "for founders who hate writing from scratch,"
    delivered fully today, not "here's a tool, go DIY."
 5. The audience is finite and reachable without a following (Product Hunt, "launched"
    tweets, IndieHackers milestones, r/SaaS).
@@ -100,6 +103,7 @@ pre-sale kept only as an order bump.
 ## 4. 30-day execution plan (North-star KPI: cash collected)
 
 **Week 1 — Make money collectable + build the list (target: first $299)**
+
 - Day 1: Stripe Payment Links for $299 / $499 + Gumroad/Lemon Squeezy $79 LTD. One-page
   sales page (Notion/Carrd fastest).
 - Day 1–2: Write offer + 3 outreach templates + a repeatable delivery spec.
@@ -112,16 +116,19 @@ pre-sale kept only as an order bump.
 - KPIs: 100 leads, 50 outreach, 8%+ reply, ≥1 sale.
 
 **Week 2 — Systematize outreach + launch (cumulative $600–900)**
+
 - 50 more outreach (A/B-tested). Public LTD launch (IndieHackers + r/SaaS + X thread
   with a real before/after). Fulfill; collect testimonials publicly.
 - KPIs: 2nd–3rd DFY, first 2–4 LTDs, ≥1 public case study.
 
 **Week 3 — Double down on what converted (cumulative $900–1,200, cross $1k)**
+
 - Pour time into the channel that produced cash (usually outreach). Order bump: offer
   free-sample non-buyers the $79 LTD. Ask happy customers for 1 referral each.
 - KPIs: cross **$1,000**; 4+ DFY equivalent.
 
 **Week 4 — Harvest + convert proof into the SaaS foundation (stretch $1,500–2,000)**
+
 - Deadline-driven final push ("closing Founding Member pricing Friday"). Package all
   testimonials onto the real landing page. Decision point: if DFY demand is strong,
   that's a real solo $5–15k/mo business; if LTD popped, build real Stripe billing next.
@@ -139,6 +146,7 @@ landing page`, `"finally live"`, `#buildinpublic`), recently-funded micro-startu
 **Wedge = give value first:** run their real URL through Flashletter, send email #1 free.
 
 **Template A — cold (free sample hook):**
+
 > Subject: made you the first email of your welcome sequence
 >
 > Hey [Name] — saw you launched [Product]. Loved the [specific detail].
@@ -151,11 +159,13 @@ landing page`, `"finally live"`, `#buildinpublic`), recently-funded micro-startu
 > [their ESP], in 48 hours. Want the other 4?
 
 **Template B — close (after reply):**
+
 > Glad it landed. I write your full 5-email sequence (welcome → story → social proof →
 > objection → CTA), matched to your voice, in 48h. **$299, full refund if you don't
 > love it.** Taking 10 founders this month — want in? [Stripe Payment Link]
 
 **Template C — LTD pivot (DIY types):**
+
 > Totally get it. If you'd rather DIY, I'm opening lifetime access at founder pricing —
 > **$79 once, never pay again** (will be $19/mo). First 25 only: [link]
 
