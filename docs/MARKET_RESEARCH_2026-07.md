@@ -16,7 +16,7 @@ everyone procrastinates"). But "AI writes your email sequence from your website"
 $0/mo), Hoppy Copy owns the email-copy-AI positioning ($29–99/mo), every ESP has
 bolted on AI writing, and ChatGPT does a passable version for free. Flashletter is
 viable **as a wedge, not as the whole product**. The one-shot generation is the
-acquisition hook; the business has to come from what happens *after* generation:
+acquisition hook; the business has to come from what happens _after_ generation:
 deployment into the user's ESP, and recurring lifecycle-email work. As-is, the
 product has a churn-shaped hole — a welcome sequence is written once and runs
 forever, which is a one-time-purchase value shape being sold (implicitly) as a
@@ -28,11 +28,11 @@ subscription.
 
 ### Direct: AI sequence generation
 
-| Competitor | What they do | Pricing | Threat level |
-|---|---|---|---|
-| **Sequenzy** | Parses your website at signup, generates full multi-email sequences (subject lines, body, timing) — **and is an ESP** (sends, unlimited contacts, transactional included) | Free tier (2,500 emails/mo), paid from $19/mo | **High.** Same generation trick + they own the send. Aggressive programmatic SEO — their own comparison/review/listicle pages dominate the SERPs for every relevant query. |
-| **Hoppy Copy** | 27-tool AI email copywriting suite: sequences, newsletters, competitor email spying, brand voices | $29 / $49 / $99 per month | **Medium.** Established, broad, copy-only (no deploy). Their price points anchor what "AI email copy" is worth. |
-| **ChatGPT / Claude** | "Here's my landing page, write me a 5-email welcome sequence" | Free / $20/mo they already pay | **Highest, and unbeatable on copy quality alone.** The answer must be workflow, not words. |
+| Competitor           | What they do                                                                                                                                                              | Pricing                                       | Threat level                                                                                                                                                               |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sequenzy**         | Parses your website at signup, generates full multi-email sequences (subject lines, body, timing) — **and is an ESP** (sends, unlimited contacts, transactional included) | Free tier (2,500 emails/mo), paid from $19/mo | **High.** Same generation trick + they own the send. Aggressive programmatic SEO — their own comparison/review/listicle pages dominate the SERPs for every relevant query. |
+| **Hoppy Copy**       | 27-tool AI email copywriting suite: sequences, newsletters, competitor email spying, brand voices                                                                         | $29 / $49 / $99 per month                     | **Medium.** Established, broad, copy-only (no deploy). Their price points anchor what "AI email copy" is worth.                                                            |
+| **ChatGPT / Claude** | "Here's my landing page, write me a 5-email welcome sequence"                                                                                                             | Free / $20/mo they already pay                | **Highest, and unbeatable on copy quality alone.** The answer must be workflow, not words.                                                                                 |
 
 ### Indirect: ESPs with built-in AI
 
@@ -44,15 +44,15 @@ subscription.
   a single prompt.
 
 **Implication:** any value that lives purely in "we generate good copy" erodes
-monthly. Value that lives in *workflow, deployment, and data feedback* does not.
+monthly. Value that lives in _workflow, deployment, and data feedback_ does not.
 
 ### What nobody in the indie segment does well
 
-1. **Copy → live sequence in *your existing* ESP.** Hoppy stops at copy. Sequenzy
+1. **Copy → live sequence in _your existing_ ESP.** Hoppy stops at copy. Sequenzy
    makes you switch ESPs. The unglamorous last mile — getting 7 emails into
    Resend/Loops/Kit with correct timing and triggers — is still manual friction.
 2. **Recurring lifecycle work.** The welcome sequence is a one-time job. "What do I
-   send this month" (product updates, launches, re-engagement) is the *recurring*
+   send this month" (product updates, launches, re-engagement) is the _recurring_
    job, and it's unserved for solo founders.
 3. **Performance-driven rewrites.** Nobody pulls open/click data back and says
    "email 3 is underperforming, here are two rewrites."
@@ -73,7 +73,7 @@ monthly. Value that lives in *workflow, deployment, and data feedback* does not.
 
 ## 4. The core structural problem: one-shot value
 
-A user pastes a URL, gets a great sequence, exports it, and is *done* — possibly
+A user pastes a URL, gets a great sequence, exports it, and is _done_ — possibly
 forever. That's a great product experience and a terrible subscription. Three ways
 out, in order of increasing ambition:
 
@@ -94,9 +94,9 @@ The plan below sequences 1 → 2 → 3.
 
 **Not:** "AI generates email campaigns in seconds" (commodity claim, everyone says it).
 
-**Instead:** *"The email marketer your one-person SaaS doesn't have. Paste your URL,
+**Instead:** _"The email marketer your one-person SaaS doesn't have. Paste your URL,
 get a launch-ready sequence, push it live into Resend/Loops/Kit — and keep your
-lifecycle emails alive without thinking about them."*
+lifecycle emails alive without thinking about them."_
 
 The unique value is **URL → live, deployed, measured sequence in your existing
 stack** — not URL → text in an editor.
@@ -157,7 +157,7 @@ stack** — not URL → text in an editor.
   activation **< 25%** → the wedge isn't converting; reposition (different job,
   different buyer) rather than adding features.
 - Funnel to watch weekly: `url_pasted → scrape_succeeded → first_email_streamed →
-  sequence_exported → paid`.
+sequence_exported → paid`.
 
 ---
 
@@ -167,12 +167,12 @@ stack** — not URL → text in an editor.
   measurement + not-having-to-think-about-it. If the product ever competes on copy
   quality alone, it loses.
 - **ESPs eat the feature.** Kit MCP shows the direction. Being cross-ESP is the
-  hedge — no single ESP will build great deploy-into-*competitors'* tooling.
+  hedge — no single ESP will build great deploy-into-_competitors'_ tooling.
 - **Sequenzy owns search.** Their programmatic SEO moat is months of head start.
   Don't out-SEO them on their terms; win on templates/examples + build-in-public
   distribution where they're absent.
 - **Scope creep back toward ESP.** `PRODUCT_STRATEGY.md` §3 already settled this:
-  tool, not ESP. Deploy *into* ESPs is the moat-consistent move; sending is not.
+  tool, not ESP. Deploy _into_ ESPs is the moat-consistent move; sending is not.
 
 ---
 
