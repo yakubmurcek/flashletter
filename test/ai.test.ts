@@ -101,8 +101,8 @@ describe('generateStructured', () => {
     await generateStructured(baseRequest)
 
     const req = lastRequest()
-    expect(CLAUDE_MODEL).toBe('claude-opus-5-5')
-    expect(req.model).toBe('claude-opus-5-5')
+    expect(CLAUDE_MODEL).toBe('claude-sonnet-5-5')
+    expect(req.model).toBe('claude-sonnet-5-5')
     expect(req.betas).toEqual(['server-side-fallback-2026-07-01'])
     expect(req.fallbacks).toBe('default')
     expect(req.max_tokens).toBe(32000)

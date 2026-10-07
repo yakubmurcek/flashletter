@@ -144,13 +144,13 @@ describe('POST /api/chat', () => {
     expect(body).toEqual({ message: 'AI response', shouldEdit: false })
   })
 
-  it('calls the AI with server instructions, the chat schema and low effort', async () => {
+  it('calls the AI with server instructions, the chat schema and the default effort', async () => {
     await post(hello)
     expect(generateStructuredMock).toHaveBeenCalledOnce()
     const call = lastCall()
     expect(call.system).toBe('System instructions here')
     expect(call.schema).toBe(chatOutputSchema)
-    expect(call.effort).toBe('low')
+    expect(call.effort).toBeUndefined()
     expect(call.maxTokens).toBe(16000)
   })
 

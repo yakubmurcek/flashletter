@@ -42,5 +42,5 @@ export const CAMPAIGN_DURATION = {
 export const SMART_DEFAULT_CAMPAIGN_CONFIG = {
   tone: 'friendly',
   campaignType: 'nurture',
-  days: 3,
+  days: 5,
 } as const

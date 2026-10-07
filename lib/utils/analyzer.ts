@@ -45,8 +45,6 @@ Analyze this page for email-campaign copywriting. Return structured JSON matchin
     system: SYSTEM_INSTRUCTIONS,
     messages: [{ role: 'user', content: userInput }],
     schema: landingPageAnalysisSchema,
-    // Grounded extraction from one page: low effort keeps time-to-first-email short.
-    effort: 'low',
     maxTokens: 8000,
   })
 }

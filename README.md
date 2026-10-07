@@ -23,7 +23,7 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - **React 19**
 - **TypeScript**
 - **Supabase** (Database & Authentication)
-- **Anthropic API** (Claude Opus 5.5, via `lib/ai.ts`)
+- **Anthropic API** (Claude Sonnet 5.5, via `lib/ai.ts`)
 - **Upstash Redis** (Rate Limiting)
 - **Tailwind CSS**
 - **shadcn/ui**
@@ -276,8 +276,8 @@ flashletter/
 
 ## Cost Considerations
 
-This app uses Claude Opus 5.5 ($4 per million input tokens, $20 per million output tokens).
-Page analysis and chat run at low effort; email writing at medium effort. The system prompt is
+This app uses Claude Sonnet 5.5 at medium effort ($2 per million input tokens, $10 per million output tokens).
+The system prompt is
 prompt-cached. See [Anthropic pricing](https://www.anthropic.com/pricing#api).
 
 ## Development

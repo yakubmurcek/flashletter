@@ -58,7 +58,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 💡 **Best Results**: Use landing pages with clear product descriptions and value propositions
 
-💡 **Cost**: Each campaign generation uses Claude API credits (Claude Opus 5.5)
+💡 **Cost**: Each campaign generation uses Claude API credits (Claude Sonnet 5.5)
 
 💡 **Customization**: All generated emails are fully editable - use the AI assistant for suggestions
 
