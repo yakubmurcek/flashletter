@@ -1,3 +1,5 @@
+import { Reveal, RevealGroup, RevealItem } from '@/components/ui/reveal'
+
 type Feature = {
   label: string
   description: string
@@ -44,7 +46,7 @@ export function FeaturesSection() {
     >
       {/* Lead feature */}
       <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mb-24 md:mb-32">
-        <div>
+        <Reveal>
           <p className="text-sm font-medium text-primary mb-4 tracking-tight">Generation</p>
           <h2 className="text-display text-3xl md:text-5xl text-foreground mb-6">
             A sequence that sounds like your landing page — because it read it.
@@ -54,49 +56,60 @@ export function FeaturesSection() {
             scrapes the headline, the hooks, the audience signals, and the tone — then writes a
             five-email launch sequence you can actually send.
           </p>
-        </div>
+        </Reveal>
 
         {/* Faux analysis card */}
-        <div
+        <Reveal
+          delay={0.15}
           className="relative rounded-xl border border-border bg-card p-6 md:p-7"
-          aria-hidden="true"
         >
-          <div className="flex items-center justify-between mb-5">
-            <span className="text-xs uppercase tracking-widest text-muted-foreground">
-              Analysis
-            </span>
-            <span className="font-mono text-xs text-muted-foreground tabular">stripe.com</span>
-          </div>
+          <div aria-hidden="true">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Analysis
+              </span>
+              <span className="font-mono text-xs text-muted-foreground tabular">stripe.com</span>
+            </div>
 
-          <dl className="space-y-4">
-            {[
-              { k: 'Audience', v: 'Engineers and founders integrating payments' },
-              { k: 'Positioning', v: 'Infrastructure, not a checkout widget' },
-              { k: 'Tone', v: 'Confident, technical, restrained' },
-              { k: 'Top hook', v: 'Ship a global business in days, not quarters' },
-            ].map(({ k, v }) => (
-              <div
-                key={k}
-                className="grid grid-cols-[8rem_1fr] gap-4 items-baseline"
-              >
-                <dt className="text-xs uppercase tracking-widest text-muted-foreground">{k}</dt>
-                <dd className="text-sm text-foreground">{v}</dd>
-              </div>
-            ))}
-          </dl>
+            <RevealGroup
+              as="dl"
+              className="space-y-4"
+            >
+              {[
+                { k: 'Audience', v: 'Engineers and founders integrating payments' },
+                { k: 'Positioning', v: 'Infrastructure, not a checkout widget' },
+                { k: 'Tone', v: 'Confident, technical, restrained' },
+                { k: 'Top hook', v: 'Ship a global business in days, not quarters' },
+              ].map(({ k, v }) => (
+                <RevealItem
+                  key={k}
+                  className="grid grid-cols-[8rem_1fr] gap-4 items-baseline"
+                >
+                  <dt className="text-xs uppercase tracking-widest text-muted-foreground">{k}</dt>
+                  <dd className="text-sm text-foreground">{v}</dd>
+                </RevealItem>
+              ))}
+            </RevealGroup>
 
-          <div className="mt-6 pt-5 border-t border-border flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">Generating sequence…</span>
-            <span className="font-mono text-xs text-primary tabular">3 / 5</span>
+            <div className="mt-6 pt-5 border-t border-border flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse motion-reduce:animate-none" />
+                Generating sequence…
+              </span>
+              <span className="font-mono text-xs text-primary tabular">3 / 5</span>
+            </div>
           </div>
-        </div>
+        </Reveal>
       </div>
 
       {/* Supporting features */}
       <div className="border-t border-border">
-        <dl className="grid md:grid-cols-2">
+        <RevealGroup
+          as="dl"
+          className="grid md:grid-cols-2"
+        >
           {FEATURES.map((feature, i) => (
-            <div
+            <RevealItem
               key={feature.label}
               className={`
                 py-8 md:py-10 px-0 md:px-8
@@ -110,9 +123,9 @@ export function FeaturesSection() {
               <dd className="text-sm text-muted-foreground leading-relaxed">
                 {feature.description}
               </dd>
-            </div>
+            </RevealItem>
           ))}
-        </dl>
+        </RevealGroup>
       </div>
     </section>
   )

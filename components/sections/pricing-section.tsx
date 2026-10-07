@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import Link from 'next/link'
+import { Reveal } from '@/components/ui/reveal'
 
 type Tier = {
   name: string
@@ -39,14 +40,17 @@ export function PricingSection() {
       aria-label="Pricing"
       className="py-24 md:py-32"
     >
-      <div className="max-w-2xl mx-auto text-center mb-14">
+      <Reveal className="max-w-2xl mx-auto text-center mb-14">
         <h2 className="text-display text-3xl md:text-5xl text-foreground mb-4">
           Free while in early access.
         </h2>
         <p className="text-muted-foreground text-lg">No credit card. Paid plans will come later.</p>
-      </div>
+      </Reveal>
 
-      <div className="max-w-md mx-auto grid gap-px bg-border rounded-xl overflow-hidden border border-border">
+      <Reveal
+        delay={0.1}
+        className="max-w-md mx-auto grid gap-px bg-border rounded-xl overflow-hidden border border-border"
+      >
         {TIERS.map((tier) => (
           <div
             key={tier.name}
@@ -95,7 +99,7 @@ export function PricingSection() {
             </Button>
           </div>
         ))}
-      </div>
+      </Reveal>
     </section>
   )
 }

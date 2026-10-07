@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { Reveal } from '@/components/ui/reveal'
 
 export function CTASection() {
   return (
@@ -9,7 +10,7 @@ export function CTASection() {
       className="border-y border-border"
     >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 md:py-32">
-        <div className="max-w-3xl">
+        <Reveal className="max-w-3xl">
           <h2 className="text-display text-4xl md:text-6xl text-foreground mb-6">
             The blank page is the hardest part.
             <br />
@@ -28,7 +29,7 @@ export function CTASection() {
             </Button>
             <span className="text-sm text-muted-foreground">No credit card.</span>
           </div>
-        </div>
+        </Reveal>
       </div>
     </section>
   )
