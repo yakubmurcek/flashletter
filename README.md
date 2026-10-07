@@ -83,7 +83,7 @@ UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 > **Get your Supabase keys:** Visit your [Supabase project settings](https://app.supabase.com) → API  
 > **Get Upstash Redis credentials (optional):** Sign up at [Upstash](https://upstash.com) and create a Redis database
 
-**Note:** Rate limiting is optional for development. Without Upstash Redis configured, the app will work normally but without rate limit protection.
+**Note:** Upstash Redis is optional in local development only. In production (or any Vercel deploy) every AI route refuses requests with 429 until Redis is configured. On Vercel, adding Upstash for Redis from the Marketplace is enough: the app also reads the `KV_REST_API_URL` / `KV_REST_API_TOKEN` it injects.
 
 ### 5. Run the development server
 
