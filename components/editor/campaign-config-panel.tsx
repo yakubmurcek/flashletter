@@ -66,17 +66,17 @@ export function CampaignConfigPanel({
         )}
         aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isOpen ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
           ) : (
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
-          <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold whitespace-nowrap">
             Sequence settings
           </span>
         </div>
-        <span className="text-xs text-muted-foreground truncate ml-3">
+        <span className="min-w-0 text-xs text-muted-foreground truncate ml-3">
           {typeLabel} · {toneLabel} · {days}d
         </span>
       </button>

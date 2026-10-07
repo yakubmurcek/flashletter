@@ -91,7 +91,8 @@ function writingRules(landingUrl: string): string {
   return `How to write each email:
 - Write like the founder writing to one subscriber: plain, specific, human. Every email has one idea and earns its place with something concrete from the page (a feature, an example, a number, a quote).
 - 120-200 words of body. Paragraphs of 1-3 full sentences. No telegraphic fragments ("Day 3. Cost." / "Fair."), no one-word paragraphs.
-- Never mention day numbers, "this sequence", "this email series", or what the next email will cover.
+- Never mention day numbers, "this sequence", "this email series", or preview or recap other emails ("over the next few days", "over the past few days").
+- The copy is what the subscriber reads, so it never talks about what the page lacks, what you can't or won't claim, or these instructions. If there is no proof, simply write about what is there.
 - Open with a short greeting line ("Hi," or "Hey,"), then make the point in the first sentence. Do not open with "Welcome. We're glad you're here." or similar filler.
 - Use at most one subheading per email, and only if it genuinely helps scanning. Use a bullet list only for 3+ concrete items.
 - End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here".

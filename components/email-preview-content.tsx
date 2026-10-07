@@ -1,6 +1,5 @@
-import { memo } from 'react'
+import { memo, useLayoutEffect, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { Input } from '@/components/ui/input'
 import { Loader2 } from 'lucide-react'
 
 const RichTextEditor = dynamic(
@@ -24,6 +23,30 @@ interface EmailPreviewContentProps {
   onEditorCreated?: (editor: import('@tiptap/react').Editor) => void
 }
 
+/** Subject line that wraps onto more lines instead of scrolling sideways. */
+function SubjectField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
+  }, [value])
+
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\n/g, ' '))}
+      aria-label="Subject"
+      placeholder="Enter subject..."
+      className="block w-full resize-none overflow-hidden bg-transparent text-xl md:text-2xl font-semibold leading-snug tracking-tight text-foreground outline-none placeholder:text-muted-foreground/40"
+    />
+  )
+}
+
 function EmailPreviewContentComponent({
   subject,
   content,
@@ -42,11 +65,9 @@ function EmailPreviewContentComponent({
           <div className="rounded-lg bg-background border border-border p-5 sm:p-8 lg:p-10 min-h-[500px]">
             <div className="space-y-2 mb-6 pb-6 border-b border-border">
               <div className="text-xs uppercase tracking-widest text-muted-foreground">Subject</div>
-              <Input
+              <SubjectField
                 value={subject}
-                onChange={(e) => onSubjectChange?.(e.target.value)}
-                className="text-xl md:text-2xl font-semibold tracking-tight text-foreground border-none shadow-none px-0 h-auto focus-visible:ring-0 bg-transparent placeholder:text-muted-foreground/40"
-                placeholder="Enter subject..."
+                onChange={(value) => onSubjectChange?.(value)}
               />
             </div>
 

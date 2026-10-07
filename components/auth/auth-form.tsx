@@ -206,7 +206,7 @@ export function AuthForm({ mode }: AuthFormProps) {
             {mode === 'signup' ? 'Creating Account...' : 'Signing In...'}
           </>
         ) : mode === 'signup' ? (
-          'Create Account'
+          'Create account'
         ) : (
           'Sign in'
         )}

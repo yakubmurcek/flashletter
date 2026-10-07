@@ -1,3 +1,4 @@
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
@@ -50,9 +51,7 @@ export default async function SignupPage({
       <CardHeader className="space-y-2 text-center">
         <CardTitle className="text-display text-2xl md:text-3xl">Create an account</CardTitle>
         <CardDescription>
-          Enter your email and password to get started
-          <br />
-          with AI-powered email campaigns
+          Free plan: {PLAN_LIMITS.free.campaignsPerMonth} campaigns a month. No credit card.
         </CardDescription>
       </CardHeader>
       <CardContent>
