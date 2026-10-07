@@ -91,6 +91,8 @@ UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 
 **Billing:** Stripe is the source of truth for who pays (customers carry `metadata.user_id`; no webhook or subscriptions table). Run `STRIPE_SECRET_KEY=sk_... node scripts/stripe-setup.mjs https://your-domain` once per Stripe mode (test, then live) to create the Pro product, the `flashletter_pro_monthly` / `flashletter_pro_yearly` prices and the customer-portal settings. Plan limits live in `lib/billing/plans.ts` and are enforced in the generate and chat routes.
 
+Billing caveats: a just-created Stripe customer is found via `customers.list` by email, because Stripe's search index lags about a minute. A Stripe outage fails open to Pro so paying users are never locked out. The monthly AI-rewrite allowance is only counted when Redis is configured.
+
 ### 5. Run the development server
 
 ```bash
