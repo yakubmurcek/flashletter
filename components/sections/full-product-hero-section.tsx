@@ -4,20 +4,20 @@ export function FullProductHeroSection() {
   return (
     <section className="pt-24 md:pt-32 pb-20 md:pb-28">
       <div className="max-w-3xl mx-auto text-center">
-        <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none">
+        <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight">
           For founders who hate writing from scratch
         </p>
 
-        <h1 className="text-display text-5xl md:text-7xl text-foreground mb-6 animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-100">
+        <h1 className="text-display text-5xl md:text-7xl text-foreground mb-6">
           Turn your landing page into a <span className="text-primary">newsletter campaign</span> in
-          30 seconds.
+          2 minutes.
         </h1>
 
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-200">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
           Stop staring at a blank editor. Your first converting email campaign is ready to send.
         </p>
 
-        <div className="animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-300">
+        <div>
           <HeroUrlForm />
         </div>
       </div>

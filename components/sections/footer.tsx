@@ -14,7 +14,7 @@ export function Footer() {
               <BrandMark href="/" />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Turn your landing page into a newsletter campaign in 30 seconds.
+              Turn your landing page into a newsletter campaign in 2 minutes.
             </p>
           </div>
 

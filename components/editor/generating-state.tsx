@@ -42,7 +42,7 @@ export function GeneratingState({ streamedCount, totalExpected, error }: Generat
         </h2>
         <p className="text-sm text-muted-foreground mb-4">
           {showFirstHint
-            ? 'Reading your landing page and drafting Day 1. This usually takes a few seconds.'
+            ? 'Reading your landing page and drafting Day 1. This usually takes under a minute.'
             : 'Day 1 is ready. Generating the rest of the sequence in the background.'}
         </p>
         <p className="font-mono text-xs text-muted-foreground tabular">{progressLabel} emails</p>

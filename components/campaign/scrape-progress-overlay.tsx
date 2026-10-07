@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Loader2 } from 'lucide-react'
 import {
@@ -17,6 +18,11 @@ interface ScrapeProgressOverlayProps {
 }
 
 export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressOverlayProps) {
+  // Portal to <body>: the hero's entrance animation leaves a transform on its
+  // wrapper, which would otherwise become the containing block for `fixed`.
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
   // Prevent body scroll when open
   useEffect(() => {
     if (isOpen) {
@@ -29,33 +35,33 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
     }
   }, [isOpen])
 
-  if (!isOpen) return null
+  if (!isOpen || !mounted) return null
 
   // Find index of current stage
   const currentStageIndex = SCRAPE_PROGRESS_STAGES.findIndex(
     (s) => s.id === progressState.currentStageId,
   )
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-md p-4 text-left"
         >
-          <div className="w-full max-w-lg">
-            <div className="bg-card border border-border shadow-xl rounded-2xl p-6 md:p-8 space-y-8 relative">
-              <div className="relative z-10">
-                <h3 className="text-display text-2xl text-center mb-2 text-foreground">
-                  Analyzing Landing Page
+          <div className="w-full max-w-md">
+            <div className="bg-card border border-border shadow-xl rounded-2xl p-6 md:p-7 max-h-[90vh] overflow-y-auto">
+              <div>
+                <h3 className="text-display text-xl text-center mb-1.5 text-foreground">
+                  Reading your landing page
                 </h3>
-                <p className="text-center text-muted-foreground mb-8 text-sm">
-                  We&apos;re building your campaign context...
+                <p className="text-center text-muted-foreground mb-6 text-sm">
+                  Your first email starts writing right after this.
                 </p>
 
-                <div className="space-y-4">
+                <div className="space-y-1.5">
                   {SCRAPE_PROGRESS_STAGES.map((stage, index) => {
                     const isCompleted = progressState.completedStageIds.includes(stage.id)
                     const isCurrent = stage.id === progressState.currentStageId
@@ -78,7 +84,8 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
           </div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   )
 }
 
@@ -99,7 +106,7 @@ function ProgressStep({
       animate={{ opacity: 1, y: 0 }}
       layout
       className={cn(
-        'flex items-center gap-4 p-3 rounded-lg transition-colors border',
+        'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors border',
         state === 'current'
           ? 'bg-primary/5 border-primary/20 shadow-sm'
           : 'bg-transparent border-transparent',
@@ -107,18 +114,18 @@ function ProgressStep({
     >
       <div
         className={cn(
-          'flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300',
+          'flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300',
           state === 'completed'
             ? 'bg-primary text-primary-foreground scale-100'
             : state === 'current'
-              ? 'bg-primary text-primary-foreground scale-110'
+              ? 'bg-primary/15 text-primary'
               : 'bg-muted text-muted-foreground',
         )}
       >
         {state === 'completed' ? (
-          <Check className="w-5 h-5" />
+          <Check className="w-4 h-4" />
         ) : state === 'current' ? (
-          <Loader2 className="w-5 h-5 animate-spin" />
+          <Loader2 className="w-4 h-4 animate-spin" />
         ) : (
           <div className="w-2 h-2 rounded-full bg-current opacity-40" />
         )}

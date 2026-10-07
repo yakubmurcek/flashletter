@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, FormEvent } from 'react'
+import { useState, useEffect, useRef, FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,7 @@ export function HeroUrlForm() {
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const {
     analyzeLandingPage,
@@ -30,17 +30,9 @@ export function HeroUrlForm() {
   const { setLandingPageData, createNewCampaign, clearAll, applyConfigToCampaign } = useCampaign()
 
   useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setIsAuthenticated(!!user)
-    }
-    checkAuth()
-  }, [])
-
-  useEffect(() => {
+    // Keep anything typed into the server-rendered input before hydration.
+    const typed = inputRef.current?.value
+    if (typed) setUrl(typed)
     clearAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -62,9 +54,11 @@ export function HeroUrlForm() {
     track('url_pasted', { domain })
 
     try {
-      if (!isAuthenticated) {
+      const {
+        data: { user },
+      } = await createClient().auth.getUser()
+      if (!user) {
         await signInAnonymously()
-        setIsAuthenticated(true)
       }
 
       const data = await analyzeLandingPage(finalUrl)
@@ -130,6 +124,7 @@ export function HeroUrlForm() {
           "
         >
           <Input
+            ref={inputRef}
             type="text"
             placeholder="https://your-landing-page.com"
             value={url}
@@ -145,7 +140,7 @@ export function HeroUrlForm() {
           />
           <Button
             type="submit"
-            disabled={isLoading || isAuthenticated === null}
+            disabled={isLoading}
             className="rounded-full h-11 px-5 shrink-0"
           >
             {isLoading ? (

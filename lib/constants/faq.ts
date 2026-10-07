@@ -5,7 +5,7 @@ export const FAQ_ITEMS: FAQItem[] = [
     id: 'what-is-flashletter',
     question: 'What is Flashletter?',
     answer:
-      'Flashletter helps you turn your landing page content into a full newsletter campaign in 30 seconds. It writes the copy for you, so you simply tweak and send.',
+      'Flashletter helps you turn your landing page content into a full newsletter campaign in about 2 minutes. It writes the copy for you, so you simply tweak and send.',
   },
   {
     id: 'how-it-works',
