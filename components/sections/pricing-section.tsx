@@ -25,6 +25,17 @@ const PRO_FEATURES = [
   'Priority support by email',
 ]
 
+function StaticBlock({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}) {
+  return <div className={className}>{children}</div>
+}
+
 function FeatureList({ items }: { items: string[] }) {
   return (
     <ul className="space-y-3 text-sm text-foreground mb-8 flex-1">
@@ -41,7 +52,15 @@ function FeatureList({ items }: { items: string[] }) {
   )
 }
 
-export function PricingSection({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 'h2' }) {
+export function PricingSection({
+  headingLevel = 'h2',
+  animate = true,
+}: {
+  headingLevel?: 'h1' | 'h2'
+  /** Off on /pricing, where the cards are above the fold and must show at once. */
+  animate?: boolean
+}) {
+  const Wrap = animate ? Reveal : StaticBlock
   const [interval, setInterval] = useState<BillingInterval>('month')
   const Heading = headingLevel
   const proPrice = interval === 'month' ? PRO_PRICE_USD.month : PRO_PRICE_USD.year
@@ -53,14 +72,14 @@ export function PricingSection({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 
       aria-label="Pricing"
       className="py-24 md:py-32"
     >
-      <Reveal className="max-w-2xl mx-auto text-center mb-10">
+      <Wrap className="max-w-2xl mx-auto text-center mb-10">
         <Heading className="text-display text-3xl md:text-5xl text-foreground mb-4">
           Simple pricing.
         </Heading>
         <p className="text-muted-foreground text-lg">
           Start free. Upgrade when Flashletter is writing your emails every week.
         </p>
-      </Reveal>
+      </Wrap>
 
       <div className="flex justify-center mb-10">
         <div
@@ -88,7 +107,7 @@ export function PricingSection({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 
         </div>
       </div>
 
-      <Reveal
+      <Wrap
         delay={0.1}
         className="max-w-3xl mx-auto grid md:grid-cols-2 gap-px bg-border rounded-xl overflow-hidden border border-border"
       >
@@ -129,7 +148,7 @@ export function PricingSection({ headingLevel = 'h2' }: { headingLevel?: 'h1' | 
             Secure checkout by Stripe. Cancel anytime.
           </p>
         </div>
-      </Reveal>
+      </Wrap>
     </section>
   )
 }

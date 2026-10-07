@@ -15,7 +15,10 @@ export default function PricingPage() {
       <Header />
       <main className="flex-1 pt-14">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <PricingSection headingLevel="h1" />
+          <PricingSection
+            headingLevel="h1"
+            animate={false}
+          />
           <FAQSection />
         </div>
       </main>
