@@ -1,7 +1,7 @@
 'use client'
 
 import type React from 'react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 import { useAIChat } from '@/lib/hooks'
 import { AIChatHeader } from '@/components/ai-chat/header'
@@ -65,12 +65,18 @@ export function AIChatAssistant({
       }, 50)
     }
   }, [autoSubmitMessage, isLoading, onAutoSubmitComplete, setInput])
+  const contextReady = !!campaignContext || !!emailContext
+  const quickActionPendingRef = useRef(false)
+
   // A suggestion chip is a request, not a draft: send it straight away.
   const handleQuickAction = (action: string) => {
+    if (isLoading || !contextReady || quickActionPendingRef.current) return
+    quickActionPendingRef.current = true
     setInput(action)
     setTimeout(() => {
       const form = document.querySelector('[data-chat-form]') as HTMLFormElement | null
       form?.requestSubmit()
+      quickActionPendingRef.current = false
     }, 50)
   }
 
@@ -88,10 +94,10 @@ export function AIChatAssistant({
         <AIChatQuickActions
           actions={quickActions}
           onSelect={handleQuickAction}
-          isVisible={!isLoading}
+          isVisible={!isLoading && contextReady}
         />
         <AIChatInputForm
-          contextReady={!!campaignContext || !!emailContext}
+          contextReady={contextReady}
           input={input}
           setInput={setInput}
           isLoading={isLoading}

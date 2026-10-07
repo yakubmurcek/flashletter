@@ -75,7 +75,7 @@ export function MobileEmailTabs({
   return (
     <nav
       aria-label="Emails in this sequence"
-      className="md:hidden sticky top-0 z-10 flex gap-2 overflow-x-auto border-b border-border bg-background/95 px-4 py-3 backdrop-blur"
+      className="md:hidden flex-shrink-0 flex gap-2 overflow-x-auto border-b border-border bg-background px-4 py-3"
     >
       {sorted.map((email) => (
         <button

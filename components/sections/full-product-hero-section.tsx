@@ -118,7 +118,7 @@ export function FullProductHeroSection() {
                   </div>
                 </div>
 
-                <p className="text-muted-foreground">— The Flashletter team</p>
+                <p className="text-muted-foreground">The Flashletter team</p>
               </div>
             </div>
           </div>

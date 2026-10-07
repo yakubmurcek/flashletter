@@ -97,6 +97,20 @@ function EditorPageContent() {
     setShouldFocusChatInput(true)
   }, [deleteParam])
 
+  // Crossing the breakpoint (resize, tablet rotation) re-applies the default
+  // for the new size instead of leaving the panel over the emails.
+  const deleteParamRef = useRef(deleteParam)
+  deleteParamRef.current = deleteParam
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)')
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsCompact(e.matches)
+      deleteParamRef.current('chat')
+    }
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
   const config = campaignData?.config
@@ -333,6 +347,17 @@ function EditorPageContent() {
     )
   }
 
+  const configPanel = (
+    <CampaignConfigPanel
+      config={config ?? null}
+      onConfigChange={handleConfigChange}
+      onRegenerate={handleRegenerate}
+      isStreaming={isStreaming}
+      streamedCount={streamedCount}
+      totalExpected={totalExpected}
+    />
+  )
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <EditorHeader
@@ -363,19 +388,14 @@ function EditorPageContent() {
           pendingCount={
             isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
           }
-          configPanel={
-            <CampaignConfigPanel
-              config={config ?? null}
-              onConfigChange={handleConfigChange}
-              onRegenerate={handleRegenerate}
-              isStreaming={isStreaming}
-              streamedCount={streamedCount}
-              totalExpected={totalExpected}
-            />
-          }
+          configPanel={configPanel}
         />
 
-        <main className="flex-1 min-w-0 overflow-y-auto">
+        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          {/* Phones: the sidebar is hidden, so settings and the email list live here. */}
+          <div className="md:hidden flex-shrink-0 max-h-[60vh] overflow-y-auto bg-card">
+            {configPanel}
+          </div>
           <MobileEmailTabs
             emails={emails}
             selectedId={selectedEmailId}
@@ -396,21 +416,23 @@ function EditorPageContent() {
               </button>
             </div>
           )}
-          {selectedEmail ? (
-            <EmailPreview
-              email={selectedEmail}
-              onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
-              onTextSelected={handleTextSelected}
-              isSaving={isSaving}
-            />
-          ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
-            <GeneratingState
-              streamedCount={streamedCount}
-              totalExpected={totalExpected}
-              error={streamError}
-              limitPlan={limitPlan}
-            />
-          ) : null}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {selectedEmail ? (
+              <EmailPreview
+                email={selectedEmail}
+                onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
+                onTextSelected={handleTextSelected}
+                isSaving={isSaving}
+              />
+            ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
+              <GeneratingState
+                streamedCount={streamedCount}
+                totalExpected={totalExpected}
+                error={streamError}
+                limitPlan={limitPlan}
+              />
+            ) : null}
+          </div>
         </main>
 
         <ChatSidebar

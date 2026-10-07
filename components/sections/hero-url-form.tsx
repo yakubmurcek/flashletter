@@ -44,9 +44,20 @@ export function HeroUrlForm() {
       inputRef.current?.scrollIntoView({ block: 'center' })
       inputRef.current?.focus({ preventScroll: true })
     }
+    // Next's <Link> changes the hash with pushState, which fires no hashchange,
+    // so same-page clicks on a #try link are caught here instead.
+    const onClick = (e: MouseEvent) => {
+      if ((e.target as Element | null)?.closest?.('a[href$="#try"]')) {
+        window.setTimeout(focusIfTargeted, 50)
+      }
+    }
     focusIfTargeted()
     window.addEventListener('hashchange', focusIfTargeted)
-    return () => window.removeEventListener('hashchange', focusIfTargeted)
+    document.addEventListener('click', onClick)
+    return () => {
+      window.removeEventListener('hashchange', focusIfTargeted)
+      document.removeEventListener('click', onClick)
+    }
   }, [])
 
   const handleSubmit = async (e: FormEvent) => {

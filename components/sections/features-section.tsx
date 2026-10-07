@@ -9,7 +9,7 @@ const FEATURES: Feature[] = [
   {
     label: 'Reads the page, not just the URL',
     description:
-      'A streaming scrape-and-analyze pipeline pulls the positioning, audience, and tone — so the sequence sounds like the page it came from.',
+      'A streaming scrape-and-analyze pipeline pulls the positioning, audience, and tone, so the sequence sounds like the page it came from.',
   },
   {
     label: 'Five emails, one prompt',
@@ -49,11 +49,11 @@ export function FeaturesSection() {
         <Reveal>
           <p className="text-sm font-medium text-primary mb-4 tracking-tight">Generation</p>
           <h2 className="text-display text-3xl md:text-5xl text-foreground mb-6">
-            A sequence that sounds like your landing page — because it read it.
+            A sequence that sounds like your landing page, because it read it.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
             Most AI email tools start from a blank prompt. Flashletter starts from your page. It
-            scrapes the headline, the hooks, the audience signals, and the tone — then writes a
+            scrapes the headline, the hooks, the audience signals, and the tone, then writes a
             five-email launch sequence you can actually send.
           </p>
         </Reveal>

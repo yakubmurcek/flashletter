@@ -30,8 +30,21 @@ function SubjectField({ value, onChange }: { value: string; onChange: (value: st
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${el.scrollHeight}px`
+    const fit = () => {
+      el.style.height = 'auto'
+      el.style.height = `${el.scrollHeight}px`
+    }
+    fit()
+    // Width changes (rotation, chat panel opening) change how many lines it needs.
+    if (typeof ResizeObserver === 'undefined') return
+    let lastWidth = el.clientWidth
+    const observer = new ResizeObserver(() => {
+      if (el.clientWidth === lastWidth) return
+      lastWidth = el.clientWidth
+      fit()
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [value])
 
   return (
@@ -40,6 +53,10 @@ function SubjectField({ value, onChange }: { value: string; onChange: (value: st
       rows={1}
       value={value}
       onChange={(e) => onChange(e.target.value.replace(/\n/g, ' '))}
+      onKeyDown={(e) => {
+        // A subject is one line; Enter must not add a stray space.
+        if (e.key === 'Enter') e.preventDefault()
+      }}
       aria-label="Subject"
       placeholder="Enter subject..."
       className="block w-full resize-none overflow-hidden bg-transparent text-xl md:text-2xl font-semibold leading-snug tracking-tight text-foreground outline-none placeholder:text-muted-foreground/40"

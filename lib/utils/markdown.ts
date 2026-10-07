@@ -12,6 +12,11 @@ export function markdownToHtml(text: string): string {
     /^### (.+)$/gm,
     '<h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 0.5rem;">$1</h3>',
   )
+  // Links: only http(s) targets, so a crafted `javascript:` URL stays plain text.
+  html = html.replace(
+    /\[([^\]]+)\]\((https?:\/\/[^\s)"<>]+)\)/g,
+    '<a href="$2" style="color: #e96326; text-decoration: underline;">$1</a>',
+  )
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')
   html = html.replace(/^• (.+)$/gm, '<li style="margin-left: 1.5rem;">$1</li>')
@@ -31,6 +36,7 @@ export function htmlToMarkdown(html: string): string {
   markdown = markdown.replace(/<h1[^>]*>(.*?)<\/h1>/gi, '# $1\n\n')
   markdown = markdown.replace(/<h2[^>]*>(.*?)<\/h2>/gi, '## $1\n\n')
   markdown = markdown.replace(/<h3[^>]*>(.*?)<\/h3>/gi, '### $1\n\n')
+  markdown = markdown.replace(/<a [^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gi, '[$2]($1)')
   markdown = markdown.replace(/<strong>(.*?)<\/strong>/gi, '**$1**')
   markdown = markdown.replace(/<b>(.*?)<\/b>/gi, '**$1**')
   markdown = markdown.replace(/<em>(.*?)<\/em>/gi, '*$1*')

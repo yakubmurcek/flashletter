@@ -123,8 +123,8 @@ export function UpgradePrompt({
               : 'You\u2019ve created your first campaign!'}
           </CardTitle>
           <CardDescription className="mt-2">
-            Create a free account to keep it and write {PLAN_LIMITS.free.campaignsPerMonth}{' '}
-            campaigns a month. No credit card.
+            Create a free account to keep your work. The free plan includes{' '}
+            {PLAN_LIMITS.free.campaignsPerMonth} campaigns a month, no credit card.
           </CardDescription>
         </CardHeader>
 
