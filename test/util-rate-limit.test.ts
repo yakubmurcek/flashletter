@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { checkRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import { checkRateLimit, getRateLimitHeaders, MemoryLimiter } from '@/lib/utils/rate-limit'
 import type { Ratelimit } from '@upstash/ratelimit'
 
 describe('checkRateLimit', () => {
@@ -156,5 +156,37 @@ describe('getRateLimitHeaders', () => {
       'X-RateLimit-Remaining',
       'X-RateLimit-Reset',
     ])
+  })
+})
+
+describe('MemoryLimiter', () => {
+  it('allows up to max requests per identifier, then blocks', async () => {
+    const limiter = new MemoryLimiter(2, 60_000)
+    expect((await limiter.limit('a')).success).toBe(true)
+    const second = await limiter.limit('a')
+    expect(second.success).toBe(true)
+    expect(second.remaining).toBe(0)
+    expect((await limiter.limit('a')).success).toBe(false)
+    expect((await limiter.limit('b')).success).toBe(true)
+  })
+
+  it('resets after the window passes', async () => {
+    vi.useFakeTimers()
+    try {
+      const limiter = new MemoryLimiter(1, 1_000)
+      expect((await limiter.limit('a')).success).toBe(true)
+      expect((await limiter.limit('a')).success).toBe(false)
+      vi.advanceTimersByTime(1_001)
+      expect((await limiter.limit('a')).success).toBe(true)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('works through checkRateLimit', async () => {
+    const limiter = new MemoryLimiter(1, 60_000)
+    expect((await checkRateLimit(limiter, 'x')).success).toBe(true)
+    const blocked = await checkRateLimit(limiter, 'x')
+    expect(blocked).toMatchObject({ success: false, limit: 1, remaining: 0 })
   })
 })
