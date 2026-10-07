@@ -54,11 +54,17 @@ function extractTitleFromContent(html?: string | null): string | null {
   }
 }
 
+/** "Cal.com | Scheduling Software for…" → "Cal.com": page titles carry SEO tails. */
+export function shortenPageTitle(title: string): string {
+  const head = title.split(/\s+[|\u2013\u2014-]\s+|\s*[|:]\s+/)[0]?.trim()
+  return head && head.length >= 3 ? head : title.trim()
+}
+
 function deriveCampaignName(data?: LandingPageData | null): string | null {
   if (!data) return null
 
   const contentTitle = extractTitleFromContent(data.content)
-  if (contentTitle) return contentTitle
+  if (contentTitle) return shortenPageTitle(contentTitle)
 
   const meta = data.metadata
   const candidates = [meta?.title, meta?.ogTitle, meta?.twitterTitle, meta?.ogSiteName]
@@ -66,7 +72,7 @@ function deriveCampaignName(data?: LandingPageData | null): string | null {
   for (const candidate of candidates) {
     if (typeof candidate === 'string') {
       const trimmed = candidate.trim()
-      if (trimmed) return trimmed
+      if (trimmed) return shortenPageTitle(trimmed)
     }
   }
 

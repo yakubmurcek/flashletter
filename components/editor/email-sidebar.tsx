@@ -10,9 +10,16 @@ interface EmailSidebarProps {
   selectedId: number
   onSelect: (id: number) => void
   configPanel?: ReactNode
+  pendingCount?: number
 }
 
-function EmailSidebarComponent({ emails, selectedId, onSelect, configPanel }: EmailSidebarProps) {
+function EmailSidebarComponent({
+  emails,
+  selectedId,
+  onSelect,
+  configPanel,
+  pendingCount = 0,
+}: EmailSidebarProps) {
   return (
     <aside className="w-80 flex flex-col bg-card border-r border-border">
       <div className="px-6 pt-6 pb-4 flex-shrink-0">
@@ -25,7 +32,11 @@ function EmailSidebarComponent({ emails, selectedId, onSelect, configPanel }: Em
               Emails
             </h2>
           </div>
-          <span className="text-xs font-medium text-muted-foreground">{emails.length} total</span>
+          <span className="text-xs font-medium text-muted-foreground tabular">
+            {pendingCount > 0
+              ? `${emails.length} of ${emails.length + pendingCount}`
+              : `${emails.length} total`}
+          </span>
         </div>
       </div>
       {configPanel}
@@ -34,6 +45,7 @@ function EmailSidebarComponent({ emails, selectedId, onSelect, configPanel }: Em
           emails={emails}
           selectedId={selectedId}
           onSelect={onSelect}
+          pendingCount={pendingCount}
         />
       </div>
     </aside>

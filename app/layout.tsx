@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     title: 'Flashletter - Lightning-fast AI newsletter campaigns',
-    description: 'Turn your landing page into a ready-to-send newsletter campaign in 30 seconds.',
+    description: 'Turn your landing page into a ready-to-send newsletter campaign in 2 minutes.',
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`],
     creator: '@ykbmck',
   },
@@ -101,7 +101,7 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'Turn your landing page into a ready-to-send newsletter campaign in 30 seconds.',
+                'Turn your landing page into a ready-to-send newsletter campaign in 2 minutes.',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app',
               applicationCategory: 'BusinessApplication',
               offers: {

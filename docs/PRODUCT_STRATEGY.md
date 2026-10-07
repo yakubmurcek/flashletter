@@ -9,7 +9,7 @@
 - **Who we serve:** indie hackers / solo founders / build-in-public operators on X. Not enterprise, not non-technical small biz.
 - **Job to be done:** "I have a landing page and need a welcome / nurture email sequence, but I don't want to write it from scratch."
 - **Strategic position:** be a **tool** that plugs into the user's existing email platform — _not_ an ESP ourselves.
-- **Moat:** AI generation from a landing page URL → real, on-brand sequence in ~30 seconds. Defensible only if we stay focused on it.
+- **Moat:** AI generation from a landing page URL → real, on-brand sequence in ~2 minutes (first email in under a minute). Defensible only if we stay focused on it.
 - **Immediate next move:** ship test-send to inbox + Resend integration as the post-generation experience. Move the paywall to those value-confirming actions. Skipping the teaser/wait-for-data phase because AI-coded integration work is cheap enough to commit early.
 
 ---
@@ -26,7 +26,7 @@
 - **MailerLite / nothing yet** (~5–10%) — budget-conscious or pre-product.
 - **Mailchimp** — _almost zero_ in this segment. It's the small-business-with-a-restaurant tool. Ignore it for at least a year.
 
-**The pain we solve:** they already have an ESP (often on a free tier). The pain is _staring at a blank email composer_. Writing 7 emails takes a weekend or $500–2000 to a copywriter. We compress that to 30 seconds with on-brand output.
+**The pain we solve:** they already have an ESP (often on a free tier). The pain is _staring at a blank email composer_. Writing 7 emails takes a weekend or $500–2000 to a copywriter. We compress that to about 2 minutes with on-brand output.
 
 **What this means for the product:** they don't need us to send. They need us to _write_. Anything we add beyond "great writing, easy to get out of the app" is mission creep.
 

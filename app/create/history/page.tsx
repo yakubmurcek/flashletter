@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, Suspense } from 'react'
+import { useState, useEffect, useMemo, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,11 +23,14 @@ import type { EmailVersion } from '@/lib/types'
 import { isValidCampaignId, isValidEmailId } from '@/lib/utils/validation'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
+import { extractChangeSummary } from '@/lib/utils/diff'
+
+const CURRENT_VERSION_ID = 'current'
 
 function HistoryPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { generatedEmails, isLoading } = useCampaign()
+  const { generatedEmails, isLoading, loadCampaign, currentCampaignId } = useCampaign()
 
   const emailIdParam = searchParams.get('emailId')
   const emailId = emailIdParam ? parseInt(emailIdParam, 10) : null
@@ -40,6 +43,23 @@ function HistoryPageContent() {
   const [selectedVersionId, setSelectedVersionId] = useState<string | null>(null)
   const [showRestoreConfirm, setShowRestoreConfirm] = useState(false)
   const [versionToRestore, setVersionToRestore] = useState<EmailVersion | null>(null)
+
+  // A direct visit or reload starts with an empty context; load the campaign
+  // from the URL instead of reporting the email as missing.
+  const requestedLoadRef = useRef(false)
+  const [campaignLoading, setCampaignLoading] = useState(
+    () =>
+      !!validCampaignId && !(currentCampaignId === validCampaignId && generatedEmails.length > 0),
+  )
+  useEffect(() => {
+    if (!validCampaignId || requestedLoadRef.current) return
+    if (currentCampaignId === validCampaignId && generatedEmails.length > 0) return
+    requestedLoadRef.current = true
+    setCampaignLoading(true)
+    Promise.resolve(loadCampaign(validCampaignId))
+      .catch((error) => console.error('Failed to load campaign for history:', error))
+      .finally(() => setCampaignLoading(false))
+  }, [validCampaignId, currentCampaignId, generatedEmails.length, loadCampaign])
 
   // Initialize version storage service
   const supabase = createClient()
@@ -64,11 +84,6 @@ function HistoryPageContent() {
               })),
             })
             setVersions(loadedVersions)
-
-            // Auto-select the latest version
-            if (loadedVersions.length > 0 && !selectedVersionId) {
-              setSelectedVersionId(loadedVersions[loadedVersions.length - 1].id)
-            }
           } catch (error) {
             console.error('Failed to load versions:', error)
             setVersions([])
@@ -80,7 +95,7 @@ function HistoryPageContent() {
       }
       loadVersions()
     }
-  }, [validEmailId, generatedEmails, selectedVersionId, versionStorageService])
+  }, [validEmailId, generatedEmails, versionStorageService])
 
   // Route guard
   useEffect(() => {
@@ -92,7 +107,7 @@ function HistoryPageContent() {
     }
   }, [isLoading, validEmailId, validCampaignId, router])
 
-  if (isLoading) {
+  if (isLoading || campaignLoading) {
     return null
   }
 
@@ -127,13 +142,32 @@ function HistoryPageContent() {
     )
   }
 
-  const selectedVersion = selectedVersionId
-    ? versions.find((v) => v.id === selectedVersionId)
-    : null
+  // Saved versions hold the state *before* each edit, so the email as it is
+  // now (e.g. after an AI rewrite) is appended as the latest entry.
+  const lastSaved = versions.length > 0 ? versions[versions.length - 1] : null
+  const currentIsSaved =
+    lastSaved?.subject === currentEmail.subject && lastSaved?.content === currentEmail.content
+  const timeline: EmailVersion[] = currentIsSaved
+    ? versions
+    : [
+        ...versions,
+        {
+          id: CURRENT_VERSION_ID,
+          emailId: currentEmail.day,
+          subject: currentEmail.subject,
+          content: currentEmail.content,
+          timestamp: Date.now(),
+          changesSummary: lastSaved
+            ? extractChangeSummary(lastSaved, currentEmail)
+            : 'Current version',
+        },
+      ]
 
-  const selectedIndex = selectedVersion ? versions.findIndex((v) => v.id === selectedVersionId) : -1
+  const effectiveSelectedId = selectedVersionId ?? timeline[timeline.length - 1]?.id ?? null
+  const selectedIndex = timeline.findIndex((v) => v.id === effectiveSelectedId)
+  const selectedVersion = selectedIndex >= 0 ? timeline[selectedIndex] : null
 
-  const previousVersion = selectedIndex > 0 ? versions[selectedIndex - 1] : null
+  const previousVersion = selectedIndex > 0 ? timeline[selectedIndex - 1] : null
 
   const handleRestoreVersion = (version: EmailVersion) => {
     setVersionToRestore(version)
@@ -205,8 +239,8 @@ function HistoryPageContent() {
         {/* Left: Version List */}
         <aside className="w-80 border-r border-border bg-card flex flex-col overflow-hidden">
           <VersionList
-            versions={versions}
-            selectedVersionId={selectedVersionId}
+            versions={timeline}
+            selectedVersionId={effectiveSelectedId}
             onSelectVersion={setSelectedVersionId}
             onRestoreVersion={handleRestoreVersion}
           />
@@ -216,6 +250,7 @@ function HistoryPageContent() {
         <main className="flex-1 overflow-hidden">
           {selectedVersion ? (
             <DiffViewer
+              key={selectedVersion.id}
               oldVersion={previousVersion}
               newVersion={selectedVersion}
               viewMode="unified"
@@ -233,7 +268,7 @@ function HistoryPageContent() {
             <VersionPreview
               version={selectedVersion}
               onRestore={handleRestoreVersion}
-              isLatest={selectedIndex === versions.length - 1}
+              isLatest={selectedIndex === timeline.length - 1}
             />
           ) : (
             <div className="flex items-center justify-center h-full p-8 text-center">

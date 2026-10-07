@@ -9,17 +9,21 @@ import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
+import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
 
 interface UpgradePromptProps {
   campaignCount?: number
   redirectTo?: string
   initialError?: string | null
+  /** Shown when a guest opens /signup directly rather than hitting the limit. */
+  variant?: 'limit' | 'save'
 }
 
 export function UpgradePrompt({
   campaignCount = 1,
   redirectTo = '/create',
   initialError = null,
+  variant = 'limit',
 }: UpgradePromptProps) {
   const router = useRouter()
   const [oauthLoading, setOauthLoading] = useState(false)
@@ -29,9 +33,12 @@ export function UpgradePrompt({
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
+  const { ensureConsent, consentProps } = useLegalConsent()
+
   const anyLoading = oauthLoading || emailLoading
 
   const handleGoogleSignUp = async () => {
+    if (!ensureConsent()) return
     setOauthLoading(true)
     setError(null)
     setPendingMessage(null)
@@ -73,6 +80,7 @@ export function UpgradePrompt({
   // post-signup experience prematurely.
   const handleEmailUpgrade = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!ensureConsent()) return
     setEmailLoading(true)
     setError(null)
     setPendingMessage(null)
@@ -109,7 +117,9 @@ export function UpgradePrompt({
             <Sparkles className="w-8 h-8 text-primary" />
           </div>
           <CardTitle className="text-display text-2xl md:text-3xl">
-            You&apos;ve created your first campaign!
+            {variant === 'save'
+              ? 'Save your campaigns'
+              : 'You\u2019ve created your first campaign!'}
           </CardTitle>
           <CardDescription className="mt-2">
             Sign up to save your work and create unlimited campaigns.
@@ -117,12 +127,14 @@ export function UpgradePrompt({
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="bg-muted/50 rounded-lg p-4 text-center">
-            <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{campaignCount} campaign</span>{' '}
-              created • <span className="text-primary font-medium">Free trial used</span>
-            </p>
-          </div>
+          {variant === 'limit' && (
+            <div className="bg-muted/50 rounded-lg p-4 text-center">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{campaignCount} campaign</span>{' '}
+                created • <span className="text-primary font-medium">Free trial used</span>
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md">
@@ -135,6 +147,11 @@ export function UpgradePrompt({
               {pendingMessage}
             </div>
           )}
+
+          <LegalConsent
+            {...consentProps}
+            idPrefix="upgrade"
+          />
 
           <Button
             onClick={handleGoogleSignUp}

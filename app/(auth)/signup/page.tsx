@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
+import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
+import { createClient } from '@/lib/supabase/server'
 import {
   Card,
   CardContent,
@@ -14,7 +16,23 @@ export const metadata = {
   description: 'Create a new account',
 }
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // A guest already has campaigns on an anonymous user; signing up fresh would
+  // orphan them, so upgrade that user in place instead.
+  if (user?.is_anonymous) {
+    return (
+      <UpgradePrompt
+        variant="save"
+        redirectTo="/campaigns"
+      />
+    )
+  }
+
   return (
     <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">

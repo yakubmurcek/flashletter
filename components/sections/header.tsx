@@ -74,7 +74,16 @@ export function Header() {
               >
                 <Link href="/campaigns">My campaigns</Link>
               </Button>
-              <UserMenu user={user} />
+              {user.is_anonymous ? (
+                <Button
+                  size="sm"
+                  asChild
+                >
+                  <Link href="/signup">Sign up to save</Link>
+                </Button>
+              ) : (
+                <UserMenu user={user} />
+              )}
             </>
           ) : (
             <>

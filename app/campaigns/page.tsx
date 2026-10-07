@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mail, Plus } from 'lucide-react'
+import { Mail, Plus, Save } from 'lucide-react'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 import { AppShell } from '@/components/layouts/app-shell'
 
@@ -30,7 +30,23 @@ export default async function CampaignsPage() {
 
   return (
     <AppShell
-      headerRight={<SignOutButton />}
+      headerRight={
+        // Signing a guest out would throw their campaigns away; offer to save them instead.
+        user.is_anonymous ? (
+          <Button
+            asChild
+            size="sm"
+            className="gap-2"
+          >
+            <Link href="/signup">
+              <Save className="h-4 w-4" />
+              Sign up to save
+            </Link>
+          </Button>
+        ) : (
+          <SignOutButton />
+        )
+      }
       withFooter={false}
     >
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
