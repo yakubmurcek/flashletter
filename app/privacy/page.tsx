@@ -46,6 +46,11 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
           to the AI assistant.
         </li>
         <li>
+          <strong>Billing data:</strong> if you subscribe to Pro, Stripe collects your card and
+          billing details. We never see or store your full card number; we keep only your plan,
+          subscription status and the Stripe customer reference.
+        </li>
+        <li>
           <strong>Technical data:</strong> browser, device, pages visited and error reports, used to
           keep the service working and secure. We use your IP address briefly for rate limiting and
           to pick the right consent options for your region; we do not store it with your account.
@@ -101,6 +106,9 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
           </li>
           <li>
             <strong>Vercel</strong>: hosting of the website and app.
+          </li>
+          <li>
+            <strong>Stripe</strong>: payments and subscription billing for Pro.
           </li>
           <li>
             <strong>Upstash</strong>: rate limiting and caching, if enabled.

@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/rate-limit'
 import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
+import { checkCampaignAllowed, checkEmailCount, getPlan } from '@/lib/billing/limits'
 import { buildInstructions } from './prompts'
 
 export async function POST(req: NextRequest) {
@@ -64,6 +65,14 @@ export async function POST(req: NextRequest) {
       if (!owned) {
         return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
       }
+    }
+
+    const plan = await getPlan(user)
+    const denial =
+      checkEmailCount(plan, config.days) ??
+      (await checkCampaignAllowed(supabase, user.id, plan, campaignId))
+    if (denial) {
+      return NextResponse.json(denial, { status: 402 })
     }
 
     const instructions = buildInstructions(config, landingUrl, landingContent, landingAnalysis)

@@ -16,7 +16,19 @@ export const metadata = {
   description: 'Create a new account',
 }
 
-export default async function SignupPage() {
+function safeRedirect(target: string | string[] | undefined, fallback: string) {
+  if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//')) {
+    return fallback
+  }
+  return target.startsWith('/\\') ? fallback : target
+}
+
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { redirectTo } = await searchParams
   const supabase = await createClient()
   const {
     data: { user },
@@ -28,7 +40,7 @@ export default async function SignupPage() {
     return (
       <UpgradePrompt
         variant="save"
-        redirectTo="/campaigns"
+        redirectTo={safeRedirect(redirectTo, '/campaigns')}
       />
     )
   }

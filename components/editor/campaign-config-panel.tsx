@@ -12,6 +12,9 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { CAMPAIGN_TONES, CAMPAIGN_TYPES, CAMPAIGN_DURATION } from '@/lib/constants/campaign'
+import Link from 'next/link'
+import { usePlan } from '@/lib/hooks/use-plan'
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 import type { CampaignConfig } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
@@ -35,6 +38,7 @@ export function CampaignConfigPanel({
   defaultOpen = false,
 }: CampaignConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
+  const { plan, maxEmails } = usePlan()
 
   if (!config) {
     return null
@@ -132,12 +136,24 @@ export function CampaignConfigPanel({
             </div>
             <Slider
               min={CAMPAIGN_DURATION.MIN}
-              max={CAMPAIGN_DURATION.MAX}
+              max={Math.min(CAMPAIGN_DURATION.MAX, maxEmails)}
               step={1}
               value={[days]}
               onValueChange={(v) => setDays(v[0])}
               disabled={isStreaming}
             />
+            {plan !== 'pro' && plan !== null && (
+              <p className="text-xs text-muted-foreground">
+                Up to {maxEmails} emails on your plan.{' '}
+                <Link
+                  href="/pricing"
+                  className="text-primary hover:underline"
+                >
+                  Pro writes up to {PLAN_LIMITS.pro.maxEmailsPerCampaign}
+                </Link>
+                .
+              </p>
+            )}
           </div>
 
           <Button

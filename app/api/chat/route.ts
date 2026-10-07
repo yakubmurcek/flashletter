@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
 import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
+import { consumeAiRewrite, getPlan } from '@/lib/billing/limits'
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,6 +58,11 @@ export async function POST(req: NextRequest) {
     while (history.length && history[history.length - 1].role !== 'user') history.pop()
     if (!history.length) {
       return NextResponse.json({ error: 'No user message' }, { status: 400 })
+    }
+
+    const rewriteDenial = await consumeAiRewrite(user.id, await getPlan(user))
+    if (rewriteDenial) {
+      return NextResponse.json(rewriteDenial, { status: 402 })
     }
 
     const output = await generateStructured({

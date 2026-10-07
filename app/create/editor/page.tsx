@@ -56,6 +56,7 @@ function EditorPageContent() {
     warning: streamWarning,
     clearWarning: clearStreamWarning,
     generateEmailsStream,
+    limitPlan,
   } = useEmailStreaming()
 
   const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
@@ -389,6 +390,7 @@ function EditorPageContent() {
               streamedCount={streamedCount}
               totalExpected={totalExpected}
               error={streamError}
+              limitPlan={limitPlan}
             />
           ) : null}
         </main>

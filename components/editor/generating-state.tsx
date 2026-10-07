@@ -1,6 +1,9 @@
 'use client'
 
-import { Loader2, Sparkles, AlertCircle } from 'lucide-react'
+import Link from 'next/link'
+import { Loader2, Sparkles, AlertCircle, Lock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import type { PlanId } from '@/lib/billing/plans'
 import { AnimatePresence, motion } from 'framer-motion'
 import { EasedProgressBar, useEasedProgress, useRotatingText } from '@/components/ui/eased-progress'
 
@@ -25,13 +28,41 @@ interface GeneratingStateProps {
   streamedCount: number
   totalExpected: number | null
   error: string | null
+  limitPlan?: PlanId | null
 }
 
-export function GeneratingState({ streamedCount, totalExpected, error }: GeneratingStateProps) {
+export function GeneratingState({
+  streamedCount,
+  totalExpected,
+  error,
+  limitPlan = null,
+}: GeneratingStateProps) {
   const showFirstHint = streamedCount === 0
   const firstProgress = useEasedProgress(!error && showFirstHint, 45_000)
   const restProgress = useEasedProgress(!error && !showFirstHint, 70_000)
   const hint = useRotatingText(showFirstHint ? FIRST_EMAIL_HINTS : SEQUENCE_HINTS, !error)
+
+  if (error && limitPlan) {
+    const isGuest = limitPlan === 'guest'
+    return (
+      <div className="h-full flex items-center justify-center px-6">
+        <div className="max-w-md text-center">
+          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Lock className="w-5 h-5 text-primary" />
+          </div>
+          <h2 className="text-display text-2xl mb-2">
+            {isGuest ? 'Save your work to keep going' : 'You\u2019ve hit this month\u2019s limit'}
+          </h2>
+          <p className="text-sm text-muted-foreground mb-6">{error}</p>
+          <Button asChild>
+            <Link href={isGuest ? '/signup' : '/pricing'}>
+              {isGuest ? 'Create a free account' : 'Upgrade to Pro'}
+            </Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   if (error) {
     return (

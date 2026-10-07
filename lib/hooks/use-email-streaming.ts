@@ -6,12 +6,16 @@ import { useCampaignActions } from '../campaign-context'
 import type { CampaignConfig, Email, LandingPageData } from '../types'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
 import { track } from '../analytics'
+import { PlanLimitError } from '../billing/errors'
+import type { PlanId } from '../billing/plans'
 
 interface UseEmailStreamingReturn {
   isStreaming: boolean
   streamedCount: number
   totalExpected: number | null
   error: string | null
+  /** Set when generation was refused because the plan limit was reached. */
+  limitPlan: PlanId | null
   warning: string | null
   generateEmailsStream: (
     landingPageData: LandingPageData,
@@ -29,6 +33,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
   const [streamedCount, setStreamedCount] = useState(0)
   const [totalExpected, setTotalExpected] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [limitPlan, setLimitPlan] = useState<PlanId | null>(null)
   const [warning, setWarning] = useState<string | null>(null)
   const abortRef = useRef<AbortController | null>(null)
 
@@ -46,6 +51,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
       setStreamedCount(0)
       setTotalExpected(config.days)
       setError(null)
+      setLimitPlan(null)
       setWarning(null)
 
       // Clear any prior emails locally so the stream renders cleanly.
@@ -97,6 +103,12 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
         if (err instanceof Error && err.name === 'AbortError') {
           return null
         }
+        if (err instanceof PlanLimitError) {
+          setLimitPlan(err.plan)
+          setError(err.message)
+          track('limit_reached', { plan: err.plan, limit: 'campaigns' })
+          return null
+        }
         logError(err, {
           operation: 'generate emails (stream)',
           component: 'useEmailStreaming',
@@ -122,6 +134,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
     streamedCount,
     totalExpected,
     error,
+    limitPlan,
     warning,
     generateEmailsStream,
     clearError,

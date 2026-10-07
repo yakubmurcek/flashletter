@@ -11,6 +11,7 @@ import {
 } from '@/lib/utils/rate-limit'
 import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
+import { checkCampaignAllowed, checkEmailCount, getPlan } from '@/lib/billing/limits'
 import { buildFirstEmailInstructions, buildRemainingEmailsInstructions } from '../prompts'
 import type { Email } from '@/lib/schemas'
 
@@ -56,6 +57,14 @@ export async function POST(req: NextRequest) {
     if (!owned) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
+  }
+
+  const plan = await getPlan(user)
+  const denial =
+    checkEmailCount(plan, parsedBody.config.days) ??
+    (await checkCampaignAllowed(supabase, user.id, plan, parsedBody.campaignId))
+  if (denial) {
+    return NextResponse.json(denial, { status: 402 })
   }
 
   const identifier = user.id || getClientIp(req)

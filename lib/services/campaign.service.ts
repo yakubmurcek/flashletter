@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { CampaignConfig, Email, GenerateEmailsResponse, LandingPageData } from '../types'
 import type { LandingPageAnalysis } from '../schemas/analysis'
 import type { ScrapeStreamEvent } from '../types/scrape-progress'
+import { planLimitFromResponse } from '../billing/errors'
 
 const generateEmailsStreamEventSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('start'), total: z.number() }),
@@ -238,7 +239,10 @@ export class CampaignService {
 
     if (!response.ok) {
       const raw = await response.json().catch(() => null)
-      throw new Error(extractErrorMessage(raw, 'Failed to generate emails'))
+      throw (
+        planLimitFromResponse(response.status, raw) ??
+        new Error(extractErrorMessage(raw, 'Failed to generate emails'))
+      )
     }
     if (!response.body) {
       throw new Error('Stream not supported in this environment')
