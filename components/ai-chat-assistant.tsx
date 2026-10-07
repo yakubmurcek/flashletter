@@ -65,8 +65,13 @@ export function AIChatAssistant({
       }, 50)
     }
   }, [autoSubmitMessage, isLoading, onAutoSubmitComplete, setInput])
+  // A suggestion chip is a request, not a draft: send it straight away.
   const handleQuickAction = (action: string) => {
     setInput(action)
+    setTimeout(() => {
+      const form = document.querySelector('[data-chat-form]') as HTMLFormElement | null
+      form?.requestSubmit()
+    }, 50)
   }
 
   return (

@@ -33,7 +33,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
           )}
           <Card
             className={cn(
-              'px-3 py-2 max-w-[85%] min-w-[120px] transition-colors',
+              'gap-1 px-3 py-2 max-w-[85%] min-w-[120px] transition-colors',
               message.role === 'user'
                 ? 'bg-primary text-primary-foreground border-0 shadow-sm'
                 : message.appliedEdit
@@ -44,7 +44,7 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
             {message.appliedEdit && (
               <div className="flex items-center gap-2 mb-1 pb-1 border-b border-primary/20">
                 <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                <span className="text-xs font-semibold text-primary">Email Updated</span>
+                <span className="text-xs font-semibold text-primary">Email updated</span>
               </div>
             )}
             {message.context && (

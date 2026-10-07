@@ -7,9 +7,9 @@ export default function CampaignsLoading() {
     <AppShell withFooter={false}>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-display text-3xl md:text-5xl mb-3">My Campaigns</h1>
+          <h1 className="text-display text-3xl md:text-5xl mb-3">Campaigns</h1>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Manage and view all your email campaigns
+            Every sequence you have generated. Open one to keep editing.
           </p>
         </div>
         <Skeleton className="h-11 w-40" />

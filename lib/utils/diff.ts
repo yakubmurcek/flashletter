@@ -186,16 +186,17 @@ export function collapseUnchangedLines(
  * Format diff stats into a human-readable string
  */
 export function formatDiffStats(stats: DiffResult['stats']): string {
+  const lines = (n: number) => `${n} ${n === 1 ? 'line' : 'lines'}`
   const parts: string[] = []
 
   if (stats.added > 0) {
-    parts.push(`+${stats.added}`)
+    parts.push(`+${lines(stats.added)} added`)
   }
   if (stats.removed > 0) {
-    parts.push(`-${stats.removed}`)
+    parts.push(`-${lines(stats.removed)} removed`)
   }
   if (stats.modified > 0) {
-    parts.push(`~${stats.modified}`)
+    parts.push(`${lines(stats.modified)} changed`)
   }
 
   return parts.length > 0 ? parts.join(', ') : 'No changes'
