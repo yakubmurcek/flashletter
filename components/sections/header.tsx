@@ -101,7 +101,7 @@ export function Header() {
                 asChild
               >
                 {LANDING_PAGE_CONFIG.showProductFeatures ? (
-                  <Link href="/signup">Try free</Link>
+                  <Link href="/#try">Try free</Link>
                 ) : (
                   <Link href="/login">Sign in</Link>
                 )}

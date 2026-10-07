@@ -37,6 +37,18 @@ export function HeroUrlForm() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // "Try free" links point at #try: land on the box with the cursor in it.
+  useEffect(() => {
+    const focusIfTargeted = () => {
+      if (window.location.hash !== '#try') return
+      inputRef.current?.scrollIntoView({ block: 'center' })
+      inputRef.current?.focus({ preventScroll: true })
+    }
+    focusIfTargeted()
+    window.addEventListener('hashchange', focusIfTargeted)
+    return () => window.removeEventListener('hashchange', focusIfTargeted)
+  }, [])
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     const trimmedUrl = url.trim()
@@ -125,6 +137,8 @@ export function HeroUrlForm() {
         >
           <Input
             ref={inputRef}
+            id="try"
+            aria-label="Your landing page URL"
             type="text"
             placeholder="https://your-landing-page.com"
             value={url}
