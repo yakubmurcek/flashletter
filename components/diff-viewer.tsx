@@ -23,7 +23,7 @@ interface DiffViewerProps {
 type DiffSection = 'subject' | 'content'
 
 export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: DiffViewerProps) {
-  const [activeSection, setActiveSection] = useState<DiffSection>('content')
+  const [chosenSection, setActiveSection] = useState<DiffSection | null>(null)
   const [expandedSections, setExpandedSections] = useState<Set<number>>(new Set())
 
   if (!oldVersion) {
@@ -41,6 +41,12 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
 
   const subjectDiff = generateDiff(oldVersion.subject, newVersion.subject)
   const contentDiff = generateDiff(oldVersion.content, newVersion.content)
+
+  // Open on whichever part actually changed (e.g. an AI subject rewrite).
+  const contentChanged = oldVersion.content !== newVersion.content
+  const subjectChanged = oldVersion.subject !== newVersion.subject
+  const activeSection: DiffSection =
+    chosenSection ?? (subjectChanged && !contentChanged ? 'subject' : 'content')
 
   const currentDiff = activeSection === 'subject' ? subjectDiff : contentDiff
   const collapsedLines = collapseUnchangedLines(currentDiff.lines, 3)

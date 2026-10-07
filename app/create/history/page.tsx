@@ -250,6 +250,7 @@ function HistoryPageContent() {
         <main className="flex-1 overflow-hidden">
           {selectedVersion ? (
             <DiffViewer
+              key={selectedVersion.id}
               oldVersion={previousVersion}
               newVersion={selectedVersion}
               viewMode="unified"
