@@ -34,14 +34,44 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
           subscribers.
         </p>
         <p>
-          Flashletter is in early access and currently free. Features may change, and we may
-          introduce paid plans later; we will tell you before anything you use starts to cost money.
+          Flashletter has a Free plan with monthly limits and a paid Pro plan. The current limits
+          and prices are shown on our{' '}
+          <Link
+            href="/pricing"
+            className="text-primary hover:underline"
+          >
+            pricing page
+          </Link>
+          . Features may change over time.
         </p>
       </>
     ),
   },
   {
-    title: '3. Your account',
+    title: '3. Paid plans, billing and cancellation',
+    body: (
+      <ul className="list-disc list-inside space-y-2">
+        <li>
+          Pro is a subscription billed monthly or yearly in advance through Stripe, our payment
+          processor. Prices are in US dollars; taxes may be added where the law requires.
+        </li>
+        <li>
+          Your subscription renews automatically until you cancel. You can cancel anytime from your
+          account page; you keep Pro until the end of the period you paid for.
+        </li>
+        <li>
+          If you are not happy, write to us within 14 days of your first payment and we will refund
+          it in full. After that, payments are not refundable except where the law requires.
+        </li>
+        <li>
+          We will tell you at least 30 days before a price change applies to your subscription, and
+          you can cancel before it takes effect.
+        </li>
+      </ul>
+    ),
+  },
+  {
+    title: '4. Your account',
     body: (
       <ul className="list-disc list-inside space-y-2">
         <li>You must be at least 16 years old.</li>
@@ -54,7 +84,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '4. Acceptable use',
+    title: '5. Acceptable use',
     body: (
       <>
         <p className="mb-4">Please do not use Flashletter to:</p>
@@ -68,7 +98,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '5. Your content and AI output',
+    title: '6. Your content and AI output',
     body: (
       <>
         <p className="mb-4">
@@ -84,7 +114,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '6. Availability and warranty',
+    title: '7. Availability and warranty',
     body: (
       <p>
         We work to keep Flashletter running and accurate, but it is provided &ldquo;as is&rdquo;
@@ -93,7 +123,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '7. Limitation of liability',
+    title: '8. Limitation of liability',
     body: (
       <p>
         To the extent the law allows, we are not liable for indirect or consequential losses, such
@@ -103,7 +133,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '8. Ending your use',
+    title: '9. Ending your use',
     body: (
       <p>
         You can stop using Flashletter at any time and ask us to delete your account by writing to{' '}
@@ -118,7 +148,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '9. Privacy',
+    title: '10. Privacy',
     body: (
       <p>
         How we handle personal data is described in our{' '}
@@ -133,7 +163,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '10. Changes and governing law',
+    title: '11. Changes and governing law',
     body: (
       <p>
         We may update these terms; if a change matters, we will tell you by email or in the app
@@ -142,7 +172,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
     ),
   },
   {
-    title: '11. Contact',
+    title: '12. Contact',
     body: (
       <div className="space-y-2">
         <p>

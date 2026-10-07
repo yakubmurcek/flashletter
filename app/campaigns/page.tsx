@@ -44,7 +44,16 @@ export default async function CampaignsPage() {
             </Link>
           </Button>
         ) : (
-          <SignOutButton />
+          <>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+            >
+              <Link href="/account">Account</Link>
+            </Button>
+            <SignOutButton />
+          </>
         )
       }
       withFooter={false}

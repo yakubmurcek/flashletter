@@ -6,6 +6,11 @@ import { Redis } from '@upstash/redis'
 // to in-memory rate limiting
 let redis: Redis | undefined
 
+/** Shared Upstash client, or undefined when Redis is not configured. */
+export function getRedis(): Redis | undefined {
+  return redis
+}
+
 // The Upstash integration on the Vercel Marketplace injects KV_REST_API_*;
 // a manually created Upstash database uses UPSTASH_REDIS_REST_*.
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL

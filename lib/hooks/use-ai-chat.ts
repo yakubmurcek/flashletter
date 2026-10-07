@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 import { MESSAGE_HISTORY_LIMIT } from '@/lib/constants/app'
 import { logError, getUserFriendlyMessage } from '@/lib/utils/error-handling'
+import { planLimitFromResponse } from '../billing/errors'
 
 export interface ChatMessage {
   id: number
@@ -104,6 +105,20 @@ export function useAIChat({
       })
 
       if (!response.ok) {
+        const raw = await response.json().catch(() => null)
+        const limit = planLimitFromResponse(response.status, raw)
+        if (limit) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: messages.length + 2,
+              role: 'assistant',
+              content: `${limit.message} See plans at /pricing.`,
+              timestamp: new Date(),
+            },
+          ])
+          return
+        }
         throw new Error('Failed to get response')
       }
 

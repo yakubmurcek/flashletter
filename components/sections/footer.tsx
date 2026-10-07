@@ -24,30 +24,30 @@ export function Footer() {
             </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <a
-                  href="#features"
+                <Link
+                  href="/#features"
                   className="text-foreground hover:text-primary transition-colors"
                 >
                   Features
-                </a>
+                </Link>
               </li>
               {LANDING_PAGE_CONFIG.showProductFeatures && (
                 <li>
-                  <a
-                    href="#pricing"
+                  <Link
+                    href="/pricing"
                     className="text-foreground hover:text-primary transition-colors"
                   >
                     Pricing
-                  </a>
+                  </Link>
                 </li>
               )}
               <li>
-                <a
-                  href="#faq"
+                <Link
+                  href="/#faq"
                   className="text-foreground hover:text-primary transition-colors"
                 >
                   FAQ
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -72,6 +72,14 @@ export function Footer() {
                 >
                   Terms
                 </Link>
+              </li>
+              <li>
+                <a
+                  href="mailto:jakub@flashletter.app"
+                  className="text-foreground hover:text-primary transition-colors"
+                >
+                  Contact
+                </a>
               </li>
               <li>
                 <Link

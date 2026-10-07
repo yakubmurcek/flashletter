@@ -32,13 +32,13 @@ export function Header() {
   }, [])
 
   const navItems = [
-    { href: '#features', label: 'Features', show: true },
+    { href: '/#features', label: 'Features', show: true },
     {
-      href: '#pricing',
+      href: '/pricing',
       label: 'Pricing',
       show: LANDING_PAGE_CONFIG.showProductFeatures,
     },
-    { href: '#faq', label: 'FAQ', show: true },
+    { href: '/#faq', label: 'FAQ', show: true },
   ].filter((item) => item.show)
 
   return (

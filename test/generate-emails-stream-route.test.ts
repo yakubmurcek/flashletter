@@ -2,6 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Anthropic from '@anthropic-ai/sdk'
 
 const captureExceptionMock = vi.fn()
+vi.mock('@/lib/billing/limits', () => ({
+  getPlan: async () => 'free',
+  consumeAiRewrite: async () => null,
+  checkEmailCount: () => null,
+  checkCampaignAllowed: async () => null,
+}))
+
 vi.mock('@sentry/nextjs', () => ({
   captureException: (...args: unknown[]) => captureExceptionMock(...args),
 }))

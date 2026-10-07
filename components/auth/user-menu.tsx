@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { User, LogOut, FolderOpen } from 'lucide-react'
+import { User, LogOut, FolderOpen, CreditCard } from 'lucide-react'
 
 interface UserMenuProps {
   user: {
@@ -62,6 +62,10 @@ export function UserMenu({ user }: UserMenuProps) {
         <DropdownMenuItem onClick={() => router.push('/campaigns')}>
           <FolderOpen className="mr-2 h-4 w-4" />
           My Campaigns
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.push('/account')}>
+          <CreditCard className="mr-2 h-4 w-4" />
+          Account & billing
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>

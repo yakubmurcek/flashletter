@@ -2,7 +2,10 @@ import { HeroUrlForm } from '@/components/sections/hero-url-form'
 
 export function FullProductHeroSection() {
   return (
-    <section className="pt-24 md:pt-32 pb-20 md:pb-28">
+    <section
+      id="top"
+      className="pt-24 md:pt-32 pb-20 md:pb-28 scroll-mt-14"
+    >
       <div className="max-w-3xl mx-auto text-center">
         <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight">
           For founders who hate writing from scratch
