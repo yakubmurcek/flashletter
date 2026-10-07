@@ -30,7 +30,9 @@ which the app also reads.
 
 ### `RESEND_API_KEY` and `RESEND_FROM_ADDRESS`
 
-Powers the "Send to my inbox" button in the editor. `RESEND_API_KEY` comes from
+Powers the "Send to my inbox" button in the editor. The button (and the
+pricing bullet that mentions it) only shows when
+`NEXT_PUBLIC_ENABLE_TEST_SEND=true`; set that only after both Resend vars work. `RESEND_API_KEY` comes from
 the Resend dashboard. `RESEND_FROM_ADDRESS` is the verified-domain sender (e.g.
 `Flashletter <hi@flashletter.app>`); for early testing, Resend's
 `onboarding@resend.dev` works but only sends to the account-owner inbox.

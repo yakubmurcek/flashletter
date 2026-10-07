@@ -6,6 +6,7 @@ import { ArrowLeft, History, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { BrandMark } from '@/components/brand/brand-mark'
 import { SendTestDialog } from '@/components/editor/send-test-dialog'
+import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 interface EditorHeaderProps {
   landingPageUrl?: string
@@ -88,7 +89,7 @@ export function EditorHeader({
                 )}
               </Link>
             </Button>
-            {canSendTest ? (
+            {!FEATURE_FLAGS.ENABLE_TEST_SEND ? null : canSendTest ? (
               <SendTestDialog
                 campaignId={campaignId!}
                 emailDay={selectedEmailDay!}

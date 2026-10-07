@@ -2,6 +2,7 @@ import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import Link from 'next/link'
 import { Reveal } from '@/components/ui/reveal'
+import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 type Tier = {
   name: string
@@ -27,7 +28,7 @@ const TIERS: Tier[] = [
       'Full email sequence from any landing page URL',
       'Rich-text editor with version history',
       'AI chat to rewrite any email or selection',
-      'Send a test email to your own inbox',
+      ...(FEATURE_FLAGS.ENABLE_TEST_SEND ? ['Send a test email to your own inbox'] : []),
       'Copy into Mailchimp, ConvertKit, Beehiiv or any ESP',
     ],
   },

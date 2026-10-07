@@ -28,6 +28,10 @@ export const FEATURE_FLAGS = {
   // Analytics and tracking
   ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
   ENABLE_SENTRY: process.env.NEXT_PUBLIC_ENABLE_SENTRY === 'true',
+
+  // "Send to my inbox" in the editor. Needs RESEND_API_KEY + RESEND_FROM_ADDRESS
+  // on the server; keep it off until those exist so nobody hits a dead button.
+  ENABLE_TEST_SEND: process.env.NEXT_PUBLIC_ENABLE_TEST_SEND === 'true',
 } as const
 
 // Landing page configuration based on feature flags
