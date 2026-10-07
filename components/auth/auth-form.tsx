@@ -208,7 +208,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         ) : mode === 'signup' ? (
           'Create Account'
         ) : (
-          'Sign In'
+          'Sign in'
         )}
       </Button>
 

@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'Sign In - Flashletter',
+  title: 'Sign in - Flashletter',
   description: 'Sign in to your account',
 }
 
@@ -19,11 +19,7 @@ export default function LoginPage() {
     <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
         <CardTitle className="text-display text-2xl md:text-3xl">Welcome back</CardTitle>
-        <CardDescription>
-          Sign in to your account to continue creating
-          <br />
-          amazing email campaigns
-        </CardDescription>
+        <CardDescription>Sign in to pick up your campaigns where you left off.</CardDescription>
       </CardHeader>
       <CardContent>
         <AuthForm mode="login" />
