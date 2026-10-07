@@ -89,15 +89,23 @@ function createLimiter(max: number, window: Window, prefix: string): Limiter {
  * - Generate emails: 5 requests per hour
  * - Scrape landing: 20 requests per hour
  */
-export const chatRateLimit = createLimiter(10, '1 m', 'ratelimit:chat')
-export const generateEmailsRateLimit = createLimiter(5, '1 h', 'ratelimit:generate-emails')
-export const scrapeLandingRateLimit = createLimiter(20, '1 h', 'ratelimit:scrape')
+export const chatRateLimit = createLimiter(10, '1 m', 'flashletter:ratelimit:chat')
+export const generateEmailsRateLimit = createLimiter(
+  5,
+  '1 h',
+  'flashletter:ratelimit:generate-emails',
+)
+export const scrapeLandingRateLimit = createLimiter(20, '1 h', 'flashletter:ratelimit:scrape')
 
 // Test-send: 5/hr/user keeps a curious user from spamming themselves; the
 // route also applies a 20/day/IP cap separately to slow shared-IP abuse and
 // keep us under Resend's free-tier 3k/mo with headroom.
-export const sendTestEmailRateLimit = createLimiter(5, '1 h', 'ratelimit:send-test')
-export const sendTestEmailIpRateLimit = createLimiter(20, '1 d', 'ratelimit:send-test-ip')
+export const sendTestEmailRateLimit = createLimiter(5, '1 h', 'flashletter:ratelimit:send-test')
+export const sendTestEmailIpRateLimit = createLimiter(
+  20,
+  '1 d',
+  'flashletter:ratelimit:send-test-ip',
+)
 
 /**
  * Helper function to check rate limit for a given identifier

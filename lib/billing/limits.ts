@@ -86,7 +86,7 @@ export async function consumeAiRewrite(userId: string, plan: PlanId): Promise<Li
   if (!redis) return null
 
   const period = currentPeriodStart().toISOString().slice(0, 7)
-  const key = `billing:rewrites:${userId}:${period}`
+  const key = `flashletter:billing:rewrites:${userId}:${period}`
   const used = await redis.incr(key).catch(() => 0)
   if (used === 1) await redis.expire(key, 60 * 60 * 24 * 40).catch(() => undefined)
   if (used <= max) return null

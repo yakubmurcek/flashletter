@@ -39,8 +39,8 @@ const NONE: SubscriptionSummary = {
   customerId: null,
 }
 
-const customerKey = (userId: string) => `billing:customer:${userId}`
-const summaryKey = (userId: string) => `billing:summary:${userId}`
+const customerKey = (userId: string) => `flashletter:billing:customer:${userId}`
+const summaryKey = (userId: string) => `flashletter:billing:summary:${userId}`
 const SUMMARY_TTL_SECONDS = 60
 
 // Stripe search only accepts quoted literals; user ids are UUIDs, but be strict.
