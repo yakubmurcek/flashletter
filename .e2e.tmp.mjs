@@ -37,6 +37,7 @@ for (let d = 1; d <= 5; d++) {
   emails.push(`### EMAIL ${d}\n` + await p.evaluate(() => document.querySelector('main')?.innerText ?? document.body.innerText));
 }
 fs.writeFileSync('/tmp/e2e/emails.txt', emails.join('\n\n'));
+await p.getByText(/full context ready/i).waitFor({ timeout: 30000 }).catch(() => out('context never ready'));
 const before = await p.evaluate(() => document.querySelector('main')?.innerText ?? '');
 const box = p.getByPlaceholder(/ask me anything/i);
 if (await box.count()) {

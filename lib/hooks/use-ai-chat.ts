@@ -65,6 +65,8 @@ export function useAIChat({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
+    // Without the campaign the AI would answer blind ("paste your email").
+    if (!campaignContext && !emailContext) return
 
     const contextForThisRequest = selectedContext
     if (selectedContext && onClearContext) {
