@@ -11,6 +11,17 @@ import {
   ProgressStage,
 } from '@/lib/types/scrape-progress'
 import { cn } from '@/lib/utils'
+import { EasedProgressBar, useEasedProgress, useRotatingText } from '@/components/ui/eased-progress'
+
+// The analysis step is one long model call; rotate what it is looking at so
+// the dialog keeps visibly moving.
+const ANALYSIS_HINTS = [
+  'Finding the main promise',
+  'Working out who it is for',
+  'Collecting proof and numbers',
+  'Noting likely objections',
+  'Picking angles for each email',
+] as const
 
 interface ScrapeProgressOverlayProps {
   isOpen: boolean
@@ -35,12 +46,16 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
     }
   }, [isOpen])
 
-  if (!isOpen || !mounted) return null
-
-  // Find index of current stage
   const currentStageIndex = SCRAPE_PROGRESS_STAGES.findIndex(
     (s) => s.id === progressState.currentStageId,
   )
+  const inModelStage =
+    progressState.currentStageId === 'analyzing' || progressState.currentStageId === 'synthesizing'
+  const eased = useEasedProgress(isOpen, 35_000)
+  const stageFloor = (progressState.completedStageIds.length / SCRAPE_PROGRESS_STAGES.length) * 90
+  const hint = useRotatingText(ANALYSIS_HINTS, isOpen && inModelStage)
+
+  if (!isOpen || !mounted) return null
 
   return createPortal(
     <AnimatePresence>
@@ -57,9 +72,13 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
                 <h3 className="text-display text-xl text-center mb-1.5 text-foreground">
                   Reading your landing page
                 </h3>
-                <p className="text-center text-muted-foreground mb-6 text-sm">
+                <p className="text-center text-muted-foreground mb-4 text-sm">
                   Your first email starts writing right after this.
                 </p>
+                <EasedProgressBar
+                  value={Math.max(eased, stageFloor)}
+                  className="mb-5"
+                />
 
                 <div className="space-y-1.5">
                   {SCRAPE_PROGRESS_STAGES.map((stage, index) => {
@@ -75,6 +94,7 @@ export function ScrapeProgressOverlay({ isOpen, progressState }: ScrapeProgressO
                         stage={stage}
                         state={isCompleted ? 'completed' : isCurrent ? 'current' : 'pending'}
                         context={progressState.dynamicContext}
+                        hint={isCurrent && inModelStage ? hint : undefined}
                       />
                     )
                   })}
@@ -93,10 +113,12 @@ function ProgressStep({
   stage,
   state,
   context,
+  hint,
 }: {
   stage: ProgressStage
   state: 'completed' | 'current' | 'pending'
   context: ProgressState['dynamicContext']
+  hint?: string
 }) {
   const message = formatProgressMessage(stage.messageTemplate, context)
 
@@ -144,6 +166,20 @@ function ProgressStep({
         >
           {message}
         </p>
+        {hint && (
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={hint}
+              initial={{ opacity: 0, y: 3 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -3 }}
+              transition={{ duration: 0.2 }}
+              className="mt-1.5 text-xs text-muted-foreground truncate"
+            >
+              {hint}…
+            </motion.p>
+          </AnimatePresence>
+        )}
       </div>
     </motion.div>
   )

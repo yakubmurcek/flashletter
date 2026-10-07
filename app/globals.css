@@ -268,3 +268,17 @@
     animation: none;
   }
 }
+
+/* Sheen sweeping across progress bars so long waits never look frozen */
+@keyframes progressSheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-progress-sheen {
+  animation: progressSheen 1.4s ease-in-out infinite;
+}

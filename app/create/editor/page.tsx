@@ -349,6 +349,9 @@ function EditorPageContent() {
           emails={emails}
           selectedId={selectedEmailId}
           onSelect={handleSelectEmail}
+          pendingCount={
+            isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
+          }
           configPanel={
             <CampaignConfigPanel
               config={config ?? null}
