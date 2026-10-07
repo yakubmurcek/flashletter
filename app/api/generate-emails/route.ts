@@ -1,8 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
-import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
@@ -11,7 +9,7 @@ import {
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
-import { retryWithBackoff, extractRateLimitInfo } from '@/lib/utils/openai-retry'
+import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { buildInstructions } from './prompts'
 
@@ -23,7 +21,7 @@ export async function POST(req: NextRequest) {
     } = await supabase.auth.getUser()
 
     // Require auth — rate-limit-by-IP alone is too easy to bypass and this
-    // route spends OpenAI credits on every call. Anonymous Supabase users
+    // route spends AI credits on every call. Anonymous Supabase users
     // (signInAnonymously) are still accepted because they have a `user.id`.
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -58,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // If the caller wants emails persisted, they must own the target campaign.
     // RLS would also block the underlying delete/insert, but checking here
-    // turns a misconfigured RLS into an explicit 403 + avoids burning OpenAI
+    // turns a misconfigured RLS into an explicit 403 + avoids burning AI
     // tokens on a request that can't possibly persist.
     if (campaignId) {
       const ownershipService = new CampaignStorageService(supabase)
@@ -72,25 +70,11 @@ export async function POST(req: NextRequest) {
 
     const userInput = `Generate ${config.days} emails for this ${config.campaignType} campaign. Return only valid JSON.`
 
-    // Wrap OpenAI call with retry logic
-    const response = await retryWithBackoff(() =>
-      openai.responses.parse({
-        model: 'gpt-5',
-        input: [
-          { role: 'system', content: instructions },
-          { role: 'user', content: userInput },
-        ],
-        // Note: GPT-5 family does not accept `temperature` on responses.parse.
-        text: {
-          format: zodTextFormat(aiEmailsResponseSchema, 'emails_response'),
-        },
-      }),
-    )
-
-    const parsed = response.output_parsed
-    if (!parsed) {
-      throw new Error('No response from OpenAI')
-    }
+    const parsed = await generateStructured({
+      system: instructions,
+      messages: [{ role: 'user', content: userInput }],
+      schema: aiEmailsResponseSchema,
+    })
 
     // Normalize AI output (no id/uuid) into the full Email domain shape. Force
     // the day number from the index so a flaky model can't return duplicates
@@ -117,7 +101,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             emails: savedEmails,
-            usage: response.usage,
           },
           {
             headers: getRateLimitHeaders(
@@ -133,7 +116,6 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           {
             emails: emailsToSave,
-            usage: response.usage,
             warning: 'Could not save emails; returned without persistence',
           },
           {
@@ -150,7 +132,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         emails: emailsToSave,
-        usage: response.usage,
       },
       {
         headers: getRateLimitHeaders(
@@ -170,30 +151,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Handle OpenAI rate limit errors
-    if (error && typeof error === 'object' && 'status' in error) {
-      if (error.status === 429) {
-        const rateLimitInfo = extractRateLimitInfo(error)
+    if (isRateLimitError(error)) {
+      const rateLimitInfo = extractRateLimitInfo(error)
 
-        // Report to Sentry as warning (expected but needs visibility)
-        Sentry.captureException(error, {
-          level: 'warning',
-          tags: {
-            error_type: 'openai_rate_limit',
-            api_route: '/api/generate-emails',
-          },
-          extra: { rateLimitInfo },
-        })
+      // Report to Sentry as warning (expected but needs visibility)
+      Sentry.captureException(error, {
+        level: 'warning',
+        tags: {
+          error_type: 'ai_rate_limit',
+          api_route: '/api/generate-emails',
+        },
+        extra: { rateLimitInfo },
+      })
 
-        return NextResponse.json(
-          {
-            error: 'OpenAI rate limit exceeded',
-            message: 'Too many requests to AI service. Please try again later.',
-            rateLimitInfo,
-          },
-          { status: 429 },
-        )
-      }
+      return NextResponse.json(
+        {
+          error: 'AI rate limit exceeded',
+          message: 'Too many requests to AI service. Please try again later.',
+          rateLimitInfo,
+        },
+        { status: 429 },
+      )
     }
 
     return NextResponse.json({ error: 'Failed to generate emails' }, { status: 500 })

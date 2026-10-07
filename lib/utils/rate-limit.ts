@@ -9,11 +9,13 @@ let rateLimitEnabled = false
 
 const isProductionEnv = process.env.NODE_ENV === 'production' || !!process.env.VERCEL
 
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  })
+// The Upstash integration on the Vercel Marketplace injects KV_REST_API_*;
+// a manually created Upstash database uses UPSTASH_REDIS_REST_*.
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+
+if (redisUrl && redisToken) {
+  redis = new Redis({ url: redisUrl, token: redisToken })
   rateLimitEnabled = true
 } else if (isProductionEnv) {
   // Don't crash the import — but make every checkRateLimit() fail closed below.
@@ -95,7 +97,7 @@ export const sendTestEmailIpRateLimit = rateLimitEnabled
  */
 export async function checkRateLimit(ratelimit: Ratelimit | null, identifier: string) {
   if (!ratelimit) {
-    // Fail closed in production — silent unrestricted access to OpenAI-spending
+    // Fail closed in production — silent unrestricted access to AI-spending
     // routes is far worse than a 429 while Redis is being wired up.
     if (isProductionEnv) {
       return {

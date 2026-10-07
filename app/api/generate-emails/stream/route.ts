@@ -1,8 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
-import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { zodTextFormat } from 'openai/helpers/zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
@@ -11,7 +9,7 @@ import {
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
-import { retryWithBackoff, extractRateLimitInfo } from '@/lib/utils/openai-retry'
+import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { buildFirstEmailInstructions, buildRemainingEmailsInstructions } from '../prompts'
 import type { Email } from '@/lib/schemas'
@@ -44,7 +42,7 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Require auth before opening the stream — anonymous callers shouldn't
-  // be able to spend OpenAI tokens.
+  // be able to spend AI tokens.
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
@@ -93,28 +91,13 @@ export async function POST(req: NextRequest) {
         send({ type: 'start', total: config.days })
 
         // Phase 1: generate Day 1 alone — this is what the user sees first.
-        const firstResponse = await retryWithBackoff(() =>
-          openai.responses.parse({
-            model: 'gpt-5',
-            input: [
-              {
-                role: 'system',
-                content: buildFirstEmailInstructions(
-                  config,
-                  landingUrl,
-                  landingContent,
-                  landingAnalysis,
-                ),
-              },
-              { role: 'user', content: 'Generate Day 1 only. Return only valid JSON.' },
-            ],
-            text: { format: zodTextFormat(aiEmailsResponseSchema, 'emails_response') },
-          }),
-        )
-
-        const firstParsed = firstResponse.output_parsed
-        if (!firstParsed?.emails?.[0]) {
-          throw new Error('No Day 1 email returned from OpenAI')
+        const firstParsed = await generateStructured({
+          system: buildFirstEmailInstructions(config, landingUrl, landingContent, landingAnalysis),
+          messages: [{ role: 'user', content: 'Generate Day 1 only.' }],
+          schema: aiEmailsResponseSchema,
+        })
+        if (!firstParsed.emails[0]) {
+          throw new Error('No Day 1 email returned')
         }
 
         const rawFirst = firstParsed.emails[0]
@@ -133,37 +116,21 @@ export async function POST(req: NextRequest) {
 
         // Phase 2: generate Days 2..N referencing Day 1 for coherence.
         if (config.days > 1) {
-          const remainingResponse = await retryWithBackoff(() =>
-            openai.responses.parse({
-              model: 'gpt-5',
-              input: [
-                {
-                  role: 'system',
-                  content: buildRemainingEmailsInstructions(
-                    config,
-                    landingUrl,
-                    {
-                      subject: firstEmail.subject,
-                      preview: firstEmail.preview,
-                      content: firstEmail.content,
-                    },
-                    landingContent,
-                    landingAnalysis,
-                  ),
-                },
-                {
-                  role: 'user',
-                  content: `Generate Days 2 through ${config.days}. Return only valid JSON.`,
-                },
-              ],
-              text: { format: zodTextFormat(aiEmailsResponseSchema, 'emails_response') },
-            }),
-          )
-
-          const remainingParsed = remainingResponse.output_parsed
-          if (!remainingParsed?.emails) {
-            throw new Error('No remaining emails returned from OpenAI')
-          }
+          const remainingParsed = await generateStructured({
+            system: buildRemainingEmailsInstructions(
+              config,
+              landingUrl,
+              {
+                subject: firstEmail.subject,
+                preview: firstEmail.preview,
+                content: firstEmail.content,
+              },
+              landingContent,
+              landingAnalysis,
+            ),
+            messages: [{ role: 'user', content: `Generate Days 2 through ${config.days}.` }],
+            schema: aiEmailsResponseSchema,
+          })
 
           // Force the day number from the index — never trust the model. Phase 2
           // is asked for Days 2..N, so position i (0-based) maps to day i + 2.
@@ -213,12 +180,12 @@ export async function POST(req: NextRequest) {
         console.error('Generate Emails Stream Error:', error)
 
         let message = 'Failed to generate emails'
-        if (error && typeof error === 'object' && 'status' in error && error.status === 429) {
+        if (isRateLimitError(error)) {
           message = 'Too many requests to AI service. Please try again later.'
           Sentry.captureException(error, {
             level: 'warning',
             tags: {
-              error_type: 'openai_rate_limit',
+              error_type: 'ai_rate_limit',
               api_route: '/api/generate-emails/stream',
             },
             extra: { rateLimitInfo: extractRateLimitInfo(error) },

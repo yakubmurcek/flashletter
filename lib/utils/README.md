@@ -34,30 +34,10 @@ if (!result.success) {
 - `generateEmailsRateLimit` - 5 requests per hour
 - `scrapeLandingRateLimit` - 20 requests per hour
 
-### `openai-retry.ts`
+### Claude calls
 
-Provides retry logic with exponential backoff for OpenAI API calls.
-
-**Usage:**
-
-```typescript
-import { retryWithBackoff } from '@/lib/utils/openai-retry'
-
-// Wrap OpenAI calls
-const response = await retryWithBackoff(() =>
-  openai.responses.create({
-    model: 'gpt-5',
-    input: 'Hello!',
-  }),
-)
-```
-
-**Features:**
-
-- Automatic retry on 429 (rate limit) and 5xx (server) errors
-- Exponential backoff with jitter
-- Configurable retry attempts and delays
-- Rate limit info extraction
+Retries live in the Anthropic SDK (`maxRetries: 3`, backoff on 429/5xx). Every AI call goes
+through `generateStructured()` in `lib/ai.ts`; see that file.
 
 ## Other Utilities
 

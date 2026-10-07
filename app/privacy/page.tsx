@@ -171,14 +171,22 @@ export default function PrivacyPolicyPage() {
               </li>
             </ul>
             <div className="mt-4 space-y-2 text-muted-foreground text-sm">
-              <p>
-                In particular, we rely on the following processors to deliver the waitlist
-                experience:
-              </p>
+              <p>In particular, we rely on the following processors to run Flashletter:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>
-                  <strong>Supabase:</strong> Cloud database and auth provider we use to store
-                  waitlist submissions and related metadata.
+                  <strong>Supabase:</strong> Cloud database and auth provider we use to store your
+                  account, campaigns and waitlist submissions.
+                </li>
+                <li>
+                  <strong>Anthropic (Claude):</strong> AI provider that receives the landing page
+                  content you submit and your chat messages in order to write and edit your emails.
+                </li>
+                <li>
+                  <strong>Vercel:</strong> Hosting provider that serves the website.
+                </li>
+                <li>
+                  <strong>PostHog:</strong> Product analytics that records how the app is used so we
+                  can improve it.
                 </li>
                 <li>
                   <strong>Sentry:</strong> Error monitoring service that helps us diagnose and fix

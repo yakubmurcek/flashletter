@@ -8,7 +8,7 @@ Get Flashletter up and running in 3 minutes.
 pnpm install
 ```
 
-## Step 2: Add Your OpenAI API Key
+## Step 2: Add Your Anthropic API Key
 
 1. Copy the example environment file:
 
@@ -16,14 +16,14 @@ pnpm install
    cp .env.local.example .env.local
    ```
 
-2. Get your OpenAI API key:
-   - Visit [https://platform.openai.com/api-keys](https://platform.openai.com/api-keys)
-   - Click "Create new secret key"
+2. Get your Anthropic API key:
+   - Visit [https://platform.claude.com/settings/keys](https://platform.claude.com/settings/keys)
+   - Click "Create Key"
    - Copy the key
 
 3. Add the key to `.env.local`:
    ```
-   OPENAI_API_KEY=sk-your-key-here
+   ANTHROPIC_API_KEY=sk-ant-your-key-here
    ```
 
 ## Step 3: Run the App
@@ -43,7 +43,7 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 ## Example Landing Page URLs to Try
 
-- https://openai.com
+- https://claude.com
 - https://vercel.com
 - https://stripe.com/checkout
 - Your own product landing page
@@ -58,11 +58,11 @@ Visit [http://localhost:3000](http://localhost:3000)
 
 💡 **Best Results**: Use landing pages with clear product descriptions and value propositions
 
-💡 **Cost**: Each campaign generation costs ~$0.01-0.05 in OpenAI credits
+💡 **Cost**: Each campaign generation uses Claude API credits (Claude Opus 5.5)
 
 💡 **Customization**: All generated emails are fully editable - use the AI assistant for suggestions
 
-💡 **Export**: Use the Export button to download your campaign when ready
+💡 **Test send**: Send any email to your own inbox from the editor before copying it into your ESP
 
 ---
 

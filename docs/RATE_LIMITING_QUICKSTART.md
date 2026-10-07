@@ -77,21 +77,21 @@ X-RateLimit-Reset: 1697123456
 
 **Solution**: Wait for the time shown in `X-RateLimit-Reset` header.
 
-### OpenAI Rate Limit (429)
+### Claude Rate Limit (429)
 
 ```json
 {
-  "error": "OpenAI rate limit exceeded",
+  "error": "AI rate limit exceeded",
   "message": "Too many requests to AI service. Please try again later.",
   "rateLimitInfo": {
     "limit": 10000,
     "remaining": 0,
-    "resetTime": 1234567890
+    "resetTime": "2026-10-07T12:00:00Z"
   }
 }
 ```
 
-**Note**: OpenAI rate limits are **automatically retried** with exponential backoff.
+**Note**: Claude rate limits are **automatically retried** by the Anthropic SDK with backoff.
 If you see this error, all retries have been exhausted.
 
 ## 🛠️ Customizing Rate Limits
@@ -113,22 +113,7 @@ export const chatRateLimit = rateLimitEnabled
 
 ### Adjust Retry Behavior
 
-When calling OpenAI APIs, pass custom config:
-
-```typescript
-const response = await retryWithBackoff(
-  () =>
-    openai.responses.create({
-      /* ... */
-    }),
-  {
-    maxRetries: 5, // Try 5 times instead of 3
-    initialDelay: 2000, // Start with 2 seconds instead of 1
-    maxDelay: 120000, // Max 2 minutes instead of 1
-    backoffMultiplier: 3, // 3x instead of 2x
-  },
-)
-```
+Change `maxRetries` where the client is created in `lib/ai.ts` (default 3).
 
 ## 📈 Free Tier Limits
 
@@ -193,10 +178,10 @@ environment variables. Not recommended for production!
 3. Implement request batching in your frontend
 4. Consider upgrading rate limits for paid users
 
-### OpenAI retries failing
+### Claude retries failing
 
-1. Check OpenAI API status: [status.openai.com](https://status.openai.com)
-2. Verify your OpenAI API key is valid
+1. Check Claude API status: [status.claude.com](https://status.claude.com)
+2. Verify your `ANTHROPIC_API_KEY` is valid
 3. Check you have sufficient credits
 4. Review retry logs in console
 

@@ -14,51 +14,20 @@ type Tier = {
   variant?: 'default' | 'outline'
 }
 
+// Only list what the product does today. No paid plan exists yet.
 const TIERS: Tier[] = [
   {
-    name: 'Free',
+    name: 'Early access',
     price: '$0',
-    blurb: 'For trying it out.',
-    cta: 'Get started',
+    blurb: 'Free while Flashletter is in early access.',
+    cta: 'Get started free',
     href: '/signup',
-    variant: 'outline',
     features: [
-      '3 campaigns / month',
-      'AI generation from any URL',
-      'Full editor access',
-      'Community support',
-    ],
-  },
-  {
-    name: 'Pro',
-    price: '$19',
-    period: '/mo',
-    blurb: 'For founders shipping regularly.',
-    cta: 'Start Pro',
-    href: '/signup',
-    recommended: true,
-    features: [
-      'Unlimited campaigns',
-      'Advanced AI controls',
-      'Version history',
-      'Analytics & insights',
-      'Priority support',
-    ],
-  },
-  {
-    name: 'Team',
-    price: '$49',
-    period: '/mo',
-    blurb: 'For small teams collaborating.',
-    cta: 'Contact sales',
-    href: '/signup',
-    variant: 'outline',
-    features: [
-      'Everything in Pro',
-      'Team workspaces',
-      'Role permissions',
-      'Advanced analytics',
-      'Dedicated support',
+      'Full email sequence from any landing page URL',
+      'Rich-text editor with version history',
+      'AI chat to rewrite any email or selection',
+      'Send a test email to your own inbox',
+      'Copy into Mailchimp, ConvertKit, Beehiiv or any ESP',
     ],
   },
 ]
@@ -71,11 +40,13 @@ export function PricingSection() {
       className="py-24 md:py-32"
     >
       <div className="max-w-2xl mx-auto text-center mb-14">
-        <h2 className="text-display text-3xl md:text-5xl text-foreground mb-4">Simple pricing.</h2>
-        <p className="text-muted-foreground text-lg">Start free. Upgrade when you need to.</p>
+        <h2 className="text-display text-3xl md:text-5xl text-foreground mb-4">
+          Free while in early access.
+        </h2>
+        <p className="text-muted-foreground text-lg">No credit card. Paid plans will come later.</p>
       </div>
 
-      <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-px bg-border rounded-xl overflow-hidden border border-border">
+      <div className="max-w-md mx-auto grid gap-px bg-border rounded-xl overflow-hidden border border-border">
         {TIERS.map((tier) => (
           <div
             key={tier.name}
@@ -125,10 +96,6 @@ export function PricingSection() {
           </div>
         ))}
       </div>
-
-      <p className="text-sm text-muted-foreground text-center mt-10">
-        30-day money-back guarantee on paid plans. Cancel anytime.
-      </p>
     </section>
   )
 }
