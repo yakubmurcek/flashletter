@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const customer = await findCustomerId(user.id)
+    const customer = await findCustomerId(user)
     if (!customer) {
       return NextResponse.json({ error: 'No billing account yet' }, { status: 404 })
     }

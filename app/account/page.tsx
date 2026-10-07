@@ -68,7 +68,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   let summary: SubscriptionSummary | null = null
   let billingError = false
   try {
-    summary = await getSubscriptionSummary(user.id, { fresh: justUpgraded })
+    summary = await getSubscriptionSummary(user, { fresh: justUpgraded })
   } catch {
     billingError = true
   }

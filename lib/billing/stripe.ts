@@ -48,28 +48,48 @@ function assertUuid(userId: string) {
   if (!/^[0-9a-f-]{36}$/i.test(userId)) throw new Error('Invalid user id')
 }
 
-export async function findCustomerId(userId: string): Promise<string | null> {
-  assertUuid(userId)
+export interface BillingUser {
+  id: string
+  email?: string | null
+}
+
+const ownedBy = (userId: string) => (c: Stripe.Customer | Stripe.DeletedCustomer) =>
+  !('deleted' in c && c.deleted) && (c as Stripe.Customer).metadata?.user_id === userId
+
+export async function findCustomerId(user: BillingUser): Promise<string | null> {
+  assertUuid(user.id)
   const redis = getRedis()
-  const cached = await redis?.get<string>(customerKey(userId)).catch(() => null)
+  const cached = await redis?.get<string>(customerKey(user.id)).catch(() => null)
   if (cached) return cached
 
-  const result = await getStripe().customers.search({
-    query: `metadata['user_id']:'${userId}'`,
-    limit: 1,
-  })
-  const id = result.data[0]?.id ?? null
-  if (id) await redis?.set(customerKey(userId), id).catch(() => undefined)
+  // Listing by email is read-after-write consistent, so a brand-new customer is
+  // found at once; search lags about a minute and only covers changed emails.
+  let id: string | null = null
+  if (user.email) {
+    const byEmail = await getStripe().customers.list({ email: user.email, limit: 10 })
+    id = byEmail.data.find(ownedBy(user.id))?.id ?? null
+  }
+  if (!id) {
+    const result = await getStripe().customers.search({
+      query: `metadata['user_id']:'${user.id}'`,
+      limit: 1,
+    })
+    id = result.data[0]?.id ?? null
+  }
+  if (id) await redis?.set(customerKey(user.id), id).catch(() => undefined)
   return id
 }
 
-export async function getOrCreateCustomer(userId: string, email?: string | null): Promise<string> {
-  const existing = await findCustomerId(userId)
+export async function getOrCreateCustomer(user: BillingUser): Promise<string> {
+  const existing = await findCustomerId(user)
   if (existing) return existing
+  const { id: userId, email } = user
   const customer = await getStripe().customers.create(
     { email: email ?? undefined, metadata: { user_id: userId } },
-    // A double click must not create two customers for one user.
-    { idempotencyKey: `customer-${userId}` },
+    // A double click must not create two customers for one user. Stripe search
+    // lags ~1 min behind writes, so a quick retry lands here again; the key must
+    // match the exact parameters or Stripe rejects it.
+    { idempotencyKey: `customer-${userId}-${email ?? ''}` },
   )
   await getRedis()
     ?.set(customerKey(userId), customer.id)
@@ -93,9 +113,10 @@ function summarize(sub: Stripe.Subscription, customerId: string): SubscriptionSu
 }
 
 export async function getSubscriptionSummary(
-  userId: string,
+  user: BillingUser,
   { fresh = false } = {},
 ): Promise<SubscriptionSummary> {
+  const userId = user.id
   if (!isBillingEnabled()) return NONE
   const redis = getRedis()
   if (!fresh) {
@@ -103,7 +124,7 @@ export async function getSubscriptionSummary(
     if (cached) return cached
   }
 
-  const customerId = await findCustomerId(userId)
+  const customerId = await findCustomerId(user)
   let summary: SubscriptionSummary = NONE
   if (customerId) {
     const subs = await getStripe().subscriptions.list({

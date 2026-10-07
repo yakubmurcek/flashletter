@@ -8,7 +8,7 @@ export async function getPlan(user: User): Promise<PlanId> {
   if (user.is_anonymous) return 'guest'
   if (!isBillingEnabled()) return 'free'
   try {
-    const summary = await getSubscriptionSummary(user.id)
+    const summary = await getSubscriptionSummary(user)
     return summary.active ? 'pro' : 'free'
   } catch (error) {
     // A Stripe outage must not lock paying users out of their work.

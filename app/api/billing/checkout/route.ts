@@ -38,9 +38,9 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const summary = await getSubscriptionSummary(user.id, { fresh: true })
+    const summary = await getSubscriptionSummary(user, { fresh: true })
     const origin = appOrigin(req)
-    const customer = await getOrCreateCustomer(user.id, user.email)
+    const customer = await getOrCreateCustomer(user)
 
     // Already subscribed: send them to manage the plan instead of paying twice.
     if (summary.active) {
