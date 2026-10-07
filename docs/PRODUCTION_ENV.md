@@ -5,25 +5,26 @@ shipping. Each entry says what fails silently or loudly if it's missing.
 
 ## Required
 
-### `OPENAI_API_KEY`
+### `ANTHROPIC_API_KEY`
 
-Used by every AI route. Without it, generate-emails / chat / analyzer all 500.
+Claude API key, used by every AI route through `lib/ai.ts`. Without it,
+generate-emails / chat / analyzer all 500. Vault name:
+`FLASHLETTER_ANTHROPIC_API_KEY`.
 
 ### `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
 Auth + database. Without them the Supabase client throws on construction and
 the app won't render.
 
-### `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`
+## Recommended
 
-Rate limiting. Since the security audit (PR #26) the rate-limit module **fails
-closed in production** when these are missing — every rate-limited route
-(`/api/chat`, `/api/generate-emails(/stream)`, `/api/scrape-landing(/stream)`)
-will return 429 until both are set. There is also a FATAL log line at startup,
-visible in the Vercel function logs.
+### `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` / `KV_REST_API_TOKEN`)
 
-If you ever see "rate limit exceeded" right after a deploy and you didn't
-hammer anything, check these two first.
+Shared rate limits across serverless instances. Without them the limits live in
+each instance's memory (`MemoryLimiter` in `lib/utils/rate-limit.ts`): still on,
+but a client hitting several instances gets the limit once per instance. The
+Upstash integration on the Vercel Marketplace injects the `KV_REST_API_*` names,
+which the app also reads.
 
 ## Required for specific features
 

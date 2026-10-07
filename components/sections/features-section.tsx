@@ -20,9 +20,9 @@ const FEATURES: Feature[] = [
       'A clean rich-text editor with version history. Auto-save by default. No surprise modals.',
   },
   {
-    label: 'Built on GPT-5',
+    label: 'Written by Claude',
     description:
-      'The latest reasoning model — better hooks, sharper subject lines, fewer apologies.',
+      'Anthropic’s Claude reads your page and writes the sequence in your voice, citing only proof that is actually on the page.',
   },
   {
     label: 'Bring your own ESP',

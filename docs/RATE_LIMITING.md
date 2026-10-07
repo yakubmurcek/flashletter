@@ -1,14 +1,14 @@
 # Rate Limiting Setup
 
 This document describes the rate limiting implementation for the application,
-following best practices from Supabase and OpenAI documentation.
+following best practices from Supabase and Anthropic documentation.
 
 ## Overview
 
 The application implements two types of rate limiting:
 
 1. **User-based rate limiting** - Prevents abuse of API endpoints
-2. **OpenAI retry logic** - Handles OpenAI API rate limits gracefully
+2. **Claude retries** - The Anthropic SDK retries rate limits and server errors
 
 ## Features
 
@@ -19,12 +19,10 @@ The application implements two types of rate limiting:
 - Rate limits are applied per user (authenticated) or per IP (anonymous)
 - Returns standard rate limit headers in responses
 
-### OpenAI Retry Logic
+### Claude Retries
 
-- Exponential backoff with jitter
-- Handles 429 (rate limit) and 5xx (server error) responses
-- Configurable retry attempts and delays
-- Prevents thundering herd problem
+- Built into the Anthropic SDK (`maxRetries: 3` in `lib/ai.ts`)
+- Retries 408/409/429/5xx and connection errors with exponential backoff
 
 ## Rate Limits
 
@@ -99,16 +97,16 @@ All API responses include these headers when rate limiting is enabled:
 
 Status: `429 Too Many Requests`
 
-### OpenAI Rate Limit Exceeded
+### Claude Rate Limit Exceeded
 
 ```json
 {
-  "error": "OpenAI rate limit exceeded",
+  "error": "AI rate limit exceeded",
   "message": "Too many requests to AI service. Please try again later.",
   "rateLimitInfo": {
     "limit": 10000,
     "remaining": 0,
-    "resetTime": 1234567890
+    "resetTime": "2026-10-07T12:00:00Z"
   }
 }
 ```
@@ -120,7 +118,7 @@ Status: `429 Too Many Requests`
 ### Files
 
 - `lib/utils/rate-limit.ts` - User-based rate limiting logic
-- `lib/utils/openai-retry.ts` - OpenAI retry logic with exponential backoff
+- `lib/ai.ts` - Claude client (SDK retries) and rate-limit info extraction
 - `app/api/*/route.ts` - API routes with rate limiting applied
 
 ### Flow
@@ -130,7 +128,7 @@ Status: `429 Too Many Requests`
 3. Rate limit is checked against Redis
 4. If limit exceeded, return 429 error
 5. If limit OK, process request
-6. For OpenAI calls, wrap with retry logic
+6. Claude calls retry inside the Anthropic SDK
 7. Return response with rate limit headers
 
 ## Customization
@@ -152,22 +150,7 @@ export const chatRateLimit = rateLimitEnabled
 
 ### Adjusting Retry Config
 
-Edit retry calls in API routes:
-
-```typescript
-const response = await retryWithBackoff(
-  () =>
-    openai.responses.create({
-      /* ... */
-    }),
-  {
-    maxRetries: 3,
-    initialDelay: 1000,
-    maxDelay: 60000,
-    backoffMultiplier: 2,
-  },
-)
-```
+Change `maxRetries` where the client is created in `lib/ai.ts`.
 
 ## Testing
 
@@ -183,9 +166,9 @@ for i in {1..15}; do
 done
 ```
 
-### Test OpenAI Retry
+### Test Claude Retry
 
-Retry logic is automatically triggered when OpenAI returns 429 or 5xx errors.
+The Anthropic SDK retries automatically when Claude returns 429 or 5xx errors.
 Check console logs for retry attempts.
 
 ## Monitoring
@@ -214,5 +197,5 @@ Look for these log messages:
 ## References
 
 - [Supabase Rate Limiting Docs](https://supabase.com/docs/guides/auth/rate-limits)
-- [OpenAI Production Best Practices](https://platform.openai.com/docs/guides/production-best-practices)
+- [Claude API errors and rate limits](https://platform.claude.com/docs/en/api/rate-limits)
 - [Upstash Rate Limiting](https://upstash.com/docs/redis/features/ratelimiting)

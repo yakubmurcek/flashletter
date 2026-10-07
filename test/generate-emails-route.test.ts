@@ -1,23 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import Anthropic from '@anthropic-ai/sdk'
 
+const captureExceptionMock = vi.fn()
 vi.mock('@sentry/nextjs', () => ({
-  captureException: vi.fn(),
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
 }))
 
-const openaiResponsesParseMock = vi.fn()
-vi.mock('@/lib/openai', () => ({
-  openai: {
-    responses: {
-      parse: (...args: unknown[]) => openaiResponsesParseMock(...args),
-    },
-  },
-}))
-
-const retryWithBackoffMock = vi.fn()
-vi.mock('@/lib/utils/openai-retry', () => ({
-  retryWithBackoff: (...args: unknown[]) => retryWithBackoffMock(...args),
-  extractRateLimitInfo: (error: unknown) => ({ remaining: 0, reset: 100 }),
-}))
+const generateStructuredMock = vi.fn()
+vi.mock('@/lib/ai', async () => {
+  const { default: SDK } = await import('@anthropic-ai/sdk')
+  return {
+    generateStructured: (...args: unknown[]) => generateStructuredMock(...args),
+    isRateLimitError: (error: unknown) => error instanceof SDK.RateLimitError,
+    extractRateLimitInfo: () => ({ limit: 50, remaining: 0, resetTime: '2026-10-07T12:00:00Z' }),
+  }
+})
 
 const checkRateLimitMock = vi.fn()
 vi.mock('@/lib/utils/rate-limit', () => ({
@@ -59,6 +56,7 @@ vi.mock('@/app/api/generate-emails/prompts', () => ({
 
 // Import after all vi.mock calls
 import { POST } from '@/app/api/generate-emails/route'
+import { aiEmailsResponseSchema } from '@/lib'
 
 function buildRequest(body: unknown): Request {
   return new Request('http://localhost/api/generate-emails', {
@@ -66,6 +64,27 @@ function buildRequest(body: unknown): Request {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   })
+}
+
+interface GenerateCall {
+  system: string
+  messages: Array<{ role: string; content: string }>
+  schema: unknown
+  effort?: string
+  maxTokens?: number
+}
+
+function lastCall(): GenerateCall {
+  return generateStructuredMock.mock.calls.at(-1)![0] as GenerateCall
+}
+
+function rateLimitError() {
+  return new Anthropic.RateLimitError(
+    429,
+    { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limit exceeded' } },
+    'Rate limit exceeded',
+    new Headers(),
+  )
 }
 
 const VALID_CAMPAIGN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
@@ -100,27 +119,28 @@ describe('POST /api/generate-emails', () => {
       remaining: 9,
       reset: 0,
     })
-    retryWithBackoffMock.mockReset().mockResolvedValue({
-      output_parsed: {
-        emails: [
-          {
-            subject: 'Subject 1',
-            preview: 'Preview 1',
-            content: 'Content 1',
-          },
-          {
-            subject: 'Subject 2',
-            preview: 'Preview 2',
-            content: 'Content 2',
-          },
-          {
-            subject: 'Subject 3',
-            preview: 'Preview 3',
-            content: 'Content 3',
-          },
-        ],
-      },
-      usage: { prompt_tokens: 100, completion_tokens: 200 },
+    captureExceptionMock.mockReset()
+    generateStructuredMock.mockReset().mockResolvedValue({
+      emails: [
+        {
+          day: 1,
+          subject: 'Subject 1',
+          preview: 'Preview 1',
+          content: 'Content 1',
+        },
+        {
+          day: 2,
+          subject: 'Subject 2',
+          preview: 'Preview 2',
+          content: 'Content 2',
+        },
+        {
+          day: 3,
+          subject: 'Subject 3',
+          preview: 'Preview 3',
+          content: 'Content 3',
+        },
+      ],
     })
     saveEmailsMock.mockReset().mockResolvedValue([
       {
@@ -190,7 +210,21 @@ describe('POST /api/generate-emails', () => {
     expect(body.emails[0].day).toBe(1)
     expect(body.emails[1].day).toBe(2)
     expect(body.emails[2].day).toBe(3)
-    expect(body.usage).toBeDefined()
+    expect(body.emails[0]).toMatchObject({ id: 1, uuid: null, subject: 'Subject 1' })
+    expect(saveEmailsMock).not.toHaveBeenCalled()
+  })
+
+  it('asks the AI for the campaign with the email schema', async () => {
+    await POST(buildRequest(validRequestBody) as never)
+
+    expect(generateStructuredMock).toHaveBeenCalledOnce()
+    const call = lastCall()
+    expect(call.system).toBe('Build instructions')
+    expect(call.schema).toBe(aiEmailsResponseSchema)
+    expect(call.messages).toHaveLength(1)
+    expect(call.messages[0].role).toBe('user')
+    expect(call.messages[0].content).toContain('3 emails')
+    expect(call.messages[0].content).toContain('nurture')
   })
 
   it('happy path: generates and saves emails with campaignId', async () => {
@@ -218,38 +252,47 @@ describe('POST /api/generate-emails', () => {
     expect(body.warning).toContain('Could not save emails')
   })
 
-  it('handles OpenAI 429 rate limit error', async () => {
-    const error = { status: 429, message: 'Rate limit exceeded' }
-    retryWithBackoffMock.mockRejectedValue(error)
+  it('handles an AI rate limit error', async () => {
+    const error = rateLimitError()
+    generateStructuredMock.mockRejectedValue(error)
 
     const response = await POST(buildRequest(validRequestBody) as never)
     expect(response.status).toBe(429)
     const body = await response.json()
-    expect(body.error).toContain('OpenAI rate limit')
+    expect(body.error).toBe('AI rate limit exceeded')
+    expect(body.rateLimitInfo).toEqual({
+      limit: 50,
+      remaining: 0,
+      resetTime: '2026-10-07T12:00:00Z',
+    })
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({
+        level: 'warning',
+        tags: { error_type: 'ai_rate_limit', api_route: '/api/generate-emails' },
+      }),
+    )
   })
 
-  it('handles general OpenAI error', async () => {
-    const error = new Error('OpenAI connection failed')
-    retryWithBackoffMock.mockRejectedValue(error)
+  it('handles a general AI error', async () => {
+    generateStructuredMock.mockRejectedValue(new Error('AI returned an unexpected format'))
 
     const response = await POST(buildRequest(validRequestBody) as never)
     expect(response.status).toBe(500)
     const body = await response.json()
-    expect(body.error).toBeDefined()
+    expect(body.error).toBe('Failed to generate emails')
+    expect(saveEmailsMock).not.toHaveBeenCalled()
   })
 
   it('caps emails to config.days', async () => {
-    retryWithBackoffMock.mockResolvedValue({
-      output_parsed: {
-        emails: [
-          { subject: 'S1', preview: 'P1', content: 'C1' },
-          { subject: 'S2', preview: 'P2', content: 'C2' },
-          { subject: 'S3', preview: 'P3', content: 'C3' },
-          { subject: 'S4', preview: 'P4', content: 'C4' },
-          { subject: 'S5', preview: 'P5', content: 'C5' },
-        ],
-      },
-      usage: { prompt_tokens: 100, completion_tokens: 200 },
+    generateStructuredMock.mockResolvedValue({
+      emails: [
+        { day: 1, subject: 'S1', preview: 'P1', content: 'C1' },
+        { day: 1, subject: 'S2', preview: 'P2', content: 'C2' },
+        { day: 1, subject: 'S3', preview: 'P3', content: 'C3' },
+        { day: 4, subject: 'S4', preview: 'P4', content: 'C4' },
+        { day: 5, subject: 'S5', preview: 'P5', content: 'C5' },
+      ],
     })
 
     const response = await POST(
@@ -260,8 +303,9 @@ describe('POST /api/generate-emails', () => {
     )
     const body = await response.json()
     expect(body.emails.length).toBe(3)
-    expect(body.emails[0].day).toBe(1)
-    expect(body.emails[2].day).toBe(3)
+    // Day numbers come from the position, never from the model.
+    expect(body.emails.map((e: { day: number }) => e.day)).toEqual([1, 2, 3])
+    expect(body.emails[2].subject).toBe('S3')
   })
 
   it('includes rate limit headers in response', async () => {
