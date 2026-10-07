@@ -122,7 +122,7 @@ function HistoryPageContent() {
       <div className="h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Email Not Found</h2>
+          <h2 className="text-xl font-semibold mb-2">Email not found</h2>
           <p className="text-muted-foreground mb-4">
             The email you&apos;re looking for doesn&apos;t exist.
           </p>

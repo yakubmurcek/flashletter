@@ -47,7 +47,7 @@ export function FullProductHeroSection() {
             </span>
           </div>
 
-          <div className="grid sm:grid-cols-[200px_1fr] md:grid-cols-[240px_1fr] md:min-h-[480px]">
+          <div className="grid sm:grid-cols-[200px_1fr] md:grid-cols-[240px_1fr]">
             {/* Sidebar — email list */}
             <aside className="hidden sm:block border-r border-border bg-background/40 py-4 text-left">
               <div className="px-4 pb-3 text-xs uppercase tracking-widest text-muted-foreground">

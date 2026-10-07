@@ -293,7 +293,7 @@ function EditorPageContent() {
   if (loadingState === 'error') {
     return (
       <FullScreenState
-        title="Error Loading Campaign"
+        title="Couldn't load this campaign"
         message={error || 'Failed to load campaign data'}
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
@@ -305,7 +305,7 @@ function EditorPageContent() {
   if (!campaignIdFromUrl) {
     return (
       <FullScreenState
-        title="No Campaign Selected"
+        title="No campaign selected"
         message="Please select a campaign to edit from the campaigns page."
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
@@ -319,7 +319,7 @@ function EditorPageContent() {
   if (loadingState === 'loaded' && !config && emails.length === 0 && !isStreaming && !autogenFlag) {
     return (
       <FullScreenState
-        title="Campaign Data Missing"
+        title="This campaign is incomplete"
         message="This campaign appears to be incomplete. It's missing both configuration and email data."
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
