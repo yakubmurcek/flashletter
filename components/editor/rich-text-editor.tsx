@@ -41,6 +41,8 @@ export function RichTextEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        // StarterKit v3 bundles Link; it is configured separately below.
+        link: false,
       }),
       Link.configure({
         openOnClick: false,

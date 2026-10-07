@@ -25,7 +25,7 @@ export function FullProductHeroSection() {
         </div>
       </div>
 
-      {/* Product canvas placeholder — replace with real editor screenshot */}
+      {/* Product canvas: a static rendition of the editor with a real sample email */}
       <div
         className="mt-20 md:mt-24 max-w-5xl mx-auto px-4 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 animation-duration-1000 fill-mode-both delay-500 motion-reduce:animate-none"
         aria-hidden="true"
@@ -47,9 +47,9 @@ export function FullProductHeroSection() {
             </span>
           </div>
 
-          <div className="grid grid-cols-[200px_1fr] md:grid-cols-[240px_1fr] min-h-[420px] md:min-h-[480px]">
+          <div className="grid sm:grid-cols-[200px_1fr] md:grid-cols-[240px_1fr] md:min-h-[480px]">
             {/* Sidebar — email list */}
-            <aside className="border-r border-border bg-background/40 py-4 text-left">
+            <aside className="hidden sm:block border-r border-border bg-background/40 py-4 text-left">
               <div className="px-4 pb-3 text-xs uppercase tracking-widest text-muted-foreground">
                 5 emails
               </div>
@@ -85,7 +85,7 @@ export function FullProductHeroSection() {
             </aside>
 
             {/* Main — email content */}
-            <div className="px-6 md:px-10 py-7 text-left flex flex-col gap-4">
+            <div className="px-5 sm:px-6 md:px-10 py-6 md:py-7 text-left flex flex-col gap-4">
               <div className="flex items-center justify-between">
                 <span className="text-xs uppercase tracking-widest text-muted-foreground">
                   Email 1 of 5 · Welcome
@@ -100,30 +100,25 @@ export function FullProductHeroSection() {
                 </div>
               </div>
 
-              <div className="border-t border-border pt-4 space-y-3 animate-pulse motion-reduce:animate-none">
-                <div className="h-3 w-[42%] bg-muted rounded" />
-                <div className="space-y-2">
-                  <div className="h-3 w-full bg-muted rounded" />
-                  <div className="h-3 w-[94%] bg-muted rounded" />
-                  <div className="h-3 w-[88%] bg-muted rounded" />
-                  <div className="h-3 w-[72%] bg-muted rounded" />
-                </div>
-                <div className="space-y-2 pt-2">
-                  <div className="h-3 w-full bg-muted rounded" />
-                  <div className="h-3 w-[90%] bg-muted rounded" />
-                  <div className="h-3 w-[55%] bg-muted rounded" />
-                </div>
+              <div className="border-t border-border pt-4 space-y-3 text-sm md:text-[15px] leading-relaxed text-foreground/85">
+                <p>Hi,</p>
+                <p>
+                  Thanks for signing up. Flashletter reads your landing page and drafts a five-email
+                  launch sequence in your own voice, so you start from a real draft instead of a
+                  blank editor.
+                </p>
+                <p className="hidden sm:block">
+                  Paste your URL and the first email is ready in under a minute. Edit anything, then
+                  copy it straight into Mailchimp, Kit or Beehiiv.
+                </p>
 
-                <div className="pt-3">
+                <div className="pt-1">
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium">
-                    Read the launch story
+                    Generate my sequence
                   </div>
                 </div>
 
-                <div className="space-y-2 pt-3">
-                  <div className="h-3 w-[60%] bg-muted rounded" />
-                  <div className="h-3 w-[35%] bg-muted rounded" />
-                </div>
+                <p className="text-muted-foreground">— The Flashletter team</p>
               </div>
             </div>
           </div>

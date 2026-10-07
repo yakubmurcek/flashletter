@@ -16,7 +16,7 @@ import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 import { isValidCampaignId } from '@/lib/utils/validation'
 import { EditorHeader } from '@/components/editor/editor-header'
-import { EmailSidebar } from '@/components/editor/email-sidebar'
+import { EmailSidebar, MobileEmailTabs } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { GeneratingState } from '@/components/editor/generating-state'
@@ -59,7 +59,7 @@ function EditorPageContent() {
     limitPlan,
   } = useEmailStreaming()
 
-  const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
+  const { getParam, replaceParam, getCampaignId, deleteParam } = useUrlState()
 
   const [selectedContext, setSelectedContext] = useState<SelectedContext | null>(null)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(null)
@@ -67,7 +67,10 @@ function EditorPageContent() {
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
-  const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
+  const [isCompact, setIsCompact] = useState(false)
+  const chatParam = getParam('chat')
+  // Open by default on desktop, closed by default on small screens.
+  const showChat = chatParam === 'open' || (chatParam !== 'closed' && !isCompact)
   const restoreVersionParam = getParam('restoreVersion')
   const hasProcessedRestoreRef = useRef(false)
   const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
@@ -81,8 +84,15 @@ function EditorPageContent() {
       return
     }
     hasInitializedChatStateRef.current = true
-    // Reset any persisted "closed" state when the editor mounts
+    // Reset any persisted open/closed state when the editor mounts
     deleteParam('chat')
+    // On phones and small tablets the panel would cover the emails, so it
+    // starts closed there and opens from the floating button instead.
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      setIsCompact(true)
+      setShouldFocusChatInput(false)
+      return
+    }
     // Focus the chat input on first open
     setShouldFocusChatInput(true)
   }, [deleteParam])
@@ -150,8 +160,8 @@ function EditorPageContent() {
       setShouldFocusChatInput(true)
     }
     openedViaAutoSelectionRef.current = false
-    toggleParam('chat', 'closed')
-  }, [toggleParam, showChat])
+    replaceParam('chat', showChat ? 'closed' : 'open')
+  }, [replaceParam, showChat])
 
   const handleTextSelected = useCallback(
     (
@@ -168,7 +178,7 @@ function EditorPageContent() {
 
       if (!showChat) {
         openedViaAutoSelectionRef.current = !shouldFocus
-        deleteParam('chat') // Remove 'closed' parameter to open chat
+        replaceParam('chat', 'open')
       }
 
       // For command actions (not "Ask AI about this"), auto-submit the action
@@ -177,7 +187,7 @@ function EditorPageContent() {
         setAutoSubmitMessage(action)
       }
     },
-    [showChat, deleteParam],
+    [showChat, replaceParam],
   )
 
   const handleClearContext = useCallback(() => {
@@ -337,13 +347,13 @@ function EditorPageContent() {
         campaignId={campaignIdFromUrl ?? undefined}
         selectedEmailDay={selectedEmail?.day}
         selectedEmailSubject={selectedEmail?.subject}
-        className={cn('transition-all duration-300', showChat ? 'mr-96 pr-4' : 'mr-0')}
+        className={cn('transition-all duration-300', showChat ? 'lg:mr-96 lg:pr-4' : 'mr-0')}
       />
 
       <div
         className={cn(
           'flex-1 flex overflow-hidden h-0 transition-all duration-300',
-          showChat ? 'mr-96' : 'mr-0',
+          showChat ? 'lg:mr-96' : 'mr-0',
         )}
       >
         <EmailSidebar
@@ -365,7 +375,15 @@ function EditorPageContent() {
           }
         />
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 min-w-0 overflow-y-auto">
+          <MobileEmailTabs
+            emails={emails}
+            selectedId={selectedEmailId}
+            onSelect={handleSelectEmail}
+            pendingCount={
+              isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
+            }
+          />
           {streamWarning && (
             <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm flex items-center justify-between gap-3">
               <span className="text-destructive">⚠️ {streamWarning}</span>

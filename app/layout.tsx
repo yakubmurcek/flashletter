@@ -16,7 +16,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Flashletter - Turn your landing page into a newsletter campaign',
   description:
-    'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free during early access.',
+    'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
   keywords: [
     'newsletter campaigns',
     'AI email generator',
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
     url: 'https://flashletter.app',
     title: 'Flashletter - Lightning-fast AI newsletter campaigns',
     description:
-      'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free during early access.',
+      'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
     siteName: 'Flashletter',
     images: [
       {

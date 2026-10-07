@@ -33,6 +33,16 @@ export function useUrlState() {
     [router, searchParams],
   )
 
+  // Same as setParam without adding a history entry (UI toggles, not navigation).
+  const replaceParam = useCallback(
+    (key: string, value: string) => {
+      const params = new URLSearchParams(searchParams.toString())
+      params.set(key, value)
+      router.replace(`?${params.toString()}`)
+    },
+    [router, searchParams],
+  )
+
   const deleteParam = useCallback(
     (key: string) => {
       const params = new URLSearchParams(searchParams.toString())
@@ -124,6 +134,7 @@ export function useUrlState() {
   return {
     getParam,
     setParam,
+    replaceParam,
     deleteParam,
     toggleParam,
     getCampaignId,

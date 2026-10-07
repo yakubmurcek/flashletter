@@ -47,7 +47,7 @@ export function useAIChat({
       id: 1,
       role: 'assistant',
       content:
-        "Hi! I'm your AI assistant. I can help you refine your email content, suggest improvements, or answer questions about your campaign. How can I help you today?",
+        "I've read your landing page and every email in this sequence. Ask me to sharpen a subject line, cut an email down, or change the tone. Select any text in the email to rework just that part.",
       timestamp: new Date(),
     },
   ])
