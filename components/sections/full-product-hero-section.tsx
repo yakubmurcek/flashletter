@@ -4,25 +4,27 @@ export function FullProductHeroSection() {
   return (
     <section className="pt-24 md:pt-32 pb-20 md:pb-28">
       <div className="max-w-3xl mx-auto text-center">
-        <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight">
+        <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none">
           For founders who hate writing from scratch
         </p>
 
-        <h1 className="text-display text-5xl md:text-7xl text-foreground mb-6">
+        <h1 className="text-display text-5xl md:text-7xl text-foreground mb-6 animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-100">
           Turn your landing page into a <span className="text-primary">newsletter campaign</span> in
           30 seconds.
         </h1>
 
-        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-200">
           Stop staring at a blank editor. Your first converting email campaign is ready to send.
         </p>
 
-        <HeroUrlForm />
+        <div className="animate-in fade-in slide-in-from-bottom-4 animation-duration-700 fill-mode-both motion-reduce:animate-none delay-300">
+          <HeroUrlForm />
+        </div>
       </div>
 
       {/* Product canvas placeholder — replace with real editor screenshot */}
       <div
-        className="mt-20 md:mt-24 max-w-5xl mx-auto px-4"
+        className="mt-20 md:mt-24 max-w-5xl mx-auto px-4 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 animation-duration-1000 fill-mode-both delay-500 motion-reduce:animate-none"
         aria-hidden="true"
       >
         <div
@@ -95,7 +97,7 @@ export function FullProductHeroSection() {
                 </div>
               </div>
 
-              <div className="border-t border-border pt-4 space-y-3">
+              <div className="border-t border-border pt-4 space-y-3 animate-pulse motion-reduce:animate-none">
                 <div className="h-3 w-[42%] bg-muted rounded" />
                 <div className="space-y-2">
                   <div className="h-3 w-full bg-muted rounded" />
