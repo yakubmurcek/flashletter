@@ -14,6 +14,7 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - 💾 **Database Storage** - All campaigns and emails persisted in Supabase
 - 📝 **Version History** - Track changes to your emails over time
 - 🔄 **Auto-save** - Your work is automatically saved as you edit
+- 💳 **Plans & Billing** - Free plan limits and a Stripe-billed Pro plan with self-serve customer portal
 - 🛡️ **Rate Limiting** - Built-in protection against API abuse with Redis-based rate limiting
 - ⚡ **Retry Logic** - The Anthropic SDK retries rate limits and server errors with backoff
 
@@ -74,6 +75,9 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
 
+# Billing (optional; without it, upgrade buttons report billing as unavailable)
+STRIPE_SECRET_KEY=sk_test_your-key-here
+
 # Optional (for rate limiting in production)
 UPSTASH_REDIS_REST_URL=your-upstash-redis-url
 UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
@@ -84,6 +88,8 @@ UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 > **Get Upstash Redis credentials (optional):** Sign up at [Upstash](https://upstash.com) and create a Redis database
 
 **Note:** Upstash Redis is optional. Without it, rate limits are kept in each server instance's memory (weaker: serverless instances count separately). On Vercel, adding Upstash for Redis from the Marketplace switches to shared limits: the app also reads the `KV_REST_API_URL` / `KV_REST_API_TOKEN` it injects.
+
+**Billing:** Stripe is the source of truth for who pays (customers carry `metadata.user_id`; no webhook or subscriptions table). Run `STRIPE_SECRET_KEY=sk_... node scripts/stripe-setup.mjs https://your-domain` once per Stripe mode (test, then live) to create the Pro product, the `flashletter_pro_monthly` / `flashletter_pro_yearly` prices and the customer-portal settings. Plan limits live in `lib/billing/plans.ts` and are enforced in the generate and chat routes.
 
 ### 5. Run the development server
 
