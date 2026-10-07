@@ -1,15 +1,188 @@
 import { Metadata } from 'next'
+import type { ReactNode } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AppShell } from '@/components/layouts/app-shell'
 
 export const metadata: Metadata = {
   title: 'Privacy Policy | Flashletter',
-  description:
-    'Privacy Policy for Flashletter - GDPR and CCPA compliant data protection information.',
+  description: 'What personal data Flashletter collects, why, who processes it and your rights.',
 }
 
-const LAST_UPDATED = 'June 12, 2024'
+const LAST_UPDATED = 'October 7, 2026'
+const CONTACT_EMAIL = 'jakub@flashletter.app'
+
+const mail = (
+  <a
+    href={`mailto:${CONTACT_EMAIL}`}
+    className="text-primary hover:underline"
+  >
+    {CONTACT_EMAIL}
+  </a>
+)
+
+const SECTIONS: { title: string; body: ReactNode }[] = [
+  {
+    title: '1. Who is responsible',
+    body: (
+      <p>
+        The controller of your personal data is Jakub Murček, sole trader, IČO 08294593, Czech
+        Republic, operating Flashletter (flashletter.app). Contact: {mail}.
+      </p>
+    ),
+  },
+  {
+    title: '2. What we collect',
+    body: (
+      <ul className="list-disc list-inside space-y-2">
+        <li>
+          <strong>Account data:</strong> your email address and a hashed password, or your Google
+          account email and name if you sign in with Google. If you try Flashletter before signing
+          up, we create an anonymous account with no personal details.
+        </li>
+        <li>
+          <strong>Your content:</strong> the landing page URLs you submit, the page text we read
+          from them, the emails generated for you, your edits and version history, and your messages
+          to the AI assistant.
+        </li>
+        <li>
+          <strong>Technical data:</strong> browser, device, pages visited and error reports, used to
+          keep the service working and secure. We use your IP address briefly for rate limiting and
+          to pick the right consent options for your region; we do not store it with your account.
+        </li>
+        <li>
+          <strong>Waitlist data:</strong> if you joined our earlier waitlist, the email and optional
+          name you gave us, and your marketing choice.
+        </li>
+      </ul>
+    ),
+  },
+  {
+    title: '3. Why we use it and on what legal basis',
+    body: (
+      <ul className="list-disc list-inside space-y-2">
+        <li>
+          To provide Flashletter: create your account, generate and store your campaigns
+          (performance of a contract).
+        </li>
+        <li>To keep the service secure, prevent abuse and fix errors (legitimate interest).</li>
+        <li>To understand how the product is used so we can improve it (legitimate interest).</li>
+        <li>
+          To send product or marketing emails only if you opted in (consent, which you can withdraw
+          at any time via the unsubscribe link or by email).
+        </li>
+      </ul>
+    ),
+  },
+  {
+    title: '4. AI processing',
+    body: (
+      <p>
+        To write and edit your emails, the page text you submit and your assistant messages are sent
+        to Anthropic&rsquo;s Claude API. Under Anthropic&rsquo;s commercial terms, API data is not
+        used to train their models. We do not use your content to train any model either.
+      </p>
+    ),
+  },
+  {
+    title: '5. Who processes your data',
+    body: (
+      <>
+        <p className="mb-4">
+          We do not sell your personal data. We share it only with providers that run Flashletter
+          for us, under their data processing terms:
+        </p>
+        <ul className="list-disc list-inside space-y-2">
+          <li>
+            <strong>Supabase</strong>: database and sign-in (accounts, campaigns, waitlist).
+          </li>
+          <li>
+            <strong>Anthropic</strong>: the Claude AI model that writes and edits your emails.
+          </li>
+          <li>
+            <strong>Vercel</strong>: hosting of the website and app.
+          </li>
+          <li>
+            <strong>Upstash</strong>: rate limiting and caching, if enabled.
+          </li>
+          <li>
+            <strong>Sentry</strong>: error monitoring, which may include the email you entered if an
+            error happens during sign-up.
+          </li>
+          <li>
+            <strong>PostHog</strong>: product analytics, if enabled.
+          </li>
+          <li>
+            <strong>Google</strong>: only if you choose Sign in with Google.
+          </li>
+        </ul>
+        <p className="mt-4">
+          We may also disclose data where the law requires it or to protect our rights.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: '6. International transfers',
+    body: (
+      <p>
+        Some providers, including Anthropic and Vercel, process data in the United States. Where
+        data leaves the EU, we rely on the providers&rsquo; Standard Contractual Clauses or the
+        EU-US Data Privacy Framework.
+      </p>
+    ),
+  },
+  {
+    title: '7. How long we keep it',
+    body: (
+      <p>
+        We keep your account and campaigns while your account exists, and delete them when you ask
+        us to. Anonymous trial data may be deleted after a period of inactivity. Waitlist data is
+        kept until you unsubscribe or ask for deletion. Error logs are kept for a limited time by
+        our providers.
+      </p>
+    ),
+  },
+  {
+    title: '8. Your rights',
+    body: (
+      <>
+        <p className="mb-4">
+          You can ask us to access, correct, delete or export your data, to restrict or object to
+          processing, and withdraw consent at any time. Email {mail} and we will reply within 30
+          days. You can also complain to the Czech data protection authority (ÚOOÚ, uoou.gov.cz) or
+          the authority in your country.
+        </p>
+        <p>
+          California residents have the right to know, delete and not be discriminated against for
+          exercising these rights. We do not sell or share personal information for advertising.
+        </p>
+      </>
+    ),
+  },
+  {
+    title: '9. Cookies',
+    body: (
+      <p>
+        We use cookies and local storage that are needed to keep you signed in and remember your
+        privacy choice. Analytics, if enabled, follows the consent options shown to you.
+      </p>
+    ),
+  },
+  {
+    title: '10. Children',
+    body: <p>Flashletter is not intended for anyone under 16.</p>,
+  },
+  {
+    title: '11. Changes',
+    body: (
+      <p>
+        If we change this policy in a way that matters, we will update the date above and tell
+        account holders by email or in the app.
+      </p>
+    ),
+  },
+]
 
 export default function PrivacyPolicyPage() {
   return (
@@ -19,292 +192,24 @@ export default function PrivacyPolicyPage() {
     >
       <div className="text-center mb-12">
         <h1 className="text-display text-3xl md:text-4xl mb-4">Privacy Policy</h1>
-        <p className="text-muted-foreground leading-relaxed">
-          Last updated: <time dateTime="2024-06-12">{LAST_UPDATED}</time>
+        <p className="text-muted-foreground leading-relaxed mb-4">
+          Last updated: <time dateTime="2026-10-07">{LAST_UPDATED}</time>
         </p>
-        <div className="flex justify-center gap-2 mt-4">
-          <Badge variant="secondary">GDPR Compliant</Badge>
-          <Badge variant="secondary">CCPA Compliant</Badge>
+        <div className="flex justify-center gap-2">
+          <Badge variant="secondary">GDPR</Badge>
+          <Badge variant="secondary">CCPA</Badge>
         </div>
       </div>
 
       <div className="space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>1. Information We Collect</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <h3 className="font-semibold mb-2">Waitlist Information</h3>
-              <p className="text-muted-foreground">When you join our waitlist, we collect:</p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
-                <li>Email address (required)</li>
-                <li>Name (optional)</li>
-                <li>Timestamp of signup</li>
-              </ul>
-              <p className="mt-3 text-muted-foreground text-sm">
-                We do not store your IP address. We only receive coarse region information through
-                our hosting provider so we can show the right consent options (for example, GDPR
-                prompts in the EU), and we discard that information after the consent decision.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="font-semibold mb-2">Technical Information</h3>
-              <p className="text-muted-foreground">
-                We automatically collect certain technical information:
-              </p>
-              <ul className="list-disc list-inside mt-2 space-y-1 text-muted-foreground">
-                <li>Browser type and version</li>
-                <li>Device information</li>
-                <li>Pages visited on our website</li>
-                <li>Referral source</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>2. How We Use Your Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              We use your information solely for the following purposes:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>To notify you when Flashletter becomes available</li>
-              <li>
-                To send service or operational updates about our product development and waitlist
-                status
-              </li>
-              <li>
-                To send additional marketing updates, tips, or promotions—but only if you have
-                explicitly opted in. Every marketing message includes an unsubscribe link so you can
-                withdraw consent at any time.
-              </li>
-              <li>To improve our website and services</li>
-              <li>To prevent fraud and ensure security</li>
-              <li>To comply with legal obligations</li>
-            </ul>
-            <p className="mt-4 text-muted-foreground">
-              We honor the selections you make in the waitlist form. If you do not opt in to
-              marketing communications, we will not send them.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>3. Legal Basis for Processing (GDPR)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Under GDPR, we process your personal data based on:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>
-                <strong>Consent:</strong> You have given clear consent for us to process your
-                personal data for the specific purpose of joining our waitlist and, where selected,
-                to receive optional marketing communications
-              </li>
-              <li>
-                <strong>Legitimate Interest:</strong> We have a legitimate interest in improving our
-                services and preventing fraud
-              </li>
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>4. Your Rights</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold mb-2">GDPR Rights (EU Residents)</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Right to access your personal data</li>
-                  <li>Right to rectification of inaccurate data</li>
-                  <li>Right to erasure (&ldquo;right to be forgotten&rdquo;)</li>
-                  <li>Right to restrict processing</li>
-                  <li>Right to data portability</li>
-                  <li>Right to object to processing</li>
-                  <li>Right to withdraw consent at any time</li>
-                </ul>
-                <p className="mt-2 text-muted-foreground text-sm">
-                  You can unsubscribe at any time using the link provided in our emails or by
-                  contacting us directly.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-2">CCPA Rights (California Residents)</h3>
-                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-                  <li>Right to know what personal information is collected</li>
-                  <li>Right to delete personal information</li>
-                  <li>Right to opt-out of the sale of personal information</li>
-                  <li>Right to non-discrimination for exercising privacy rights</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>5. Data Sharing and Third Parties</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              We do not sell, trade, or rent your personal information to third parties. We may
-              share your information only in the following circumstances:
-            </p>
-            <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li>With your explicit consent</li>
-              <li>To comply with legal obligations</li>
-              <li>To protect our rights and prevent fraud</li>
-              <li>
-                With service providers who assist us in operating our website (under strict data
-                protection agreements)
-              </li>
-            </ul>
-            <div className="mt-4 space-y-2 text-muted-foreground text-sm">
-              <p>In particular, we rely on the following processors to run Flashletter:</p>
-              <ul className="list-disc list-inside space-y-1">
-                <li>
-                  <strong>Supabase:</strong> Cloud database and auth provider we use to store your
-                  account, campaigns and waitlist submissions.
-                </li>
-                <li>
-                  <strong>Anthropic (Claude):</strong> AI provider that receives the landing page
-                  content you submit and your chat messages in order to write and edit your emails.
-                </li>
-                <li>
-                  <strong>Vercel:</strong> Hosting provider that serves the website.
-                </li>
-                <li>
-                  <strong>PostHog:</strong> Product analytics that records how the app is used so we
-                  can improve it.
-                </li>
-                <li>
-                  <strong>Sentry:</strong> Error monitoring service that helps us diagnose and fix
-                  issues. Sentry receives technical error details and may include the email address
-                  you entered if an error occurs during signup.
-                </li>
-              </ul>
-              <p>
-                These providers only process data on our behalf and in accordance with their data
-                protection addenda. We regularly review them to ensure they maintain appropriate
-                safeguards.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>6. Data Security</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              We implement appropriate technical and organizational measures to protect your
-              personal data against unauthorized access, alteration, disclosure, or destruction.
-              This includes encryption, secure servers, and regular security assessments.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>7. Data Retention</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              We retain your waitlist information until you request its deletion or until it&rsquo;s
-              no longer necessary for the purposes outlined in this policy. You can request deletion
-              at any time by contacting us.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>8. International Data Transfers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Your data may be transferred to and processed in countries other than your own. We
-              ensure appropriate safeguards are in place to protect your data in accordance with
-              applicable data protection laws.
-            </p>
-            <p className="text-muted-foreground mt-4 text-sm">
-              We host our core waitlist data in Supabase&rsquo;s EU region and use Sentry&rsquo;s EU
-              data residency option for error monitoring. They commit to appropriate transfer
-              safeguards. You can review their individual data protection terms via Supabase&rsquo;s
-              and Sentry&rsquo;s privacy policies.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>9. Children&rsquo;s Privacy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              Our service is not intended for children under 16. We do not knowingly collect
-              personal information from children under 16. If you are a parent or guardian and
-              believe your child has provided us with personal information, please contact us.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>10. Changes to This Policy</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground">
-              We may update this privacy policy from time to time. We will notify you of any changes
-              by posting the new privacy policy on this page and updating the &ldquo;Last
-              updated&rdquo; date. We encourage you to review this privacy policy periodically.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>11. Contact Information</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              If you have any questions about this privacy policy or wish to exercise your rights,
-              please contact us:
-            </p>
-            <div className="space-y-2 text-muted-foreground">
-              <p>
-                <strong>Email:</strong> yakubmurcek@gmail.com
-              </p>
-              <p>
-                <strong>Data Protection Officer:</strong> Jakub Murcek
-              </p>
-              <p>
-                <strong>IČO:</strong> 08294593
-              </p>
-              <p className="mt-4">
-                <strong>Quick Actions:</strong>{' '}
-                <a
-                  href="/unsubscribe"
-                  className="text-primary hover:underline"
-                >
-                  Unsubscribe from waitlist
-                </a>
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        {SECTIONS.map((section) => (
+          <Card key={section.title}>
+            <CardHeader>
+              <CardTitle>{section.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="text-muted-foreground">{section.body}</CardContent>
+          </Card>
+        ))}
       </div>
     </AppShell>
   )
