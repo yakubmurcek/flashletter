@@ -39,6 +39,7 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
         variant="ghost"
         size="icon"
         onClick={onClose}
+        aria-label="Close AI assistant"
         className="hover:bg-primary/10 transition-colors"
       >
         <X className="w-4 h-4" />
