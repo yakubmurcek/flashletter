@@ -1,16 +1,14 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { AnimatePresence, motion, useAnimationControls, useReducedMotion } from 'framer-motion'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-react'
-import { useRegionDetection } from '@/lib/utils/location-detection'
+import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
 
 interface AuthFormProps {
   mode: 'login' | 'signup'
@@ -36,42 +34,22 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [legalConsent, setLegalConsent] = useState(false)
-  // Bumped each time someone tries to continue without ticking the consent
-  // box; drives the callout + shake instead of a permanently disabled button.
-  const [consentNudge, setConsentNudge] = useState(0)
-  const consentRef = useRef<HTMLInputElement>(null)
-  const reduceMotion = useReducedMotion()
-  const shake = useAnimationControls()
-
-  const { locationInfo, isLoading } = useRegionDetection()
-
-  const requiresNonUSConsent = mode === 'signup' && !isLoading && locationInfo?.region === 'OTHER'
-  const needsConsentConfirmation = requiresNonUSConsent && !legalConsent
+  const { ensureConsent, reset: resetConsent, consentProps } = useLegalConsent(mode === 'signup')
 
   useEffect(() => {
     if (mode !== 'signup') {
-      setLegalConsent(false)
+      resetConsent()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   const supabase = createClient()
-
-  const nudgeConsent = () => {
-    setConsentNudge((n) => n + 1)
-    consentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    consentRef.current?.focus({ preventScroll: true })
-    if (!reduceMotion) void shake.start({ x: [0, -6, 6, -4, 4, 0], transition: { duration: 0.4 } })
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (oauthLoading) return
 
-    if (needsConsentConfirmation) {
-      nudgeConsent()
-      return
-    }
+    if (!ensureConsent()) return
 
     setLoading(true)
     setError(null)
@@ -121,10 +99,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   const handleGoogleSignIn = async () => {
-    if (needsConsentConfirmation) {
-      nudgeConsent()
-      return
-    }
+    if (!ensureConsent()) return
 
     setError(null)
     setMessage(null)
@@ -214,90 +189,10 @@ export function AuthForm({ mode }: AuthFormProps) {
       )}
 
       {mode === 'signup' && (
-        <div className="space-y-3">
-          {!isLoading && locationInfo?.requiresGDPR ? (
-            <div className="relative">
-              <AnimatePresence>
-                {consentNudge > 0 && !legalConsent && (
-                  <motion.div
-                    key="consent-callout"
-                    id="legal-consent-callout"
-                    role="alert"
-                    initial={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                    transition={{ duration: 0.2 }}
-                    className="absolute bottom-full left-0 mb-2 z-10 rounded-md bg-foreground px-3 py-2 text-xs font-medium text-background shadow-lg"
-                  >
-                    Please tick this box to continue.
-                    <span
-                      aria-hidden="true"
-                      className="absolute -bottom-1 left-4 h-2 w-2 rotate-45 bg-foreground"
-                    />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <motion.div
-                animate={shake}
-                className={`flex items-start space-x-3 rounded-md border p-3 transition-colors ${
-                  consentNudge > 0 && !legalConsent
-                    ? 'border-primary bg-primary/5 ring-2 ring-primary/30'
-                    : 'border-border bg-muted/30'
-                }`}
-              >
-                <input
-                  ref={consentRef}
-                  type="checkbox"
-                  id="legal-consent"
-                  checked={legalConsent}
-                  onChange={(e) => setLegalConsent(e.target.checked)}
-                  aria-describedby={
-                    consentNudge > 0 && !legalConsent ? 'legal-consent-callout' : undefined
-                  }
-                  className="mt-1 h-4 w-4 text-primary focus:ring-primary border-border rounded"
-                />
-                <label
-                  htmlFor="legal-consent"
-                  className="text-xs leading-5 text-muted-foreground text-left"
-                >
-                  I agree to the{' '}
-                  <Link
-                    href="/terms"
-                    className="font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link
-                    href="/privacy"
-                    className="font-medium text-primary hover:text-primary/80 transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>{' '}
-                  and consent to the processing of my personal data in accordance with GDPR.
-                </label>
-              </motion.div>
-            </div>
-          ) : (
-            <p className="text-xs text-center text-muted-foreground">
-              By creating an account, you agree to our{' '}
-              <Link
-                href="/terms"
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                href="/privacy"
-                className="font-medium text-primary hover:text-primary/80 transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+        <LegalConsent
+          {...consentProps}
+          idPrefix="legal"
+        />
       )}
 
       <Button

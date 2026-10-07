@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Calendar, ArrowRight, Trash2, Loader2 } from 'lucide-react'
+import { Mail, ArrowRight, Trash2, Loader2 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import {
   AlertDialog,
@@ -86,8 +86,10 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
             )}
             {campaign.days && (
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span>{campaign.days} days</span>
+                <Mail className="w-4 h-4 text-muted-foreground" />
+                <span>
+                  {campaign.days} {campaign.days === 1 ? 'email' : 'emails'}
+                </span>
               </div>
             )}
             <div className="flex items-center gap-2">

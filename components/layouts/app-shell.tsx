@@ -16,8 +16,8 @@ interface AppShellProps {
 }
 
 const chromeClass: Record<NonNullable<AppShellProps['chrome']>, string> = {
-  default: 'max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10',
-  narrow: 'max-w-2xl mx-auto px-4 sm:px-6 py-12',
+  default: 'w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10',
+  narrow: 'w-full max-w-2xl mx-auto px-4 sm:px-6 py-12',
   centered: 'flex-1 flex items-center justify-center px-4 py-10',
 }
 
