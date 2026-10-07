@@ -63,7 +63,6 @@ export async function POST(req: NextRequest) {
       system: instructions,
       messages: history,
       schema: chatOutputSchema,
-      effort: 'low',
       maxTokens: 16000,
     })
 

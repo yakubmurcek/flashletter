@@ -9,7 +9,7 @@ import { zodToJsonSchema } from 'zod-to-json-schema'
  * requests themselves: they pass a prompt + a zod schema and get typed data back.
  */
 
-export const CLAUDE_MODEL = 'claude-opus-5-5'
+export const CLAUDE_MODEL = 'claude-sonnet-5-5'
 
 let client: Anthropic | null = null
 
@@ -28,7 +28,7 @@ interface StructuredRequest<T extends z.ZodTypeAny> {
   system: string
   messages: Anthropic.Beta.BetaMessageParam[]
   schema: T
-  /** low: extraction and chat. medium: copywriting (the model default). */
+  /** Defaults to medium for every route (Sonnet 5.5's own default is high). */
   effort?: Effort
   maxTokens?: number
 }

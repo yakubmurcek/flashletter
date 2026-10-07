@@ -86,6 +86,7 @@ export function AIChatAssistant({
           isVisible={!isLoading}
         />
         <AIChatInputForm
+          contextReady={!!campaignContext || !!emailContext}
           input={input}
           setInput={setInput}
           isLoading={isLoading}
