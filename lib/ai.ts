@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { transformJSONSchema } from '@anthropic-ai/sdk/lib/transform-json-schema'
+import { transformJSONSchema } from '@anthropic-ai/sdk/lib/transform-json-schema.mjs'
 import type { z } from 'zod'
 import { zodToJsonSchema } from 'zod-to-json-schema'
 

@@ -188,7 +188,7 @@ describe('POST /api/scrape-landing/stream', () => {
   })
 
   it('complete event still fires when analyzer throws (analysis undefined)', async () => {
-    analyzeLandingPageMock.mockRejectedValue(new Error('openai exploded'))
+    analyzeLandingPageMock.mockRejectedValue(new Error('AI exploded'))
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
     const events = await readStreamEvents(response)
     const completeEvent = events.find((e) => e.type === 'complete')
