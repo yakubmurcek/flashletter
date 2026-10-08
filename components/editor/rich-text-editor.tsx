@@ -64,7 +64,10 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose max-w-none focus:outline-none min-h-[150px] whitespace-pre-wrap',
+          // text-foreground/90 everywhere: Tailwind's default prose body is a cool
+          // grey that clashed with the warm list text.
+          'prose max-w-none focus:outline-none min-h-[150px] whitespace-pre-wrap text-foreground/90',
+          'prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary',
           'prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground',
           'prose-strong:font-semibold prose-strong:text-foreground',
           'prose-ul:list-disc prose-ul:pl-6 prose-ul:text-foreground/90',
