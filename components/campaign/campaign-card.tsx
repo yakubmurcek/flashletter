@@ -165,7 +165,7 @@ export function CampaignCard({ campaign }: CampaignCardProps) {
                   Deleting...
                 </>
               ) : (
-                'Delete Campaign'
+                'Delete campaign'
               )}
             </Button>
           </AlertDialogFooter>

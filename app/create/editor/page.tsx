@@ -355,6 +355,7 @@ function EditorPageContent() {
       isStreaming={isStreaming}
       streamedCount={streamedCount}
       totalExpected={totalExpected}
+      hasEmails={emails.length > 0}
     />
   )
 

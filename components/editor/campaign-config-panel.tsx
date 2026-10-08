@@ -17,6 +17,16 @@ import { usePlan } from '@/lib/hooks/use-plan'
 import { PLAN_LIMITS } from '@/lib/billing/plans'
 import type { CampaignConfig } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface CampaignConfigPanelProps {
   config: CampaignConfig | null
@@ -26,6 +36,8 @@ interface CampaignConfigPanelProps {
   streamedCount: number
   totalExpected: number | null
   defaultOpen?: boolean
+  /** When there are emails to lose, Regenerate asks before replacing them. */
+  hasEmails?: boolean
 }
 
 export function CampaignConfigPanel({
@@ -36,8 +48,10 @@ export function CampaignConfigPanel({
   streamedCount,
   totalExpected,
   defaultOpen = false,
+  hasEmails = false,
 }: CampaignConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
+  const [confirmRegenerate, setConfirmRegenerate] = useState(false)
   const { plan, maxEmails } = usePlan()
 
   if (!config) {
@@ -160,7 +174,7 @@ export function CampaignConfigPanel({
             type="button"
             variant="outline"
             size="sm"
-            onClick={onRegenerate}
+            onClick={() => (hasEmails ? setConfirmRegenerate(true) : onRegenerate())}
             disabled={isStreaming}
             className="w-full"
           >
@@ -182,6 +196,25 @@ export function CampaignConfigPanel({
           </p>
         </div>
       )}
+
+      <AlertDialog
+        open={confirmRegenerate}
+        onOpenChange={setConfirmRegenerate}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace all emails?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Claude writes a new sequence with these settings. Your current emails and any edits
+              you made to them are replaced.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep my emails</AlertDialogCancel>
+            <AlertDialogAction onClick={onRegenerate}>Regenerate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
