@@ -1,20 +1,14 @@
-interface OpenAIResponse {
-  output_text?: string
-  usage?: {
-    input_tokens?: number
-    output_tokens?: number
-    total_tokens?: number
-  }
-}
+import { z } from 'zod'
+import { emailEditSchema } from '@/lib/schemas'
 
-interface ParsedChatResponse {
-  shouldEdit: boolean
-  message: string
-  edits?: {
-    subject?: string
-    content?: string
-  }
-}
+// Shape Claude must return for every chat turn (enforced by structured outputs).
+export const chatOutputSchema = z.object({
+  message: z.string(),
+  shouldEdit: z.boolean(),
+  edits: emailEditSchema.optional(),
+})
+
+export type ChatOutput = z.infer<typeof chatOutputSchema>
 
 export interface ChatResponse {
   message: string
@@ -23,42 +17,15 @@ export interface ChatResponse {
     subject?: string
     content?: string
   }
-  usage?: {
-    input_tokens?: number
-    output_tokens?: number
-    total_tokens?: number
-  }
 }
 
-export function parseOpenAIResponse(response: OpenAIResponse): ChatResponse {
-  if (!response.output_text) {
-    throw new Error('No response from OpenAI')
-  }
-
-  // Log response for debugging in development
-  if (process.env.NODE_ENV === 'development') {
-    console.log('OpenAI Response:', response.output_text)
-  }
-
-  let parsedResponse: ParsedChatResponse
-
-  try {
-    parsedResponse = JSON.parse(response.output_text)
-  } catch (parseError) {
-    console.error('JSON Parse Error:', parseError)
-    console.error('Raw response:', response.output_text)
-
-    // If parsing fails, wrap the response as a message
-    parsedResponse = {
-      shouldEdit: false,
-      message: response.output_text,
-    }
-  }
-
+export function toChatResponse(output: ChatOutput): ChatResponse {
+  // Edits are only applied when the model explicitly opted in, so a stray
+  // `edits` object can never overwrite the user's email.
+  const shouldEdit = output.shouldEdit && !!output.edits
   return {
-    message: parsedResponse.message,
-    shouldEdit: parsedResponse.shouldEdit || false,
-    edits: parsedResponse.shouldEdit ? parsedResponse.edits : undefined,
-    usage: response.usage,
+    message: output.message,
+    shouldEdit,
+    edits: shouldEdit ? output.edits : undefined,
   }
 }

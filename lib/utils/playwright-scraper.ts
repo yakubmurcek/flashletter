@@ -2,6 +2,7 @@ import { chromium as playwrightChromium, type Browser, type Page } from 'playwri
 import { PLAYWRIGHT_TIMEOUT } from '@/lib/constants/app'
 import { extractTextFromHTML } from './scraper'
 import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
+import { assertSafeUrl } from './url-safety'
 
 // Only import @sparticuz/chromium in production/serverless environments
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +55,10 @@ export async function scrapeWithPlaywright(
       'Playwright is disabled in development mode. Remove ENABLE_PLAYWRIGHT_DEV=false from .env.local to enable it.',
     )
   }
+
+  // Refuse to navigate Playwright at private/loopback hosts or non-http(s)
+  // schemes — same SSRF surface as the static `fetch` path.
+  await assertSafeUrl(url)
 
   const startTime = Date.now()
   const timeout = options.timeout || PLAYWRIGHT_TIMEOUT

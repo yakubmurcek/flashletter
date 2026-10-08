@@ -3,16 +3,27 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-react'
-import { useRegionDetection } from '@/lib/utils/location-detection'
+import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
 
 interface AuthFormProps {
   mode: 'login' | 'signup'
+}
+
+/**
+ * Allow only same-origin paths starting with a single `/`. Blocks
+ * `https://evil.com`, `//evil.com`, and `/\evil.com` flavors of open-redirect
+ * payloads carried in `?redirectTo=...`.
+ */
+function safeRedirectPath(target: string | null, fallback = '/campaigns'): string {
+  if (!target) return fallback
+  if (!target.startsWith('/')) return fallback
+  if (target.startsWith('//') || target.startsWith('/\\')) return fallback
+  return target
 }
 
 export function AuthForm({ mode }: AuthFormProps) {
@@ -23,17 +34,13 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [oauthLoading, setOauthLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [message, setMessage] = useState<string | null>(null)
-  const [legalConsent, setLegalConsent] = useState(false)
-
-  const { locationInfo, isLoading } = useRegionDetection()
-
-  const requiresNonUSConsent = mode === 'signup' && !isLoading && locationInfo?.region === 'OTHER'
-  const needsConsentConfirmation = requiresNonUSConsent && !legalConsent
+  const { ensureConsent, reset: resetConsent, consentProps } = useLegalConsent(mode === 'signup')
 
   useEffect(() => {
     if (mode !== 'signup') {
-      setLegalConsent(false)
+      resetConsent()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   const supabase = createClient()
@@ -42,15 +49,11 @@ export function AuthForm({ mode }: AuthFormProps) {
     e.preventDefault()
     if (oauthLoading) return
 
+    if (!ensureConsent()) return
+
     setLoading(true)
     setError(null)
     setMessage(null)
-
-    if (needsConsentConfirmation) {
-      setError('You must agree to the Terms and Privacy Policy to continue.')
-      setLoading(false)
-      return
-    }
 
     try {
       if (mode === 'signup') {
@@ -74,8 +77,7 @@ export function AuthForm({ mode }: AuthFormProps) {
         }
 
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/campaigns'
-        router.push(redirectTo)
+        router.push(safeRedirectPath(params.get('redirectTo')))
         return
       } else {
         const { error } = await supabase.auth.signInWithPassword({
@@ -87,8 +89,7 @@ export function AuthForm({ mode }: AuthFormProps) {
 
         // Get redirect URL from query params or default to home
         const params = new URLSearchParams(window.location.search)
-        const redirectTo = params.get('redirectTo') || '/campaigns'
-        router.push(redirectTo)
+        router.push(safeRedirectPath(params.get('redirectTo')))
         // Don't reset loading state - let the page navigation handle it
       }
     } catch (err) {
@@ -98,10 +99,7 @@ export function AuthForm({ mode }: AuthFormProps) {
   }
 
   const handleGoogleSignIn = async () => {
-    if (needsConsentConfirmation) {
-      setError('You must agree to the Terms and Privacy Policy to continue.')
-      return
-    }
+    if (!ensureConsent()) return
 
     setError(null)
     setMessage(null)
@@ -111,10 +109,10 @@ export function AuthForm({ mode }: AuthFormProps) {
 
     try {
       const params = new URLSearchParams(window.location.search)
-      const redirectTo = params.get('redirectTo')
+      const redirectTo = safeRedirectPath(params.get('redirectTo'))
       const callbackUrl = new URL('/auth/callback', window.location.origin)
 
-      if (redirectTo) {
+      if (redirectTo !== '/campaigns') {
         callbackUrl.searchParams.set('redirectTo', redirectTo)
       }
 
@@ -179,76 +177,28 @@ export function AuthForm({ mode }: AuthFormProps) {
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+        <div className="p-3 text-sm text-destructive bg-destructive/10 border border-destructive/30 rounded-md">
           {error}
         </div>
       )}
 
       {message && (
-        <div className="p-3 text-sm text-green-600 bg-green-50 border border-green-200 rounded-md">
+        <div className="p-3 text-sm text-foreground bg-primary/10 border border-primary/30 rounded-md">
           {message}
         </div>
       )}
 
       {mode === 'signup' && (
-        <div className="space-y-3">
-          {!isLoading && locationInfo?.requiresGDPR ? (
-            <div className="flex items-start space-x-3 rounded-md border border-border/40 p-3 bg-muted/30">
-              <input
-                type="checkbox"
-                id="legal-consent"
-                checked={legalConsent}
-                onChange={(e) => setLegalConsent(e.target.checked)}
-                className="mt-1 h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                required
-              />
-              <label
-                htmlFor="legal-consent"
-                className="text-xs leading-5 text-muted-foreground text-left"
-              >
-                I agree to the{' '}
-                <Link
-                  href="/terms"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                >
-                  Terms of Service
-                </Link>{' '}
-                and{' '}
-                <Link
-                  href="/privacy"
-                  className="font-semibold text-primary hover:text-primary/80 transition-colors"
-                >
-                  Privacy Policy
-                </Link>{' '}
-                and consent to the processing of my personal data in accordance with GDPR.
-              </label>
-            </div>
-          ) : (
-            <p className="text-xs text-center text-muted-foreground">
-              By creating an account, you agree to our{' '}
-              <Link
-                href="/terms"
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
-              >
-                Terms of Service
-              </Link>{' '}
-              and{' '}
-              <Link
-                href="/privacy"
-                className="font-semibold text-primary hover:text-primary/80 transition-colors"
-              >
-                Privacy Policy
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+        <LegalConsent
+          {...consentProps}
+          idPrefix="legal"
+        />
       )}
 
       <Button
         type="submit"
-        disabled={loading || oauthLoading || needsConsentConfirmation}
-        className="w-full bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 transition-transform duration-300"
+        disabled={loading || oauthLoading}
+        className="w-full"
       >
         {loading ? (
           <>
@@ -256,23 +206,23 @@ export function AuthForm({ mode }: AuthFormProps) {
             {mode === 'signup' ? 'Creating Account...' : 'Signing In...'}
           </>
         ) : mode === 'signup' ? (
-          'Create Account'
+          'Create account'
         ) : (
-          'Sign In'
+          'Sign in'
         )}
       </Button>
 
       <div className="relative">
-        <Separator className="bg-border/60" />
-        <span className="absolute inset-x-0 -top-2 flex justify-center text-xs uppercase text-muted-foreground">
-          <span className="bg-background px-2">Or continue with</span>
+        <Separator />
+        <span className="absolute inset-x-0 -top-2 flex justify-center text-xs uppercase tracking-widest text-muted-foreground">
+          <span className="bg-card px-2">Or continue with</span>
         </span>
       </div>
 
       <Button
         type="button"
         variant="outline"
-        disabled={loading || oauthLoading || needsConsentConfirmation}
+        disabled={loading || oauthLoading}
         onClick={handleGoogleSignIn}
         className="w-full"
       >

@@ -20,7 +20,7 @@ export function CampaignTypeSelector({ value, onChange }: CampaignTypeSelectorPr
         htmlFor="campaign-type"
         className="text-base font-semibold"
       >
-        Campaign Type
+        Campaign type
       </Label>
       <Select
         value={value}
@@ -28,7 +28,7 @@ export function CampaignTypeSelector({ value, onChange }: CampaignTypeSelectorPr
       >
         <SelectTrigger
           id="campaign-type"
-          className="h-12 border-border/60 focus:border-primary/50 transition-colors"
+          className="h-12"
         >
           <SelectValue />
         </SelectTrigger>

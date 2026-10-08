@@ -9,21 +9,31 @@ import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-ca
 import { extractTextFromHTML } from '@/lib/utils/scraper'
 import { extractMetadata, type ExtractedMetadata } from '@/lib/utils/metadata-extractor'
 import { scrapeWithPlaywright, shouldUseDynamicScraping } from '@/lib/utils/playwright-scraper'
+import {
+  assertSafeUrl,
+  isUnsafeUrlError,
+  userMessageForUnsafeUrl,
+  safeFetch,
+} from '@/lib/utils/url-safety'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
 
   try {
-    // Get user ID for rate limiting
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Use user ID or IP address as identifier
-    const identifier = user?.id || getClientIp(req)
+    // Require auth. The marketing-page hero calls signInAnonymously() before
+    // hitting this route, so anonymous Supabase users (with a real `user.id`)
+    // still pass — but a fully unauth'd caller can't burn our scrape budget.
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Check rate limit
+    const identifier = user.id || getClientIp(req)
+
     const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
 
     if (!rateLimitResult.success) {
@@ -46,6 +56,10 @@ export async function POST(req: NextRequest) {
     // Parse request body
     const body = await req.json()
     const { url, useDynamic = false } = scrapeLandingRequestSchema.parse(body)
+
+    // Reject SSRF targets (cloud metadata, private/loopback ranges, non-http(s)
+    // schemes) before doing any work. Throws UnsafeUrlError on failure.
+    await assertSafeUrl(url)
 
     // Check cache first
     const cacheResult = await getCachedScrapeData(url)
@@ -102,7 +116,7 @@ export async function POST(req: NextRequest) {
           playwrightError,
         )
         // Fallback to static scraping if forced dynamic fails
-        const response = await fetch(url, {
+        const response = await safeFetch(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (compatible; NewsletterGenerator/1.0)',
           },
@@ -112,8 +126,8 @@ export async function POST(req: NextRequest) {
           throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
         }
 
-        const html = await response.text()
-        const finalUrl = response.url
+        const html = response.text
+        const finalUrl = response.finalUrl
         const scrapedContent = extractTextFromHTML(html)
         const metadata = extractMetadata(html, finalUrl)
 
@@ -127,7 +141,7 @@ export async function POST(req: NextRequest) {
       }
     } else {
       // Try static scraping first
-      const response = await fetch(url, {
+      const response = await safeFetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; NewsletterGenerator/1.0)',
         },
@@ -137,8 +151,8 @@ export async function POST(req: NextRequest) {
         throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
       }
 
-      const html = await response.text()
-      const finalUrl = response.url
+      const html = response.text
+      const finalUrl = response.finalUrl
 
       // Check if we should use dynamic scraping instead
       if (shouldUseDynamicScraping(url, html)) {
@@ -236,6 +250,13 @@ export async function POST(req: NextRequest) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request format', details: error.errors },
+        { status: 400 },
+      )
+    }
+
+    if (isUnsafeUrlError(error)) {
+      return NextResponse.json(
+        { error: userMessageForUnsafeUrl(error), message: error.message },
         { status: 400 },
       )
     }

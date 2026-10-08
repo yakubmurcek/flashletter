@@ -1,11 +1,11 @@
 {
   "name": "Flashletter",
   "short_name": "Flashletter",
-  "description": "Lightning-fast AI newsletter campaigns",
+  "description": "Turn your landing page into a newsletter campaign in 2 minutes.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#6366F1",
+  "background_color": "#fdfcf9",
+  "theme_color": "#c94600",
   "icons": [
     {
       "src": "/icon-192.png",

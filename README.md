@@ -1,11 +1,11 @@
 # Flashletter
 
-Flashletter - Lightning-fast AI email campaigns. Generate complete email sequences in seconds by analyzing your landing page with OpenAI.
+Flashletter - Lightning-fast AI email campaigns. Generate complete email sequences in seconds by analyzing your landing page with Claude.
 
 ## Features
 
 - 🚀 **Landing Page Analysis** - Automatically scrapes and analyzes your landing page content
-- 🤖 **AI-Powered Email Generation** - Uses OpenAI GPT-4 to create personalized email campaigns
+- 🤖 **AI-Powered Email Generation** - Uses Claude (Anthropic) to write the sequence from your page
 - 💬 **AI Chat Assistant** - Get real-time help with email optimization and copywriting
 - ✏️ **Full Editor** - Edit and customize every aspect of your generated emails
 - 🎨 **Modern UI** - Beautiful, responsive interface built with Next.js and Tailwind CSS
@@ -14,8 +14,9 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - 💾 **Database Storage** - All campaigns and emails persisted in Supabase
 - 📝 **Version History** - Track changes to your emails over time
 - 🔄 **Auto-save** - Your work is automatically saved as you edit
+- 💳 **Plans & Billing** - Free plan limits and a Stripe-billed Pro plan with self-serve customer portal
 - 🛡️ **Rate Limiting** - Built-in protection against API abuse with Redis-based rate limiting
-- ⚡ **Retry Logic** - Automatic retry with exponential backoff for OpenAI API calls
+- ⚡ **Retry Logic** - The Anthropic SDK retries rate limits and server errors with backoff
 
 ## Tech Stack
 
@@ -23,7 +24,7 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 - **React 19**
 - **TypeScript**
 - **Supabase** (Database & Authentication)
-- **OpenAI API** (GPT-4)
+- **Anthropic API** (Claude Sonnet 5.5, via `lib/ai.ts`)
 - **Upstash Redis** (Rate Limiting)
 - **Tailwind CSS**
 - **shadcn/ui**
@@ -34,7 +35,7 @@ Flashletter - Lightning-fast AI email campaigns. Generate complete email sequenc
 
 - Node.js 20+ or Bun 1.0+
 - pnpm (recommended) or npm
-- OpenAI API key
+- Anthropic API key
 - Supabase account and project
 
 ## Setup Instructions
@@ -70,20 +71,27 @@ Add your keys to `.env.local`:
 
 ```
 # Required
-OPENAI_API_KEY=sk-your-openai-api-key-here
+ANTHROPIC_API_KEY=sk-ant-your-key-here
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+
+# Billing (optional; without it, upgrade buttons report billing as unavailable)
+STRIPE_SECRET_KEY=sk_test_your-key-here
 
 # Optional (for rate limiting in production)
 UPSTASH_REDIS_REST_URL=your-upstash-redis-url
 UPSTASH_REDIS_REST_TOKEN=your-upstash-redis-token
 ```
 
-> **Get your OpenAI API key:** Visit [OpenAI Platform](https://platform.openai.com/api-keys)  
+> **Get your Anthropic API key:** Visit the [Claude Console](https://platform.claude.com/settings/keys)  
 > **Get your Supabase keys:** Visit your [Supabase project settings](https://app.supabase.com) → API  
 > **Get Upstash Redis credentials (optional):** Sign up at [Upstash](https://upstash.com) and create a Redis database
 
-**Note:** Rate limiting is optional for development. Without Upstash Redis configured, the app will work normally but without rate limit protection.
+**Note:** Upstash Redis is optional. Without it, rate limits are kept in each server instance's memory (weaker: serverless instances count separately). On Vercel, adding Upstash for Redis from the Marketplace switches to shared limits: the app also reads the `KV_REST_API_URL` / `KV_REST_API_TOKEN` it injects.
+
+**Billing:** Stripe is the source of truth for who pays (customers carry `metadata.user_id`; no webhook or subscriptions table). Run `STRIPE_SECRET_KEY=sk_... node scripts/stripe-setup.mjs https://your-domain` once per Stripe mode (test, then live) to create the Pro product, the `flashletter_pro_monthly` / `flashletter_pro_yearly` prices and the customer-portal settings. Plan limits live in `lib/billing/plans.ts` and are enforced in the generate and chat routes.
+
+Billing caveats: a just-created Stripe customer is found via `customers.list` by email, because Stripe's search index lags about a minute. A Stripe outage fails open to Pro so paying users are never locked out. The monthly AI-rewrite allowance is only counted when Redis is configured.
 
 ### 5. Run the development server
 
@@ -163,7 +171,7 @@ Scrapes and analyzes a landing page.
 
 ### POST `/api/generate-emails`
 
-Generates email campaign using OpenAI.
+Generates email campaign using Claude.
 
 **Request:**
 
@@ -256,7 +264,7 @@ flashletter/
 │   ├── landing-page.tsx            # Main landing page
 │   └── url-input-step.tsx          # URL input form
 ├── lib/
-│   ├── openai.ts                   # OpenAI client config
+│   ├── ai.ts                       # Claude client + structured-output helper
 │   ├── types.ts                    # TypeScript types
 │   └── utils.ts                    # Utility functions
 └── .env.local                      # Environment variables
@@ -266,7 +274,7 @@ flashletter/
 
 | Variable                        | Description                    | Required |
 | ------------------------------- | ------------------------------ | -------- |
-| `OPENAI_API_KEY`                | Your OpenAI API key            | Yes      |
+| `ANTHROPIC_API_KEY`             | Your Anthropic API key         | Yes      |
 | `NEXT_PUBLIC_SUPABASE_URL`      | Your Supabase project URL      | Yes      |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Your Supabase anon key         | Yes      |
 | `UPSTASH_REDIS_REST_URL`        | Upstash Redis URL (rate limit) | No       |
@@ -276,13 +284,9 @@ flashletter/
 
 ## Cost Considerations
 
-This app uses OpenAI's GPT-4o model. Costs depend on usage:
-
-- **Email Generation**: ~1,500-3,000 tokens per campaign (varies by length)
-- **Chat Assistance**: ~100-500 tokens per conversation
-- **Pricing**: See [OpenAI Pricing](https://openai.com/api/pricing/)
-
-Typical campaign generation costs $0.01-0.05 per generation.
+This app uses Claude Sonnet 5.5 at medium effort ($2 per million input tokens, $10 per million output tokens).
+The system prompt is
+prompt-cached. See [Anthropic pricing](https://www.anthropic.com/pricing#api).
 
 ## Development
 
@@ -313,8 +317,8 @@ pnpm lint
 
 ### "Failed to generate emails"
 
-- Verify your OpenAI API key is valid
-- Check you have sufficient credits in your OpenAI account
+- Verify your Anthropic API key is valid
+- Check you have credits in the Claude Console
 - Review the console for detailed error messages
 
 ### "Too many requests" (429 error)
@@ -322,7 +326,7 @@ pnpm lint
 - You've hit the rate limit for the API endpoint
 - Wait for the cooldown period (shown in error headers)
 - For production, configure Upstash Redis for better rate limiting
-- OpenAI rate limits are automatically retried with exponential backoff
+- Claude rate limits are automatically retried by the Anthropic SDK
 
 ### "Authentication error"
 

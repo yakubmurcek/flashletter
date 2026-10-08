@@ -9,6 +9,12 @@ import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-ca
 import { extractTextFromHTML } from '@/lib/utils/scraper'
 import { extractMetadata, type ExtractedMetadata } from '@/lib/utils/metadata-extractor'
 import { scrapeWithPlaywright, shouldUseDynamicScraping } from '@/lib/utils/playwright-scraper'
+import {
+  assertSafeUrl,
+  isUnsafeUrlError,
+  userMessageForUnsafeUrl,
+  safeFetch,
+} from '@/lib/utils/url-safety'
 import { analyzeLandingPage } from '@/lib/utils/analyzer'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
@@ -37,12 +43,29 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
 
+  try {
+    await assertSafeUrl(parsedBody.url)
+  } catch (error) {
+    if (isUnsafeUrlError(error)) {
+      return NextResponse.json(
+        { error: userMessageForUnsafeUrl(error), message: error.message },
+        { status: 400 },
+      )
+    }
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
+  }
+
   const supabase = await createClient()
   const {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const identifier = user?.id || getClientIp(req)
+  // Require auth. Anonymous Supabase users (signInAnonymously) still pass.
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const identifier = user.id || getClientIp(req)
   const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
 
   if (!rateLimitResult.success) {
@@ -113,7 +136,7 @@ export async function POST(req: NextRequest) {
             finalUrl = result.finalUrl
             loadTime = result.loadTime
           } else {
-            const response = await fetch(url, {
+            const response = await safeFetch(url, {
               headers: { 'User-Agent': 'Mozilla/5.0 (compatible; NewsletterGenerator/1.0)' },
             })
 
@@ -121,8 +144,8 @@ export async function POST(req: NextRequest) {
               throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
             }
 
-            const html = await response.text()
-            const fetchedUrl = response.url
+            const html = response.text
+            const fetchedUrl = response.finalUrl
 
             if (shouldUseDynamicScraping(url, html)) {
               try {

@@ -34,3 +34,6 @@ next-env.d.ts
 
 # Claude Code local config
 .claude/
+
+# throwaway local test scripts
+*.tmp.mjs

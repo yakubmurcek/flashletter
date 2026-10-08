@@ -168,29 +168,97 @@ export class CampaignStorageService {
     if (error) throw error
   }
 
-  async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
-    // Delete existing emails for this campaign
-    const { error: deleteError } = await this.supabase
-      .from('emails')
-      .delete()
-      .eq('campaign_id', campaignId)
-
-    if (deleteError) throw deleteError
-
-    // Insert new emails
-    const emailsToInsert = emails.map((email) => ({
-      campaign_id: campaignId,
-      day: email.day,
-      subject: email.subject,
-      preview: email.preview,
-      content: email.content,
-    }))
-
-    const { data, error } = await this.supabase.from('emails').insert(emailsToInsert).select()
+  /**
+   * Verify the given user owns the campaign. Returns true on match, false on
+   * mismatch or not-found. Used as defence-in-depth on routes that mutate
+   * campaign data — RLS should already cover this, but the application-layer
+   * check makes mis-configured RLS surface as a 403 instead of a silent wipe.
+   */
+  async isOwnedBy(campaignId: string, userId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .from('campaigns')
+      .select('user_id')
+      .eq('id', campaignId)
+      .maybeSingle()
 
     if (error) throw error
+    if (!data) return false
+    return data.user_id === userId
+  }
 
-    return (data || []).map((email) => mapDbEmailToDomain(dbEmailRowSchema.parse(email)))
+  async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
+    // Preserve email UUIDs across re-saves so `email_versions.email_id` (and
+    // any other FKs) stay valid. The previous delete-then-insert pattern
+    // minted fresh UUIDs every time, which silently orphaned (or, with
+    // ON DELETE CASCADE, wiped) the entire version history on every regen.
+    //
+    // Strategy: read existing rows by (campaign_id, day), update in place
+    // when the day matches an existing row, insert when it's new, and only
+    // delete rows whose day is no longer present (e.g. user shrank the
+    // sequence from 7 → 3).
+    const { data: existingRows, error: readError } = await this.supabase
+      .from('emails')
+      .select('id, day')
+      .eq('campaign_id', campaignId)
+
+    if (readError) throw readError
+
+    const existingIdByDay = new Map<number, string>()
+    for (const row of (existingRows ?? []) as Array<{ id: string; day: number }>) {
+      existingIdByDay.set(row.day, row.id)
+    }
+    const incomingDays = new Set(emails.map((e) => e.day))
+
+    const result: Email[] = []
+
+    for (const email of emails) {
+      const existingId = existingIdByDay.get(email.day)
+      const payload = {
+        day: email.day,
+        subject: email.subject,
+        preview: email.preview,
+        content: email.content,
+      }
+
+      if (existingId) {
+        const { data, error } = await this.supabase
+          .from('emails')
+          .update(payload)
+          .eq('id', existingId)
+          .select()
+          .single()
+        if (error) throw error
+        result.push(mapDbEmailToDomain(dbEmailRowSchema.parse(data)))
+      } else {
+        const { data, error } = await this.supabase
+          .from('emails')
+          .insert({ ...payload, campaign_id: campaignId })
+          .select()
+          .single()
+        if (error) throw error
+        result.push(mapDbEmailToDomain(dbEmailRowSchema.parse(data)))
+      }
+    }
+
+    // NOTE on FK behavior: this DELETE assumes `email_versions.email_id` has
+    // ON DELETE CASCADE — versions of removed days are dropped along with
+    // their email. That matches user intent (the user shrank the campaign,
+    // they no longer want history for the removed days), and matches the
+    // pre-fix behavior (which did `DELETE FROM emails WHERE campaign_id = $1`
+    // on every save). If the FK is RESTRICT, this DELETE will throw — which
+    // would also have broken the previous code path on every save.
+    const idsToDelete = ((existingRows ?? []) as Array<{ id: string; day: number }>)
+      .filter((row) => !incomingDays.has(row.day))
+      .map((row) => row.id)
+    if (idsToDelete.length > 0) {
+      const { error: deleteError } = await this.supabase
+        .from('emails')
+        .delete()
+        .in('id', idsToDelete)
+      if (deleteError) throw deleteError
+    }
+
+    return result.sort((a, b) => a.day - b.day)
   }
 
   async updateEmail(

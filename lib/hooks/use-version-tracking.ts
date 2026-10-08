@@ -30,18 +30,27 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         setIsLoading(true)
         const counts: Record<number, number> = {}
 
-        for (const email of emails) {
-          if (email.uuid) {
-            try {
-              const count = await versionStorageService.getVersionCount(email.uuid)
-              counts[email.id] = count
-            } catch (error) {
-              console.error(`Failed to load version count for email ${email.id}:`, error)
+        // Collect all UUIDs to fetch counts in batch
+        const emailUuids = emails.map((e) => e.uuid).filter((uuid): uuid is string => !!uuid)
+
+        try {
+          // Fetch all counts in a single query
+          const batchCounts = await versionStorageService.getBatchVersionCounts(emailUuids)
+
+          // Map the UUID-based counts back to the email IDs
+          for (const email of emails) {
+            if (email.uuid && batchCounts[email.uuid] !== undefined) {
+              counts[email.id] = batchCounts[email.uuid]
+            } else {
               counts[email.id] = 0
             }
-          } else {
-            counts[email.id] = 0
           }
+        } catch (error) {
+          console.error('Failed to load version counts in batch:', error)
+          // Fallback to 0 for all emails on error
+          emails.forEach((email) => {
+            counts[email.id] = 0
+          })
         }
 
         setVersionCounts(counts)

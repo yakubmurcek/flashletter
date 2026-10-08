@@ -1,244 +1,129 @@
-'use client'
-
-import { useState, useEffect, FormEvent } from 'react'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { ArrowRight, Play, Sparkles, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { AnimatedSection, GradientText, FloatingElement } from '@/components/ui/animations'
-import { createClient, signInAnonymously } from '@/lib/supabase/client'
-import { useLandingPage } from '@/lib/hooks/use-landing-page'
-import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-overlay'
-import { useCampaign } from '@/lib/campaign-context'
-
-function HeroUrlForm() {
-  const router = useRouter()
-  const [url, setUrl] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null)
-
-  const { analyzeLandingPage, isAnalyzing, progressState, error: analyzeError } = useLandingPage()
-  const { setLandingPageData, createNewCampaign, clearAll } = useCampaign()
-
-  useEffect(() => {
-    async function checkAuth() {
-      const supabase = createClient()
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setIsAuthenticated(!!user)
-    }
-    checkAuth()
-  }, [])
-
-  // Clear campaign context when form mounts (fresh start)
-  useEffect(() => {
-    clearAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault()
-    const trimmedUrl = url.trim()
-    if (!trimmedUrl) return
-
-    // Normalize URL: add https:// if missing
-    let finalUrl = trimmedUrl
-    if (!/^https?:\/\//i.test(finalUrl)) {
-      finalUrl = `https://${finalUrl}`
-    }
-
-    setIsSubmitting(true)
-    setError(null)
-
-    try {
-      // Step 1: Ensure user is authenticated (anonymously if needed)
-      if (!isAuthenticated) {
-        await signInAnonymously()
-        setIsAuthenticated(true)
-      }
-
-      // Step 2: Analyze the landing page
-      const data = await analyzeLandingPage(finalUrl)
-      if (!data) {
-        // Error is set by useLandingPage hook
-        setIsSubmitting(false)
-        return
-      }
-
-      // Step 3: Set landing page data and create campaign
-      setLandingPageData(data)
-      const campaignId = await createNewCampaign(data)
-
-      // Step 4: Navigate to configure page
-      router.push(`/create/configure?campaign=${campaignId}`)
-    } catch (err) {
-      console.error('Failed to start campaign:', err)
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.')
-      setIsSubmitting(false)
-    }
-  }
-
-  const isLoading = isSubmitting || isAnalyzing
-  const displayError = error || analyzeError
-
-  return (
-    <>
-      <ScrapeProgressOverlay
-        isOpen={isAnalyzing}
-        progressState={progressState}
-      />
-      <form
-        onSubmit={handleSubmit}
-        className="w-full max-w-xl mx-auto"
-      >
-        <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-          <Input
-            type="text"
-            placeholder="https://your-landing-page.com"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            className="h-12 text-base flex-1 border-border/60 focus:border-primary bg-background/80 backdrop-blur-sm"
-            required
-            autoFocus
-            disabled={isLoading}
-          />
-          <Button
-            type="submit"
-            size="lg"
-            disabled={isLoading || isAuthenticated === null}
-            className="bg-gradient-to-r from-orange-400 to-amber-300/70 hover:from-orange-400/90 hover:to-amber-300/50 text-white px-6 h-12 text-base font-semibold transition-transform duration-300 whitespace-nowrap"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Analyzing...
-              </>
-            ) : (
-              <>
-                Generate My Campaign
-                <ArrowRight className="w-5 h-5 ml-2" />
-              </>
-            )}
-          </Button>
-        </div>
-        {displayError && (
-          <p className="text-sm text-destructive mt-2 text-center">{displayError}</p>
-        )}
-        <p className="text-sm text-muted-foreground mt-3 text-center">
-          No sign up required — try it free
-        </p>
-      </form>
-    </>
-  )
-}
+import { HeroUrlForm } from '@/components/sections/hero-url-form'
 
 export function FullProductHeroSection() {
   return (
-    <div className="relative text-center py-20">
-      {/* Floating elements */}
-      <FloatingElement
-        delay={0}
-        className="absolute pointer-events-none top-20 left-10"
-      >
-        <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-amber-400/20 rounded-full blur-xl"></div>
-      </FloatingElement>
-
-      <FloatingElement
-        delay={1000}
-        className="absolute pointer-events-none top-40 right-20"
-      >
-        <div className="w-32 h-32 bg-gradient-to-br from-amber-400/20 to-orange-500/20 rounded-full blur-xl"></div>
-      </FloatingElement>
-
-      <FloatingElement
-        delay={2000}
-        className="absolute pointer-events-none bottom-20 left-1/3"
-      >
-        <div className="w-24 h-24 bg-gradient-to-br from-pink-500/20 to-red-500/20 rounded-full blur-xl"></div>
-      </FloatingElement>
-
-      <AnimatedSection
-        delay={250}
-        immediate
-      >
-        <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <span className="text-sm font-medium text-primary">
-            For founders who hate writing from scratch
-          </span>
-        </div>
-      </AnimatedSection>
-
-      <AnimatedSection
-        delay={250}
-        immediate
-      >
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-[1.2]">
-          Turn your landing page into a{' '}
-          <GradientText className="cursor-behind">
-            full newsletter campaign in 30 seconds
-          </GradientText>
-        </h1>
-      </AnimatedSection>
-
-      <AnimatedSection
-        delay={500}
-        immediate
-      >
-        <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-          Stop staring at a blank editor. Start from a ready‑to‑send sequence you just tweak.
+    <section
+      id="top"
+      className="pt-24 md:pt-32 pb-20 md:pb-28 scroll-mt-14"
+    >
+      <div className="max-w-3xl mx-auto text-center">
+        <p className="text-sm font-medium text-muted-foreground mb-6 tracking-tight">
+          For founders who hate writing from scratch
         </p>
-      </AnimatedSection>
 
-      {/* URL Input Form */}
-      <AnimatedSection
-        delay={750}
-        immediate
-      >
-        <div className="mb-8">
+        <h1 className="text-display text-5xl md:text-7xl text-foreground mb-6">
+          Turn your landing page into a <span className="text-primary">newsletter campaign</span> in
+          2 minutes.
+        </h1>
+
+        <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+          Stop staring at a blank editor. Your first converting email campaign is ready to send.
+        </p>
+
+        <div>
           <HeroUrlForm />
         </div>
-        <div className="flex justify-center">
-          <Button
-            variant="outline"
-            size="lg"
-            className="px-8 py-3 text-lg font-semibold border-border/60 hover:border-primary/50"
-            asChild
-          >
-            <Link
-              href="#demo"
-              className="flex items-center gap-2"
-            >
-              <Play className="w-5 h-5" />
-              Watch Demo
-            </Link>
-          </Button>
-        </div>
-      </AnimatedSection>
+      </div>
 
-      {/* Stats section */}
-      <AnimatedSection
-        delay={1000}
-        immediate
+      {/* Product canvas: a static rendition of the editor with a real sample email */}
+      <div
+        className="mt-20 md:mt-24 max-w-5xl mx-auto px-4 animate-in fade-in slide-in-from-bottom-8 zoom-in-95 animation-duration-1000 fill-mode-both delay-500 motion-reduce:animate-none"
+        aria-hidden="true"
       >
-        <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">10x</div>
-            <div className="text-sm text-muted-foreground">Faster Campaign Creation</div>
+        <div
+          className="
+            relative rounded-xl border border-border
+            bg-card overflow-hidden
+            shadow-[0_30px_80px_-30px_oklch(0.18_0.012_60_/_0.18)]
+          "
+        >
+          {/* Window chrome */}
+          <div className="h-9 border-b border-border bg-background/80 flex items-center gap-1.5 px-4">
+            <span className="w-2.5 h-2.5 rounded-full bg-border" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border" />
+            <span className="w-2.5 h-2.5 rounded-full bg-border" />
+            <span className="ml-3 text-xs text-muted-foreground tabular">
+              flashletter / launch sequence
+            </span>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">25%</div>
-            <div className="text-sm text-muted-foreground">Higher Open Rates</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-2">65%</div>
-            <div className="text-sm text-muted-foreground">ROI Improvement</div>
+
+          <div className="grid sm:grid-cols-[200px_1fr] md:grid-cols-[240px_1fr]">
+            {/* Sidebar — email list */}
+            <aside className="hidden sm:block border-r border-border bg-background/40 py-4 text-left">
+              <div className="px-4 pb-3 text-xs uppercase tracking-widest text-muted-foreground">
+                5 emails
+              </div>
+              {[
+                { n: 1, label: 'Welcome', sub: 'You’re in.', active: true },
+                { n: 2, label: 'Story', sub: 'Why we built this' },
+                { n: 3, label: 'Social proof', sub: 'What customers say' },
+                { n: 4, label: 'Objection', sub: 'But what about…' },
+                { n: 5, label: 'Close', sub: 'Last chance' },
+              ].map((item) => (
+                <div
+                  key={item.n}
+                  className={`
+                    px-4 py-2.5 flex items-baseline gap-3 border-l-2
+                    ${item.active ? 'border-l-primary bg-primary/5' : 'border-l-transparent'}
+                  `}
+                >
+                  <span className="font-mono text-xs text-muted-foreground tabular w-3">
+                    {item.n}
+                  </span>
+                  <div className="min-w-0">
+                    <div
+                      className={`text-sm leading-tight truncate ${
+                        item.active ? 'text-foreground font-medium' : 'text-foreground/80'
+                      }`}
+                    >
+                      {item.label}
+                    </div>
+                    <div className="text-xs text-muted-foreground truncate">{item.sub}</div>
+                  </div>
+                </div>
+              ))}
+            </aside>
+
+            {/* Main — email content */}
+            <div className="px-5 sm:px-6 md:px-10 py-6 md:py-7 text-left flex flex-col gap-4">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Email 1 of 5 · Welcome
+                </span>
+                <span className="font-mono text-xs text-muted-foreground tabular">Auto-saved</span>
+              </div>
+
+              <div className="space-y-1">
+                <div className="text-xs text-muted-foreground">Subject</div>
+                <div className="text-base font-medium text-foreground">
+                  You&rsquo;re in. Here&rsquo;s what happens next.
+                </div>
+              </div>
+
+              <div className="border-t border-border pt-4 space-y-3 text-sm md:text-[15px] leading-relaxed text-foreground/85">
+                <p>Hi,</p>
+                <p>
+                  Thanks for signing up. Flashletter reads your landing page and drafts a five-email
+                  launch sequence in your own voice, so you start from a real draft instead of a
+                  blank editor.
+                </p>
+                <p className="hidden sm:block">
+                  Paste your URL and the first email is ready in under a minute. Edit anything, then
+                  copy it straight into Mailchimp, Kit or Beehiiv.
+                </p>
+
+                <div className="pt-1">
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-md bg-primary text-primary-foreground text-sm font-medium">
+                    Generate my sequence
+                  </div>
+                </div>
+
+                <p className="text-muted-foreground">The Flashletter team</p>
+              </div>
+            </div>
           </div>
         </div>
-      </AnimatedSection>
-    </div>
+      </div>
+    </section>
   )
 }

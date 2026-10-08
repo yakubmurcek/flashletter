@@ -19,7 +19,7 @@ export default function CampaignsError({
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="max-w-md w-full p-6 space-y-4">
         <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-destructive">Campaign Error</h2>
+          <h2 className="text-display text-2xl text-destructive">Campaign Error</h2>
           <p className="text-sm text-muted-foreground">
             Unable to load your campaigns. This might be a temporary issue.
           </p>

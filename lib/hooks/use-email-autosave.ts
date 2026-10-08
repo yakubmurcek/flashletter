@@ -6,6 +6,7 @@ import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
 import type { Email } from '@/lib/types'
+import { track } from '@/lib/analytics'
 
 interface EmailAutosaveReturn {
   saveEmail: (id: number, updates: Partial<Email>, skipVersioning?: boolean) => Promise<void>
@@ -14,19 +15,56 @@ interface EmailAutosaveReturn {
   cleanup: () => void
 }
 
+type Snapshot = { subject: string; content: string }
+
+/**
+ * Per-email autosave with versioning that captures *pauses*, not keystrokes.
+ *
+ * The previous implementation saved a fresh `email_versions` row on every
+ * call to `saveEmail` (i.e. every keystroke), then debounced only the DB
+ * write. That meant 200 chars of typing produced ~200 version rows plus
+ * an N+1 read on every one. This rewrite folds the version save into the
+ * same debounce: when the timer fires we compare the email's current state
+ * to the last-known snapshot, save the *snapshot* as a version (so it
+ * represents the state the user was in before this typing burst), then
+ * advance the snapshot. The `saveVersion` service still has its own
+ * duplicate-content guard, so back-to-back identical pauses (e.g. after a
+ * restore-from-history) won't insert duplicate rows.
+ */
 export function useEmailAutosave(
   emails: Email[],
   currentCampaignId: string | null,
   updateEmail: (id: number, updates: Partial<Email>) => void,
 ): EmailAutosaveReturn {
-  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const saveTimerRef = useRef<Map<number, NodeJS.Timeout>>(new Map())
+  const previousSnapshotRef = useRef<Map<number, Snapshot>>(new Map())
+  // Tracks which email ids have already fired `email_edited` this hook
+  // lifetime. Persists across re-renders without triggering them, and
+  // resets naturally if the user navigates away and back.
+  const trackedEditsRef = useRef<Set<number>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  // Keep a ref to the latest emails array to avoid stale closures in setTimeout
+  // Latest emails array — read inside the deferred timer so the saved data
+  // reflects the keystroke that fired the debounce, not whatever was in
+  // scope when saveEmail was invoked.
   const emailsRef = useRef(emails)
   useEffect(() => {
     emailsRef.current = emails
+  }, [emails])
+
+  // Seed snapshots when an email first becomes visible. Only fill missing
+  // entries — re-seeding on every render would clobber the snapshot the
+  // debounce relies on.
+  useEffect(() => {
+    for (const email of emails) {
+      if (!previousSnapshotRef.current.has(email.id)) {
+        previousSnapshotRef.current.set(email.id, {
+          subject: email.subject,
+          content: email.content,
+        })
+      }
+    }
   }, [emails])
 
   const supabase = createClient()
@@ -35,76 +73,81 @@ export function useEmailAutosave(
 
   const saveEmail = useCallback(
     async (id: number, updates: Partial<Email>, skipVersioning = false) => {
-      // Save current version before updating (unless explicitly skipped)
-      if (!skipVersioning) {
-        const currentEmail = emails.find((e) => e.id === id)
-        if (currentEmail && currentEmail.uuid) {
-          try {
-            await versionStorageService.saveVersion(currentEmail.uuid, currentEmail.day, {
-              subject: currentEmail.subject,
-              content: currentEmail.content,
-            })
-          } catch (error) {
-            console.error('Failed to save version:', error)
-            // Continue with update even if versioning fails
-          }
-        } else {
-          console.error('Email not found or missing UUID for versioning:', id)
-        }
-      }
-
-      // Update the email in local state
+      // Apply locally immediately so the editor stays responsive.
       updateEmail(id, updates)
 
-      // Save to Supabase if we have a campaign ID
-      if (currentCampaignId) {
-        // Clear any existing timeout
-        if (saveTimeoutRef.current) {
-          clearTimeout(saveTimeoutRef.current)
-        }
+      if (!currentCampaignId) return
 
-        // Debounce the save operation
-        saveTimeoutRef.current = setTimeout(async () => {
-          setIsSaving(true)
-          try {
-            // Get the complete current email state from the ref to avoid data loss
-            // This ensures we save ALL fields, not just the last partial update
-            const currentEmail = emailsRef.current.find((e) => e.id === id)
-            if (currentEmail) {
-              await campaignService.updateEmail(currentCampaignId, id, {
+      // Reset any pending debounce for this email — only the latest paused
+      // state for a given email gets persisted/versioned.
+      const existingTimer = saveTimerRef.current.get(id)
+      if (existingTimer) clearTimeout(existingTimer)
+
+      const timer = setTimeout(async () => {
+        saveTimerRef.current.delete(id)
+        setIsSaving(true)
+        try {
+          const currentEmail = emailsRef.current.find((e) => e.id === id)
+          if (!currentEmail) return
+
+          if (!skipVersioning && currentEmail.uuid) {
+            const snapshot = previousSnapshotRef.current.get(id)
+            if (
+              snapshot &&
+              (snapshot.subject !== currentEmail.subject ||
+                snapshot.content !== currentEmail.content)
+            ) {
+              try {
+                await versionStorageService.saveVersion(
+                  currentEmail.uuid,
+                  currentEmail.day,
+                  snapshot,
+                )
+              } catch (error) {
+                console.error('Failed to save version:', error)
+                // Continue with the DB update even if versioning fails.
+              }
+              previousSnapshotRef.current.set(id, {
                 subject: currentEmail.subject,
                 content: currentEmail.content,
-                preview: currentEmail.preview,
               })
-              setLastSaved(new Date())
-            } else {
-              console.error(
-                'Email not found for save operation:',
-                id,
-                'Available:',
-                emailsRef.current.map((e) => e.id),
-              )
             }
-          } catch (error) {
-            console.error('Failed to save email to database:', error)
-          } finally {
-            setIsSaving(false)
           }
-        }, EMAIL_SAVE_DEBOUNCE_MS)
-      }
+
+          await campaignService.updateEmail(currentCampaignId, id, {
+            subject: currentEmail.subject,
+            content: currentEmail.content,
+            preview: currentEmail.preview,
+          })
+          setLastSaved(new Date())
+
+          // Fire once per (email id, hook lifetime). The funnel cares about
+          // "did the user actually engage with the editor for this day," not
+          // raw keystroke volume, and the snapshot guard above means we only
+          // get here when the content genuinely changed.
+          if (!trackedEditsRef.current.has(id) && !skipVersioning) {
+            trackedEditsRef.current.add(id)
+            track('email_edited', { day: currentEmail.day })
+          }
+        } catch (error) {
+          console.error('Failed to save email to database:', error)
+        } finally {
+          setIsSaving(false)
+        }
+      }, EMAIL_SAVE_DEBOUNCE_MS)
+
+      saveTimerRef.current.set(id, timer)
     },
-    [emails, currentCampaignId, updateEmail, campaignService, versionStorageService],
+    [currentCampaignId, updateEmail, campaignService, versionStorageService],
   )
 
-  // Cleanup timeout on unmount
   const cleanup = useCallback(() => {
-    if (saveTimeoutRef.current) {
-      clearTimeout(saveTimeoutRef.current)
-      saveTimeoutRef.current = null
+    for (const timer of saveTimerRef.current.values()) {
+      clearTimeout(timer)
     }
+    saveTimerRef.current.clear()
   }, [])
 
-  // Automatic cleanup on unmount
   useEffect(() => {
     return cleanup
   }, [cleanup])

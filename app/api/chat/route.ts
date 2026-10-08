@@ -1,27 +1,29 @@
 import * as Sentry from '@sentry/nextjs'
-import { openai } from '@/lib/openai'
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requestSchema } from './schemas'
 import { buildSystemInstructions } from './prompt-builder'
-import { parseOpenAIResponse } from './response-handler'
+import { chatOutputSchema, toChatResponse } from './response-handler'
 import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
-import { retryWithBackoff, extractRateLimitInfo } from '@/lib/utils/openai-retry'
+import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
+import { consumeAiRewrite, getPlan } from '@/lib/billing/limits'
 
 export async function POST(req: NextRequest) {
   try {
-    // Get user ID for rate limiting
     const supabase = await createClient()
     const {
       data: { user },
     } = await supabase.auth.getUser()
 
-    // Use user ID or IP address as identifier
-    const identifier = user?.id || getClientIp(req)
+    // Require auth — same money-leak concern as the generate-emails routes.
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    // Check rate limit
+    const identifier = user.id || getClientIp(req)
+
     const rateLimitResult = await checkRateLimit(chatRateLimit, identifier)
 
     if (!rateLimitResult.success) {
@@ -46,20 +48,31 @@ export async function POST(req: NextRequest) {
 
     const instructions = buildSystemInstructions(campaignContext, emailContext, selectedContext)
 
-    const userInput = messages[messages.length - 1]?.content || ''
+    // Send the whole conversation so follow-ups ("make it shorter") have context.
+    // Client-sent system messages are ignored; only the server sets instructions.
+    const history = messages
+      .filter((m) => m.role !== 'system')
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+    // The conversation must start and end on a user turn (no assistant prefill).
+    while (history.length && history[0].role !== 'user') history.shift()
+    while (history.length && history[history.length - 1].role !== 'user') history.pop()
+    if (!history.length) {
+      return NextResponse.json({ error: 'No user message' }, { status: 400 })
+    }
 
-    // Wrap OpenAI call with retry logic
-    const response = await retryWithBackoff(() =>
-      openai.responses.create({
-        model: 'gpt-5-mini',
-        instructions,
-        input: userInput,
-        // Note: GPT-5 family does not accept `temperature` on responses.create.
-        max_output_tokens: 2000,
-      }),
-    )
+    const rewriteDenial = await consumeAiRewrite(user.id, await getPlan(user))
+    if (rewriteDenial) {
+      return NextResponse.json(rewriteDenial, { status: 402 })
+    }
 
-    const parsedResponse = parseOpenAIResponse(response)
+    const output = await generateStructured({
+      system: instructions,
+      messages: history,
+      schema: chatOutputSchema,
+      maxTokens: 16000,
+    })
+
+    const parsedResponse = toChatResponse(output)
 
     return NextResponse.json(parsedResponse, {
       headers: getRateLimitHeaders(
@@ -82,30 +95,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Handle OpenAI rate limit errors
-    if (error && typeof error === 'object' && 'status' in error) {
-      if (error.status === 429) {
-        const rateLimitInfo = extractRateLimitInfo(error)
+    if (isRateLimitError(error)) {
+      const rateLimitInfo = extractRateLimitInfo(error)
 
-        // Report to Sentry as warning (expected but needs visibility)
-        Sentry.captureException(error, {
-          level: 'warning',
-          tags: {
-            error_type: 'openai_rate_limit',
-            api_route: '/api/chat',
-          },
-          extra: { rateLimitInfo },
-        })
+      // Report to Sentry as warning (expected but needs visibility)
+      Sentry.captureException(error, {
+        level: 'warning',
+        tags: {
+          error_type: 'ai_rate_limit',
+          api_route: '/api/chat',
+        },
+        extra: { rateLimitInfo },
+      })
 
-        return NextResponse.json(
-          {
-            error: 'OpenAI rate limit exceeded',
-            message: 'Too many requests to AI service. Please try again later.',
-            rateLimitInfo,
-          },
-          { status: 429 },
-        )
-      }
+      return NextResponse.json(
+        {
+          error: 'AI rate limit exceeded',
+          message: 'Too many requests to AI service. Please try again later.',
+          rateLimitInfo,
+        },
+        { status: 429 },
+      )
     }
 
     return NextResponse.json(

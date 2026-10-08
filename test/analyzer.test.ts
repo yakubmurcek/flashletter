@@ -1,17 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const parseMock = vi.fn()
+const generateStructuredMock = vi.fn()
 
-vi.mock('@/lib/openai', () => ({
-  openai: {
-    responses: {
-      parse: (...args: unknown[]) => parseMock(...args),
-    },
-  },
+vi.mock('@/lib/ai', () => ({
+  generateStructured: (...args: unknown[]) => generateStructuredMock(...args),
 }))
 
 // Import AFTER vi.mock so analyzer.ts sees the mock
 import { analyzeLandingPage } from '@/lib/utils/analyzer'
+import { landingPageAnalysisSchema } from '@/lib/schemas/analysis'
 
 const validAnalysis = {
   valueProp: 'a',
@@ -24,14 +21,28 @@ const validAnalysis = {
   opportunities: [],
 }
 
+interface GenerateCall {
+  system: string
+  messages: Array<{ role: string; content: string }>
+  schema: unknown
+  effort?: string
+  maxTokens?: number
+}
+
+function lastCall(): GenerateCall {
+  return generateStructuredMock.mock.calls.at(-1)![0] as GenerateCall
+}
+
+function userInput(): string {
+  return lastCall().messages.find((m) => m.role === 'user')!.content
+}
+
 describe('analyzeLandingPage', () => {
   beforeEach(() => {
-    parseMock.mockReset()
+    generateStructuredMock.mockReset().mockResolvedValue(validAnalysis)
   })
 
-  it('returns the parsed analysis on success', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
-
+  it('returns the structured analysis on success', async () => {
     const result = await analyzeLandingPage({
       url: 'https://example.com',
       content: 'Some content',
@@ -39,101 +50,81 @@ describe('analyzeLandingPage', () => {
     })
 
     expect(result).toEqual(validAnalysis)
-    expect(parseMock).toHaveBeenCalledOnce()
+    expect(generateStructuredMock).toHaveBeenCalledOnce()
   })
 
-  it('throws when OpenAI returns output_parsed=null', async () => {
-    parseMock.mockResolvedValue({ output_parsed: null })
+  it('propagates errors from the AI call', async () => {
+    generateStructuredMock.mockRejectedValue(new Error('AI returned an unexpected format'))
     await expect(
       analyzeLandingPage({
         url: 'https://example.com',
         content: 'c',
         metadata: {},
       }),
-    ).rejects.toThrow(/no analysis/i)
+    ).rejects.toThrow(/unexpected format/)
   })
 
-  it('uses gpt-5-mini (not gpt-4o)', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
+  it('validates against landingPageAnalysisSchema at low effort', async () => {
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
-    const callArg = parseMock.mock.calls[0][0] as { model: string }
-    expect(callArg.model).toBe('gpt-5-mini')
+    const call = lastCall()
+    expect(call.schema).toBe(landingPageAnalysisSchema)
+    expect(call.effort).toBe('low')
+    expect(call.maxTokens).toBe(8000)
+  })
+
+  it('sends a single user message', async () => {
+    await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
+    const { messages } = lastCall()
+    expect(messages).toHaveLength(1)
+    expect(messages[0].role).toBe('user')
   })
 
   it('sends URL + title in the user input', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
     await analyzeLandingPage({
       url: 'https://acme.io',
       content: 'Acme rocks.',
       metadata: { title: 'Acme Home', ogSiteName: 'Acme Inc' },
     })
-    const callArg = parseMock.mock.calls[0][0] as {
-      input: Array<{ role: string; content: string }>
-    }
-    const userInput = callArg.input.find((m) => m.role === 'user')!.content
-    expect(userInput).toContain('https://acme.io')
-    expect(userInput).toContain('Acme Home')
-    expect(userInput).toContain('Acme Inc')
-    expect(userInput).toContain('Acme rocks.')
+    const input = userInput()
+    expect(input).toContain('https://acme.io')
+    expect(input).toContain('Acme Home')
+    expect(input).toContain('Acme Inc')
+    expect(input).toContain('Acme rocks.')
   })
 
   it('prefers ogTitle over title in user input', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
     await analyzeLandingPage({
       url: 'https://example.com',
       content: 'c',
       metadata: { title: 'Plain', ogTitle: 'OG Title' },
     })
-    const callArg = parseMock.mock.calls[0][0] as {
-      input: Array<{ role: string; content: string }>
-    }
-    const userInput = callArg.input.find((m) => m.role === 'user')!.content
-    expect(userInput).toContain('OG Title')
-    expect(userInput).not.toContain('Title: Plain')
+    const input = userInput()
+    expect(input).toContain('OG Title')
+    expect(input).not.toContain('Title: Plain')
   })
 
   it('uses "Untitled page" when no title metadata', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
-    const callArg = parseMock.mock.calls[0][0] as {
-      input: Array<{ role: string; content: string }>
-    }
-    const userInput = callArg.input.find((m) => m.role === 'user')!.content
-    expect(userInput).toContain('Untitled page')
+    expect(userInput()).toContain('Untitled page')
   })
 
   it('truncates long content (>8000 chars)', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
     const bigContent = 'x'.repeat(15000) + 'END_MARKER'
     await analyzeLandingPage({
       url: 'https://example.com',
       content: bigContent,
       metadata: {},
     })
-    const callArg = parseMock.mock.calls[0][0] as {
-      input: Array<{ role: string; content: string }>
-    }
-    const userInput = callArg.input.find((m) => m.role === 'user')!.content
-    expect(userInput).not.toContain('END_MARKER')
+    const input = userInput()
+    expect(input).not.toContain('END_MARKER')
     // Hard upper bound: truncated content + framing, well under 10k
-    expect(userInput.length).toBeLessThan(10000)
+    expect(input.length).toBeLessThan(10000)
   })
 
-  it('sends a system message with email-copywriting rules', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
+  it('sends a system prompt with email-copywriting rules', async () => {
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
-    const callArg = parseMock.mock.calls[0][0] as {
-      input: Array<{ role: string; content: string }>
-    }
-    const systemInput = callArg.input.find((m) => m.role === 'system')!.content
-    expect(systemInput.toLowerCase()).toContain('landing pages')
-    expect(systemInput.toLowerCase()).toMatch(/never invent/)
-  })
-
-  it('does not pass temperature (GPT-5 family rejects it on structured output)', async () => {
-    parseMock.mockResolvedValue({ output_parsed: validAnalysis })
-    await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
-    const callArg = parseMock.mock.calls[0][0] as Record<string, unknown>
-    expect('temperature' in callArg).toBe(false)
+    const { system } = lastCall()
+    expect(system.toLowerCase()).toContain('landing pages')
+    expect(system.toLowerCase()).toMatch(/never invent/)
   })
 })

@@ -1,161 +1,154 @@
-import { Button } from '@/components/ui/button'
-import { Check } from 'lucide-react'
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
-import { AnimatedSection, GradientText, PulseButton } from '@/components/ui/animations'
+import { Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Reveal } from '@/components/ui/reveal'
+import { UpgradeButton } from '@/components/billing/upgrade-button'
+import { PLAN_LIMITS, PRO_PRICE_USD, type BillingInterval } from '@/lib/billing/plans'
+import { cn } from '@/lib/utils'
 
-export function PricingSection() {
+const FREE_FEATURES = [
+  `${PLAN_LIMITS.free.campaignsPerMonth} campaigns a month`,
+  `Sequences up to ${PLAN_LIMITS.free.maxEmailsPerCampaign} emails`,
+  `${PLAN_LIMITS.free.aiRewritesPerMonth} AI rewrites a month`,
+  'Rich-text editor with version history',
+  'Copy into Mailchimp, Kit, Beehiiv or any ESP',
+]
+
+const PRO_FEATURES = [
+  'Unlimited campaigns',
+  `Sequences up to ${PLAN_LIMITS.pro.maxEmailsPerCampaign} emails`,
+  'Unlimited AI rewrites',
+  'Rich-text editor with version history',
+  'Priority support by email',
+]
+
+function StaticBlock({
+  children,
+  className,
+}: {
+  children: React.ReactNode
+  className?: string
+  delay?: number
+}) {
+  return <div className={className}>{children}</div>
+}
+
+function FeatureList({ items }: { items: string[] }) {
   return (
-    <AnimatedSection delay={250}>
-      <section
-        id="pricing"
-        aria-label="Pricing"
-        className="py-14 md:py-20"
+    <ul className="space-y-3 text-sm text-foreground mb-8 flex-1">
+      {items.map((feature) => (
+        <li
+          key={feature}
+          className="flex items-start gap-3"
+        >
+          <Check className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+          <span>{feature}</span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
+export function PricingSection({
+  headingLevel = 'h2',
+  animate = true,
+}: {
+  headingLevel?: 'h1' | 'h2'
+  /** Off on /pricing, where the cards are above the fold and must show at once. */
+  animate?: boolean
+}) {
+  const Wrap = animate ? Reveal : StaticBlock
+  const [interval, setInterval] = useState<BillingInterval>('month')
+  const Heading = headingLevel
+  const proPrice = interval === 'month' ? PRO_PRICE_USD.month : PRO_PRICE_USD.year
+  const monthsFree = 12 - PRO_PRICE_USD.year / PRO_PRICE_USD.month
+
+  return (
+    <section
+      id="pricing"
+      aria-label="Pricing"
+      className="py-24 md:py-32"
+    >
+      <Wrap className="max-w-2xl mx-auto text-center mb-10">
+        <Heading className="text-display text-3xl md:text-5xl text-foreground mb-4">
+          Simple pricing.
+        </Heading>
+        <p className="text-muted-foreground text-lg">
+          Start free. Upgrade when Flashletter is writing your emails every week.
+        </p>
+      </Wrap>
+
+      <div className="flex justify-center mb-10">
+        <div
+          role="radiogroup"
+          aria-label="Billing period"
+          className="inline-flex rounded-full border border-border bg-muted/40 p-1 text-sm"
+        >
+          {(['month', 'year'] as const).map((value) => (
+            <button
+              key={value}
+              type="button"
+              role="radio"
+              aria-checked={interval === value}
+              onClick={() => setInterval(value)}
+              className={cn(
+                'rounded-full px-4 py-1.5 font-medium transition-colors',
+                interval === value
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {value === 'month' ? 'Monthly' : `Yearly · ${monthsFree} months free`}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <Wrap
+        delay={0.1}
+        className="max-w-3xl mx-auto grid md:grid-cols-2 gap-px bg-border rounded-xl overflow-hidden border border-border"
       >
-        <div className="max-w-2xl mx-auto text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">
-            <GradientText>Simple Pricing</GradientText>
-          </h2>
-          <p className="text-muted-foreground text-lg">
-            Start free and upgrade as you grow. No hidden fees.
+        <div className="bg-background p-8 flex flex-col">
+          <h3 className="text-base font-semibold text-foreground mb-1">Free</h3>
+          <p className="text-sm text-muted-foreground mb-6">Try it on your own landing page.</p>
+          <div className="mb-8">
+            <span className="text-display text-5xl text-foreground tabular">$0</span>
+          </div>
+          <FeatureList items={FREE_FEATURES} />
+          <Button
+            variant="outline"
+            className="w-full"
+            asChild
+          >
+            <Link href="/#top">Generate from a URL</Link>
+          </Button>
+        </div>
+
+        <div className="relative bg-background p-8 flex flex-col">
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary" />
+          <div className="flex items-baseline justify-between mb-1">
+            <h3 className="text-base font-semibold text-primary">Pro</h3>
+            <span className="text-xs uppercase tracking-widest text-primary">Most popular</span>
+          </div>
+          <p className="text-sm text-muted-foreground mb-6">
+            For founders shipping launches and newsletters.
+          </p>
+          <div className="mb-8">
+            <span className="text-display text-5xl text-foreground tabular">${proPrice}</span>
+            <span className="text-muted-foreground text-base ml-1">
+              /{interval === 'month' ? 'month' : 'year'}
+            </span>
+          </div>
+          <FeatureList items={PRO_FEATURES} />
+          <UpgradeButton interval={interval}>Upgrade to Pro</UpgradeButton>
+          <p className="mt-3 text-xs text-center text-muted-foreground">
+            Secure checkout by Stripe. Cancel anytime.
           </p>
         </div>
-
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-semibold mb-2">Free</h3>
-              <p className="text-muted-foreground text-sm mb-4">Perfect for trying things out</p>
-              <div className="text-4xl font-bold mb-2">$0</div>
-              <div className="text-sm text-muted-foreground">Forever free</div>
-            </div>
-            <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />3 campaigns/month
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Basic AI generation
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Editor access
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Community support
-              </li>
-            </ul>
-            <Button
-              variant="outline"
-              className="mt-auto group-hover:border-primary group-hover:text-primary transition"
-              asChild
-            >
-              <Link href="/signup">Get Started Free</Link>
-            </Button>
-          </div>
-
-          <div className="relative bg-gradient-to-br from-orange-400 to-amber-300 text-primary-foreground border border-primary rounded-xl overflow-visible p-8 flex flex-col shadow-2xl md:scale-[1.05] md:-translate-y-2 z-[1] group">
-            <span className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-4 py-2 text-sm font-medium rounded-full bg-primary-foreground text-primary shadow-lg z-10">
-              Most Popular
-            </span>
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-semibold mb-2">Pro</h3>
-              <p className="text-primary-foreground/80 text-sm mb-4">
-                For growing teams and businesses
-              </p>
-              <div className="text-5xl font-bold mb-2">
-                $19
-                <span className="text-lg font-normal text-primary-foreground/80">/mo</span>
-              </div>
-              <div className="text-sm text-primary-foreground/80">Billed monthly</div>
-            </div>
-            <ul className="space-y-3 text-sm text-primary-foreground/90 mb-8 flex-1">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary-foreground flex-shrink-0" />
-                Unlimited campaigns
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary-foreground flex-shrink-0" />
-                Advanced AI features
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary-foreground flex-shrink-0" />
-                Version history
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary-foreground flex-shrink-0" />
-                Analytics & insights
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary-foreground flex-shrink-0" />
-                Priority support
-              </li>
-            </ul>
-            <PulseButton>
-              <Button
-                size="lg"
-                variant="secondary"
-                className="mt-auto bg-primary-foreground text-primary hover:bg-primary-foreground/90 shadow-lg"
-                asChild
-              >
-                <Link href="/signup">Start Pro Trial</Link>
-              </Button>
-            </PulseButton>
-          </div>
-
-          <div className="group bg-card border border-border rounded-xl p-8 flex flex-col hover:shadow-xl hover:shadow-primary/5 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-semibold mb-2">Team</h3>
-              <p className="text-muted-foreground text-sm mb-4">Collaboration at scale</p>
-              <div className="text-4xl font-bold mb-2">
-                $49
-                <span className="text-lg font-normal text-muted-foreground">/mo</span>
-              </div>
-              <div className="text-sm text-muted-foreground">Per team</div>
-            </div>
-            <ul className="space-y-3 text-sm text-muted-foreground mb-8 flex-1">
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Everything in Pro
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Team workspaces
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Role permissions
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Advanced analytics
-              </li>
-              <li className="flex items-center gap-3">
-                <Check className="w-5 h-5 text-primary flex-shrink-0" />
-                Dedicated support
-              </li>
-            </ul>
-            <Button
-              variant="outline"
-              className="mt-auto group-hover:border-primary group-hover:text-primary transition"
-              asChild
-            >
-              <Link href="/signup">Contact Sales</Link>
-            </Button>
-          </div>
-        </div>
-
-        {/* Pricing note */}
-        <div className="max-w-2xl mx-auto text-center mt-10 p-6 bg-gradient-to-r from-primary/5 to-amber-400/5 border border-primary/20 rounded-xl">
-          <p className="text-sm text-muted-foreground flex items-center justify-center gap-2">
-            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-            <span>
-              <strong className="text-foreground">30-day money-back guarantee</strong> on all paid
-              plans. Cancel anytime. No questions asked.
-            </span>
-          </p>
-        </div>
-      </section>
-    </AnimatedSection>
+      </Wrap>
+    </section>
   )
 }

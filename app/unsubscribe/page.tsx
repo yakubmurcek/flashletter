@@ -1,12 +1,36 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { AppShell } from '@/components/layouts/app-shell'
 import { CheckCircle, AlertCircle, Mail, Trash2 } from 'lucide-react'
-export default function UnsubscribePage() {
+
+const SUCCESS_MESSAGE =
+  'You have been successfully removed from our waitlist. You will no longer receive updates from us.'
+
+async function submitUnsubscribe(payload: { email?: string; token?: string }): Promise<void> {
+  const response = await fetch('/api/waitlist/unsubscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  if (!response.ok) {
+    const data = await response.json().catch(() => null)
+    throw new Error(
+      (data && typeof data === 'object' && 'error' in data && (data as { error: string }).error) ||
+        'Something went wrong',
+    )
+  }
+}
+
+function UnsubscribePageContent() {
+  const searchParams = useSearchParams()
+  const tokenFromUrl = searchParams.get('token')
+
   const [email, setEmail] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [result, setResult] = useState<{
@@ -14,31 +38,33 @@ export default function UnsubscribePage() {
     message: string
   } | null>(null)
 
+  // When the user arrives via a signed link, auto-submit once. Single-shot
+  // so a re-render or React Strict Mode double-mount doesn't fire it twice.
+  const autoSubmittedRef = useRef(false)
+  useEffect(() => {
+    if (!tokenFromUrl || autoSubmittedRef.current) return
+    autoSubmittedRef.current = true
+
+    setIsSubmitting(true)
+    submitUnsubscribe({ token: tokenFromUrl })
+      .then(() => setResult({ type: 'success', message: SUCCESS_MESSAGE }))
+      .catch((err) =>
+        setResult({
+          type: 'error',
+          message: err instanceof Error ? err.message : 'Something went wrong',
+        }),
+      )
+      .finally(() => setIsSubmitting(false))
+  }, [tokenFromUrl])
+
   const handleUnsubscribe = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
     setResult(null)
 
     try {
-      const response = await fetch('/api/waitlist/unsubscribe', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Something went wrong')
-      }
-
-      setResult({
-        type: 'success',
-        message:
-          'You have been successfully removed from our waitlist. You will no longer receive updates from us.',
-      })
+      await submitUnsubscribe({ email })
+      setResult({ type: 'success', message: SUCCESS_MESSAGE })
       setEmail('')
     } catch (err) {
       setResult({
@@ -51,11 +77,13 @@ export default function UnsubscribePage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <AppShell chrome="centered">
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold mb-2">Unsubscribe</h1>
-          <p className="text-muted-foreground">Remove your email from our waitlist</p>
+          <h1 className="text-display text-2xl md:text-3xl mb-2">Unsubscribe</h1>
+          <p className="text-muted-foreground leading-relaxed">
+            Remove your email from our waitlist
+          </p>
         </div>
 
         <Card>
@@ -84,26 +112,18 @@ export default function UnsubscribePage() {
 
               {result && (
                 <div
-                  className={`p-4 rounded-lg flex items-start gap-3 ${
+                  className={`p-3 rounded-md flex items-start gap-3 text-sm ${
                     result.type === 'success'
-                      ? 'bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800'
-                      : 'bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800'
+                      ? 'bg-primary/10 border border-primary/30 text-foreground'
+                      : 'bg-destructive/10 border border-destructive/30 text-destructive'
                   }`}
                 >
                   {result.type === 'success' ? (
-                    <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                   ) : (
-                    <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                   )}
-                  <p
-                    className={`text-sm ${
-                      result.type === 'success'
-                        ? 'text-green-600 dark:text-green-400'
-                        : 'text-red-600 dark:text-red-400'
-                    }`}
-                  >
-                    {result.message}
-                  </p>
+                  <p>{result.message}</p>
                 </div>
               )}
 
@@ -133,14 +153,22 @@ export default function UnsubscribePage() {
           <p className="text-sm text-muted-foreground">
             Need help? Contact us at{' '}
             <a
-              href="mailto:support@flashletter.com"
-              className="text-primary hover:underline"
+              href="mailto:jakub@flashletter.app"
+              className="text-primary underline underline-offset-2 hover:text-primary/80"
             >
-              support@flashletter.com
+              jakub@flashletter.app
             </a>
           </p>
         </div>
       </div>
-    </div>
+    </AppShell>
+  )
+}
+
+export default function UnsubscribePage() {
+  return (
+    <Suspense fallback={null}>
+      <UnsubscribePageContent />
+    </Suspense>
   )
 }

@@ -1,5 +1,6 @@
 'use client'
 import { memo, useMemo } from 'react'
+import { Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface Email {
@@ -14,9 +15,11 @@ interface EmailListProps {
   emails: Email[]
   selectedId: number
   onSelect: (id: number) => void
+  /** Emails still being written; shown as placeholder rows after the real ones. */
+  pendingCount?: number
 }
 
-function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
+function EmailListComponent({ emails, selectedId, onSelect, pendingCount = 0 }: EmailListProps) {
   // Memoize sorted emails to avoid resorting on every render
   const sortedEmails = useMemo(() => [...emails].sort((a, b) => a.day - b.day), [emails])
 
@@ -27,21 +30,19 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(
-            'group w-full text-left p-4 rounded-2xl transition duration-300 cursor-pointer',
-            'bg-white/[0.04] hover:bg-white/[0.07] hover:shadow-[0_20px_45px_-30px_rgba(15,23,42,0.35)]',
-            'ring-1 ring-transparent hover:ring-primary/20',
+            'group w-full text-left p-4 rounded-lg transition cursor-pointer border',
             selectedId === email.id
-              ? 'bg-primary/10 shadow-[0_18px_40px_-28px_rgba(15,23,42,0.4)] ring-primary/30'
-              : '',
+              ? 'bg-primary/10 border-primary/20'
+              : 'bg-transparent border-transparent hover:bg-muted hover:border-border',
           )}
         >
           <div className="flex items-start gap-3">
             <div
               className={cn(
-                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 mt-0.5 transition',
+                'w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition',
                 selectedId === email.id
-                  ? 'bg-primary text-primary-foreground font-semibold shadow-lg'
-                  : 'bg-muted text-foreground/80 font-medium ring-1 ring-border/15',
+                  ? 'bg-primary text-primary-foreground font-semibold'
+                  : 'bg-muted text-foreground/80 font-medium border border-border',
               )}
             >
               <span className="text-xs">{email.day}</span>
@@ -56,6 +57,29 @@ function EmailListComponent({ emails, selectedId, onSelect }: EmailListProps) {
           </div>
         </button>
       ))}
+      {Array.from({ length: pendingCount }, (_, i) => {
+        const day = sortedEmails.length + i + 1
+        return (
+          <div
+            key={`pending-${day}`}
+            aria-hidden="true"
+            className="w-full p-4 rounded-lg border border-dashed border-border"
+          >
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-primary/10 text-primary">
+                <Loader2 className="w-4 h-4 animate-spin" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-sm mb-2 text-muted-foreground">
+                  Day {day} · Writing…
+                </h3>
+                <div className="h-2.5 w-4/5 rounded bg-muted animate-pulse mb-1.5" />
+                <div className="h-2 w-3/5 rounded bg-muted animate-pulse" />
+              </div>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

@@ -28,7 +28,7 @@ export function ChatFab({ onClick }: ChatFabProps) {
         title="Ask AI"
         variant="default"
         size="lg"
-        className="rounded-full w-14 h-14 shadow-[0_25px_60px_-30px_rgba(15,23,42,0.45)] hover:scale-[1.04] transition-transform animate-pulse-glow"
+        className="rounded-full w-14 h-14 shadow-lg hover:scale-[1.04] transition-transform animate-pulse-glow"
         onClick={onClick}
       >
         <MessageSquare className="w-6 h-6" />

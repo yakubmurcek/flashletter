@@ -29,7 +29,10 @@ export function RichTextEditor({
     immediatelyRender: false,
     extensions: [
       Markdown.configure({
-        html: true,
+        // Disallow raw HTML in Markdown so a paste containing
+        // <script>/<img onerror=...>/etc. can't be persisted into an email
+        // and re-rendered for someone else (e.g. when collab/sharing ships).
+        html: false,
         transformPastedText: true,
         transformCopiedText: true,
         breaks: true,
@@ -38,6 +41,8 @@ export function RichTextEditor({
         heading: {
           levels: [1, 2, 3],
         },
+        // StarterKit v3 bundles Link; it is configured separately below.
+        link: false,
       }),
       Link.configure({
         openOnClick: false,
@@ -59,7 +64,10 @@ export function RichTextEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose max-w-none focus:outline-none min-h-[150px] whitespace-pre-wrap',
+          // text-foreground/90 everywhere: Tailwind's default prose body is a cool
+          // grey that clashed with the warm list text.
+          'prose max-w-none focus:outline-none min-h-[150px] whitespace-pre-wrap text-foreground/90',
+          'prose-p:text-foreground/90 prose-li:text-foreground/90 prose-a:text-primary',
           'prose-headings:font-semibold prose-headings:tracking-tight prose-headings:text-foreground',
           'prose-strong:font-semibold prose-strong:text-foreground',
           'prose-ul:list-disc prose-ul:pl-6 prose-ul:text-foreground/90',

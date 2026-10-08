@@ -10,11 +10,19 @@ import { useCampaignLoader } from '@/lib/hooks/use-campaign-loader'
 import { useEmailState } from '@/lib/hooks/use-email-state'
 import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
+import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 import type { Email, SelectedContext } from '@/lib/types'
+import { createClient } from '@/lib/supabase/client'
+import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
+import { isValidCampaignId } from '@/lib/utils/validation'
 import { EditorHeader } from '@/components/editor/editor-header'
-import { EmailSidebar } from '@/components/editor/email-sidebar'
+import { EmailSidebar, MobileEmailTabs } from '@/components/editor/email-sidebar'
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
+import { GeneratingState } from '@/components/editor/generating-state'
+import { EmptyCampaignState } from '@/components/editor/empty-campaign-state'
+import { CampaignConfigPanel } from '@/components/editor/campaign-config-panel'
+import { useCampaignActions } from '@/lib/campaign-context'
 import { cn } from '@/lib/utils'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
@@ -39,17 +47,36 @@ function EditorPageContent() {
   const { emails, selectedEmail, selectedEmailId, selectEmail, updateEmail } = useEmailState()
   const { versionCounts, restoreVersion } = useVersionTracking(emails)
   const { currentCampaignId } = useCampaignData()
+  const { updateCampaignConfig } = useCampaignActions()
   const { saveEmail, isSaving } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+  const {
+    isStreaming,
+    streamedCount,
+    totalExpected,
+    error: streamError,
+    warning: streamWarning,
+    clearWarning: clearStreamWarning,
+    generateEmailsStream,
+    limitPlan,
+  } = useEmailStreaming()
 
-  const { getParam, toggleParam, getCampaignId, deleteParam } = useUrlState()
+  const { getParam, replaceParam, getCampaignId, deleteParam } = useUrlState()
 
   const [selectedContext, setSelectedContext] = useState<SelectedContext | null>(null)
   const [autoSubmitMessage, setAutoSubmitMessage] = useState<string | null>(null)
+  const hasTriggeredAutogenRef = useRef(false)
 
   // Use validated getters
   const campaignIdFromUrl = getCampaignId()
-  const showChat = getParam('chat') !== 'closed' // Default to open unless explicitly closed
-  const restoreParam = getParam('restore')
+  const [isCompact, setIsCompact] = useState(false)
+  const chatParam = getParam('chat')
+  // Open by default on desktop, closed by default on small screens.
+  const chatWanted = chatParam === 'open' || (chatParam !== 'closed' && !isCompact)
+  // Nothing to talk about on an empty campaign (a plan limit or failed run).
+  const chatAvailable = emails.length > 0 || isStreaming
+  const showChat = chatWanted && chatAvailable
+  const restoreVersionParam = getParam('restoreVersion')
+  const hasProcessedRestoreRef = useRef(false)
   const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
   const openedViaAutoSelectionRef = useRef(false)
   const prevShowChatRef = useRef(showChat)
@@ -61,16 +88,72 @@ function EditorPageContent() {
       return
     }
     hasInitializedChatStateRef.current = true
-    // Reset any persisted "closed" state when the editor mounts
+    // Reset any persisted open/closed state when the editor mounts
     deleteParam('chat')
+    // On phones and small tablets the panel would cover the emails, so it
+    // starts closed there and opens from the floating button instead.
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+      setIsCompact(true)
+      setShouldFocusChatInput(false)
+      return
+    }
     // Focus the chat input on first open
     setShouldFocusChatInput(true)
   }, [deleteParam])
+
+  // Crossing the breakpoint (resize, tablet rotation) re-applies the default
+  // for the new size instead of leaving the panel over the emails.
+  const deleteParamRef = useRef(deleteParam)
+  deleteParamRef.current = deleteParam
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 1023px)')
+    const onChange = (e: MediaQueryListEvent) => {
+      setIsCompact(e.matches)
+      deleteParamRef.current('chat')
+    }
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
 
   // Extract data from campaign data
   const landingPageData = campaignData?.landingPageData
   const config = campaignData?.config
   const campaignName = campaignData?.name
+
+  // Auto-generate the sequence when arriving from the streamlined hero flow
+  // (`autogen=1`). Single-shot per mount; clears the URL flag so a refresh
+  // doesn't re-trigger generation.
+  const autogenFlag = getParam('autogen') === '1'
+  useEffect(() => {
+    if (
+      !autogenFlag ||
+      hasTriggeredAutogenRef.current ||
+      loadingState !== 'loaded' ||
+      !landingPageData ||
+      !config ||
+      !campaignIdFromUrl ||
+      emails.length > 0 ||
+      isStreaming
+    ) {
+      return
+    }
+    hasTriggeredAutogenRef.current = true
+    deleteParam('autogen')
+    // Pass the URL-validated id (guaranteed non-null by the guard above) so the
+    // stream route persists emails and the client gets back UUIDs for version
+    // tracking. `currentCampaignId` is React state and can lag behind here.
+    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
+  }, [
+    autogenFlag,
+    loadingState,
+    landingPageData,
+    config,
+    emails.length,
+    isStreaming,
+    deleteParam,
+    generateEmailsStream,
+    campaignIdFromUrl,
+  ])
 
   // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
   // Define all callbacks before any early returns
@@ -95,8 +178,8 @@ function EditorPageContent() {
       setShouldFocusChatInput(true)
     }
     openedViaAutoSelectionRef.current = false
-    toggleParam('chat', 'closed')
-  }, [toggleParam, showChat])
+    replaceParam('chat', showChat ? 'closed' : 'open')
+  }, [replaceParam, showChat])
 
   const handleTextSelected = useCallback(
     (
@@ -113,7 +196,7 @@ function EditorPageContent() {
 
       if (!showChat) {
         openedViaAutoSelectionRef.current = !shouldFocus
-        deleteParam('chat') // Remove 'closed' parameter to open chat
+        replaceParam('chat', 'open')
       }
 
       // For command actions (not "Ask AI about this"), auto-submit the action
@@ -122,7 +205,7 @@ function EditorPageContent() {
         setAutoSubmitMessage(action)
       }
     },
-    [showChat, deleteParam],
+    [showChat, replaceParam],
   )
 
   const handleClearContext = useCallback(() => {
@@ -138,6 +221,20 @@ function EditorPageContent() {
     setAutoSubmitMessage(null)
   }, [])
 
+  const handleConfigChange = useCallback(
+    (next: import('@/lib/types').CampaignConfig) => {
+      updateCampaignConfig(next)
+    },
+    [updateCampaignConfig],
+  )
+
+  const handleRegenerate = useCallback(() => {
+    if (!landingPageData || !config || isStreaming) return
+    // Same reason as the autogen effect: prefer the URL-validated id so the
+    // server can persist emails and the client gets back UUIDs for versioning.
+    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
+  }, [landingPageData, config, isStreaming, generateEmailsStream, campaignIdFromUrl])
+
   useEffect(() => {
     if (showChat && !prevShowChatRef.current) {
       if (openedViaAutoSelectionRef.current) {
@@ -149,48 +246,65 @@ function EditorPageContent() {
     prevShowChatRef.current = showChat
   }, [showChat])
 
-  // Handle restoration from history page
+  // Handle restoration from history page. The URL only carries an opaque
+  // version UUID — we resolve subject/content server-side via Supabase, so
+  // RLS enforces that the version belongs to a campaign owned by this user.
+  // (The previous flow accepted JSON in the URL and applied it directly,
+  // letting a crafted link overwrite arbitrary email content.) Single-shot
+  // ref guard so updateEmail's state churn doesn't re-fire the effect.
   useEffect(() => {
-    if (restoreParam) {
-      const handleRestore = async () => {
-        try {
-          // Safe JSON parsing with validation
-          let restoreData
-          try {
-            restoreData = JSON.parse(decodeURIComponent(restoreParam))
-          } catch (parseError) {
-            console.error('Failed to parse restore data:', parseError)
-            return
-          }
+    if (!restoreVersionParam || hasProcessedRestoreRef.current) return
+    // Wait for the campaign: saving needs the email rows and the campaign id.
+    if (!currentCampaignId || emails.length === 0) return
+    hasProcessedRestoreRef.current = true
 
-          // Validate restore data structure
-          if (
-            restoreData &&
-            typeof restoreData.emailId === 'number' &&
-            typeof restoreData.subject === 'string' &&
-            typeof restoreData.content === 'string'
-          ) {
-            // Update the email directly (versioning already handled by history page)
-            updateEmail(restoreData.emailId, {
-              subject: restoreData.subject,
-              content: restoreData.content,
-            })
-
-            // Update version count for this email
-            await restoreVersion(restoreData)
-
-            // Clean up restore param to prevent re-processing on refresh
-            deleteParam('restore')
-          } else {
-            console.error('Invalid restore data structure:', restoreData)
-          }
-        } catch (error) {
-          console.error('Failed to restore version:', error)
-        }
+    const handleRestore = async () => {
+      const decoded = decodeURIComponent(restoreVersionParam)
+      if (!isValidCampaignId(decoded)) {
+        // versionId shares the UUID v4 shape with campaignId — reject anything else.
+        console.error('Invalid restoreVersion id, refusing to apply')
+        deleteParam('restoreVersion')
+        return
       }
-      handleRestore()
+
+      try {
+        const supabase = createClient()
+        const versionService = new EmailVersionStorageService(supabase)
+        const version = await versionService.getVersion(decoded)
+        if (!version) {
+          console.error('Version not found or not accessible:', decoded)
+          deleteParam('restoreVersion')
+          return
+        }
+
+        // Persist through the autosave path (not just local state), so the
+        // restore survives a reload and the replaced text becomes a version.
+        await saveEmail(version.emailId, {
+          subject: version.subject,
+          content: version.content,
+        })
+
+        await restoreVersion({
+          emailId: version.emailId,
+          subject: version.subject,
+          content: version.content,
+        })
+
+        deleteParam('restoreVersion')
+      } catch (error) {
+        console.error('Failed to restore version:', error)
+        deleteParam('restoreVersion')
+      }
     }
-  }, [restoreParam, updateEmail, restoreVersion, deleteParam])
+    handleRestore()
+  }, [
+    restoreVersionParam,
+    saveEmail,
+    restoreVersion,
+    deleteParam,
+    currentCampaignId,
+    emails.length,
+  ])
 
   // Show loading state
   if (loadingState === 'loading') {
@@ -208,7 +322,7 @@ function EditorPageContent() {
   if (loadingState === 'error') {
     return (
       <FullScreenState
-        title="Error Loading Campaign"
+        title="Couldn't load this campaign"
         message={error || 'Failed to load campaign data'}
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
@@ -220,7 +334,7 @@ function EditorPageContent() {
   if (!campaignIdFromUrl) {
     return (
       <FullScreenState
-        title="No Campaign Selected"
+        title="No campaign selected"
         message="Please select a campaign to edit from the campaigns page."
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
@@ -228,11 +342,13 @@ function EditorPageContent() {
     )
   }
 
-  // Show error state if we have no essential data after loading is complete
-  if (loadingState === 'loaded' && !config && emails.length === 0) {
+  // Show error state if we have no essential data after loading is complete.
+  // Skip while we're auto-generating from the hero flow (config exists but
+  // emails are still streaming in).
+  if (loadingState === 'loaded' && !config && emails.length === 0 && !isStreaming && !autogenFlag) {
     return (
       <FullScreenState
-        title="Campaign Data Missing"
+        title="This campaign is incomplete"
         message="This campaign appears to be incomplete. It's missing both configuration and email data."
         actionHref="/campaigns"
         actionLabel="Back to Campaigns"
@@ -246,6 +362,18 @@ function EditorPageContent() {
     )
   }
 
+  const configPanel = (
+    <CampaignConfigPanel
+      config={config ?? null}
+      onConfigChange={handleConfigChange}
+      onRegenerate={handleRegenerate}
+      isStreaming={isStreaming}
+      streamedCount={streamedCount}
+      totalExpected={totalExpected}
+      hasEmails={emails.length > 0}
+    />
+  )
+
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       <EditorHeader
@@ -257,32 +385,75 @@ function EditorPageContent() {
         }
         versionCount={versionCounts[selectedEmailId] || 0}
         campaignName={campaignName || undefined}
-        className={cn('transition-all duration-300', showChat ? 'mr-96 pr-4' : 'mr-0')}
+        campaignId={campaignIdFromUrl ?? undefined}
+        selectedEmailDay={selectedEmail?.day}
+        selectedEmailSubject={selectedEmail?.subject}
+        className={cn('transition-all duration-300', showChat ? 'lg:mr-96 lg:pr-4' : 'mr-0')}
       />
 
       <div
         className={cn(
           'flex-1 flex overflow-hidden h-0 transition-all duration-300',
-          showChat ? 'mr-96' : 'mr-0',
+          showChat ? 'lg:mr-96' : 'mr-0',
         )}
       >
         <EmailSidebar
           emails={emails}
           selectedId={selectedEmailId}
           onSelect={handleSelectEmail}
-          campaignType={config?.campaignType}
-          tone={config?.tone}
+          pendingCount={
+            isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
+          }
+          configPanel={configPanel}
         />
 
-        <main className="flex-1 overflow-y-auto">
-          {selectedEmail && (
-            <EmailPreview
-              email={selectedEmail}
-              onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
-              onTextSelected={handleTextSelected}
-              isSaving={isSaving}
-            />
+        <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
+          {/* Phones: the sidebar is hidden, so settings and the email list live here. */}
+          <div className="md:hidden flex-shrink-0 max-h-[60vh] overflow-y-auto bg-card">
+            {configPanel}
+          </div>
+          <MobileEmailTabs
+            emails={emails}
+            selectedId={selectedEmailId}
+            onSelect={handleSelectEmail}
+            pendingCount={
+              isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
+            }
+          />
+          {streamWarning && (
+            <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm flex items-center justify-between gap-3">
+              <span className="text-destructive">⚠️ {streamWarning}</span>
+              <button
+                type="button"
+                onClick={clearStreamWarning}
+                className="text-xs text-muted-foreground hover:text-foreground underline"
+              >
+                Dismiss
+              </button>
+            </div>
           )}
+          <div className="flex-1 min-h-0 overflow-y-auto">
+            {selectedEmail ? (
+              <EmailPreview
+                email={selectedEmail}
+                onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
+                onTextSelected={handleTextSelected}
+                isSaving={isSaving}
+              />
+            ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
+              <GeneratingState
+                streamedCount={streamedCount}
+                totalExpected={totalExpected}
+                error={streamError}
+                limitPlan={limitPlan}
+              />
+            ) : loadingState === 'loaded' && emails.length === 0 ? (
+              <EmptyCampaignState
+                onGenerate={handleRegenerate}
+                disabled={!landingPageData || !config}
+              />
+            ) : null}
+          </div>
         </main>
 
         <ChatSidebar
@@ -314,7 +485,7 @@ function EditorPageContent() {
         />
       </div>
 
-      {!showChat && <ChatFab onClick={handleToggleChat} />}
+      {!showChat && chatAvailable && <ChatFab onClick={handleToggleChat} />}
     </div>
   )
 }

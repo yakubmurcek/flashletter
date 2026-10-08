@@ -156,8 +156,10 @@ describe('getUserFriendlyMessage', () => {
     expect(getUserFriendlyMessage(new Error('Invalid API key'), 'foo')).toMatch(/configuration/i)
   })
 
-  it('returns original message for other errors', () => {
-    expect(getUserFriendlyMessage(new Error('specific failure'), 'foo')).toBe('specific failure')
+  it('falls back to generic for unknown errors instead of leaking the raw message', () => {
+    expect(getUserFriendlyMessage(new Error('specific failure'), 'foo')).toBe(
+      'Failed to foo. Please try again.',
+    )
   })
 
   it('returns fallback for non-Error values', () => {

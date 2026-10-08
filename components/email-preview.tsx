@@ -14,10 +14,6 @@ interface EmailPreviewProps {
   isSaving?: boolean
 }
 
-// ... imports will be handled in separate call or combined if I use multi-replace. I'll use replace_file_content for the main body first or do imports and body together.
-// Let's do imports and body separately to be safe with line numbers, or I can replace the whole file content block if I am careful.
-// I will reuse "EmailPreviewComponent" signature and update its body.
-
 function EmailPreviewComponent({
   email,
   onUpdate,
@@ -181,15 +177,22 @@ function EmailPreviewComponent({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 py-4 supports-[backdrop-filter]:backdrop-blur-2xl bg-white/5 ring-1 ring-border/10 rounded-b-3xl shadow-[0_18px_55px_-38px_rgba(15,23,42,0.4)]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
-            <p className="text-sm text-muted-foreground/80 truncate">
-              Review and edit your campaign email
+      <div className="px-4 py-3 sm:px-6 sm:py-4 bg-background border-b border-border">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight">Day {email.day}</h2>
+            <p className="text-sm text-muted-foreground truncate">
+              {email.preview ? (
+                <>
+                  <span className="hidden sm:inline">Inbox preview: </span>
+                  {email.preview}
+                </>
+              ) : (
+                'Click anywhere in the email to edit it'
+              )}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
             <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
               {!isSaving && <Check className="w-3 h-3 text-muted-foreground" />}
               {isSaving ? 'Saving...' : 'Saved'}
@@ -201,19 +204,15 @@ function EmailPreviewComponent({
               className="gap-2"
               disabled={!editor}
             >
-              {isCopied ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              Copy HTML
+              {isCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+              <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Copy HTML'}</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0 flex flex-col items-center">
-        <div className="w-full max-w-4xl h-full flex flex-col min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+        <div className="w-full h-full flex flex-col min-h-0">
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}

@@ -1,14 +1,22 @@
 import { Label } from '@/components/ui/label'
 import { Slider } from '@/components/ui/slider'
+import Link from 'next/link'
 import { CAMPAIGN_DURATION } from '@/lib/constants/campaign'
 
 interface DurationSliderProps {
   value: number[]
   onChange: (value: number[]) => void
+  /** Plan limit; defaults to the absolute maximum. */
+  max?: number
 }
 
-export function DurationSlider({ value, onChange }: DurationSliderProps) {
+export function DurationSlider({
+  value,
+  onChange,
+  max = CAMPAIGN_DURATION.MAX,
+}: DurationSliderProps) {
   const days = value[0]
+  const limited = max < CAMPAIGN_DURATION.MAX
 
   return (
     <div className="space-y-4">
@@ -17,27 +25,38 @@ export function DurationSlider({ value, onChange }: DurationSliderProps) {
           htmlFor="days"
           className="text-base font-semibold"
         >
-          Campaign Duration
+          Number of emails
         </Label>
-        <span className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-amber-300 bg-clip-text text-transparent">
-          {days} days
-        </span>
+        <span className="text-2xl font-semibold text-primary tabular">{days} emails</span>
       </div>
       <Slider
         id="days"
         min={CAMPAIGN_DURATION.MIN}
-        max={CAMPAIGN_DURATION.MAX}
+        max={max}
         step={1}
         value={value}
         onValueChange={onChange}
         className="py-4"
       />
       <div className="flex justify-between text-xs text-muted-foreground">
-        <span>{CAMPAIGN_DURATION.MIN} days</span>
-        <span>{CAMPAIGN_DURATION.MAX} days</span>
+        <span>{CAMPAIGN_DURATION.MIN}</span>
+        <span>{max}</span>
       </div>
       <p className="text-sm text-muted-foreground">
-        We&apos;ll generate {days} emails, one for each day of your campaign
+        One email per day of your campaign.
+        {limited && (
+          <>
+            {' '}
+            Up to {max} on your plan.{' '}
+            <Link
+              href="/pricing"
+              className="text-primary underline underline-offset-2"
+            >
+              Pro writes up to {CAMPAIGN_DURATION.MAX}
+            </Link>
+            .
+          </>
+        )}
       </p>
     </div>
   )

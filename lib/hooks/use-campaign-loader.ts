@@ -35,7 +35,10 @@ export function useCampaignLoader(): CampaignLoaderReturn {
 
   const [loadingState, setLoadingState] = useState<LoadingState>('idle')
   const [error, setError] = useState<string | null>(null)
-  const [campaignLoaded, setCampaignLoaded] = useState(false)
+  // Track which campaign we last loaded by id. Replaces the previous boolean
+  // `campaignLoaded`, which never reset when the URL id changed — meaning
+  // navigating from `?campaign=A` to `?campaign=B` quietly reused A's data.
+  const [loadedCampaignId, setLoadedCampaignId] = useState<string | null>(null)
 
   const campaignIdFromUrl = getCampaignId()
 
@@ -46,7 +49,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
 
       try {
         await contextLoadCampaign(campaignId)
-        setCampaignLoaded(true)
+        setLoadedCampaignId(campaignId)
         setLoadingState('loaded')
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load campaign'
@@ -61,18 +64,18 @@ export function useCampaignLoader(): CampaignLoaderReturn {
     [contextLoadCampaign, cleanupParams, router],
   )
 
-  // Load campaign from URL if present
+  // Load campaign from URL when the id changes (or first appears).
   useEffect(() => {
-    if (campaignIdFromUrl && !campaignLoaded && !isLoading) {
+    if (campaignIdFromUrl && campaignIdFromUrl !== loadedCampaignId && !isLoading) {
       loadCampaign(campaignIdFromUrl)
     }
-  }, [campaignIdFromUrl, campaignLoaded, isLoading, loadCampaign])
+  }, [campaignIdFromUrl, loadedCampaignId, isLoading, loadCampaign])
 
   // Determine loading state based on context
   useEffect(() => {
     if (isLoading) {
       setLoadingState('loading')
-    } else if (campaignIdFromUrl && !campaignLoaded) {
+    } else if (campaignIdFromUrl && campaignIdFromUrl !== loadedCampaignId) {
       setLoadingState('loading')
     } else if (error) {
       setLoadingState('error')
@@ -84,7 +87,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
   }, [
     isLoading,
     campaignIdFromUrl,
-    campaignLoaded,
+    loadedCampaignId,
     error,
     campaignName,
     landingPageData,

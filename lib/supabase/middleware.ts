@@ -53,11 +53,12 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Auth routes - redirect to home if already logged in
+  // Auth routes - redirect to home if already logged in. Guest (anonymous)
+  // sessions pass through: /signup upgrades them in place, /login swaps them.
   const authRoutes = ['/login', '/signup']
   const isAuthRoute = authRoutes.includes(request.nextUrl.pathname)
 
-  if (isAuthRoute && user) {
+  if (isAuthRoute && user && !user.is_anonymous) {
     const url = request.nextUrl.clone()
     url.pathname = '/campaigns'
     url.search = ''

@@ -1,78 +1,132 @@
-import { Sparkles, Users, Link } from 'lucide-react'
-import { Badge } from '@/components/ui/badge'
-import { AnimatedSection, GradientText } from '@/components/ui/animations'
+import { Reveal, RevealGroup, RevealItem } from '@/components/ui/reveal'
+
+type Feature = {
+  label: string
+  description: string
+}
+
+const FEATURES: Feature[] = [
+  {
+    label: 'Reads the page, not just the URL',
+    description:
+      'A streaming scrape-and-analyze pipeline pulls the positioning, audience, and tone, so the sequence sounds like the page it came from.',
+  },
+  {
+    label: 'Five emails, one prompt',
+    description:
+      'Welcome, story, social proof, objection, close. Edit any of them; the rest stay coherent.',
+  },
+  {
+    label: 'Editor that gets out of the way',
+    description:
+      'A clean rich-text editor with version history. Auto-save by default. No surprise modals.',
+  },
+  {
+    label: 'Written by Claude',
+    description:
+      'Anthropic’s Claude reads your page and writes the sequence in your voice, citing only proof that is actually on the page.',
+  },
+  {
+    label: 'Bring your own ESP',
+    description:
+      'Copy and paste straight into Mailchimp, Kit, Beehiiv, or whatever you already use.',
+  },
+  {
+    label: 'No signup to try',
+    description: 'Paste a URL and you have a draft sequence. Sign up only if you want to keep it.',
+  },
+]
 
 export function FeaturesSection() {
   return (
-    <AnimatedSection delay={250}>
-      <section
-        id="features"
-        aria-label="Features"
-        className="py-14 md:py-20"
-      >
-        <div className="max-w-2xl mx-auto text-center mb-10">
-          <h2 className="text-3xl md:text-4xl font-bold mb-3">
-            <GradientText>Powerful Features</GradientText>
+    <section
+      id="features"
+      aria-label="Features"
+      className="py-24 md:py-32"
+    >
+      {/* Lead feature */}
+      <div className="grid md:grid-cols-2 gap-12 md:gap-16 items-center mb-24 md:mb-32">
+        <Reveal>
+          <p className="text-sm font-medium text-primary mb-4 tracking-tight">Generation</p>
+          <h2 className="text-display text-3xl md:text-5xl text-foreground mb-6">
+            A sequence that sounds like your landing page, because it read it.
           </h2>
-          <p className="text-muted-foreground text-lg">
-            Everything you need to ship effective newsletter campaigns fast.
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Most AI email tools start from a blank prompt. Flashletter starts from your page. It
+            scrapes the headline, the hooks, the audience signals, and the tone, then writes a
+            five-email launch sequence you can actually send.
           </p>
-        </div>
+        </Reveal>
 
-        <div className="max-w-5xl mx-auto grid md:grid-cols-3 gap-8">
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-amber-400/10 to-amber-400/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="w-8 h-8 text-amber-500" />
+        {/* Faux analysis card */}
+        <Reveal
+          delay={0.15}
+          className="relative rounded-xl border border-border bg-card p-6 md:p-7"
+        >
+          <div aria-hidden="true">
+            <div className="flex items-center justify-between mb-5">
+              <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                Analysis
+              </span>
+              <span className="font-mono text-xs text-muted-foreground tabular">stripe.com</span>
             </div>
-            <h3 className="text-xl font-semibold mb-3 group-hover:text-primary transition-colors">
-              Custom AI
-            </h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Writes your launch sequence so you only tweak and send.
-            </p>
-          </div>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary/10 to-primary/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Link className="w-8 h-8 text-primary" />
-            </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                Integrations
-              </h3>
-              <Badge
-                variant="secondary"
-                className="text-xs"
-              >
-                Coming Soon
-              </Badge>
-            </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Seamlessly export to popular email platforms like Mailchimp and ConvertKit.
-            </p>
-          </div>
+            <RevealGroup
+              as="dl"
+              className="space-y-4"
+            >
+              {[
+                { k: 'Audience', v: 'Engineers and founders integrating payments' },
+                { k: 'Positioning', v: 'Infrastructure, not a checkout widget' },
+                { k: 'Tone', v: 'Confident, technical, restrained' },
+                { k: 'Top hook', v: 'Ship a global business in days, not quarters' },
+              ].map(({ k, v }) => (
+                <RevealItem
+                  key={k}
+                  className="grid grid-cols-[8rem_1fr] gap-4 items-baseline"
+                >
+                  <dt className="text-xs uppercase tracking-widest text-muted-foreground">{k}</dt>
+                  <dd className="text-sm text-foreground">{v}</dd>
+                </RevealItem>
+              ))}
+            </RevealGroup>
 
-          <div className="group bg-card border border-border rounded-xl p-8 hover:shadow-xl hover:shadow-primary/8 transition duration-500 hover:-translate-y-2 hover:border-primary/20">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-blue-500/20 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
-              <Users className="w-8 h-8 text-blue-500" />
+            <div className="mt-6 pt-5 border-t border-border flex items-center justify-between">
+              <span className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse motion-reduce:animate-none" />
+                Generating sequence…
+              </span>
+              <span className="font-mono text-xs text-primary tabular">3 / 5</span>
             </div>
-            <div className="flex items-center gap-2 mb-3">
-              <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                Team Collab
-              </h3>
-              <Badge
-                variant="secondary"
-                className="text-xs"
-              >
-                Coming Soon
-              </Badge>
-            </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Work together seamlessly with real-time collaboration workflows.
-            </p>
           </div>
-        </div>
-      </section>
-    </AnimatedSection>
+        </Reveal>
+      </div>
+
+      {/* Supporting features */}
+      <div className="border-t border-border">
+        <RevealGroup
+          as="dl"
+          className="grid md:grid-cols-2"
+        >
+          {FEATURES.map((feature, i) => (
+            <RevealItem
+              key={feature.label}
+              className={`
+                py-8 md:py-10 px-0 md:px-8
+                border-b border-border
+                ${i % 2 === 0 ? 'md:border-r' : ''}
+              `}
+            >
+              <dt className="text-base font-semibold text-foreground mb-2 tracking-tight">
+                {feature.label}
+              </dt>
+              <dd className="text-sm text-muted-foreground leading-relaxed">
+                {feature.description}
+              </dd>
+            </RevealItem>
+          ))}
+        </RevealGroup>
+      </div>
+    </section>
   )
 }

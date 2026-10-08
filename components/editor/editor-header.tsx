@@ -1,10 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { ArrowLeft, Download, History } from 'lucide-react'
+import { ArrowLeft, History, Inbox } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { BrandMark } from '@/components/brand/brand-mark'
+import { SendTestDialog } from '@/components/editor/send-test-dialog'
+import { FEATURE_FLAGS } from '@/lib/constants/app'
 
 interface EditorHeaderProps {
   landingPageUrl?: string
@@ -12,6 +14,9 @@ interface EditorHeaderProps {
   versionCount: number
   campaignName?: string
   className?: string
+  campaignId?: string
+  selectedEmailDay?: number
+  selectedEmailSubject?: string
 }
 
 export function EditorHeader({
@@ -20,67 +25,61 @@ export function EditorHeader({
   versionCount,
   campaignName,
   className,
+  campaignId,
+  selectedEmailDay,
+  selectedEmailSubject,
 }: EditorHeaderProps) {
+  const canSendTest = !!campaignId && typeof selectedEmailDay === 'number' && !!selectedEmailSubject
   return (
     <header
-      className={cn(
-        'flex-shrink-0 relative z-50',
-        'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/70',
-        'shadow-[0_15px_60px_-35px_rgba(15,23,42,0.35)] ring-1 ring-border/10',
-        className,
-      )}
+      className={cn('flex-shrink-0 relative z-50 bg-background border-b border-border', className)}
     >
-      <div className="w-full px-6 py-3">
-        <div className="flex w-full flex-wrap items-center gap-3 sm:gap-4">
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-            className="gap-2 rounded-full bg-white/5 px-3 py-2 hover:bg-white/10 transition-colors"
-          >
-            <Link href="/campaigns">
-              <ArrowLeft className="w-4 h-4" />
-              Back to Campaigns
-            </Link>
-          </Button>
+      <div className="w-full px-4 py-3 sm:px-6">
+        <div className="flex w-full items-center gap-3 sm:gap-4">
+          <BrandMark
+            href="/campaigns"
+            className="flex-shrink-0"
+          />
+          <span
+            aria-hidden="true"
+            className="hidden h-6 w-px bg-border sm:block"
+          />
 
-          <div className="flex min-w-0 flex-1 items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shadow-inner">
-              <Image
-                src="/icon-192.webp"
-                alt="Flashletter"
-                width={20}
-                height={20}
-                className="h-5 w-5"
-              />
-            </span>
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold uppercase text-muted-foreground tracking-[0.18em]">
-                Active campaign
-              </div>
-              <div className="text-base font-semibold leading-snug truncate">
-                {campaignName || 'Email Campaign Editor'}
-              </div>
-              {landingPageUrl ? (
-                <a
-                  href={landingPageUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors truncate"
-                >
-                  {landingPageUrl}
-                </a>
-              ) : (
-                <div className="text-xs sm:text-sm text-muted-foreground">No URL available</div>
-              )}
+          <div className="min-w-0 flex-1">
+            <div className="text-sm font-semibold leading-snug truncate sm:text-base">
+              {campaignName || 'Email Campaign Editor'}
             </div>
+            {landingPageUrl && (
+              <a
+                href={landingPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden sm:block text-xs text-muted-foreground hover:text-foreground transition-colors truncate"
+              >
+                {landingPageUrl.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+              </a>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex flex-shrink-0 items-center gap-2 ml-auto">
+            <Button
+              variant="ghost"
+              size="sm"
+              asChild
+              className="gap-2"
+            >
+              <Link
+                href="/campaigns"
+                aria-label="All campaigns"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden md:inline">All campaigns</span>
+              </Link>
+            </Button>
             <Button
               variant="outline"
               size="sm"
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/10 hover:border-border/60 transition-colors relative"
+              className="gap-2 relative"
               asChild
             >
               <Link href={historyHref}>
@@ -93,14 +92,31 @@ export function EditorHeader({
                 )}
               </Link>
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2 rounded-full border-border/40 bg-white/5 hover:bg-white/10 hover:border-border/60 transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              <span className="hidden sm:inline">Export</span>
-            </Button>
+            {!FEATURE_FLAGS.ENABLE_TEST_SEND ? null : canSendTest ? (
+              <SendTestDialog
+                campaignId={campaignId!}
+                emailDay={selectedEmailDay!}
+                emailSubject={selectedEmailSubject!}
+                trigger={
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Inbox className="w-4 h-4" />
+                    <span className="hidden sm:inline">Send to my inbox</span>
+                  </Button>
+                }
+              />
+            ) : (
+              <Button
+                size="sm"
+                className="gap-2"
+                disabled
+              >
+                <Inbox className="w-4 h-4" />
+                <span className="hidden sm:inline">Send to my inbox</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>

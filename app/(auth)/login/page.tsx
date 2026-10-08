@@ -10,20 +10,18 @@ import {
 } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'Sign In - Flashletter',
+  title: 'Sign in',
   description: 'Sign in to your account',
 }
 
 export default function LoginPage() {
   return (
-    <Card className="border-border/60 shadow-lg">
+    <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="text-3xl font-bold">Welcome back</CardTitle>
-        <CardDescription className="text-base">
-          Sign in to your account to continue creating
-          <br />
-          amazing email campaigns
-        </CardDescription>
+        <CardTitle className="text-display text-2xl md:text-3xl">
+          <h1>Welcome back</h1>
+        </CardTitle>
+        <CardDescription>Sign in to pick up your campaigns where you left off.</CardDescription>
       </CardHeader>
       <CardContent>
         <AuthForm mode="login" />
@@ -33,7 +31,7 @@ export default function LoginPage() {
           Don&apos;t have an account?{' '}
           <Link
             href="/signup"
-            className="font-semibold text-primary hover:text-primary/80 transition-colors"
+            className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Sign up
           </Link>

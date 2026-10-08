@@ -20,7 +20,7 @@ export function ToneSelector({ value, onChange }: ToneSelectorProps) {
         htmlFor="tone"
         className="text-base font-semibold"
       >
-        Campaign Tone
+        Tone
       </Label>
       <Select
         value={value}
@@ -28,7 +28,7 @@ export function ToneSelector({ value, onChange }: ToneSelectorProps) {
       >
         <SelectTrigger
           id="tone"
-          className="h-12 border-border/60 focus:border-primary/50 transition-colors"
+          className="h-12"
         >
           <SelectValue />
         </SelectTrigger>

@@ -54,11 +54,17 @@ function extractTitleFromContent(html?: string | null): string | null {
   }
 }
 
+/** "Cal.com | Scheduling Software for…" → "Cal.com": page titles carry SEO tails. */
+export function shortenPageTitle(title: string): string {
+  const head = title.split(/\s+[|\u2013\u2014-]\s+|\s*[|:]\s+/)[0]?.trim()
+  return head && head.length >= 3 ? head : title.trim()
+}
+
 function deriveCampaignName(data?: LandingPageData | null): string | null {
   if (!data) return null
 
   const contentTitle = extractTitleFromContent(data.content)
-  if (contentTitle) return contentTitle
+  if (contentTitle) return shortenPageTitle(contentTitle)
 
   const meta = data.metadata
   const candidates = [meta?.title, meta?.ogTitle, meta?.twitterTitle, meta?.ogSiteName]
@@ -66,7 +72,7 @@ function deriveCampaignName(data?: LandingPageData | null): string | null {
   for (const candidate of candidates) {
     if (typeof candidate === 'string') {
       const trimmed = candidate.trim()
-      if (trimmed) return trimmed
+      if (trimmed) return shortenPageTitle(trimmed)
     }
   }
 
@@ -214,18 +220,9 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
           })
         }
 
-        if (campaign.emails && campaign.emails.length > 0) {
-          setGeneratedEmailsState(campaign.emails)
-        } else {
-          const defaultEmail = {
-            id: 1,
-            day: 1,
-            subject: 'Welcome to our newsletter',
-            preview: 'Thank you for subscribing!',
-            content: "Welcome to our newsletter. We're excited to have you on board!",
-          }
-          setGeneratedEmailsState([defaultEmail])
-        }
+        // Use the persisted emails as-is (may be empty for a freshly-created
+        // campaign that's about to auto-generate via the streaming endpoint).
+        setGeneratedEmailsState(campaign.emails ?? [])
       } finally {
         setIsLoading(false)
       }
@@ -261,6 +258,21 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       }
     },
     [currentCampaignId, campaignService],
+  )
+
+  // Variant that takes the campaign id explicitly — needed right after
+  // createNewCampaign returns, when the `currentCampaignId` state hasn't
+  // propagated to this hook's closure yet.
+  const applyConfigToCampaign = useCallback(
+    async (campaignId: string, newConfig: CampaignConfig) => {
+      setConfigState(newConfig)
+      await campaignService.updateCampaign(campaignId, {
+        tone: newConfig.tone,
+        campaignType: newConfig.campaignType,
+        days: newConfig.days,
+      })
+    },
+    [campaignService],
   )
 
   const setLandingPageData = useCallback(
@@ -311,6 +323,24 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     )
   }, [])
 
+  // Streaming helpers: the streaming endpoint persists the batch on the server,
+  // so the client should not trigger another delete/insert cycle via saveEmails.
+  const appendGeneratedEmail = useCallback((email: Email) => {
+    setGeneratedEmailsState((prev) => {
+      const idx = prev.findIndex((e) => e.day === email.day)
+      if (idx === -1) {
+        return [...prev, email].sort((a, b) => a.day - b.day)
+      }
+      const next = prev.slice()
+      next[idx] = { ...prev[idx], ...email }
+      return next
+    })
+  }, [])
+
+  const replaceGeneratedEmailsLocal = useCallback((emails: Email[]) => {
+    setGeneratedEmailsState(emails)
+  }, [])
+
   const clearAll = useCallback(() => {
     debouncedSaveLandingPage.cancel()
     debouncedSaveConfig.cancel()
@@ -339,10 +369,13 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setConfig,
       setGeneratedEmails,
       updateEmail,
+      appendGeneratedEmail,
+      replaceGeneratedEmailsLocal,
       loadCampaign,
       saveCampaign,
       createNewCampaign,
       updateCampaignConfig,
+      applyConfigToCampaign,
       clearAll,
     }),
     [
@@ -350,10 +383,13 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setConfig,
       setGeneratedEmails,
       updateEmail,
+      appendGeneratedEmail,
+      replaceGeneratedEmailsLocal,
       loadCampaign,
       saveCampaign,
       createNewCampaign,
       updateCampaignConfig,
+      applyConfigToCampaign,
       clearAll,
     ],
   )

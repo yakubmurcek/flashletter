@@ -8,9 +8,14 @@ import { landingPageAnalysisSchema } from './analysis'
  */
 
 // Generate emails API request
+//
+// `landingContent` is capped well above what our prompt actually consumes
+// (it's truncated to 2_000 chars before being handed to the model) — the cap
+// just exists so a malicious payload can't spend memory + Zod cycles parsing
+// a megabyte string before we get to the truncation step.
 export const generateEmailsRequestSchema = z.object({
-  landingUrl: z.string().url(),
-  landingContent: z.string().optional(),
+  landingUrl: z.string().url().max(2048),
+  landingContent: z.string().max(50_000).optional(),
   landingAnalysis: landingPageAnalysisSchema.optional(),
   config: campaignConfigSchema,
   campaignId: z.string().uuid().optional(),
@@ -34,7 +39,7 @@ export const generateEmailsResponseSchema = z.object({
 
 // Scrape landing page API request
 export const scrapeLandingRequestSchema = z.object({
-  url: z.string().url(),
+  url: z.string().url().max(2048),
   useDynamic: z.boolean().optional().default(false),
 })
 
@@ -81,6 +86,23 @@ export const scrapeLandingResponseSchema = z.object({
   analysis: landingPageAnalysisSchema.optional(),
 })
 
+// Send-test-email API
+//
+// `recipientEmail` is required for anonymous Supabase users (who have no
+// auth.users.email yet); for authenticated users we ignore it and send to
+// their registered address so a typo in the dialog can't redirect the test.
+export const sendTestEmailRequestSchema = z.object({
+  campaignId: z.string().uuid(),
+  emailDay: z.number().int().min(1).max(30),
+  recipientEmail: z.string().email().max(254).optional(),
+})
+
+export const sendTestEmailResponseSchema = z.object({
+  ok: z.literal(true),
+  sentTo: z.string().email(),
+  upgradeStarted: z.boolean(),
+})
+
 /**
  * Exported types
  */
@@ -91,3 +113,5 @@ export type ScrapeLandingResponse = z.infer<typeof scrapeLandingResponseSchema>
 export type EnhancedMetadata = z.infer<typeof enhancedMetadataSchema>
 export type ScrapeStats = z.infer<typeof scrapeStatsSchema>
 export type GenerateEmailsResponse = z.infer<typeof generateEmailsResponseSchema>
+export type SendTestEmailRequest = z.infer<typeof sendTestEmailRequestSchema>
+export type SendTestEmailResponse = z.infer<typeof sendTestEmailResponseSchema>

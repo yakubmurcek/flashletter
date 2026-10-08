@@ -9,7 +9,9 @@ export const LARGE_SYSTEM_PROMPTS = {
 
   RESPONSE_STYLE: `Be direct, actionable, and results-focused. When editing, make specific improvements that enhance engagement, clarity, and conversion potential.`,
 
-  FORMATTING_GUIDELINES: `Use clear headings, bullet points, and proper email formatting. Ensure mobile-friendly layouts and compelling subject lines.`,
+  // Mirrors writingRules() in app/api/generate-emails/prompts.ts so a chat edit
+  // keeps the style the sequence was generated in.
+  FORMATTING_GUIDELINES: `When you edit, keep the style the emails were written in: full sentences in paragraphs of 1-3 sentences, at most one subheading, bullet lists only for 3 or more concrete items, the Markdown call-to-action link and the sign-off line kept intact, no em dashes, and none of these phrases: "game-changer", "unlock", "supercharge", "elevate", "seamless". Keep the email in the language it is written in. Subject lines stay under 60 characters.`,
 
   EDIT_DECISION_TREE: `DECISION TREE:
 - If user asks "improve this" or "make this better" → EDIT

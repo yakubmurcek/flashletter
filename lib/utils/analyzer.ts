@@ -1,6 +1,4 @@
-import { zodTextFormat } from 'openai/helpers/zod'
-import { openai } from '@/lib/openai'
-import { retryWithBackoff } from '@/lib/utils/openai-retry'
+import { generateStructured } from '@/lib/ai'
 import { landingPageAnalysisSchema, type LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ExtractedMetadata } from '@/lib/utils/metadata-extractor'
 
@@ -43,26 +41,13 @@ ${truncatedContent}
 
 Analyze this page for email-campaign copywriting. Return structured JSON matching the schema.`
 
-  const response = await retryWithBackoff(() =>
-    openai.responses.parse({
-      model: 'gpt-5-mini',
-      input: [
-        { role: 'system', content: SYSTEM_INSTRUCTIONS },
-        { role: 'user', content: userInput },
-      ],
-      // Note: GPT-5 family does not accept `temperature` on responses.parse;
-      // it uses `reasoning_effort` instead. Structured output already gives us
-      // deterministic extraction, so no sampling knob is needed here.
-      text: {
-        format: zodTextFormat(landingPageAnalysisSchema, 'landing_page_analysis'),
-      },
-    }),
-  )
-
-  const parsed = response.output_parsed
-  if (!parsed) {
-    throw new Error('No analysis returned from OpenAI')
-  }
-
-  return parsed
+  return generateStructured({
+    system: SYSTEM_INSTRUCTIONS,
+    messages: [{ role: 'user', content: userInput }],
+    schema: landingPageAnalysisSchema,
+    // Extraction, not writing: low effort keeps the visitor's wait before the
+    // first email short (medium took 10-14 s of a ~20 s wait).
+    effort: 'low',
+    maxTokens: 8000,
+  })
 }

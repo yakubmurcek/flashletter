@@ -15,8 +15,21 @@ const waitlistSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, name, privacyConsent, marketingConsent, consentTimestamp, userRegion } =
-      waitlistSchema.parse(body)
+    const {
+      email: rawEmail,
+      name,
+      privacyConsent,
+      marketingConsent,
+      consentTimestamp,
+      userRegion,
+    } = waitlistSchema.parse(body)
+
+    // Store emails in canonical form so the dedup check, unsubscribe-token
+    // verification, and bare-email unsubscribe lookups all line up. Without
+    // this `Foo@Bar.com` and `foo@bar.com` are different rows, and a token
+    // that round-trips through `normalizeEmail` (lowercased) wouldn't match
+    // the stored mixed-case row.
+    const email = rawEmail.trim().toLowerCase()
 
     const supabase = await createClient()
 
@@ -28,11 +41,22 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (existingEntry) {
-      return NextResponse.json({ error: 'This email is already on the waitlist!' }, { status: 400 })
+      // Return 200 with the same shape as a fresh signup so callers can't
+      // enumerate which addresses are already on the waitlist.
+      return NextResponse.json(
+        {
+          message: 'Successfully joined the waitlist!',
+          id: existingEntry.id,
+          alreadyJoined: true,
+        },
+        { status: 200 },
+      )
     }
 
-    // Insert new waitlist entry - let Supabase handle order assignment
-    // We'll use a database function to ensure atomic order assignment
+    // Insert new waitlist entry. We deliberately *omit* the `order` field so
+    // the column's DEFAULT (waitlist_order_seq) kicks in — passing NULL
+    // explicitly would override the default and we'd be back to the racy
+    // trigger path.
     const { data, error } = await supabase
       .from('waitlist')
       .insert({
@@ -44,7 +68,6 @@ export async function POST(request: NextRequest) {
         marketing_consent: marketingConsent || false,
         consent_timestamp: consentTimestamp || new Date().toISOString(),
         user_region: userRegion || 'OTHER',
-        order: null, // Let database assign order
       })
       .select()
       .single()
@@ -90,39 +113,5 @@ export async function POST(request: NextRequest) {
     })
 
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
-  }
-}
-
-// Optional: Add GET endpoint to check waitlist status (for admin)
-export async function GET() {
-  try {
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-      .from('waitlist')
-      .select('id, email, name, status, created_at')
-      .order('created_at', { ascending: false })
-
-    if (error) {
-      console.error('Waitlist fetch error:', error)
-
-      // Report to Sentry
-      Sentry.captureException(error, {
-        tags: { api_route: '/api/waitlist', action: 'fetch' },
-      })
-
-      return NextResponse.json({ error: 'Failed to fetch waitlist' }, { status: 500 })
-    }
-
-    return NextResponse.json({ waitlist: data })
-  } catch (error) {
-    console.error('Waitlist GET error:', error)
-
-    // Report to Sentry
-    Sentry.captureException(error, {
-      tags: { api_route: '/api/waitlist', action: 'fetch' },
-    })
-
-    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 })
   }
 }

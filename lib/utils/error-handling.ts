@@ -34,11 +34,15 @@ export function logError(error: unknown, context: ErrorContext): void {
 }
 
 /**
- * Standardized error message for user display
+ * Standardized error message for user display.
+ *
+ * Only known-safe shapes return a specific string; everything else falls
+ * through to a generic "Failed to {operation}" message so internal errors
+ * (DB messages, library internals, stack fragments, file paths) don't end
+ * up in the UI.
  */
 export function getUserFriendlyMessage(error: unknown, operation: string): string {
   if (error instanceof Error) {
-    // Handle specific error types
     if (error.name === 'AbortError') {
       return 'Operation was cancelled'
     }
@@ -55,11 +59,10 @@ export function getUserFriendlyMessage(error: unknown, operation: string): strin
       return 'You do not have permission to perform this action.'
     }
 
-    // Return the original message for other errors
-    return error.message
+    // Deliberately do NOT return error.message here. Let the generic
+    // fallback win so we never surface DB/library internals to end users.
   }
 
-  // Fallback for unknown errors
   return `Failed to ${operation}. Please try again.`
 }
 
