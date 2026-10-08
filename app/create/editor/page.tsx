@@ -250,6 +250,8 @@ function EditorPageContent() {
   // ref guard so updateEmail's state churn doesn't re-fire the effect.
   useEffect(() => {
     if (!restoreVersionParam || hasProcessedRestoreRef.current) return
+    // Wait for the campaign: saving needs the email rows and the campaign id.
+    if (!currentCampaignId || emails.length === 0) return
     hasProcessedRestoreRef.current = true
 
     const handleRestore = async () => {
@@ -271,7 +273,9 @@ function EditorPageContent() {
           return
         }
 
-        updateEmail(version.emailId, {
+        // Persist through the autosave path (not just local state), so the
+        // restore survives a reload and the replaced text becomes a version.
+        await saveEmail(version.emailId, {
           subject: version.subject,
           content: version.content,
         })
@@ -289,7 +293,14 @@ function EditorPageContent() {
       }
     }
     handleRestore()
-  }, [restoreVersionParam, updateEmail, restoreVersion, deleteParam])
+  }, [
+    restoreVersionParam,
+    saveEmail,
+    restoreVersion,
+    deleteParam,
+    currentCampaignId,
+    emails.length,
+  ])
 
   // Show loading state
   if (loadingState === 'loading') {

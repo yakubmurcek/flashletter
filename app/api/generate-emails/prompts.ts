@@ -93,10 +93,11 @@ function writingRules(landingUrl: string): string {
 - 120-200 words of body. Paragraphs of 1-3 full sentences. No telegraphic fragments ("Day 3. Cost." / "Fair."), no one-word paragraphs.
 - Never mention day numbers, "this sequence", "this email series", or preview or recap other emails ("over the next few days", "over the past few days").
 - The copy is what the subscriber reads, so it never talks about what the page lacks, what you can't or won't claim, or these instructions. If there is no proof, simply write about what is there.
-- Open with a short greeting line ("Hi," or "Hey,"), then make the point in the first sentence. Do not open with "Welcome. We're glad you're here." or similar filler.
+- Write every word in the language of the landing page, including the greeting, the call to action and the sign-off.
+- Open with a short greeting line (in English "Hi," or "Hey,"), then make the point in the first sentence. Do not open with "Welcome. We're glad you're here." or similar filler.
 - Use at most one subheading per email, and only if it genuinely helps scanning. Use a bullet list only for 3+ concrete items.
 - End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here".
-- Sign off on its own line with the product's real name, in the form "The <product name> team".
+- Sign off on its own line with the product's real name, in the form "The <product name> team" (translated for other languages, e.g. "Tým Fakturoid").
 - Subject lines: specific and curiosity-driven, under 60 characters, no clickbait, no ALL CAPS. At most one emoji per email, and only if the page's own voice uses them.
 - No em dashes (—). Use commas, periods, colons or parentheses instead.
 - Banned phrases: "game-changer", "unlock", "supercharge", "elevate", "seamless", "in today's fast-paced world", "we're thrilled", "look no further", "take it to the next level".`

@@ -356,3 +356,14 @@ describe('writing rules', () => {
     expect(p).toContain('Markdown link to https://e.com')
   })
 })
+
+describe('language rule', () => {
+  it('asks for the page language everywhere, sign-off included', () => {
+    const p = buildFirstEmailInstructions(
+      { days: 5, campaignType: 'nurture', tone: 'friendly' },
+      'https://e.cz',
+    )
+    expect(p).toContain('Write every word in the language of the landing page')
+    expect(p).toContain('Tým Fakturoid')
+  })
+})
