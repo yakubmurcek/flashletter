@@ -20,7 +20,7 @@ export function CampaignTypeSelector({ value, onChange }: CampaignTypeSelectorPr
         htmlFor="campaign-type"
         className="text-base font-semibold"
       >
-        Campaign Type
+        Campaign type
       </Label>
       <Select
         value={value}

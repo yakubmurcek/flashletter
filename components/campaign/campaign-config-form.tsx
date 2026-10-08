@@ -13,6 +13,8 @@ interface CampaignConfigFormProps {
   campaignType: string
   onCampaignTypeChange: (value: string) => void
   days: number[]
+  /** Most emails the user's plan can generate. */
+  maxEmails?: number
   onDaysChange: (value: number[]) => void
   isGenerating: boolean
   isSubmitting: boolean
@@ -27,6 +29,7 @@ export function CampaignConfigForm({
   campaignType,
   onCampaignTypeChange,
   days,
+  maxEmails,
   onDaysChange,
   isGenerating,
   isSubmitting,
@@ -53,6 +56,7 @@ export function CampaignConfigForm({
 
       <DurationSlider
         value={days}
+        max={maxEmails}
         onChange={onDaysChange}
       />
 
@@ -74,7 +78,7 @@ export function CampaignConfigForm({
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 animate-spin" />
-            Generating Campaign with AI...
+            Starting your campaign…
           </>
         ) : (
           <>

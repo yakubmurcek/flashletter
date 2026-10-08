@@ -26,6 +26,7 @@ function ConfigurePageContent() {
     setCampaignType,
     days,
     setDays,
+    maxEmails,
     landingPageData,
     isGenerating,
     isSubmitting,
@@ -81,6 +82,7 @@ function ConfigurePageContent() {
             onCampaignTypeChange={setCampaignType}
             days={days}
             onDaysChange={setDays}
+            maxEmails={maxEmails}
             isGenerating={isGenerating}
             isSubmitting={isSubmitting}
             error={error}

@@ -111,7 +111,7 @@ export default function CreatePage() {
           className="space-y-6"
         >
           <div className="space-y-2">
-            <Label htmlFor="url">Landing Page URL</Label>
+            <Label htmlFor="url">Landing page URL</Label>
             <Input
               id="url"
               type="url"
