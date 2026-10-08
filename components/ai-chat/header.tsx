@@ -27,10 +27,10 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
             {hasCampaignContext ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                Full context ready
+                Read your page and emails
               </span>
             ) : (
-              'Always here to help'
+              'Waiting for your emails'
             )}
           </p>
         </div>

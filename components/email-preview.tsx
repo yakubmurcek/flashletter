@@ -211,8 +211,8 @@ function EmailPreviewComponent({
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden px-3 pb-3 pt-3 sm:px-6 sm:pb-6 sm:pt-4 min-h-0 flex flex-col items-center">
-        <div className="w-full max-w-4xl h-full flex flex-col min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+        <div className="w-full h-full flex flex-col min-h-0">
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}

@@ -35,6 +35,15 @@ interface UseAIChatParams {
   onClearContext?: () => void
 }
 
+const GREETING_READY =
+  "I've read your landing page and every email in this sequence. Ask me to sharpen a subject line, cut an email down, or change the tone. Select any text in the email to rework just that part."
+const GREETING_WAITING =
+  'Claude is writing your sequence. Once the first email is in, ask me to sharpen a subject line, cut an email down, or change the tone.'
+
+function greetingFor(contextReady: boolean): string {
+  return contextReady ? GREETING_READY : GREETING_WAITING
+}
+
 export function useAIChat({
   campaignContext,
   emailContext,
@@ -46,11 +55,20 @@ export function useAIChat({
     {
       id: 1,
       role: 'assistant',
-      content:
-        "I've read your landing page and every email in this sequence. Ask me to sharpen a subject line, cut an email down, or change the tone. Select any text in the email to rework just that part.",
+      content: greetingFor(!!campaignContext || !!emailContext),
       timestamp: new Date(),
     },
   ])
+  // The greeting only claims to have read the emails once it actually has them.
+  const contextReady = !!campaignContext || !!emailContext
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === 1 && m.role === 'assistant' ? { ...m, content: greetingFor(contextReady) } : m,
+      ),
+    )
+  }, [contextReady])
+
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)

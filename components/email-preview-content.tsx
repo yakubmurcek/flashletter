@@ -74,27 +74,26 @@ function EmailPreviewContentComponent({
 }: EmailPreviewContentProps) {
   return (
     <div
-      className="flex-1 overflow-y-auto rounded-lg bg-card border border-border"
+      className="flex-1 overflow-y-auto bg-muted/50"
       onMouseUp={onMouseUp}
     >
-      <div className="p-3 sm:p-6 lg:p-10">
-        <div className="max-w-2xl mx-auto space-y-8">
-          <div className="rounded-lg bg-background border border-border p-5 sm:p-8 lg:p-10 min-h-[500px]">
-            <div className="space-y-2 mb-6 pb-6 border-b border-border">
-              <div className="text-xs uppercase tracking-widest text-muted-foreground">Subject</div>
-              <SubjectField
-                value={subject}
-                onChange={(value) => onSubjectChange?.(value)}
-              />
-            </div>
-
-            <RichTextEditor
-              content={content}
-              onChange={(newContent) => onContentChange?.(newContent)}
-              className="prose-lg"
-              onEditorCreated={onEditorCreated}
+      {/* One email "sheet" on a tinted canvas, sized like an inbox reading pane. */}
+      <div className="px-3 py-4 sm:px-6 sm:py-8">
+        <div className="max-w-2xl mx-auto rounded-xl bg-background border border-border shadow-sm px-5 py-6 sm:px-10 sm:py-9 min-h-[480px]">
+          <div className="space-y-1.5 mb-6 pb-5 border-b border-border">
+            <div className="text-xs uppercase tracking-widest text-muted-foreground">Subject</div>
+            <SubjectField
+              value={subject}
+              onChange={(value) => onSubjectChange?.(value)}
             />
           </div>
+
+          <RichTextEditor
+            content={content}
+            onChange={(newContent) => onContentChange?.(newContent)}
+            className="text-[16px] leading-[1.7] prose-p:my-4"
+            onEditorCreated={onEditorCreated}
+          />
         </div>
       </div>
     </div>

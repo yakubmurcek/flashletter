@@ -91,12 +91,13 @@ export function formatProgressMessage(
   message = message.replace('{domain}', context.domain || 'page')
 
   if (message.includes('{title}')) {
-    if (context.title) {
-      message = message.replace('{title}', context.title)
-    } else if (context.siteName) {
-      message = message.replace('{title}', context.siteName)
+    const name = context.title || context.siteName
+    if (name) {
+      const short = name.length > 48 ? `${name.slice(0, 47).trimEnd()}…` : name
+      message = message.replace('{title}', short)
     } else {
-      message = message.replace('{title}', 'page content')
+      // Before the page is fetched there is no title yet.
+      message = 'Reading the page…'
     }
   }
 
