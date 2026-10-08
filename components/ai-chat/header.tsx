@@ -19,7 +19,7 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm">AI Assistant</h3>
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded-full border border-primary/20">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground rounded-full border border-border">
               BETA
             </span>
           </div>

@@ -181,7 +181,7 @@ function EmailPreviewComponent({
         <div className="flex items-center justify-between gap-4">
           <div className="min-w-0">
             <h2 className="text-lg sm:text-xl font-semibold tracking-tight">Day {email.day}</h2>
-            <p className="text-sm text-muted-foreground/80 truncate">
+            <p className="text-sm text-muted-foreground truncate">
               {email.preview ? (
                 <>
                   <span className="hidden sm:inline">Inbox preview: </span>

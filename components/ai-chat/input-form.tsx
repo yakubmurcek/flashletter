@@ -90,6 +90,7 @@ function InputFormBase({
                 variant="ghost"
                 size="sm"
                 onClick={onClearContext}
+                aria-label="Remove selected text"
                 className="h-5 w-5 p-0 hover:bg-primary/20 transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -114,6 +115,7 @@ function InputFormBase({
         <Button
           type="submit"
           size="icon"
+          aria-label="Send message"
           disabled={isLoading || !contextReady || !input.trim()}
         >
           <Send className="w-4 h-4" />
