@@ -138,9 +138,9 @@ export async function getCacheStats(): Promise<{
   return await withRedisFallback(async (redis) => {
     let totalKeys = 0
     let scrapeKeys = 0
-    for await (const key of scanKeys(redis, '*')) {
+    for await (const key of scanKeys(redis, 'flashletter:*')) {
       totalKeys++
-      if (key.startsWith('scrape:')) scrapeKeys++
+      if (key.startsWith('flashletter:scrape:')) scrapeKeys++
     }
     return {
       totalKeys,
@@ -158,7 +158,7 @@ export async function clearAllScrapeCache(): Promise<number> {
   return await withRedisFallback(async (redis) => {
     let cleared = 0
     let batch: string[] = []
-    for await (const key of scanKeys(redis, 'scrape:*')) {
+    for await (const key of scanKeys(redis, 'flashletter:scrape:*')) {
       batch.push(key)
       // Flush in chunks so a huge cache doesn't blow the request body limit.
       if (batch.length >= SCAN_PAGE_SIZE) {

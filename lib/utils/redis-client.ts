@@ -60,6 +60,7 @@ export async function withRedisFallback<T>(
  * Cache key generators for different data types
  */
 export const CacheKeys = {
-  scrape: (url: string) => `scrape:${Buffer.from(url).toString('base64')}`,
-  metadata: (url: string) => `metadata:${Buffer.from(url).toString('base64')}`,
+  // Prefixed like every other key: the Redis store is shared with other apps.
+  scrape: (url: string) => `flashletter:scrape:${Buffer.from(url).toString('base64')}`,
+  metadata: (url: string) => `flashletter:metadata:${Buffer.from(url).toString('base64')}`,
 } as const
