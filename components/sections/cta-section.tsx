@@ -22,12 +22,12 @@ export function CTASection() {
               asChild
               className="rounded-full px-6"
             >
-              <Link href="/signup">
+              <Link href="/#try">
                 Try free
                 <ArrowRight className="w-4 h-4 ml-1" />
               </Link>
             </Button>
-            <span className="text-sm text-muted-foreground">No credit card.</span>
+            <span className="text-sm text-muted-foreground">No signup, no credit card.</span>
           </div>
         </Reveal>
       </div>

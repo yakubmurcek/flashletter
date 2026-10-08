@@ -14,7 +14,7 @@ interface NewsletterPlaybook {
 const playbook = playbookData as NewsletterPlaybook
 
 export const CAMPAIGN_STEPS = [
-  { number: 1, label: 'URL Input' },
+  { number: 1, label: 'Landing page' },
   { number: 2, label: 'Configuration' },
   { number: 3, label: 'Generate' },
 ]

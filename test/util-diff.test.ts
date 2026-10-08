@@ -94,7 +94,7 @@ describe('collapseUnchangedLines', () => {
       lineNumber: i + 1,
     }))
     const result = collapseUnchangedLines(lines, 2)
-    expect(result.some((l) => (l as any).type === 'collapsed')).toBe(true)
+    expect(result.some((l) => (l as { type: string }).type === 'collapsed')).toBe(true)
   })
 
   it('keeps context lines around changes', () => {
@@ -131,31 +131,29 @@ describe('collapseUnchangedLines', () => {
     lines.splice(10, 0, { type: 'added', content: 'new', lineNumber: 11 })
     const result = collapseUnchangedLines(lines, 1)
     // With context of 1, there should be a collapsed section
-    expect(result.some((l) => (l as any).type === 'collapsed')).toBe(true)
+    expect(result.some((l) => (l as { type: string }).type === 'collapsed')).toBe(true)
   })
 })
 
 describe('formatDiffStats', () => {
   it('formats additions', () => {
     const result = formatDiffStats({ added: 5, removed: 0, modified: 0, unchanged: 10 })
-    expect(result).toContain('+5')
+    expect(result).toBe('+5 lines added')
   })
 
   it('formats removals', () => {
     const result = formatDiffStats({ added: 0, removed: 3, modified: 0, unchanged: 10 })
-    expect(result).toContain('-3')
+    expect(result).toBe('-3 lines removed')
   })
 
   it('formats modifications', () => {
     const result = formatDiffStats({ added: 0, removed: 0, modified: 2, unchanged: 10 })
-    expect(result).toContain('~2')
+    expect(result).toBe('2 lines changed')
   })
 
   it('combines multiple changes', () => {
     const result = formatDiffStats({ added: 1, removed: 2, modified: 3, unchanged: 10 })
-    expect(result).toContain('+1')
-    expect(result).toContain('-2')
-    expect(result).toContain('~3')
+    expect(result).toBe('+1 line added, -2 lines removed, 3 lines changed')
   })
 
   it('returns "No changes" for empty diff', () => {

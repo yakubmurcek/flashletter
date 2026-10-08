@@ -32,22 +32,22 @@ export const landingPageAnalysisSchema = z.object({
   objections: z
     .array(z.string())
     .describe(
-      'Objections or concerns the page pre-addresses (via FAQ, testimonials, guarantees, comparisons). Emails will echo these to lower reader resistance. Empty array if none detected.',
+      'Objections or concerns the page pre-addresses (via FAQ, testimonials, guarantees, comparisons). Emails will echo these to lower reader resistance. At most 4 items, each under 20 words. Empty array if none detected.',
     ),
   proofPoints: z
     .array(z.string())
     .describe(
-      'Specific, concrete proof on the page — numbers, named customers, quotes, stats, certifications. NOT vague claims. Emails cite these verbatim instead of making up stats. Example: ["Used by 1,200+ founders", "Ingrid B. quote: `Saved me 6 hours/week`", "SOC 2 certified"]. Empty array if none.',
+      'Specific, concrete proof on the page — numbers, named customers, quotes, stats, certifications. NOT vague claims. Emails cite these verbatim instead of making up stats. At most 6 items, the strongest first; quotes verbatim but trimmed to one sentence. Example: ["Used by 1,200+ founders", "Ingrid B. quote: `Saved me 6 hours/week`", "SOC 2 certified"]. Empty array if none.',
     ),
   angles: z
     .array(z.string())
     .describe(
-      'Distinct selling angles the page leans on (time saved, money made, status, ease, specific feature benefit). The email sequence uses these to vary messaging email-to-email instead of hammering one angle. Return at least 2 if possible.',
+      'Distinct selling angles the page leans on (time saved, money made, status, ease, specific feature benefit). The email sequence uses these to vary messaging email-to-email instead of hammering one angle. 2 to 5 items, each under 15 words.',
     ),
   opportunities: z
     .array(z.string())
     .describe(
-      'Things the landing page does NOT address that emails could fill. Gaps the reader might have after reading the page. Example: "Page doesn\'t mention pricing — email day 3 should address cost expectations." Empty array if the page is exhaustive.',
+      'Questions a reader may still have that an email can answer using what the page does say (e.g. how setup works, who it is not for). Not facts the page lacks, such as unstated prices. At most 3 items, each under 20 words. Empty array if none.',
     ),
 })
 

@@ -20,7 +20,7 @@ export function ToneSelector({ value, onChange }: ToneSelectorProps) {
         htmlFor="tone"
         className="text-base font-semibold"
       >
-        Campaign Tone
+        Tone
       </Label>
       <Select
         value={value}

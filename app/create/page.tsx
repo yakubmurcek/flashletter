@@ -5,7 +5,11 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { ArrowRight, Link2, Loader2 } from 'lucide-react'
+import { ArrowRight, Link2, Loader2, Lock } from 'lucide-react'
+import Link from 'next/link'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { UpgradeButton } from '@/components/billing/upgrade-button'
+import { PRO_PRICE_USD } from '@/lib/billing/plans'
 import { useCampaign } from '@/lib/campaign-context'
 import { useLandingPage } from '@/lib/hooks/use-landing-page'
 import { AppShell } from '@/components/layouts/app-shell'
@@ -22,7 +26,13 @@ export default function CreatePage() {
   const searchParams = useSearchParams()
   const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
   const { isAnalyzing, progressState, error, analyzeLandingPage } = useLandingPage()
-  const { isLoading: isCheckingLimit, isAnonymous, canCreate, campaignCount } = useAnonymousLimit()
+  const {
+    isLoading: isCheckingLimit,
+    isAnonymous,
+    canCreate,
+    campaignCount,
+    campaignLimit,
+  } = useAnonymousLimit()
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
@@ -86,6 +96,46 @@ export default function CreatePage() {
     )
   }
 
+  // Signed-in user out of campaigns this month: say so before they wait for a scrape.
+  if (!isAnonymous && !canCreate) {
+    return (
+      <AppShell
+        chrome="centered"
+        backHref="/campaigns"
+      >
+        <Card className="max-w-md w-full text-center">
+          <CardHeader>
+            <div className="mx-auto mb-2 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+              <Lock className="w-5 h-5 text-primary" />
+            </div>
+            <CardTitle className="text-display text-2xl">
+              <h1>You&rsquo;ve used this month&rsquo;s campaigns</h1>
+            </CardTitle>
+            <CardDescription>
+              You&rsquo;ve used all {campaignLimit} campaigns the Free plan includes this month. Pro
+              removes the limit and writes up to 30 emails per sequence.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <UpgradeButton
+              interval="month"
+              className="w-full"
+            >
+              Upgrade to Pro · ${PRO_PRICE_USD.month}/mo
+            </UpgradeButton>
+            <Button
+              variant="outline"
+              className="w-full"
+              asChild
+            >
+              <Link href="/campaigns">Back to my campaigns</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </AppShell>
+    )
+  }
+
   return (
     <AppShell
       chrome="narrow"
@@ -111,7 +161,7 @@ export default function CreatePage() {
           className="space-y-6"
         >
           <div className="space-y-2">
-            <Label htmlFor="url">Landing Page URL</Label>
+            <Label htmlFor="url">Landing page URL</Label>
             <Input
               id="url"
               type="url"

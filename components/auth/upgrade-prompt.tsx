@@ -10,6 +10,7 @@ import { Sparkles, ArrowRight, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 
 interface UpgradePromptProps {
   campaignCount?: number
@@ -122,7 +123,8 @@ export function UpgradePrompt({
               : 'You\u2019ve created your first campaign!'}
           </CardTitle>
           <CardDescription className="mt-2">
-            Sign up to save your work and create unlimited campaigns.
+            Create a free account to keep your work. The free plan includes{' '}
+            {PLAN_LIMITS.free.campaignsPerMonth} campaigns a month, no credit card.
           </CardDescription>
         </CardHeader>
 
@@ -130,8 +132,10 @@ export function UpgradePrompt({
           {variant === 'limit' && (
             <div className="bg-muted/50 rounded-lg p-4 text-center">
               <p className="text-sm text-muted-foreground">
-                <span className="font-semibold text-foreground">{campaignCount} campaign</span>{' '}
-                created • <span className="text-primary font-medium">Free trial used</span>
+                <span className="font-semibold text-foreground">
+                  {campaignCount} {campaignCount === 1 ? 'campaign' : 'campaigns'}
+                </span>{' '}
+                created as a guest. Sign up and it moves into your account.
               </p>
             </div>
           )}

@@ -91,12 +91,12 @@ describe('buildInstructions (without analysis)', () => {
     expect(prompt).toContain('Page content here')
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '\u2603' // snowman — doesn't appear elsewhere in the prompt
-    const longContent = sentinel.repeat(3000) + 'TAIL_MARKER'
+    const longContent = sentinel.repeat(7000) + 'TAIL_MARKER'
     const p = buildInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/\u2603/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
     expect(p).not.toContain('TAIL_MARKER')
   })
 
@@ -217,12 +217,12 @@ describe('buildFirstEmailInstructions', () => {
     expect(prompt.toLowerCase()).toMatch(/do not invent/i)
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(3000)
+    const longContent = sentinel.repeat(7000)
     const p = buildFirstEmailInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
   })
 
   it('omits the analysis block when analysis is undefined', () => {
@@ -288,12 +288,12 @@ describe('buildRemainingEmailsInstructions', () => {
     expect(p).not.toContain('LANDING PAGE ANALYSIS')
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(3000)
+    const longContent = sentinel.repeat(7000)
     const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
   })
 
   it('handles a 2-day campaign (only day 2 to write)', () => {
@@ -333,5 +333,37 @@ describe('buildInstructions (empty list fields in analysis)', () => {
   it('still includes the non-list analysis fields', () => {
     expect(prompt).toContain(emptyAnalysis.valueProp)
     expect(prompt).toContain(emptyAnalysis.primaryCTA)
+  })
+})
+
+describe('writing rules', () => {
+  const config = { days: 5, campaignType: 'nurture', tone: 'friendly' }
+  const builders = [
+    () => buildInstructions(config, 'https://e.com'),
+    () => buildFirstEmailInstructions(config, 'https://e.com'),
+    () =>
+      buildRemainingEmailsInstructions(config, 'https://e.com', {
+        subject: 's',
+        preview: 'p',
+        content: 'c',
+      }),
+  ]
+
+  it.each(builders.map((b, i) => [i, b]))('builder %i carries the craft rules', (_i, build) => {
+    const p = (build as () => string)()
+    expect(p).toContain('How to write each email:')
+    expect(p).toContain('Never mention day numbers')
+    expect(p).toContain('Markdown link to https://e.com')
+  })
+})
+
+describe('language rule', () => {
+  it('asks for the page language everywhere, sign-off included', () => {
+    const p = buildFirstEmailInstructions(
+      { days: 5, campaignType: 'nurture', tone: 'friendly' },
+      'https://e.cz',
+    )
+    expect(p).toContain('Write every word in the language of the landing page')
+    expect(p).toContain('Tým Fakturoid')
   })
 })

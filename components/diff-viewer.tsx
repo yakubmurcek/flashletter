@@ -30,7 +30,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
     return (
       <div className="flex items-center justify-center h-full p-8 text-center">
         <div>
-          <h3 className="text-lg font-semibold mb-2">Initial Version</h3>
+          <h3 className="text-lg font-semibold mb-2">Initial version</h3>
           <p className="text-sm text-muted-foreground">
             This is the first version, so there are no changes to compare.
           </p>

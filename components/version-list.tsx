@@ -82,7 +82,7 @@ export function VersionList({
     <div className="space-y-2 p-4">
       <div className="mb-4">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Version History
+          Version history
         </h3>
         <p className="text-xs text-muted-foreground mt-1">
           {versions.length} saved version{versions.length > 1 ? 's' : ''}
@@ -138,7 +138,7 @@ export function VersionList({
                   }}
                 >
                   <RotateCcw className="w-3 h-3" />
-                  Restore This Version
+                  Restore this version
                 </Button>
               )}
             </div>

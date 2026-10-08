@@ -95,7 +95,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="font-mono text-xs text-muted-foreground">
-            © {year} flashletter — Jakub Murcek, IČO 08294593
+            © {year} flashletter · Jakub Murcek, IČO 08294593
           </div>
           <a
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

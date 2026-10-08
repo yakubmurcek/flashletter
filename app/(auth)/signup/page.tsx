@@ -1,3 +1,4 @@
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
@@ -12,7 +13,7 @@ import {
 } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'Sign Up - Flashletter',
+  title: 'Create your account',
   description: 'Create a new account',
 }
 
@@ -48,11 +49,11 @@ export default async function SignupPage({
   return (
     <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="text-display text-2xl md:text-3xl">Create an account</CardTitle>
+        <CardTitle className="text-display text-2xl md:text-3xl">
+          <h1>Create an account</h1>
+        </CardTitle>
         <CardDescription>
-          Enter your email and password to get started
-          <br />
-          with AI-powered email campaigns
+          Free plan: {PLAN_LIMITS.free.campaignsPerMonth} campaigns a month. No credit card.
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -183,3 +183,20 @@ describe('roundtrip conversion', () => {
     expect(htmlToMarkdown('')).toBe('')
   })
 })
+
+describe('markdown links', () => {
+  it('turns http(s) Markdown links into anchors', () => {
+    const html = markdownToHtml('[Start your trial](https://e.com/start)')
+    expect(html).toContain('<a href="https://e.com/start"')
+    expect(html).toContain('>Start your trial</a>')
+  })
+
+  it('leaves non-http links as text', () => {
+    const html = markdownToHtml('[x](javascript:alert(1))')
+    expect(html).not.toContain('<a ')
+  })
+
+  it('round-trips anchors back to Markdown', () => {
+    expect(htmlToMarkdown('<p><a href="https://e.com">Go</a></p>')).toBe('[Go](https://e.com)')
+  })
+})

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppShell } from '@/components/layouts/app-shell'
 
 export const metadata: Metadata = {
-  title: 'Terms of Service | Flashletter',
+  title: 'Terms of Service',
   description: 'The terms for using Flashletter, the AI newsletter campaign generator.',
 }
 
@@ -38,7 +38,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
           and prices are shown on our{' '}
           <Link
             href="/pricing"
-            className="text-primary hover:underline"
+            className="text-primary underline underline-offset-2 hover:text-primary/80"
           >
             pricing page
           </Link>
@@ -139,7 +139,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
         You can stop using Flashletter at any time and ask us to delete your account by writing to{' '}
         <a
           href={`mailto:${CONTACT_EMAIL}`}
-          className="text-primary hover:underline"
+          className="text-primary underline underline-offset-2 hover:text-primary/80"
         >
           {CONTACT_EMAIL}
         </a>
@@ -154,7 +154,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
         How we handle personal data is described in our{' '}
         <Link
           href="/privacy"
-          className="text-primary hover:underline"
+          className="text-primary underline underline-offset-2 hover:text-primary/80"
         >
           Privacy Policy
         </Link>
@@ -179,7 +179,7 @@ const SECTIONS: { title: string; body: ReactNode }[] = [
           <strong>Email:</strong>{' '}
           <a
             href={`mailto:${CONTACT_EMAIL}`}
-            className="text-primary hover:underline"
+            className="text-primary underline underline-offset-2 hover:text-primary/80"
           >
             {CONTACT_EMAIL}
           </a>

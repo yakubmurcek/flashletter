@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { AppShell } from '@/components/layouts/app-shell'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Flashletter',
+  title: 'Privacy Policy',
   description: 'What personal data Flashletter collects, why, who processes it and your rights.',
 }
 
@@ -15,7 +15,7 @@ const CONTACT_EMAIL = 'jakub@flashletter.app'
 const mail = (
   <a
     href={`mailto:${CONTACT_EMAIL}`}
-    className="text-primary hover:underline"
+    className="text-primary underline underline-offset-2 hover:text-primary/80"
   >
     {CONTACT_EMAIL}
   </a>

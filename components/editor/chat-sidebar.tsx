@@ -49,7 +49,7 @@ export function ChatSidebar({
         'fixed inset-y-0 right-0 transition-all duration-300 z-[60]',
         'supports-[backdrop-filter]:backdrop-blur-2xl bg-background/95',
         'shadow-xl border-l border-border',
-        isOpen ? 'w-96' : 'w-0 overflow-hidden',
+        isOpen ? 'w-full sm:w-96' : 'w-0 overflow-hidden',
       )}
       role="dialog"
       aria-modal="true"

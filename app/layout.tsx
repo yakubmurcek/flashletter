@@ -14,9 +14,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Turn your landing page into a newsletter campaign',
+  title: {
+    default: 'Flashletter - Turn your landing page into a newsletter campaign',
+    template: '%s | Flashletter',
+  },
   description:
-    'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free during early access.',
+    'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
   keywords: [
     'newsletter campaigns',
     'AI email generator',
@@ -35,23 +38,23 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://flashletter.app',
-    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
+    title: 'Flashletter - Turn your landing page into a newsletter campaign',
     description:
-      'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free during early access.',
+      'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
     siteName: 'Flashletter',
     images: [
       {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Lightning-fast AI newsletter campaigns',
+        alt: 'Flashletter - Turn your landing page into a newsletter campaign',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
+    title: 'Flashletter - Turn your landing page into a newsletter campaign',
     description: 'Turn your landing page into a ready-to-send newsletter campaign in 2 minutes.',
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`],
     creator: '@ykbmck',

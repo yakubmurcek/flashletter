@@ -122,7 +122,7 @@ function HistoryPageContent() {
       <div className="h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Email Not Found</h2>
+          <h2 className="text-xl font-semibold mb-2">Email not found</h2>
           <p className="text-muted-foreground mb-4">
             The email you&apos;re looking for doesn&apos;t exist.
           </p>
@@ -134,7 +134,7 @@ function HistoryPageContent() {
                   : `/create/editor?email=${validEmailId}`
               }
             >
-              Back to Editor
+              Back to editor
             </Link>
           </Button>
         </div>
@@ -205,8 +205,8 @@ function HistoryPageContent() {
     <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header */}
       <header className="border-b border-border bg-card flex-shrink-0">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="px-4 sm:px-6 py-3 flex items-center justify-between">
+          <div className="flex min-w-0 items-center gap-3 sm:gap-4">
             <Button
               variant="ghost"
               size="sm"
@@ -221,13 +221,13 @@ function HistoryPageContent() {
                 }
               >
                 <ArrowLeft className="w-4 h-4" />
-                Back to Editor
+                <span className="hidden sm:inline">Back to editor</span>
               </Link>
             </Button>
-            <div>
-              <div className="text-sm font-medium">Version History</div>
-              <div className="text-xs text-muted-foreground">
-                Day {currentEmail.day} - {currentEmail.subject}
+            <div className="min-w-0">
+              <div className="text-sm font-medium">Version history</div>
+              <div className="text-xs text-muted-foreground truncate">
+                Day {currentEmail.day} · {currentEmail.subject}
               </div>
             </div>
           </div>
@@ -235,9 +235,9 @@ function HistoryPageContent() {
       </header>
 
       {/* Main Content - 3 Column Layout */}
-      <div className="flex-1 flex overflow-hidden h-0">
+      <div className="flex-1 flex flex-col md:flex-row overflow-y-auto md:overflow-hidden h-0">
         {/* Left: Version List */}
-        <aside className="w-80 border-r border-border bg-card flex flex-col overflow-hidden">
+        <aside className="w-full md:w-80 flex-shrink-0 border-b md:border-b-0 md:border-r border-border bg-card flex flex-col md:overflow-hidden">
           <VersionList
             versions={timeline}
             selectedVersionId={effectiveSelectedId}
@@ -247,7 +247,7 @@ function HistoryPageContent() {
         </aside>
 
         {/* Center: Diff Viewer */}
-        <main className="flex-1 overflow-hidden">
+        <main className="flex-1 min-h-[24rem] md:min-h-0 overflow-hidden">
           {selectedVersion ? (
             <DiffViewer
               key={selectedVersion.id}
@@ -263,7 +263,7 @@ function HistoryPageContent() {
         </main>
 
         {/* Right: Version Preview */}
-        <aside className="w-96 border-l border-border bg-card overflow-hidden">
+        <aside className="hidden lg:block w-96 flex-shrink-0 border-l border-border bg-card overflow-hidden">
           {selectedVersion ? (
             <VersionPreview
               version={selectedVersion}

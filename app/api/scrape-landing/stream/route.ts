@@ -9,7 +9,12 @@ import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-ca
 import { extractTextFromHTML } from '@/lib/utils/scraper'
 import { extractMetadata, type ExtractedMetadata } from '@/lib/utils/metadata-extractor'
 import { scrapeWithPlaywright, shouldUseDynamicScraping } from '@/lib/utils/playwright-scraper'
-import { assertSafeUrl, isUnsafeUrlError, safeFetch } from '@/lib/utils/url-safety'
+import {
+  assertSafeUrl,
+  isUnsafeUrlError,
+  userMessageForUnsafeUrl,
+  safeFetch,
+} from '@/lib/utils/url-safety'
 import { analyzeLandingPage } from '@/lib/utils/analyzer'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
@@ -43,7 +48,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     if (isUnsafeUrlError(error)) {
       return NextResponse.json(
-        { error: 'URL not allowed', message: error.message },
+        { error: userMessageForUnsafeUrl(error), message: error.message },
         { status: 400 },
       )
     }
