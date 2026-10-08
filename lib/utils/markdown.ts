@@ -15,7 +15,7 @@ export function markdownToHtml(text: string): string {
   // Links: only http(s) targets, so a crafted `javascript:` URL stays plain text.
   html = html.replace(
     /\[([^\]]+)\]\((https?:\/\/[^\s)"<>]+)\)/g,
-    '<a href="$2" style="color: #e96326; text-decoration: underline;">$1</a>',
+    '<a href="$2" style="color: #c94600; text-decoration: underline;">$1</a>',
   )
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>')

@@ -11,7 +11,7 @@ import { AppShell } from '@/components/layouts/app-shell'
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
 export const metadata = {
-  title: 'Campaigns - Flashletter',
+  title: 'Campaigns',
   description: 'Manage your email campaigns',
 }
 

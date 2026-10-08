@@ -77,6 +77,31 @@ export function isUnsafeUrlError(error: unknown): error is UnsafeUrlError {
   return error instanceof Error && error.name === 'UnsafeUrlError'
 }
 
+/**
+ * What to tell the visitor. The internal messages ("Cannot resolve host",
+ * "Refusing to fetch localhost") stay in logs; a visitor who mistyped a URL
+ * should not read "URL not allowed" as if we were blocking them.
+ */
+export function userMessageForUnsafeUrl(error: Error): string {
+  const msg = error.message
+  if (msg.startsWith('Cannot resolve host')) {
+    const host = msg.slice('Cannot resolve host: '.length)
+    return host.includes('.')
+      ? `We couldn't find ${host}. Check the address for typos and try again.`
+      : "That doesn't look like a web address. Try something like https://yourproduct.com."
+  }
+  if (msg === 'Invalid URL' || msg === 'URL is missing a hostname') {
+    return "That doesn't look like a web address. Try something like https://yourproduct.com."
+  }
+  if (msg === 'Only http(s) URLs are allowed') {
+    return 'Use a web address that starts with http:// or https://.'
+  }
+  if (msg.startsWith('Refusing to fetch')) {
+    return "That address isn't reachable from the internet. Paste your live landing page URL."
+  }
+  return "We couldn't open that page. Check the address and try again."
+}
+
 export async function assertSafeUrl(rawUrl: string): Promise<URL> {
   let url: URL
   try {

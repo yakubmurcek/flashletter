@@ -5,7 +5,7 @@ import { AppShell } from '@/components/layouts/app-shell'
 import { Mail, User, Calendar, Hash } from 'lucide-react'
 
 export const metadata = {
-  title: 'Waitlist Admin - Flashletter',
+  title: 'Waitlist Admin',
   description: 'View waitlist entries',
 }
 

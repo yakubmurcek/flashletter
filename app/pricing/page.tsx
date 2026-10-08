@@ -5,7 +5,7 @@ import { PricingSection } from '@/components/sections/pricing-section'
 import { FAQSection } from '@/components/sections/faq-section'
 
 export const metadata: Metadata = {
-  title: 'Pricing | Flashletter',
+  title: 'Pricing',
   description: 'Start free. Flashletter Pro is $19/month for unlimited AI email campaigns.',
 }
 

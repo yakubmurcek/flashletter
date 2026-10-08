@@ -21,7 +21,7 @@ import {
 } from '@/lib/billing/stripe'
 
 export const metadata: Metadata = {
-  title: 'Account | Flashletter',
+  title: 'Account',
 }
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
