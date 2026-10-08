@@ -26,6 +26,12 @@ but a client hitting several instances gets the limit once per instance. The
 Upstash integration on the Vercel Marketplace injects the `KV_REST_API_*` names,
 which the app also reads.
 
+Current setup (2026-10-08): flashletter uses the team's existing Upstash store
+`store_GDbJAU71nVY35Lbf`, which it shares with shouldijev. Every flashletter key is
+prefixed `flashletter:`. `KV_REST_API_URL` and `KV_REST_API_TOKEN` were copied onto
+flashletter as sensitive variables (Preview + Production) instead of attaching the store
+through the integration, so if that store's token is ever rotated, update them here too.
+
 ## Required for specific features
 
 ### `RESEND_API_KEY` and `RESEND_FROM_ADDRESS`
