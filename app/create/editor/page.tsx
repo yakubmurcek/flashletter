@@ -20,6 +20,7 @@ import { EmailSidebar, MobileEmailTabs } from '@/components/editor/email-sidebar
 import { ChatFab } from '@/components/editor/chat-fab'
 import { FullScreenState } from '@/components/editor/full-screen-state'
 import { GeneratingState } from '@/components/editor/generating-state'
+import { EmptyCampaignState } from '@/components/editor/empty-campaign-state'
 import { CampaignConfigPanel } from '@/components/editor/campaign-config-panel'
 import { useCampaignActions } from '@/lib/campaign-context'
 import { cn } from '@/lib/utils'
@@ -445,6 +446,11 @@ function EditorPageContent() {
                 totalExpected={totalExpected}
                 error={streamError}
                 limitPlan={limitPlan}
+              />
+            ) : loadingState === 'loaded' && emails.length === 0 ? (
+              <EmptyCampaignState
+                onGenerate={handleRegenerate}
+                disabled={!landingPageData || !config}
               />
             ) : null}
           </div>

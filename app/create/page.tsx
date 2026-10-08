@@ -112,8 +112,8 @@ export default function CreatePage() {
               <h1>You&rsquo;ve used this month&rsquo;s campaigns</h1>
             </CardTitle>
             <CardDescription>
-              {campaignCount} of {campaignLimit} campaigns on the Free plan this month. Pro removes
-              the limit and writes up to 30 emails per sequence.
+              You&rsquo;ve used all {campaignLimit} campaigns the Free plan includes this month. Pro
+              removes the limit and writes up to 30 emails per sequence.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
