@@ -32,3 +32,13 @@ preview, which runs the real scrape, analysis and generation pipeline:
 
 Look for: fragments, emails without a concrete detail from the page, guardrail leaks, em
 dashes, and a CTA that isn't a Markdown link.
+
+## Speed of the first email (2026-10-08)
+
+The visitor waits for the scrape, then the page analysis (`lib/utils/analyzer.ts`), then
+the first email. The analysis wait is mostly output length: at medium effort with
+uncapped lists it took 10-14 s. It now runs at `effort: 'low'`, and the schema
+descriptions in `lib/schemas/analysis.ts` cap each list. On plausible.io the first email
+went from about 26 s to about 16 s after pasting the URL, and the emails still cited the
+page's numbers and quotes. JS-heavy pages add about 9 s of Playwright fetching
+(cal.com, linear.app, resend.com).
