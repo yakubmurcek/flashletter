@@ -64,11 +64,11 @@ describe('analyzeLandingPage', () => {
     ).rejects.toThrow(/unexpected format/)
   })
 
-  it('validates against landingPageAnalysisSchema at the default effort', async () => {
+  it('validates against landingPageAnalysisSchema at low effort', async () => {
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
     const call = lastCall()
     expect(call.schema).toBe(landingPageAnalysisSchema)
-    expect(call.effort).toBeUndefined()
+    expect(call.effort).toBe('low')
     expect(call.maxTokens).toBe(8000)
   })
 

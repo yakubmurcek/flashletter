@@ -45,6 +45,9 @@ Analyze this page for email-campaign copywriting. Return structured JSON matchin
     system: SYSTEM_INSTRUCTIONS,
     messages: [{ role: 'user', content: userInput }],
     schema: landingPageAnalysisSchema,
+    // Extraction, not writing: low effort keeps the visitor's wait before the
+    // first email short (medium took 10-14 s of a ~20 s wait).
+    effort: 'low',
     maxTokens: 8000,
   })
 }
