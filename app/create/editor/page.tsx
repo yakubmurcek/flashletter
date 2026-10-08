@@ -70,7 +70,10 @@ function EditorPageContent() {
   const [isCompact, setIsCompact] = useState(false)
   const chatParam = getParam('chat')
   // Open by default on desktop, closed by default on small screens.
-  const showChat = chatParam === 'open' || (chatParam !== 'closed' && !isCompact)
+  const chatWanted = chatParam === 'open' || (chatParam !== 'closed' && !isCompact)
+  // Nothing to talk about on an empty campaign (a plan limit or failed run).
+  const chatAvailable = emails.length > 0 || isStreaming
+  const showChat = chatWanted && chatAvailable
   const restoreVersionParam = getParam('restoreVersion')
   const hasProcessedRestoreRef = useRef(false)
   const [shouldFocusChatInput, setShouldFocusChatInput] = useState(showChat)
@@ -476,7 +479,7 @@ function EditorPageContent() {
         />
       </div>
 
-      {!showChat && <ChatFab onClick={handleToggleChat} />}
+      {!showChat && chatAvailable && <ChatFab onClick={handleToggleChat} />}
     </div>
   )
 }

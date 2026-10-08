@@ -10,6 +10,8 @@ interface AnonymousLimitState {
   campaignCount: number
   canCreate: boolean
   user: User | null
+  /** Signed-in users: monthly campaign allowance, null when unlimited. */
+  campaignLimit?: number | null
 }
 
 const ANONYMOUS_CAMPAIGN_LIMIT = 1
@@ -51,13 +53,30 @@ export function useAnonymousLimit(): AnonymousLimitState {
       const isAnonymous = user.is_anonymous ?? false
 
       if (!isAnonymous) {
-        // Authenticated users have no limit (for now)
+        // Signed-in users: the plan's monthly allowance. If the check fails,
+        // allow creation; the server still enforces the limit.
+        let campaignCount = 0
+        let campaignLimit: number | null = null
+        try {
+          const res = await fetch('/api/billing/status')
+          if (res.ok) {
+            const data = (await res.json()) as {
+              campaignsThisMonth?: number
+              limits?: { campaignsPerMonth: number | null }
+            }
+            campaignCount = data.campaignsThisMonth ?? 0
+            campaignLimit = data.limits?.campaignsPerMonth ?? null
+          }
+        } catch {
+          // fall through: allowed
+        }
         setState({
           isLoading: false,
           isAnonymous: false,
-          campaignCount: 0,
-          canCreate: true,
+          campaignCount,
+          canCreate: campaignLimit === null || campaignCount < campaignLimit,
           user,
+          campaignLimit,
         })
         return
       }
