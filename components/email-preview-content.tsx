@@ -91,7 +91,7 @@ function EmailPreviewContentComponent({
           <RichTextEditor
             content={content}
             onChange={(newContent) => onContentChange?.(newContent)}
-            className="text-[16px] leading-[1.7] prose-p:my-4"
+            className="text-[16px] leading-[1.7] prose-p:my-4 [&>:first-child]:mt-0"
             onEditorCreated={onEditorCreated}
           />
         </div>
