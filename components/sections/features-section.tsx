@@ -29,7 +29,7 @@ const FEATURES: Feature[] = [
   {
     label: 'Bring your own ESP',
     description:
-      'Copy and paste straight into Mailchimp, ConvertKit, Beehiiv, or whatever you already use.',
+      'Copy and paste straight into Mailchimp, Kit, Beehiiv, or whatever you already use.',
   },
   {
     label: 'No signup to try',
