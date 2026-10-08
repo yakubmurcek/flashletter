@@ -106,8 +106,11 @@ function summarize(sub: Stripe.Subscription, customerId: string): SubscriptionSu
     active: sub.status === 'active' || sub.status === 'trialing',
     status: sub.status,
     interval,
-    currentPeriodEnd: item?.current_period_end ?? null,
-    cancelAtPeriodEnd: sub.cancel_at_period_end,
+    // The customer portal schedules a cancellation as `cancel_at` (a date) on
+    // current API versions, leaving `cancel_at_period_end` false; treat either
+    // as "ends on" so the account page doesn't promise a renewal.
+    currentPeriodEnd: sub.cancel_at ?? item?.current_period_end ?? null,
+    cancelAtPeriodEnd: sub.cancel_at_period_end || sub.cancel_at !== null,
     customerId,
   }
 }
