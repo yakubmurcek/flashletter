@@ -58,13 +58,11 @@ describe('RichTextEditor external content changes', () => {
     expect(onChange.mock.calls[0][0]).toContain('Quick note.')
   })
 
-  it('cannot undo back into the previous email after switching', async () => {
+  // An AI edit arrives as an outside change; Cmd+Z must still take it back,
+  // and that undo is the user's edit, so it gets saved.
+  it('lets the user undo an outside change, and reports the undo', async () => {
     const { container, onChange, swapTo, getEditor } = setup()
     await waitFor(() => expect(getEditor()).not.toBeNull())
-    act(() => {
-      getEditor()!.commands.insertContent('Typed in day one. ')
-    })
-    onChange.mockClear()
 
     swapTo(DAY_2)
     await waitFor(() => expect(container.textContent).toContain('Book a demo'))
@@ -72,8 +70,7 @@ describe('RichTextEditor external content changes', () => {
       getEditor()!.commands.undo()
     })
 
-    expect(container.textContent).toContain('Book a demo')
-    expect(container.textContent).not.toContain('Create your first project')
-    expect(onChange).not.toHaveBeenCalled()
+    expect(container.textContent).toContain('Create your first project')
+    expect(onChange).toHaveBeenCalledTimes(1)
   })
 })

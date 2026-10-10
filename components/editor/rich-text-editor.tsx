@@ -89,19 +89,14 @@ export function RichTextEditor({
     },
   })
 
-  // Update content if it changes externally (switching emails, an AI edit, a
-  // restore). That is not the user typing, so it must not echo back through
-  // onUpdate: tiptap re-serializes the Markdown slightly differently, which
-  // read as an edit and got saved as one. And it stays out of undo history,
-  // so Cmd+Z can't bring the previous email's text back into this one.
+  // Update content if it changes externally (an AI edit, a restore). That is
+  // not the user typing, so it must not echo back through onUpdate: tiptap
+  // re-serializes the Markdown slightly differently, which read as an edit
+  // and got saved as one. It stays undoable; each email gets its own editor
+  // (the preview is keyed by email id), so undo never reaches another email.
   useEffect(() => {
     if (editor && content) {
-      const replaceContent = () =>
-        editor
-          .chain()
-          .setMeta('addToHistory', false)
-          .setContent(content, { emitUpdate: false })
-          .run()
+      const replaceContent = () => editor.commands.setContent(content, { emitUpdate: false })
       const storage = editor.storage as unknown as Record<string, { getMarkdown?: () => string }>
       const markdownStorage = storage.markdown
       if (markdownStorage?.getMarkdown) {
