@@ -47,6 +47,26 @@ describe('getCampaignStructure', () => {
     const result = getCampaignStructure('nurture', 14)
     expect(result).toContain('Day 14')
   })
+
+  // Every day from 1 to N appears in exactly one phase, in order. The old
+  // templates printed "Days 2-1" for a 5-email onboarding sequence.
+  it.each(['nurture', 'onboarding', 'promotional'])(
+    'plans each day of a %s sequence exactly once',
+    (type) => {
+      for (let days = 3; days <= 30; days++) {
+        const covered: number[] = []
+        for (const [, from, to] of getCampaignStructure(type, days).matchAll(
+          /Days? (\d+)(?:-(\d+))?:/g,
+        )) {
+          const start = Number(from)
+          const end = to === undefined ? start : Number(to)
+          expect(start, `${type} ${days}: Days ${start}-${end}`).toBeLessThan(end + (to ? 0 : 1))
+          for (let d = start; d <= end; d++) covered.push(d)
+        }
+        expect(covered, `${type} ${days}`).toEqual(Array.from({ length: days }, (_, i) => i + 1))
+      }
+    },
+  )
 })
 
 describe('getToneGuidelines', () => {
