@@ -19,3 +19,8 @@ export function safeRedirectPath(target: unknown, fallback = '/campaigns'): stri
   if (url.origin !== PROBE_ORIGIN) return fallback
   return `${url.pathname}${url.search}${url.hash}`
 }
+
+/** `path` with `redirectTo` carried along, or bare when it is the default. */
+export function withRedirectTo(path: string, redirectTo: string, defaultPath = '/campaigns') {
+  return redirectTo === defaultPath ? path : `${path}?redirectTo=${encodeURIComponent(redirectTo)}`
+}
