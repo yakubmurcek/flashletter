@@ -61,7 +61,7 @@ export function renderMarkdown(text: string) {
   const lines = text.split('\n')
   const elements: React.ReactNode[] = []
 
-  let currentBlockType: 'paragraph' | 'list' | null = null
+  let currentBlockType: 'paragraph' | 'list' | 'ordered-list' | null = null
   let currentBlockLines: string[] = []
 
   // Helper to flush valid blocks
@@ -81,6 +81,19 @@ export function renderMarkdown(text: string) {
         >
           {listItems}
         </ul>,
+      )
+    } else if (currentBlockType === 'ordered-list') {
+      const listItems = currentBlockLines.map((line, idx) => {
+        const content = line.replace(/^\d+[.)]\s+/, '')
+        return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
+      })
+      elements.push(
+        <ol
+          key={`olist-${keyPrefix}`}
+          className="list-decimal list-inside space-y-1 mb-4"
+        >
+          {listItems}
+        </ol>,
       )
     } else if (currentBlockType === 'paragraph') {
       // Join lines with space for standard markdown behavior
@@ -156,9 +169,17 @@ export function renderMarkdown(text: string) {
         currentBlockType = 'list'
       }
       currentBlockLines.push(trimmed)
+    } else if (trimmed.match(/^\d+[.)]\s/)) {
+      // Numbered items ("3 subject lines" answers) would otherwise be joined
+      // into one run-on paragraph.
+      if (currentBlockType !== 'ordered-list') {
+        flushBlock(index)
+        currentBlockType = 'ordered-list'
+      }
+      currentBlockLines.push(trimmed)
     } else {
       // Regular text
-      if (currentBlockType === 'list') {
+      if (currentBlockType === 'list' || currentBlockType === 'ordered-list') {
         // If we encounter a non-list line while in a list, close the list
         flushBlock(index)
         currentBlockType = 'paragraph'
