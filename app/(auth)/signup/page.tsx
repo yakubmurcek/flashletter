@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 import { createClient } from '@/lib/supabase/server'
+import { safeRedirectPath } from '@/lib/utils/safe-redirect'
 import {
   Card,
   CardContent,
@@ -15,13 +16,6 @@ import {
 export const metadata = {
   title: 'Create your account',
   description: 'Create a new account',
-}
-
-function safeRedirect(target: string | string[] | undefined, fallback: string) {
-  if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//')) {
-    return fallback
-  }
-  return target.startsWith('/\\') ? fallback : target
 }
 
 export default async function SignupPage({
@@ -41,7 +35,7 @@ export default async function SignupPage({
     return (
       <UpgradePrompt
         variant="save"
-        redirectTo={safeRedirect(redirectTo, '/campaigns')}
+        redirectTo={safeRedirectPath(redirectTo)}
       />
     )
   }

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import * as Sentry from '@sentry/nextjs'
 import { createClient } from '@/lib/supabase/server'
+import { safeRedirectPath } from '@/lib/utils/safe-redirect'
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
@@ -30,13 +31,7 @@ export async function GET(request: Request) {
     }
   }
 
-  const isValidRedirect =
-    redirectToParam && redirectToParam.startsWith('/') && !redirectToParam.startsWith('//')
-
-  const fallbackPath = '/campaigns'
-  const basePath = isValidRedirect ? redirectToParam : fallbackPath
-
-  const redirectUrl = new URL(basePath, origin)
+  const redirectUrl = new URL(safeRedirectPath(redirectToParam), origin)
   if (errorMessage) {
     redirectUrl.searchParams.set('authError', errorMessage)
   }
