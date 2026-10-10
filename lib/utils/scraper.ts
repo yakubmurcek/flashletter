@@ -89,8 +89,6 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   const noiseSelectors = [
     'script',
     'style',
-    // Not 'header': landing pages wrap their hero headline in one. Menus
-    // inside it go with 'nav' and the menu selectors below.
     'nav',
     'footer',
     'aside',
@@ -121,6 +119,12 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   noiseSelectors.forEach((selector) => {
     $(selector).remove()
   })
+
+  // The site header (logo, menu links) is noise, but a <header> inside the
+  // content is usually a hero or section heading, so keep those.
+  $('header')
+    .filter((_, el) => $(el).parents('main, article, section, [role="main"]').length === 0)
+    .remove()
 }
 
 function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {

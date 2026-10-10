@@ -122,6 +122,23 @@ describe('Content Extraction', () => {
     expect(result.content).not.toContain('Menu link')
   })
 
+  it('still drops the site header outside the content', () => {
+    const html = `
+      <html><body>
+        <header><a href="/">Acme logo</a><a href="/login">Log in</a></header>
+        <section><h1>Hero headline</h1><p>${'Supporting copy for the product. '.repeat(5)}</p></section>
+        <section><h2>Pricing</h2><p>Pro is $19 a month.</p></section>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).not.toContain('Acme logo')
+    expect(result.content).not.toContain('Log in')
+    expect(result.content).toContain('Hero headline')
+    expect(result.content).toContain('Pro is $19 a month.')
+  })
+
   it('should handle smart truncation', () => {
     const longContent = 'This is a sentence. '.repeat(1000)
     const html = `<html><body><p>${longContent}</p></body></html>`
