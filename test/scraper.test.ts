@@ -74,6 +74,54 @@ describe('Content Extraction', () => {
     expect(result.content).not.toContain('Sidebar content')
   })
 
+  // Landing pages built in page builders often have no <main>: just a stack
+  // of sections. Taking the first match dropped everything after the hero.
+  it('keeps every section of a page made of sections', () => {
+    const html = `
+      <html><body>
+        <section><h1>Ship your launch emails today</h1><p>${'Paste a URL and get a full sequence. '.repeat(5)}</p></section>
+        <section><h2>Pricing</h2><p>Pro is $19 a month.</p></section>
+        <section><h2>What customers say</h2><p>Saved me a week. Dana, founder</p></section>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('Ship your launch emails today')
+    expect(result.content).toContain('Pro is $19 a month.')
+    expect(result.content).toContain('Saved me a week.')
+  })
+
+  it('keeps all repeated cards, not only the first', () => {
+    const html = `
+      <html><body>
+        <article><p>${'First testimonial text here. '.repeat(5)}</p></article>
+        <article><p>Second testimonial text.</p></article>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('First testimonial text here.')
+    expect(result.content).toContain('Second testimonial text.')
+  })
+
+  it('keeps a hero headline wrapped in <header>', () => {
+    const html = `
+      <html><body>
+        <main>
+          <header><h1>Value prop headline</h1><nav>Menu link</nav></header>
+          <p>${'Supporting copy for the product. '.repeat(5)}</p>
+        </main>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('Value prop headline')
+    expect(result.content).not.toContain('Menu link')
+  })
+
   it('should handle smart truncation', () => {
     const longContent = 'This is a sentence. '.repeat(1000)
     const html = `<html><body><p>${longContent}</p></body></html>`

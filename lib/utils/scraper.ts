@@ -34,16 +34,17 @@ export function extractTextFromHTML(html: string): ScrapedContent {
     '.page-content',
     '.text-content',
     '[role="main"]',
-    'section',
-    '.section',
   ]
 
   let mainElement: cheerio.Cheerio<AnyNode> | null = null
   let structuredHtml = ''
 
   for (const selector of contentSelectors) {
-    const candidate = $(selector).first()
-    if (candidate.length === 0) {
+    const candidate = $(selector)
+    // Only a single match can be the page's main content. Several matches are
+    // repeated blocks (cards, sections); taking the first one dropped the
+    // rest of the page, so fall through to the whole body instead.
+    if (candidate.length !== 1) {
       continue
     }
 
@@ -88,8 +89,9 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   const noiseSelectors = [
     'script',
     'style',
+    // Not 'header': landing pages wrap their hero headline in one. Menus
+    // inside it go with 'nav' and the menu selectors below.
     'nav',
-    'header',
     'footer',
     'aside',
     '.advertisement',
