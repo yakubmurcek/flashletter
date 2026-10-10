@@ -56,9 +56,10 @@ if your project lives in the EU instance.
 
 Events fired (all client-side via `posthog-js`): `url_pasted`,
 `scrape_succeeded`, `scrape_failed`, `first_email_streamed`, `email_edited`,
-`signup_completed`. The `signup_completed` event piggybacks on a
-`?signedUp=1` marker the auth callback adds to its redirect; the
-`/campaigns` page reads it once, fires the event, then strips the param.
+`limit_reached`, `upgrade_clicked`, `signup_completed`. `signup_completed`
+fires from `identify()` in `lib/analytics.ts` the first time a browser that
+was seen as a guest comes back signed in (two localStorage markers), so
+returning logins don't count.
 
 ### `ADMIN_EMAILS`
 
