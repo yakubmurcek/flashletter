@@ -50,19 +50,31 @@ function EmailPreviewComponent({
     return editedSubject !== email.subject || editedContent !== email.content
   }, [editedSubject, editedContent, email.subject, email.content])
 
+  // The save still waiting out the debounce below. The editor page keys this
+  // component by email id, so switching emails unmounts it: flush the pending
+  // edit then instead of dropping what was typed in the last second.
+  const pendingSaveRef = useRef<(() => void) | null>(null)
+
   // Auto-save when changes occur
   useEffect(() => {
-    if (hasChanges) {
-      const timeoutId = setTimeout(() => {
-        onUpdate({
-          subject: editedSubject,
-          content: editedContent,
-        })
-      }, 1000)
-
-      return () => clearTimeout(timeoutId)
+    if (!hasChanges) {
+      pendingSaveRef.current = null
+      return
     }
+    const save = () => {
+      pendingSaveRef.current = null
+      onUpdate({
+        subject: editedSubject,
+        content: editedContent,
+      })
+    }
+    pendingSaveRef.current = save
+    const timeoutId = setTimeout(save, 1000)
+
+    return () => clearTimeout(timeoutId)
   }, [hasChanges, editedSubject, editedContent, onUpdate])
+
+  useEffect(() => () => pendingSaveRef.current?.(), [])
 
   const selectionsMatch = (
     range: Range | null,

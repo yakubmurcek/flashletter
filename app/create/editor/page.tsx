@@ -435,6 +435,9 @@ function EditorPageContent() {
           <div className="flex-1 min-h-0 overflow-y-auto">
             {selectedEmail ? (
               <EmailPreview
+                // One instance per email: its unsaved edit and undo history
+                // belong to that email, and it flushes the edit on switch.
+                key={selectedEmail.id}
                 email={selectedEmail}
                 onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
                 onTextSelected={handleTextSelected}
