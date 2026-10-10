@@ -282,7 +282,9 @@ describe('useEmailAutosave', () => {
     expect(updateEmailDbMock).not.toHaveBeenCalled()
   })
 
-  it('unmounting cancels pending debounced write', async () => {
+  // Leaving the editor (History, All campaigns) inside the debounce window
+  // used to drop the write, so the edit was gone after a reload.
+  it('unmounting writes a pending edit right away instead of dropping it', async () => {
     const updateEmail = vi.fn()
     const emails = [makeEmail(1)]
     const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
@@ -290,11 +292,28 @@ describe('useEmailAutosave', () => {
     await act(async () => {
       await result.current.saveEmail(1, { subject: 'X' })
     })
-    unmount()
     await act(async () => {
+      unmount()
+    })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'X' }))
+  })
+
+  // The preview flushes its own pending edit while the page unmounts; that
+  // write must carry the new text even though the page will not re-render.
+  it('a save made during unmount still writes the new text', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+    const { saveEmail } = result.current
+
+    await act(async () => {
+      unmount()
+      await saveEmail(1, { subject: 'Late' })
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
     })
-    expect(updateEmailDbMock).not.toHaveBeenCalled()
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'Late' }))
   })
 
   it('swallows DB errors and resets isSaving', async () => {
