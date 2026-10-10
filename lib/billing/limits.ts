@@ -35,7 +35,18 @@ export async function checkCampaignAllowed(
   campaignId: string | undefined,
 ): Promise<LimitDenial | null> {
   const max = PLAN_LIMITS[plan].campaignsPerMonth
-  if (!Number.isFinite(max) || !campaignId) return null
+  if (!Number.isFinite(max)) return null
+  // Limited plans are counted by campaign row, so a generation with no
+  // campaign would never be counted: refuse it rather than let any direct
+  // API call skip the monthly limit. The app always saves the campaign first.
+  if (!campaignId) {
+    return {
+      error: 'limit_reached',
+      limit: 'campaigns',
+      plan,
+      message: 'Paste your landing page URL to start a campaign, then generate its emails.',
+    }
+  }
 
   const { data: campaign } = await supabase
     .from('campaigns')

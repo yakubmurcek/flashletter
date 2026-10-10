@@ -83,6 +83,20 @@ describe('checkCampaignAllowed', () => {
     expect(denial?.message).toMatch(/free account/i)
   })
 
+  // The id is optional in the request schema; leaving it out used to skip the
+  // count, so a Free user past 3 campaigns could keep generating via the API.
+  it('refuses a generation with no campaign on limited plans', async () => {
+    expect(
+      await checkCampaignAllowed(supabaseWith(thisMonth, 99), 'u', 'free', undefined),
+    ).not.toBeNull()
+    expect(
+      await checkCampaignAllowed(supabaseWith(thisMonth, 99), 'u', 'guest', undefined),
+    ).not.toBeNull()
+    expect(
+      await checkCampaignAllowed(supabaseWith(thisMonth, 99), 'u', 'pro', undefined),
+    ).toBeNull()
+  })
+
   it('never limits Pro or campaigns from earlier months', async () => {
     expect(await checkCampaignAllowed(supabaseWith(thisMonth, 99), 'u', 'pro', 'c')).toBeNull()
     expect(
