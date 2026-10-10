@@ -7,6 +7,7 @@ import {
   getToneGuidelines,
 } from '@/app/api/generate-emails/prompts'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { CAMPAIGN_TONES, CAMPAIGN_TYPES } from '@/lib/constants/campaign'
 
 const analysis: LandingPageAnalysis = {
   valueProp: 'Turn landing pages into email sequences.',
@@ -89,6 +90,23 @@ describe('getToneGuidelines', () => {
   it('falls back to friendly for unknown tone', () => {
     expect(getToneGuidelines('unknown-tone')).toEqual(getToneGuidelines('friendly'))
   })
+
+  // The tone pickers offer every playbook tone; none may silently fall back.
+  it.each(CAMPAIGN_TONES.map((t) => t.value).filter((v) => v !== 'friendly'))(
+    'has its own guidelines for the %s tone',
+    (tone) => {
+      expect(getToneGuidelines(tone)).not.toEqual(getToneGuidelines('friendly'))
+    },
+  )
+})
+
+describe('getCampaignStructure covers every campaign type offered', () => {
+  it.each(CAMPAIGN_TYPES.map((t) => t.value).filter((v) => v !== 'nurture'))(
+    'has its own plan for %s',
+    (type) => {
+      expect(getCampaignStructure(type, 5)).not.toEqual(getCampaignStructure('nurture', 5))
+    },
+  )
 })
 
 describe('buildInstructions (without analysis)', () => {

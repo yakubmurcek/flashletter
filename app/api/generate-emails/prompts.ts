@@ -64,6 +64,28 @@ export function getCampaignStructure(type: string, days: number): string {
         ],
         'Final push, last chance messaging',
       ),
+
+    educational: () =>
+      plan(
+        days,
+        'What the reader will learn in this series and why it matters to them',
+        [
+          "One core lesson per email, each grounded in a concrete example from the page's own features",
+          'Putting it into practice: common mistakes and a short worked example',
+        ],
+        'Recap the key lessons and point to the next step with the product',
+      ),
+
+    're-engagement': () =>
+      plan(
+        days,
+        'A friendly check-in: remind them what they signed up for and what they are missing',
+        [
+          'What is new or better since they last looked (only what the page shows)',
+          'One quick win they can get in a few minutes',
+        ],
+        'Last call: one clear reason to come back now',
+      ),
   }
 
   return (structures[type] ?? structures.nurture)()
@@ -72,6 +94,8 @@ export function getCampaignStructure(type: string, days: number): string {
 export function getToneGuidelines(tone: string): string {
   const tones: Record<string, string> = {
     professional: 'Formal language, clear and direct, industry expertise, authoritative',
+    formal:
+      'Strictly business, precise and serious: complete sentences, no slang, no exclamation points, measured claims',
     friendly: 'Conversational, warm, approachable, use "you" and "we", casual but respectful',
     enthusiastic: 'Energetic, exciting, use exclamation points (moderately), positive language',
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
