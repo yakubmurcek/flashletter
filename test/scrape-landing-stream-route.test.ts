@@ -231,19 +231,92 @@ describe('POST /api/scrape-landing/stream', () => {
     expect(global.fetch).not.toHaveBeenCalled()
   })
 
-  it('emits error event when fetch fails', async () => {
+  async function errorMessageFor(): Promise<string> {
+    const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
+    const events = await readStreamEvents(response)
+    expect(events.find((e) => e.type === 'complete')).toBeUndefined()
+    const errorEvent = events.find((e) => e.type === 'error')
+    if (errorEvent?.type !== 'error') throw new Error('no error event')
+    return errorEvent.message
+  }
+
+  it('emits a friendly error event when the site answers with a 5xx', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response('', { status: 500, statusText: 'Internal Server Error' }),
     )
 
-    const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
+    const message = await errorMessageFor()
+    expect(message).toMatch(/having trouble/i)
+    expect(message).not.toMatch(/500|Internal Server Error|Failed to fetch/)
+  })
+
+  it('says the site blocked us on a 403', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('', { status: 403, statusText: 'Forbidden' }),
+    )
+    const message = await errorMessageFor()
+    expect(message).toMatch(/blocked/i)
+    expect(message).not.toMatch(/403|Forbidden/)
+  })
+
+  it('says the page was not found on a 404', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response('', { status: 404, statusText: 'Not Found' }),
+    )
+    const message = await errorMessageFor()
+    expect(message).toMatch(/couldn't find that page/i)
+    expect(message).not.toMatch(/404/)
+  })
+
+  it('says the site took too long when the fetch is aborted', async () => {
+    vi.spyOn(global, 'fetch').mockRejectedValue(
+      new DOMException('This operation was aborted', 'AbortError'),
+    )
+    const message = await errorMessageFor()
+    expect(message).toMatch(/took too long/i)
+    expect(message).not.toMatch(/aborted/i)
+  })
+
+  it('says it could not reach the site on a refused connection', async () => {
+    const refused = new TypeError('fetch failed', {
+      cause: Object.assign(new Error('connect ECONNREFUSED 93.184.215.14:443'), {
+        code: 'ECONNREFUSED',
+      }),
+    })
+    vi.spyOn(global, 'fetch').mockRejectedValue(refused)
+    const message = await errorMessageFor()
+    expect(message).toMatch(/couldn't reach/i)
+    expect(message).not.toMatch(/fetch failed|ECONNREFUSED/)
+  })
+
+  it('never forwards an unknown internal error message', async () => {
+    getCachedScrapeDataMock.mockRejectedValue(new Error('redis: WRONGPASS secret-host:6379'))
+    const message = await errorMessageFor()
+    expect(message).not.toMatch(/redis|WRONGPASS|secret-host/)
+    expect(message.length).toBeGreaterThan(10)
+  })
+
+  it('still reports the raw error to Sentry', async () => {
+    const Sentry = await import('@sentry/nextjs')
+    vi.mocked(Sentry.captureException).mockClear()
+    const raw = new DOMException('This operation was aborted', 'AbortError')
+    vi.spyOn(global, 'fetch').mockRejectedValue(raw)
+    await errorMessageFor()
+    expect(Sentry.captureException).toHaveBeenCalledWith(raw, expect.anything())
+  })
+
+  it('maps a Playwright load failure status too', async () => {
+    scrapeWithPlaywrightMock.mockRejectedValue(
+      new Error('Dynamic scraping failed: Failed to load page: 403 Forbidden'),
+    )
+    const response = await POST(
+      buildRequest({ url: 'https://example.com', useDynamic: true }) as never,
+    )
     const events = await readStreamEvents(response)
     const errorEvent = events.find((e) => e.type === 'error')
-    expect(errorEvent).toBeDefined()
-    if (errorEvent?.type === 'error') {
-      expect(errorEvent.message.toLowerCase()).toContain('failed to fetch')
-    }
-    expect(events.find((e) => e.type === 'complete')).toBeUndefined()
+    if (errorEvent?.type !== 'error') throw new Error('no error event')
+    expect(errorEvent.message).toMatch(/blocked/i)
+    expect(errorEvent.message).not.toMatch(/Dynamic scraping|403/)
   })
 
   it('falls back from dynamic to static when Playwright throws', async () => {

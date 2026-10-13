@@ -18,6 +18,10 @@ import {
 import { analyzeLandingPage } from '@/lib/utils/analyzer'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
+import {
+  UpstreamStatusError,
+  userMessageForScrapeError,
+} from '@/app/api/scrape-landing/scrape-error-message'
 
 function cleanDomain(url: string): string {
   try {
@@ -47,10 +51,7 @@ export async function POST(req: NextRequest) {
     await assertSafeUrl(parsedBody.url)
   } catch (error) {
     if (isUnsafeUrlError(error)) {
-      return NextResponse.json(
-        { error: userMessageForUnsafeUrl(error), message: error.message },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: userMessageForUnsafeUrl(error) }, { status: 400 })
     }
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
@@ -141,7 +142,7 @@ export async function POST(req: NextRequest) {
             })
 
             if (!response.ok) {
-              throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+              throw new UpstreamStatusError(response.status, response.statusText)
             }
 
             const html = response.text
@@ -240,8 +241,7 @@ export async function POST(req: NextRequest) {
           tags: { api_route: '/api/scrape-landing/stream' },
         })
 
-        const message = error instanceof Error ? error.message : 'Failed to scrape landing page'
-        send({ type: 'error', message })
+        send({ type: 'error', message: userMessageForScrapeError(error) })
       } finally {
         controller.close()
       }

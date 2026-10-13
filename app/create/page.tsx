@@ -25,7 +25,7 @@ export default function CreatePage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { setLandingPageData, createNewCampaign, isLoading, clearAll } = useCampaign()
-  const { isAnalyzing, progressState, error, analyzeLandingPage } = useLandingPage()
+  const { isAnalyzing, progressState, error, analyzeLandingPage, clearError } = useLandingPage()
   const {
     isLoading: isCheckingLimit,
     isAnonymous,
@@ -36,6 +36,7 @@ export default function CreatePage() {
   const [url, setUrl] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [authError, setAuthError] = useState<string | null>(null)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   useEffect(() => {
     clearAll()
@@ -59,10 +60,15 @@ export default function CreatePage() {
     if (!url) return
 
     setIsSubmitting(true)
+    setSubmitError(null)
+    let navigating = false
     try {
+      // Returns null on every failure (error response, stream error, abort);
+      // the hook surfaces the message through `error`.
       const data = await analyzeLandingPage(url)
       if (data) {
         setLandingPageData(data)
+        navigating = true
         try {
           const campaignId = await createNewCampaign(data)
           router.push(`/create/configure?campaign=${campaignId}`)
@@ -71,10 +77,17 @@ export default function CreatePage() {
           router.push('/create/configure')
         }
       }
+    } catch (error) {
+      console.error('Failed to analyze landing page:', error)
+      setSubmitError('Something went wrong. Please try again.')
     } finally {
-      // Navigation replaces page; skip resetting local loading flag
+      // Keep the button busy only while we navigate away; any failure must
+      // leave it clickable so the visitor can fix the URL and retry.
+      if (!navigating) setIsSubmitting(false)
     }
   }
+
+  const shownError = error ?? submitError
 
   // Show loading while checking anonymous limit
   if (isLoading || isCheckingLimit) {
@@ -167,14 +180,18 @@ export default function CreatePage() {
               type="url"
               placeholder="https://example.com/landing-page"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={(e) => {
+                setUrl(e.target.value)
+                if (error) clearError()
+                setSubmitError(null)
+              }}
               className="h-12 text-base"
               required
             />
             <p className="text-sm text-muted-foreground">Enter the full URL including https://</p>
           </div>
 
-          {error && <ErrorMessage message={error} />}
+          {shownError && <ErrorMessage message={shownError} />}
 
           <Button
             type="submit"
