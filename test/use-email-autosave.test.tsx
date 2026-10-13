@@ -333,4 +333,58 @@ describe('useEmailAutosave', () => {
     expect(result.current.lastSaved).toBeNull()
     errSpy.mockRestore()
   })
+  // Bug: day ids are 1..N in every campaign, so after switching campaigns
+  // the version history baseline was the previous campaign's text.
+  it('seeds version snapshots per campaign, not from the previous campaign', async () => {
+    const updateEmail = vi.fn()
+    const emailA = makeEmail(1)
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [emailA], campaignId: 'camp-a' } },
+    )
+
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'B edited' })
+    })
+    rerender({ list: [{ ...emailB, subject: 'B edited' }], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(saveVersionMock).toHaveBeenCalledTimes(1)
+    expect(saveVersionMock).toHaveBeenCalledWith('uuid-b1', 1, {
+      subject: 'B subject',
+      content: 'B body',
+    })
+  })
+
+  // Same id collision: a pending write for campaign A read the emails list
+  // when its timer fired, by then campaign B's, and wrote B's text into A.
+  it('switching campaign writes a pending edit with the old campaign text', async () => {
+    const updateEmail = vi.fn()
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [makeEmail(1)], campaignId: 'camp-a' } },
+    )
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'A edited' })
+    })
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock).toHaveBeenCalledWith('camp-a', 1, {
+      subject: 'A edited',
+      content: 'C1',
+      preview: 'P1',
+    })
+  })
 })

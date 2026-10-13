@@ -1,8 +1,14 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
-import { CampaignService, type GenerateEmailsStreamEvent } from '../services/campaign.service'
-import { useCampaignActions } from '../campaign-context'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  CampaignService,
+  RateLimitedError,
+  type GenerateEmailsStreamEvent,
+} from '../services/campaign.service'
+import { CampaignStorageService } from '../services/campaign-storage.service'
+import { createClient } from '../supabase/client'
+import { useCampaignActions, useCampaignData } from '../campaign-context'
 import type { CampaignConfig, Email, LandingPageData } from '../types'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
 import { track } from '../analytics'
@@ -26,8 +32,51 @@ interface UseEmailStreamingReturn {
   clearWarning: () => void
 }
 
+type EmailText = Pick<Email, 'subject' | 'content' | 'preview'>
+
+/** One generateEmailsStream call. Only the live session may touch state. */
+interface StreamSession {
+  controller: AbortController
+  campaignId: string | null
+  /** Context campaign id when the stream started; it can still be lagging. */
+  contextCampaignId: string | null
+  /** What the stream showed per day, to tell user edits from streamed text. */
+  streamed: Map<number, EmailText>
+}
+
+const textOf = (email: EmailText): EmailText => ({
+  subject: email.subject,
+  content: email.content,
+  preview: email.preview,
+})
+
+const sameText = (a: EmailText, b: EmailText) =>
+  a.subject === b.subject && a.content === b.content && a.preview === b.preview
+
+async function persistEdits(campaignId: string, emails: Email[]) {
+  const storage = new CampaignStorageService(createClient())
+  for (const email of emails) {
+    try {
+      await storage.updateEmail(campaignId, email.day, textOf(email))
+    } catch (err) {
+      logError(err, {
+        operation: 'save edit made during generation',
+        component: 'useEmailStreaming',
+        campaignId,
+      })
+    }
+  }
+}
+
 export function useEmailStreaming(): UseEmailStreamingReturn {
   const { appendGeneratedEmail, replaceGeneratedEmailsLocal } = useCampaignActions()
+  const { generatedEmails, currentCampaignId } = useCampaignData()
+
+  // The emails on screen right now, read when the server's batch lands.
+  const localEmailsRef = useRef(generatedEmails)
+  localEmailsRef.current = generatedEmails
+  const currentCampaignIdRef = useRef(currentCampaignId)
+  currentCampaignIdRef.current = currentCampaignId
 
   const [isStreaming, setIsStreaming] = useState(false)
   const [streamedCount, setStreamedCount] = useState(0)
@@ -35,7 +84,39 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
   const [error, setError] = useState<string | null>(null)
   const [limitPlan, setLimitPlan] = useState<PlanId | null>(null)
   const [warning, setWarning] = useState<string | null>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const sessionRef = useRef<StreamSession | null>(null)
+  const unmountedRef = useRef(false)
+
+  // Detach the live stream: its events stop reaching state. The request
+  // itself keeps running so the server still saves that campaign's emails
+  // (the route stops, unsaved, once the client aborts).
+  const detach = useCallback(() => {
+    sessionRef.current = null
+    setIsStreaming(false)
+    setStreamedCount(0)
+    setTotalExpected(null)
+  }, [])
+
+  // Another campaign opened in this editor: the stream is not for it.
+  useEffect(() => {
+    const session = sessionRef.current
+    if (
+      session &&
+      currentCampaignId !== session.campaignId &&
+      currentCampaignId !== session.contextCampaignId
+    ) {
+      detach()
+    }
+  }, [currentCampaignId, detach])
+
+  // The editor unmounted (user left, or opened another campaign). A flag
+  // rather than dropping the session, so StrictMode's dev remount survives.
+  useEffect(() => {
+    unmountedRef.current = false
+    return () => {
+      unmountedRef.current = true
+    }
+  }, [])
 
   const generateEmailsStream = useCallback(
     async (
@@ -43,9 +124,16 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
       config: CampaignConfig,
       campaignId: string | null,
     ): Promise<Email[] | null> => {
-      abortRef.current?.abort()
+      sessionRef.current?.controller.abort()
       const controller = new AbortController()
-      abortRef.current = controller
+      const session: StreamSession = {
+        controller,
+        campaignId,
+        contextCampaignId: currentCampaignIdRef.current,
+        streamed: new Map(),
+      }
+      sessionRef.current = session
+      const isLive = () => !unmountedRef.current && sessionRef.current === session
 
       setIsStreaming(true)
       setStreamedCount(0)
@@ -62,9 +150,12 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
       // generation time. Reset on each new stream invocation (the closure
       // is fresh per call).
       let firstEmailFired = false
+      // The server's own message for a failed run; shown as is.
+      let serverErrorMessage: string | null = null
 
       try {
         const handleEvent = (event: GenerateEmailsStreamEvent) => {
+          if (!isLive()) return
           if (event.type === 'start') {
             setTotalExpected(event.total)
           } else if (event.type === 'email') {
@@ -74,11 +165,13 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
                 campaignId: campaignId ?? undefined,
               })
             }
+            session.streamed.set(event.email.day, textOf(event.email))
             appendGeneratedEmail(event.email)
             setStreamedCount((n) => n + 1)
           } else if (event.type === 'complete') {
             if (event.warning) setWarning(event.warning)
           } else if (event.type === 'error') {
+            serverErrorMessage = event.message
             setError(event.message)
           }
         }
@@ -95,12 +188,28 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           },
         )
 
+        if (!isLive()) return null
+
         // Replace with the persisted versions (which carry server-assigned UUIDs
-        // — needed for version tracking on subsequent edits).
-        replaceGeneratedEmailsLocal(finalEmails)
-        return finalEmails
+        // — needed for version tracking on subsequent edits). An email the
+        // user edited while the rest streamed keeps the user's text.
+        const edited: Email[] = []
+        const merged = finalEmails.map((serverEmail) => {
+          const streamed = session.streamed.get(serverEmail.day)
+          const local = localEmailsRef.current.find((e) => e.day === serverEmail.day)
+          if (!streamed || !local || sameText(local, streamed)) return serverEmail
+          const kept = { ...serverEmail, ...textOf(local) }
+          edited.push(kept)
+          return kept
+        })
+        replaceGeneratedEmailsLocal(merged)
+        // The server saved the streamed text, so write the edits back.
+        if (campaignId && edited.length > 0) {
+          void persistEdits(campaignId, edited)
+        }
+        return merged
       } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') {
+        if (!isLive() || (err instanceof Error && err.name === 'AbortError')) {
           return null
         }
         if (err instanceof PlanLimitError) {
@@ -109,18 +218,23 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           track('limit_reached', { plan: err.plan, limit: 'campaigns' })
           return null
         }
+        if (err instanceof RateLimitedError) {
+          setError(err.message)
+          return null
+        }
         logError(err, {
           operation: 'generate emails (stream)',
           component: 'useEmailStreaming',
           campaignId: campaignId ?? undefined,
           additionalData: { landingUrl: landingPageData.url, config },
         })
-        const message = getUserFriendlyMessage(err, 'generate emails')
-        setError(message)
+        setError(serverErrorMessage ?? getUserFriendlyMessage(err, 'generate emails'))
         return null
       } finally {
-        setIsStreaming(false)
-        abortRef.current = null
+        if (isLive()) {
+          setIsStreaming(false)
+          sessionRef.current = null
+        }
       }
     },
     [appendGeneratedEmail, replaceGeneratedEmailsLocal],

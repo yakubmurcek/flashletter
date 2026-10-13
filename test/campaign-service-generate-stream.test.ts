@@ -184,6 +184,19 @@ describe('CampaignService.generateEmailsStream', () => {
 
   it('throws server message on non-OK response (no stream)', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(
+      new Response(JSON.stringify({ error: 'Invalid request' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+
+    await expect(
+      CampaignService.generateEmailsStream('https://example.com', 'page', config, () => {}),
+    ).rejects.toThrow('Invalid request')
+  })
+
+  it('throws a wait-and-retry message when rate limited', async () => {
+    vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ error: 'Too many requests' }), {
         status: 429,
         headers: { 'Content-Type': 'application/json' },
@@ -192,7 +205,7 @@ describe('CampaignService.generateEmailsStream', () => {
 
     await expect(
       CampaignService.generateEmailsStream('https://example.com', 'page', config, () => {}),
-    ).rejects.toThrow(/too many requests/i)
+    ).rejects.toThrow(/wait a minute/i)
   })
 
   it('falls back to generic message when error body has no message field', async () => {

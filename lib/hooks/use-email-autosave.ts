@@ -17,6 +17,10 @@ interface EmailAutosaveReturn {
 
 type Snapshot = { subject: string; content: string }
 
+// Email ids are day numbers, 1..N in every campaign, so anything kept per
+// email is keyed by campaign too.
+const emailKey = (campaignId: string | null, id: number) => `${campaignId ?? ''}:${id}`
+
 /**
  * Per-email autosave with versioning that captures *pauses*, not keystrokes.
  *
@@ -39,11 +43,11 @@ export function useEmailAutosave(
   const saveTimerRef = useRef<Map<number, NodeJS.Timeout>>(new Map())
   // The write each pending timer will run, so unmounting can run it now.
   const pendingWriteRef = useRef<Map<number, () => Promise<void>>>(new Map())
-  const previousSnapshotRef = useRef<Map<number, Snapshot>>(new Map())
-  // Tracks which email ids have already fired `email_edited` this hook
-  // lifetime. Persists across re-renders without triggering them, and
-  // resets naturally if the user navigates away and back.
-  const trackedEditsRef = useRef<Set<number>>(new Set())
+  const previousSnapshotRef = useRef<Map<string, Snapshot>>(new Map())
+  // Tracks which emails (campaign + id) have already fired `email_edited`
+  // this hook lifetime. Persists across re-renders without triggering them,
+  // and resets naturally if the user navigates away and back.
+  const trackedEditsRef = useRef<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
@@ -60,14 +64,15 @@ export function useEmailAutosave(
   // debounce relies on.
   useEffect(() => {
     for (const email of emails) {
-      if (!previousSnapshotRef.current.has(email.id)) {
-        previousSnapshotRef.current.set(email.id, {
+      const key = emailKey(currentCampaignId, email.id)
+      if (!previousSnapshotRef.current.has(key)) {
+        previousSnapshotRef.current.set(key, {
           subject: email.subject,
           content: email.content,
         })
       }
     }
-  }, [emails])
+  }, [emails, currentCampaignId])
 
   const supabase = createClient()
   const campaignService = useMemo(() => new CampaignStorageService(supabase), [supabase])
@@ -97,7 +102,7 @@ export function useEmailAutosave(
           if (!currentEmail) return
 
           if (!skipVersioning && currentEmail.uuid) {
-            const snapshot = previousSnapshotRef.current.get(id)
+            const snapshot = previousSnapshotRef.current.get(emailKey(currentCampaignId, id))
             if (
               snapshot &&
               (snapshot.subject !== currentEmail.subject ||
@@ -113,7 +118,7 @@ export function useEmailAutosave(
                 console.error('Failed to save version:', error)
                 // Continue with the DB update even if versioning fails.
               }
-              previousSnapshotRef.current.set(id, {
+              previousSnapshotRef.current.set(emailKey(currentCampaignId, id), {
                 subject: currentEmail.subject,
                 content: currentEmail.content,
               })
@@ -131,8 +136,9 @@ export function useEmailAutosave(
           // "did the user actually engage with the editor for this day," not
           // raw keystroke volume, and the snapshot guard above means we only
           // get here when the content genuinely changed.
-          if (!trackedEditsRef.current.has(id) && !skipVersioning) {
-            trackedEditsRef.current.add(id)
+          const editKey = emailKey(currentCampaignId, id)
+          if (!trackedEditsRef.current.has(editKey) && !skipVersioning) {
+            trackedEditsRef.current.add(editKey)
             track('email_edited', { day: currentEmail.day })
           }
         } catch (error) {
@@ -156,7 +162,10 @@ export function useEmailAutosave(
     pendingWriteRef.current.clear()
   }, [])
 
-  // Leaving the editor inside the debounce window: write now, don't drop it.
+  // Leaving the editor, or opening another campaign in it, inside the
+  // debounce window: write now, don't drop it. This cleanup runs before the
+  // emails ref takes the next campaign's list, so the write reads its own
+  // campaign's text.
   useEffect(() => {
     const timers = saveTimerRef.current
     const writes = pendingWriteRef.current
@@ -167,7 +176,7 @@ export function useEmailAutosave(
       writes.clear()
       for (const write of pending) void write()
     }
-  }, [])
+  }, [currentCampaignId])
 
   return {
     saveEmail,
