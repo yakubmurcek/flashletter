@@ -12,9 +12,10 @@ const createSession = vi.fn()
 const createPortal = vi.fn()
 let billingEnabled = true
 let active = false
+let status: string | null = null
 vi.mock('@/lib/billing/stripe', () => ({
   isBillingEnabled: () => billingEnabled,
-  getSubscriptionSummary: async () => ({ active }),
+  getSubscriptionSummary: async () => ({ active, status }),
   getOrCreateCustomer: async () => 'cus_123',
   getPriceId: async (key: string) => `price_for_${key}`,
   getStripe: () => ({
@@ -38,6 +39,7 @@ beforeEach(() => {
   user = { id: USER_ID, email: 'a@b.co' }
   billingEnabled = true
   active = false
+  status = null
   createSession.mockReset().mockResolvedValue({ url: 'https://checkout.stripe.com/c/1' })
   createPortal.mockReset().mockResolvedValue({ url: 'https://billing.stripe.com/p/1' })
 })
@@ -73,6 +75,28 @@ describe('POST /api/billing/checkout', () => {
     expect(await res.json()).toEqual({ url: 'https://billing.stripe.com/p/1' })
     expect(createSession).not.toHaveBeenCalled()
   })
+
+  // A subscription that is still billing (or still being paid for) must be
+  // fixed in the portal; a second checkout would charge the user twice.
+  it.each(['past_due', 'unpaid', 'paused', 'incomplete'])(
+    'sends a %s subscriber to the billing portal',
+    async (s) => {
+      status = s
+      const res = await POST(request({ interval: 'month' }))
+      expect(await res.json()).toEqual({ url: 'https://billing.stripe.com/p/1' })
+      expect(createSession).not.toHaveBeenCalled()
+    },
+  )
+
+  it.each(['canceled', 'incomplete_expired'])(
+    'lets a %s subscriber start a new checkout',
+    async (s) => {
+      status = s
+      const res = await POST(request({ interval: 'month' }))
+      expect(await res.json()).toEqual({ url: 'https://checkout.stripe.com/c/1' })
+      expect(createPortal).not.toHaveBeenCalled()
+    },
+  )
 
   it('rejects an unknown interval', async () => {
     expect((await POST(request({ interval: 'weekly' }))).status).toBe(400)

@@ -13,6 +13,23 @@ import {
 
 const bodySchema = z.object({ interval: z.enum(['month', 'year']).default('month') })
 
+/**
+ * Subscriptions that still exist and can still bill or become Pro, so a new
+ * checkout would start a second one. Past-due, unpaid and paused ones are
+ * fixed by updating the card in the portal. Incomplete means the first
+ * payment is still pending (e.g. 3-D Secure); it can still succeed for about
+ * 23 hours, after which Stripe expires it and a new checkout is allowed again.
+ * Canceled and incomplete_expired can never bill again.
+ */
+const EXISTING_SUBSCRIPTION = new Set<string>([
+  'active',
+  'trialing',
+  'past_due',
+  'unpaid',
+  'paused',
+  'incomplete',
+])
+
 // Return to the host the user is on (production, or a preview while testing).
 function appOrigin(req: NextRequest) {
   return req.nextUrl.origin
@@ -43,7 +60,7 @@ export async function POST(req: NextRequest) {
     const customer = await getOrCreateCustomer(user)
 
     // Already subscribed: send them to manage the plan instead of paying twice.
-    if (summary.active) {
+    if (summary.active || (summary.status && EXISTING_SUBSCRIPTION.has(summary.status))) {
       const portal = await getStripe().billingPortal.sessions.create({
         customer,
         return_url: `${origin}/account`,

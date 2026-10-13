@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { UpgradeButton } from '@/components/billing/upgrade-button'
 import { PortalButton } from '@/components/billing/portal-button'
 import { ResumeCheckout } from '@/components/billing/resume-checkout'
+import { campaignsUsedThisMonth } from '@/lib/billing/limits'
 import { PLAN_LIMITS, PRO_PRICE_USD, currentPeriodStart } from '@/lib/billing/plans'
 import {
   clearSubscriptionCache,
@@ -74,11 +75,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   }
   const isPro = !!summary?.active
 
-  const { count: campaignsThisMonth } = await supabase
+  const { count: campaignRows } = await supabase
     .from('campaigns')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .gte('created_at', currentPeriodStart().toISOString())
+  const campaignsThisMonth = await campaignsUsedThisMonth(user.id, campaignRows ?? 0)
 
   const resumeInterval =
     !isPro && (params.upgrade === 'month' || params.upgrade === 'year') ? params.upgrade : null
@@ -123,7 +125,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
                   : `Pro, billed ${summary?.interval === 'year' ? 'yearly' : 'monthly'}${
                       renewal ? `. Renews on ${renewal}.` : '.'
                     }`
-                : `${campaignsThisMonth ?? 0} of ${PLAN_LIMITS.free.campaignsPerMonth} campaigns used this month.`}
+                : `${campaignsThisMonth} of ${PLAN_LIMITS.free.campaignsPerMonth} campaigns used this month.`}
           </CardDescription>
         </CardHeader>
         <CardContent>

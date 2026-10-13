@@ -115,6 +115,8 @@ function summarize(sub: Stripe.Subscription, customerId: string): SubscriptionSu
   }
 }
 
+const ENDED_STATUSES = new Set<Stripe.Subscription.Status>(['canceled', 'incomplete_expired'])
+
 export async function getSubscriptionSummary(
   user: BillingUser,
   { fresh = false } = {},
@@ -135,9 +137,12 @@ export async function getSubscriptionSummary(
       status: 'all',
       limit: 10,
     })
-    // Prefer a live subscription; otherwise report the most recent one.
+    // Prefer a live subscription, then one that still exists but is unpaid or
+    // paused (a newer canceled one must not hide it, or checkout would sell a
+    // second subscription); otherwise report the most recent one.
     const live = subs.data.find((s) => s.status === 'active' || s.status === 'trialing')
-    const pick = live ?? subs.data[0]
+    const open = subs.data.find((s) => !ENDED_STATUSES.has(s.status))
+    const pick = live ?? open ?? subs.data[0]
     summary = pick ? summarize(pick, customerId) : { ...NONE, customerId }
   }
   await redis?.set(summaryKey(userId), summary, { ex: SUMMARY_TTL_SECONDS }).catch(() => undefined)

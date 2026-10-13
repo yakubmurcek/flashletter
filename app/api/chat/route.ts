@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server'
 import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
 import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
-import { consumeAiRewrite, getPlan } from '@/lib/billing/limits'
+import { consumeAiRewrite, getPlan, refundAiRewrite } from '@/lib/billing/limits'
 
 export async function POST(req: NextRequest) {
   try {
@@ -60,19 +60,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No user message' }, { status: 400 })
     }
 
-    const rewriteDenial = await consumeAiRewrite(user.id, await getPlan(user))
+    // Counted before the call so parallel requests can't overshoot the limit;
+    // given back below if the AI fails, since the user got nothing for it.
+    const plan = await getPlan(user)
+    const rewriteDenial = await consumeAiRewrite(user.id, plan)
     if (rewriteDenial) {
       return NextResponse.json(rewriteDenial, { status: 402 })
     }
 
-    const output = await generateStructured({
-      system: instructions,
-      messages: history,
-      schema: chatOutputSchema,
-      maxTokens: 16000,
-    })
-
-    const parsedResponse = toChatResponse(output)
+    let parsedResponse: ReturnType<typeof toChatResponse>
+    try {
+      const output = await generateStructured({
+        system: instructions,
+        messages: history,
+        schema: chatOutputSchema,
+        maxTokens: 16000,
+      })
+      parsedResponse = toChatResponse(output)
+    } catch (error) {
+      await refundAiRewrite(user.id, plan).catch(() => undefined)
+      throw error
+    }
 
     return NextResponse.json(parsedResponse, {
       headers: getRateLimitHeaders(
