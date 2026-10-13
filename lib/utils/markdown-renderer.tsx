@@ -84,7 +84,7 @@ export function renderMarkdown(text: string) {
       )
     } else if (currentBlockType === 'ordered-list') {
       const listItems = currentBlockLines.map((line, idx) => {
-        const content = line.replace(/^\d+[.)]\s+/, '')
+        const content = line.replace(/^\d{1,2}[.)]\s+/, '')
         return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
       })
       elements.push(
@@ -169,7 +169,7 @@ export function renderMarkdown(text: string) {
         currentBlockType = 'list'
       }
       currentBlockLines.push(trimmed)
-    } else if (trimmed.match(/^\d+[.)]\s/)) {
+    } else if (trimmed.match(/^\d{1,2}[.)]\s/)) {
       // Numbered items ("3 subject lines" answers) would otherwise be joined
       // into one run-on paragraph.
       if (currentBlockType !== 'ordered-list') {

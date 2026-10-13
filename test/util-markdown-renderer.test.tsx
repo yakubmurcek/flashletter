@@ -53,6 +53,12 @@ describe('MarkdownRenderer inline formatting', () => {
     expect(el.querySelector('ol strong')?.textContent).toBe('Bold')
   })
 
+  it('keeps a line that starts with a year as a paragraph', () => {
+    const el = renderHtml('2024. What a year it was for our customers.')
+    expect(el.querySelector('ol')).toBeNull()
+    expect(el.querySelector('p')?.textContent).toBe('2024. What a year it was for our customers.')
+  })
+
   it('renders a link inside a longer bold phrase', () => {
     const el = renderHtml('**Book a call at [our site](https://example.com) now**')
     expect(el.querySelectorAll('a')).toHaveLength(1)
