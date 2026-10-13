@@ -35,6 +35,18 @@ function appOrigin(req: NextRequest) {
   return req.nextUrl.origin
 }
 
+/** The hosted page for an incomplete subscription's unpaid first invoice, if any. */
+async function openFirstInvoiceUrl(customer: string): Promise<string | null> {
+  const subs = await getStripe().subscriptions.list({
+    customer,
+    status: 'incomplete',
+    limit: 1,
+    expand: ['data.latest_invoice'],
+  })
+  const invoice = subs.data[0]?.latest_invoice
+  return invoice && typeof invoice !== 'string' ? (invoice.hosted_invoice_url ?? null) : null
+}
+
 /** Starts a Stripe Checkout session for Pro and returns its hosted URL. */
 export async function POST(req: NextRequest) {
   if (!isBillingEnabled()) {
@@ -58,6 +70,12 @@ export async function POST(req: NextRequest) {
     const summary = await getSubscriptionSummary(user, { fresh: true })
     const origin = appOrigin(req)
     const customer = await getOrCreateCustomer(user)
+
+    // First payment still open: finish paying it, not start a second subscription.
+    if (summary.status === 'incomplete') {
+      const invoiceUrl = await openFirstInvoiceUrl(customer)
+      if (invoiceUrl) return NextResponse.json({ url: invoiceUrl })
+    }
 
     // Already subscribed: send them to manage the plan instead of paying twice.
     if (summary.active || (summary.status && EXISTING_SUBSCRIPTION.has(summary.status))) {

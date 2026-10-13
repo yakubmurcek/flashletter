@@ -10,6 +10,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 const createSession = vi.fn()
 const createPortal = vi.fn()
+const listSubs = vi.fn()
 let billingEnabled = true
 let active = false
 let status: string | null = null
@@ -21,6 +22,7 @@ vi.mock('@/lib/billing/stripe', () => ({
   getStripe: () => ({
     checkout: { sessions: { create: (...a: unknown[]) => createSession(...a) } },
     billingPortal: { sessions: { create: (...a: unknown[]) => createPortal(...a) } },
+    subscriptions: { list: (...a: unknown[]) => listSubs(...a) },
   }),
 }))
 
@@ -42,6 +44,7 @@ beforeEach(() => {
   status = null
   createSession.mockReset().mockResolvedValue({ url: 'https://checkout.stripe.com/c/1' })
   createPortal.mockReset().mockResolvedValue({ url: 'https://billing.stripe.com/p/1' })
+  listSubs.mockReset().mockResolvedValue({ data: [] })
 })
 
 describe('POST /api/billing/checkout', () => {
@@ -78,6 +81,19 @@ describe('POST /api/billing/checkout', () => {
 
   // A subscription that is still billing (or still being paid for) must be
   // fixed in the portal; a second checkout would charge the user twice.
+  // The first payment is still open (e.g. 3-D Secure abandoned): pay that
+  // invoice rather than land in a portal that may not offer to pay it.
+  it('sends an incomplete subscriber to their unpaid first invoice', async () => {
+    status = 'incomplete'
+    listSubs.mockResolvedValue({
+      data: [{ latest_invoice: { hosted_invoice_url: 'https://invoice.stripe.com/i/1' } }],
+    })
+    const res = await POST(request({ interval: 'month' }))
+    expect(await res.json()).toEqual({ url: 'https://invoice.stripe.com/i/1' })
+    expect(listSubs.mock.calls[0][0]).toMatchObject({ customer: 'cus_123', status: 'incomplete' })
+    expect(createSession).not.toHaveBeenCalled()
+  })
+
   it.each(['past_due', 'unpaid', 'paused', 'incomplete'])(
     'sends a %s subscriber to the billing portal',
     async (s) => {
