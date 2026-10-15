@@ -32,6 +32,8 @@ vi.mock('@/lib/utils/rate-limit', () => ({
     'X-RateLimit-Reset': '0',
   }),
   generateEmailsRateLimit: null,
+  generateEmailsIpRateLimit: 'generate-ip-limiter',
+  checkUserAndIpRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
 }))
 
 vi.mock('@/lib/utils/get-client-ip', () => ({
@@ -39,12 +41,16 @@ vi.mock('@/lib/utils/get-client-ip', () => ({
 }))
 
 const saveEmailsMock = vi.fn()
+const upsertEmailsMock = vi.fn()
+const deleteEmailsAfterDayMock = vi.fn()
 const isOwnedByMock = vi.fn()
 vi.mock('@/lib/services/campaign-storage.service', () => ({
   // Use a class wrapper so vi.restoreAllMocks() can't strip the
   // implementation between tests.
   CampaignStorageService: class {
     saveEmails = (...args: unknown[]) => saveEmailsMock(...args)
+    upsertEmails = (...args: unknown[]) => upsertEmailsMock(...args)
+    deleteEmailsAfterDay = (...args: unknown[]) => deleteEmailsAfterDayMock(...args)
     isOwnedBy = (...args: unknown[]) => isOwnedByMock(...args)
   },
 }))
@@ -69,8 +75,8 @@ import { aiEmailsResponseSchema } from '@/lib'
 interface StreamEvent {
   type: 'start' | 'email' | 'complete' | 'error'
   total?: number
-  email?: { day: number; subject: string }
-  emails?: Array<{ day: number; subject: string }>
+  email?: { day: number; subject: string; uuid?: string | null }
+  emails?: Array<{ day: number; subject: string; uuid?: string | null }>
   warning?: string
   message?: string
 }
@@ -103,6 +109,8 @@ function buildRequest(body: unknown): Request {
 }
 
 const VALID_CAMPAIGN_ID = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+// The uuid the database gives each day, so tests can see what was saved.
+const uuidForDay = (day: number) => `bbbbbbbb-bbbb-4bbb-8bbb-${String(day).padStart(12, '0')}`
 
 const validRequestBody = {
   landingUrl: 'https://example.com',
@@ -152,6 +160,12 @@ describe('POST /api/generate-emails/stream', () => {
         content: 'Content 2',
       },
     ])
+    upsertEmailsMock
+      .mockReset()
+      .mockImplementation(async (_id: string, emails: Array<{ day: number }>) =>
+        emails.map((e) => ({ ...e, uuid: uuidForDay(e.day) })),
+      )
+    deleteEmailsAfterDayMock.mockReset().mockResolvedValue(undefined)
     // Audit-fix: routes call CampaignStorageService.isOwnedBy() before
     // saving. Default to true so happy-path tests don't 403.
     isOwnedByMock.mockReset().mockResolvedValue(true)
@@ -355,43 +369,212 @@ describe('POST /api/generate-emails/stream', () => {
     ])
   })
 
-  it('saves the full batch when a campaignId is given', async () => {
+  const withCampaign = (days = 2) =>
+    buildRequest({
+      ...validRequestBody,
+      campaignId: VALID_CAMPAIGN_ID,
+      config: { ...validRequestBody.config, days },
+    }) as never
+
+  it('saves Day 1 before sending it, so the editor gets its real id', async () => {
     generateStructuredMock
       .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
       .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
 
-    const response = await POST(
-      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
-    )
-    const events = await readStreamEvents(response)
+    const events = await readStreamEvents(await POST(withCampaign()))
+    const emailEvents = events.filter((e) => e.type === 'email')
+
+    expect(upsertEmailsMock.mock.calls[0]).toEqual([
+      VALID_CAMPAIGN_ID,
+      [expect.objectContaining({ day: 1, subject: 'S1' })],
+    ])
+    expect(emailEvents.map((e) => e.email?.uuid)).toEqual([uuidForDay(1), uuidForDay(2)])
+  })
+
+  it('saves the rest without rewriting Day 1 and trims days past the new end', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      // Asked for Days 2..4, got only one back: the old Days 3 and 4 must go.
+      .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
+
+    const events = await readStreamEvents(await POST(withCampaign(4)))
     const completeEvent = events.find((e) => e.type === 'complete')
 
-    expect(saveEmailsMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, [
-      expect.objectContaining({ day: 1, subject: 'S1' }),
-      expect.objectContaining({ day: 2, subject: 'S2' }),
+    expect(upsertEmailsMock).toHaveBeenCalledTimes(2)
+    expect(upsertEmailsMock.mock.calls[1]).toEqual([
+      VALID_CAMPAIGN_ID,
+      [expect.objectContaining({ day: 2, subject: 'S2' })],
     ])
-    expect(completeEvent?.emails?.map((e) => e.subject)).toEqual(['Subject 1', 'Subject 2'])
+    expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 2)
+    expect(saveEmailsMock).not.toHaveBeenCalled()
+    expect(completeEvent?.emails?.map((e) => [e.day, e.uuid])).toEqual([
+      [1, uuidForDay(1)],
+      [2, uuidForDay(2)],
+    ])
     expect(completeEvent?.warning).toBeUndefined()
   })
 
-  it('includes warning when save fails', async () => {
+  it('trims old days after Day 1 for a one-day sequence', async () => {
     generateStructuredMock.mockResolvedValueOnce({
-      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
+      emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    generateStructuredMock.mockResolvedValueOnce({
-      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
-    })
+    const events = await readStreamEvents(await POST(withCampaign(1)))
 
-    saveEmailsMock.mockRejectedValue(new Error('Save failed'))
+    expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 1)
+    expect(events.find((e) => e.type === 'complete')?.emails?.map((e) => e.uuid)).toEqual([
+      uuidForDay(1),
+    ])
+  })
 
-    const response = await POST(
-      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
-    )
-    const events = await readStreamEvents(response)
+  // Bug: when the call for Days 2..N failed, nothing was saved. The editor
+  // kept Day 1 with no database row, edits to it said "Saved" and were lost.
+  it('keeps Day 1 saved and drops the old later days when the rest fails', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockRejectedValueOnce(new Error('AI response was cut off before it finished'))
+
+    const events = await readStreamEvents(await POST(withCampaign(3)))
+
+    expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
+    expect(events[1].email?.uuid).toBe(uuidForDay(1))
+    expect(upsertEmailsMock).toHaveBeenCalledTimes(1)
+    // The database now matches the screen: the new Day 1 and nothing else.
+    expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 1)
+  })
+
+  it('touches nothing in the database when Day 1 itself fails', async () => {
+    generateStructuredMock.mockRejectedValueOnce(new Error('Overloaded'))
+
+    const events = await readStreamEvents(await POST(withCampaign(3)))
+
+    expect(events.map((e) => e.type)).toEqual(['start', 'error'])
+    expect(upsertEmailsMock).not.toHaveBeenCalled()
+    expect(deleteEmailsAfterDayMock).not.toHaveBeenCalled()
+  })
+
+  it('does not drop the old later days when Day 1 could not be saved', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    upsertEmailsMock.mockRejectedValueOnce(new Error('db down'))
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockRejectedValueOnce(new Error('Overloaded'))
+
+    const events = await readStreamEvents(await POST(withCampaign(3)))
+
+    expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
+    expect(events[1].email?.uuid).toBeNull()
+    expect(deleteEmailsAfterDayMock).not.toHaveBeenCalled()
+    errSpy.mockRestore()
+  })
+
+  it('saves Day 1 at the end when the early save failed', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    upsertEmailsMock.mockRejectedValueOnce(new Error('db blip'))
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
+
+    const events = await readStreamEvents(await POST(withCampaign()))
+    const completeEvent = events.find((e) => e.type === 'complete')
+
+    expect(upsertEmailsMock.mock.calls[1][1].map((e: { day: number }) => e.day)).toEqual([1, 2])
+    expect(completeEvent?.emails?.map((e) => e.uuid)).toEqual([uuidForDay(1), uuidForDay(2)])
+    expect(completeEvent?.warning).toBeUndefined()
+    errSpy.mockRestore()
+  })
+
+  it('includes warning when save fails, and keeps the saved Day 1 id', async () => {
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockResolvedValueOnce({ emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }] })
+    upsertEmailsMock
+      .mockImplementationOnce(async (_id: string, emails: Array<{ day: number }>) =>
+        emails.map((e) => ({ ...e, uuid: uuidForDay(e.day) })),
+      )
+      .mockRejectedValueOnce(new Error('Save failed'))
+
+    const events = await readStreamEvents(await POST(withCampaign()))
     const completeEvent = events.find((e) => e.type === 'complete')
 
     expect(completeEvent?.warning).toContain('Could not persist')
+    expect(completeEvent?.emails?.map((e) => [e.day, e.uuid])).toEqual([
+      [1, uuidForDay(1)],
+      [2, null],
+    ])
+    errSpy.mockRestore()
+  })
+
+  // A newer run on the same campaign aborts this request. This run must
+  // not save or trim anything after that, or it could undo the newer one.
+  it('saves nothing once the client has gone', async () => {
+    let finishDay1: (value: unknown) => void = () => {}
+    generateStructuredMock.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishDay1 = resolve
+      }),
+    )
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await POST(withCampaign(3))
+    const reader = response.body!.getReader()
+    await reader.read() // start
+    await reader.cancel()
+    finishDay1({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+    await new Promise((resolve) => setTimeout(resolve, 10))
+
+    expect(upsertEmailsMock).not.toHaveBeenCalled()
+    expect(deleteEmailsAfterDayMock).not.toHaveBeenCalled()
+    expect(generateStructuredMock).toHaveBeenCalledTimes(1)
+    errSpy.mockRestore()
+  })
+
+  // The user closes the tab while Days 2..N are written. Day 1 of this run
+  // is already saved, so the run must still finish or trim its sequence.
+  const cancelAfterDay1 = async (
+    finishRest: (resolve: (v: unknown) => void, reject: (e: unknown) => void) => void,
+  ) => {
+    let settleRest: { resolve: (v: unknown) => void; reject: (e: unknown) => void } | null = null
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockReturnValueOnce(
+        new Promise((resolve, reject) => {
+          settleRest = { resolve, reject }
+        }),
+      )
+    const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const response = await POST(withCampaign(3))
+    const reader = response.body!.getReader()
+    await reader.read() // start
+    await reader.read() // Day 1
+    await reader.cancel()
+    finishRest(settleRest!.resolve, settleRest!.reject)
+    await new Promise((resolve) => setTimeout(resolve, 10))
+    errSpy.mockRestore()
+  }
+
+  it('finishes saving its own sequence after the client goes mid-run', async () => {
+    await cancelAfterDay1((resolve) =>
+      resolve({
+        emails: [
+          { subject: 'S2', preview: 'P2', content: 'C2' },
+          { subject: 'S3', preview: 'P3', content: 'C3' },
+        ],
+      }),
+    )
+
+    expect(upsertEmailsMock).toHaveBeenCalledTimes(2)
+    expect(upsertEmailsMock.mock.calls[1][1].map((e: { day: number }) => e.day)).toEqual([2, 3])
+    expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 3)
+  })
+
+  it('trims after its saved Day 1 when the rest fails after the client went', async () => {
+    await cancelAfterDay1((_resolve, reject) => reject(new Error('Overloaded')))
+
+    expect(upsertEmailsMock).toHaveBeenCalledTimes(1)
+    expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 1)
   })
 
   it('handles single day generation', async () => {

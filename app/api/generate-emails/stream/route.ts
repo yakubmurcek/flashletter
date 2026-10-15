@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
 import {
-  checkRateLimit,
+  checkUserAndIpRateLimit,
+  generateEmailsIpRateLimit,
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
@@ -67,8 +68,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(denial, { status: 402 })
   }
 
-  const identifier = user.id || getClientIp(req)
-  const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
+  const rateLimitResult = await checkUserAndIpRateLimit(
+    generateEmailsRateLimit,
+    generateEmailsIpRateLimit,
+    user.id,
+    getClientIp(req),
+  )
 
   if (!rateLimitResult.success) {
     return NextResponse.json(
@@ -90,11 +95,32 @@ export async function POST(req: NextRequest) {
   const { landingUrl, landingContent, landingAnalysis, config, campaignId } = parsedBody
   const encoder = new TextEncoder()
 
+  // Set when the client goes away: a newer run on this campaign aborted
+  // this one, or the user closed the tab. A run that has not saved its
+  // Day 1 by then writes nothing; one that has finishes its own sequence
+  // (or trims it) so the campaign is never half old, half new.
+  let cancelled = false
+
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: StreamEvent) => {
         controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
       }
+      const storage = campaignId ? new CampaignStorageService(supabase) : null
+      const reportSaveError = (saveError: unknown, step: string) => {
+        console.error(`Failed to save streamed emails (${step}):`, saveError)
+        Sentry.captureException(saveError, {
+          tags: {
+            error_type: 'save_streamed_emails',
+            api_route: '/api/generate-emails/stream',
+          },
+          extra: { step },
+        })
+      }
+
+      // Emails generated so far, with their database ids once saved.
+      const allEmails: Email[] = []
+      let savedDay1 = false
 
       try {
         send({ type: 'start', total: config.days })
@@ -110,7 +136,7 @@ export async function POST(req: NextRequest) {
         }
 
         const rawFirst = firstParsed.emails[0]
-        const firstEmail: Email = {
+        let firstEmail: Email = {
           id: 1,
           uuid: null,
           day: 1,
@@ -119,11 +145,27 @@ export async function POST(req: NextRequest) {
           content: rawFirst.content || '',
         }
 
+        // Save Day 1 before showing it, so the editor gets its real id and
+        // edits to it are kept even if the rest of the sequence fails.
+        // Upsert only: the old Days 2..N (and their history) stay until
+        // this run replaces or trims them.
+        if (storage && campaignId && !cancelled) {
+          try {
+            const [savedFirst] = await storage.upsertEmails(campaignId, [firstEmail])
+            if (savedFirst) {
+              firstEmail = savedFirst
+              savedDay1 = true
+            }
+          } catch (saveError) {
+            reportSaveError(saveError, 'day 1')
+          }
+        }
+
+        allEmails.push(firstEmail)
         send({ type: 'email', email: firstEmail })
 
-        const allEmails: Email[] = [firstEmail]
-
         // Phase 2: generate Days 2..N referencing Day 1 for coherence.
+        const rest: Email[] = []
         if (config.days > 1) {
           const remainingParsed = await generateStructured({
             system: buildRemainingEmailsInstructions(
@@ -149,34 +191,35 @@ export async function POST(req: NextRequest) {
           for (let i = 0; i < usable.length; i++) {
             const raw = usable[i]
             const day = i + 2
-            const email: Email = {
+            rest.push({
               id: day,
               uuid: null,
               day,
               subject: raw.subject || '',
               preview: raw.preview || '',
               content: raw.content || '',
-            }
-            allEmails.push(email)
-            send({ type: 'email', email })
+            })
           }
         }
 
-        // Persist the full batch once generation is complete.
-        let saved = allEmails
+        // Persist the rest, then drop any old days past the new end. Day 1
+        // is not written again (unless its early save failed): the user may
+        // have edited it while the rest was generating.
         let saveWarning: string | undefined
-        if (campaignId) {
+        let savedRest = rest
+        if (storage && campaignId && (savedDay1 || !cancelled)) {
+          const unsaved = [...(savedDay1 ? [] : [firstEmail]), ...rest]
           try {
-            const campaignService = new CampaignStorageService(supabase)
-            saved = await campaignService.saveEmails(campaignId, allEmails)
+            const saved = unsaved.length > 0 ? await storage.upsertEmails(campaignId, unsaved) : []
+            const savedFirst = saved.find((e) => e.day === 1)
+            if (savedFirst) {
+              firstEmail = savedFirst
+              allEmails[0] = savedFirst
+            }
+            savedRest = rest.map((email) => saved.find((e) => e.day === email.day) ?? email)
+            await storage.deleteEmailsAfterDay(campaignId, 1 + rest.length)
           } catch (saveError) {
-            console.error('Failed to save streamed emails:', saveError)
-            Sentry.captureException(saveError, {
-              tags: {
-                error_type: 'save_streamed_emails',
-                api_route: '/api/generate-emails/stream',
-              },
-            })
+            reportSaveError(saveError, 'sequence')
             // Surface the failure to the client so the UI can react. Emails are
             // still returned (without UUIDs) so the user doesn't lose generated
             // content, but version tracking won't work until they re-save.
@@ -184,9 +227,26 @@ export async function POST(req: NextRequest) {
           }
         }
 
-        send({ type: 'complete', emails: saved, warning: saveWarning })
+        for (const email of savedRest) {
+          allEmails.push(email)
+          send({ type: 'email', email })
+        }
+
+        send({ type: 'complete', emails: allEmails, warning: saveWarning })
       } catch (error) {
         console.error('Generate Emails Stream Error:', error)
+
+        // Keep the campaign matching what the editor shows: the saved Day 1
+        // and nothing after it, so a retry or a reload can't mix runs. Only
+        // when Day 1 really was saved, or the old sequence would lose its
+        // later days and keep its old Day 1.
+        if (storage && campaignId && savedDay1 && allEmails.length === 1) {
+          try {
+            await storage.deleteEmailsAfterDay(campaignId, 1)
+          } catch (trimError) {
+            reportSaveError(trimError, 'trim after failure')
+          }
+        }
 
         let message = 'Failed to generate emails'
         if (isRateLimitError(error)) {
@@ -203,10 +263,13 @@ export async function POST(req: NextRequest) {
           message = error.message
         }
 
-        send({ type: 'error', message })
+        if (!cancelled) send({ type: 'error', message })
       } finally {
-        controller.close()
+        if (!cancelled) controller.close()
       }
+    },
+    cancel() {
+      cancelled = true
     },
   })
 

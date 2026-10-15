@@ -12,6 +12,8 @@ interface EmailPreviewProps {
   onUpdate: (updates: Partial<Email>) => void
   onTextSelected?: (text: string, action: string, meta?: { shouldFocus?: boolean }) => void
   isSaving?: boolean
+  /** The last save failed; the editor page shows why. */
+  saveFailed?: boolean
 }
 
 function EmailPreviewComponent({
@@ -19,6 +21,7 @@ function EmailPreviewComponent({
   onUpdate,
   onTextSelected,
   isSaving = false,
+  saveFailed = false,
 }: EmailPreviewProps) {
   const [editedSubject, setEditedSubject] = useState(email.subject || '')
   const [editedContent, setEditedContent] = useState(email.content || '')
@@ -206,8 +209,8 @@ function EmailPreviewComponent({
           </div>
           <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
             <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
-              {!isSaving && <Check className="w-3 h-3 text-muted-foreground" />}
-              {isSaving ? 'Saving...' : 'Saved'}
+              {!isSaving && !saveFailed && <Check className="w-3 h-3 text-muted-foreground" />}
+              {isSaving ? 'Saving...' : saveFailed ? 'Not saved' : 'Saved'}
             </span>
             <Button
               variant="outline"

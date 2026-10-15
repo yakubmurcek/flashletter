@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Loader2, Sparkles, AlertCircle, Lock } from 'lucide-react'
+import { Loader2, Sparkles, AlertCircle, Lock, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { PlanId } from '@/lib/billing/plans'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -29,6 +29,8 @@ interface GeneratingStateProps {
   totalExpected: number | null
   error: string | null
   limitPlan?: PlanId | null
+  /** Starts generation again after a failure. No button without it. */
+  onRetry?: () => void
 }
 
 export function GeneratingState({
@@ -36,6 +38,7 @@ export function GeneratingState({
   totalExpected,
   error,
   limitPlan = null,
+  onRetry,
 }: GeneratingStateProps) {
   const showFirstHint = streamedCount === 0
   const firstProgress = useEasedProgress(!error && showFirstHint, 45_000)
@@ -73,6 +76,15 @@ export function GeneratingState({
           </div>
           <h2 className="text-lg font-semibold mb-2">Generation failed</h2>
           <p className="text-sm text-muted-foreground">{error}</p>
+          {onRetry && (
+            <Button
+              className="mt-6"
+              onClick={onRetry}
+            >
+              <RotateCcw className="w-4 h-4" />
+              Try again
+            </Button>
+          )}
         </div>
       </div>
     )

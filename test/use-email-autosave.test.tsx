@@ -387,4 +387,79 @@ describe('useEmailAutosave', () => {
       preview: 'P1',
     })
   })
+
+  describe('save errors', () => {
+    const notSaved = () =>
+      Object.assign(new Error('Day 1 is not saved yet'), { name: 'EmailNotSavedError' })
+
+    const editAndFlush = async (
+      result: { current: ReturnType<typeof useEmailAutosave> },
+      subject: string,
+    ) => {
+      await act(async () => {
+        await result.current.saveEmail(1, { subject })
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+      })
+    }
+
+    // Bug: an edit to an email with no database row matched 0 rows and the
+    // header still said "Saved". The hook has to say it wasn't kept.
+    it('reports an edit to an unsaved email instead of passing it as saved', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValue(notSaved())
+      const { result } = renderHook(() => useEmailAutosave([makeEmail(1)], 'camp', vi.fn()))
+
+      expect(result.current.saveError).toBeNull()
+      await editAndFlush(result, 'Lost')
+
+      expect(result.current.saveError).toMatch(/not saved/i)
+      expect(result.current.lastSaved).toBeNull()
+      expect(result.current.isSaving).toBe(false)
+      // One write per pause, no retry loop.
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+      errSpy.mockRestore()
+    })
+
+    it('reports other failed writes too, and clears once a save works', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValueOnce(new Error('network down'))
+      const { result } = renderHook(() => useEmailAutosave([makeEmail(1)], 'camp', vi.fn()))
+
+      await editAndFlush(result, 'First')
+      expect(result.current.saveError).toMatch(/could not save/i)
+
+      await editAndFlush(result, 'Second')
+      expect(result.current.saveError).toBeNull()
+      expect(result.current.lastSaved).not.toBeNull()
+      errSpy.mockRestore()
+    })
+
+    it('does not carry a save error into the next campaign', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValue(notSaved())
+      const { result, rerender } = renderHook(
+        ({ campaignId }: { campaignId: string }) =>
+          useEmailAutosave([makeEmail(1)], campaignId, vi.fn()),
+        { initialProps: { campaignId: 'camp-a' } },
+      )
+
+      await editAndFlush(result, 'A1')
+      expect(result.current.saveError).not.toBeNull()
+
+      // A pending A edit is flushed on the switch and fails too.
+      await act(async () => {
+        await result.current.saveEmail(1, { subject: 'A2' })
+      })
+      rerender({ campaignId: 'camp-b' })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+      })
+
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(2)
+      expect(result.current.saveError).toBeNull()
+      errSpy.mockRestore()
+    })
+  })
 })

@@ -40,6 +40,19 @@ afterEach(() => {
 })
 
 describe('EmailPreview autosave', () => {
+  // The editor shows a "couldn't save" banner; the header must not say Saved next to it.
+  it('says Not saved when the last save failed', () => {
+    const { getByText, queryByText } = render(
+      <EmailPreview
+        email={EMAILS[0]}
+        onUpdate={() => {}}
+        saveFailed
+      />,
+    )
+    expect(getByText('Not saved')).toBeTruthy()
+    expect(queryByText('Saved')).toBeNull()
+  })
+
   it('saves an edit after the debounce', () => {
     vi.useFakeTimers()
     const onSave = vi.fn()

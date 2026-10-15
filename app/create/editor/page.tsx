@@ -24,6 +24,8 @@ import { EmptyCampaignState } from '@/components/editor/empty-campaign-state'
 import { CampaignConfigPanel } from '@/components/editor/campaign-config-panel'
 import { useCampaignActions } from '@/lib/campaign-context'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { RotateCcw } from 'lucide-react'
 
 // Dynamically import ChatSidebar to reduce initial bundle size
 const ChatSidebar = dynamic(
@@ -48,12 +50,17 @@ function EditorPageContent() {
   const { versionCounts, restoreVersion } = useVersionTracking(emails)
   const { currentCampaignId } = useCampaignData()
   const { updateCampaignConfig } = useCampaignActions()
-  const { saveEmail, isSaving } = useEmailAutosave(emails, currentCampaignId, updateEmail)
+  const { saveEmail, isSaving, saveError } = useEmailAutosave(
+    emails,
+    currentCampaignId,
+    updateEmail,
+  )
   const {
     isStreaming,
     streamedCount,
     totalExpected,
     error: streamError,
+    clearError: clearStreamError,
     warning: streamWarning,
     clearWarning: clearStreamWarning,
     generateEmailsStream,
@@ -420,6 +427,42 @@ function EditorPageContent() {
               isStreaming && totalExpected ? Math.max(0, totalExpected - emails.length) : 0
             }
           />
+          {streamError && !limitPlan && !isStreaming && emails.length > 0 && (
+            <div
+              role="alert"
+              className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm flex flex-wrap items-center justify-between gap-3"
+            >
+              <span className="text-destructive">
+                Generation stopped early: {streamError} Try again rewrites the whole sequence.
+              </span>
+              <div className="flex items-center gap-3">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRegenerate}
+                  disabled={!landingPageData || !config}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Try again
+                </Button>
+                <button
+                  type="button"
+                  onClick={clearStreamError}
+                  className="text-xs text-muted-foreground hover:text-foreground underline"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          )}
+          {saveError && (
+            <div
+              role="alert"
+              className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm text-destructive"
+            >
+              {saveError}
+            </div>
+          )}
           {streamWarning && (
             <div className="bg-destructive/10 border-b border-destructive/20 px-4 py-2 text-sm flex items-center justify-between gap-3">
               <span className="text-destructive">⚠️ {streamWarning}</span>
@@ -442,6 +485,7 @@ function EditorPageContent() {
                 onUpdate={(updates) => handleUpdateEmail(selectedEmail.id, updates)}
                 onTextSelected={handleTextSelected}
                 isSaving={isSaving}
+                saveFailed={!!saveError}
               />
             ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
               <GeneratingState
@@ -449,6 +493,7 @@ function EditorPageContent() {
                 totalExpected={totalExpected}
                 error={streamError}
                 limitPlan={limitPlan}
+                onRetry={landingPageData && config ? handleRegenerate : undefined}
               />
             ) : loadingState === 'loaded' && emails.length === 0 ? (
               <EmptyCampaignState

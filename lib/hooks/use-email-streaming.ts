@@ -53,12 +53,15 @@ const textOf = (email: EmailText): EmailText => ({
 const sameText = (a: EmailText, b: EmailText) =>
   a.subject === b.subject && a.content === b.content && a.preview === b.preview
 
-async function persistEdits(campaignId: string, emails: Email[]) {
+/** Writes the edits; resolves to how many of them could not be saved. */
+async function persistEdits(campaignId: string, emails: Email[]): Promise<number> {
   const storage = new CampaignStorageService(createClient())
+  let failed = 0
   for (const email of emails) {
     try {
       await storage.updateEmail(campaignId, email.day, textOf(email))
     } catch (err) {
+      failed++
       logError(err, {
         operation: 'save edit made during generation',
         component: 'useEmailStreaming',
@@ -66,7 +69,11 @@ async function persistEdits(campaignId: string, emails: Email[]) {
       })
     }
   }
+  return failed
 }
+
+const EDITS_NOT_SAVED_WARNING =
+  'An edit you made while the sequence was generating was not saved. Check the email and make it again.'
 
 export function useEmailStreaming(): UseEmailStreamingReturn {
   const { appendGeneratedEmail, replaceGeneratedEmailsLocal } = useCampaignActions()
@@ -203,9 +210,17 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           return kept
         })
         replaceGeneratedEmailsLocal(merged)
-        // The server saved the streamed text, so write the edits back.
+        // Make sure the kept edits are what the database holds: the server
+        // writes Day 1's streamed text again when its early save failed.
         if (campaignId && edited.length > 0) {
-          void persistEdits(campaignId, edited)
+          void persistEdits(campaignId, edited).then((failed) => {
+            // Still this campaign, and no newer run has started.
+            const shown = currentCampaignIdRef.current
+            const sameCampaign = shown === campaignId || shown === session.contextCampaignId
+            if (failed > 0 && !unmountedRef.current && !sessionRef.current && sameCampaign) {
+              setWarning(EDITS_NOT_SAVED_WARNING)
+            }
+          })
         }
         return merged
       } catch (err) {

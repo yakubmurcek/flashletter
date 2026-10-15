@@ -12,6 +12,8 @@ interface EmailAutosaveReturn {
   saveEmail: (id: number, updates: Partial<Email>, skipVersioning?: boolean) => Promise<void>
   isSaving: boolean
   lastSaved: Date | null
+  /** Why the last write failed; null once a write works again. */
+  saveError: string | null
   cleanup: () => void
 }
 
@@ -20,6 +22,12 @@ type Snapshot = { subject: string; content: string }
 // Email ids are day numbers, 1..N in every campaign, so anything kept per
 // email is keyed by campaign too.
 const emailKey = (campaignId: string | null, id: number) => `${campaignId ?? ''}:${id}`
+
+// Matched by name: tests mock the storage module without its error classes.
+const saveErrorMessage = (error: unknown) =>
+  error instanceof Error && error.name === 'EmailNotSavedError'
+    ? 'This email was not saved, so your edits to it are not kept. Copy anything you need, then generate the sequence again.'
+    : 'Could not save your last edit. Check your connection; it saves again on your next change.'
 
 /**
  * Per-email autosave with versioning that captures *pauses*, not keystrokes.
@@ -50,6 +58,14 @@ export function useEmailAutosave(
   const trackedEditsRef = useRef<Set<string>>(new Set())
   const [isSaving, setIsSaving] = useState(false)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  // A write flushed while switching campaigns finishes after the switch;
+  // its result must not show up on the next campaign.
+  const currentCampaignIdRef = useRef(currentCampaignId)
+  currentCampaignIdRef.current = currentCampaignId
+  useEffect(() => {
+    setSaveError(null)
+  }, [currentCampaignId])
 
   // Latest emails array — read inside the deferred timer so the saved data
   // reflects the keystroke that fired the debounce, not whatever was in
@@ -93,6 +109,7 @@ export function useEmailAutosave(
       const existingTimer = saveTimerRef.current.get(id)
       if (existingTimer) clearTimeout(existingTimer)
 
+      const isCurrentCampaign = () => currentCampaignIdRef.current === currentCampaignId
       const write = async () => {
         saveTimerRef.current.delete(id)
         pendingWriteRef.current.delete(id)
@@ -131,6 +148,7 @@ export function useEmailAutosave(
             preview: currentEmail.preview,
           })
           setLastSaved(new Date())
+          if (isCurrentCampaign()) setSaveError(null)
 
           // Fire once per (email id, hook lifetime). The funnel cares about
           // "did the user actually engage with the editor for this day," not
@@ -143,6 +161,8 @@ export function useEmailAutosave(
           }
         } catch (error) {
           console.error('Failed to save email to database:', error)
+          // No retry here: the next edit writes again, so a failure can't loop.
+          if (isCurrentCampaign()) setSaveError(saveErrorMessage(error))
         } finally {
           setIsSaving(false)
         }
@@ -182,6 +202,7 @@ export function useEmailAutosave(
     saveEmail,
     isSaving,
     lastSaved,
+    saveError,
     cleanup,
   }
 }
