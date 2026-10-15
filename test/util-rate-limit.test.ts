@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { checkRateLimit, getRateLimitHeaders, MemoryLimiter } from '@/lib/utils/rate-limit'
+import {
+  checkRateLimit,
+  checkUserAndIpRateLimit,
+  getRateLimitHeaders,
+  MemoryLimiter,
+} from '@/lib/utils/rate-limit'
 import type { Ratelimit } from '@upstash/ratelimit'
 
 describe('checkRateLimit', () => {
@@ -112,6 +117,63 @@ describe('checkRateLimit', () => {
     expect(result).toHaveProperty('remaining')
     expect(result).toHaveProperty('reset')
     expect(Object.keys(result)).toHaveLength(4)
+  })
+})
+
+describe('checkUserAndIpRateLimit', () => {
+  it('blocks one IP that rotates through fresh user ids', async () => {
+    // Anonymous sign-in mints a new user per call, so the per-user limiter
+    // alone never trips. The IP limiter must catch it.
+    const perUser = new MemoryLimiter(10, 60_000)
+    const perIp = new MemoryLimiter(3, 60_000)
+    const results = []
+    for (let i = 0; i < 4; i++) {
+      results.push(await checkUserAndIpRateLimit(perUser, perIp, `anon-${i}`, '203.0.113.5'))
+    }
+    expect(results.map((r) => r.success)).toEqual([true, true, true, false])
+    // The 429 headers describe the limit that actually blocked.
+    expect(results[3].limit).toBe(3)
+    expect(results[3].remaining).toBe(0)
+  })
+
+  it('keeps separate IPs on separate budgets', async () => {
+    const perUser = new MemoryLimiter(10, 60_000)
+    const perIp = new MemoryLimiter(1, 60_000)
+    expect((await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')).success).toBe(true)
+    expect((await checkUserAndIpRateLimit(perUser, perIp, 'u2', '198.51.100.7')).success).toBe(true)
+  })
+
+  it('still enforces the per-user limit and reports it when that one blocks', async () => {
+    const perUser = new MemoryLimiter(1, 60_000)
+    const perIp = new MemoryLimiter(100, 60_000)
+    await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    const blocked = await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    expect(blocked.success).toBe(false)
+    expect(blocked.limit).toBe(1)
+  })
+
+  it('does not spend IP budget on a request the per-user limit already refused', async () => {
+    const perUser = new MemoryLimiter(1, 60_000)
+    const perIp = new MemoryLimiter(2, 60_000)
+    await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    expect((await checkUserAndIpRateLimit(perUser, perIp, 'u2', '203.0.113.5')).success).toBe(true)
+  })
+
+  it('returns the per-user result when both pass', async () => {
+    const perUser = new MemoryLimiter(10, 60_000)
+    const perIp = new MemoryLimiter(100, 60_000)
+    const result = await checkUserAndIpRateLimit(perUser, perIp, 'u1', '203.0.113.5')
+    expect(result).toMatchObject({ success: true, limit: 10, remaining: 9 })
+  })
+
+  it('skips the IP limiter when the IP is unknown, so local requests do not share one bucket', async () => {
+    const perUser = new MemoryLimiter(10, 60_000)
+    const perIp = { limit: vi.fn() }
+    const result = await checkUserAndIpRateLimit(perUser, perIp, 'u1', 'anonymous')
+    expect(result.success).toBe(true)
+    expect(perIp.limit).not.toHaveBeenCalled()
   })
 })
 

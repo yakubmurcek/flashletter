@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { aiEmailsResponseSchema, generateEmailsRequestSchema } from '@/lib'
 import {
-  checkRateLimit,
+  checkUserAndIpRateLimit,
+  generateEmailsIpRateLimit,
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
@@ -28,11 +29,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Now-redundant fallback to IP, kept as defense in depth in case auth
-    // ever gets relaxed for a public-demo endpoint.
-    const identifier = user.id || getClientIp(req)
-
-    const rateLimitResult = await checkRateLimit(generateEmailsRateLimit, identifier)
+    // Per user, plus a per-IP cap: anonymous sign-in mints a fresh user id on
+    // every call, so the per-user limit alone can be sidestepped.
+    const rateLimitResult = await checkUserAndIpRateLimit(
+      generateEmailsRateLimit,
+      generateEmailsIpRateLimit,
+      user.id,
+      getClientIp(req),
+    )
 
     if (!rateLimitResult.success) {
       return NextResponse.json(

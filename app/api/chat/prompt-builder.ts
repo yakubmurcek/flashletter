@@ -3,6 +3,13 @@ import {
   EMAIL_CONTENT_PREVIEW_LIMIT,
 } from '@/lib/constants/app'
 import type { CampaignContext, EmailContext, SelectedContext } from './schemas'
+import {
+  CHAT_EMAIL_CONTENT_LIMIT,
+  CHAT_MAX_LISTED_EMAILS,
+  CHAT_METADATA_LIMIT,
+  CHAT_SELECTION_LIMIT,
+  clip,
+} from './limits'
 import * as prompts from './prompts'
 
 // ============================================================================
@@ -22,8 +29,8 @@ export function buildSelectedTextContext(
   return `
 
 🎯 SELECTED TEXT FOCUS:
-The user has specifically selected this text to focus on: "${selectedContext.text}"
-Requested action: ${selectedContext.action}
+The user has specifically selected this text to focus on: "${clip(selectedContext.text, CHAT_SELECTION_LIMIT)}"
+Requested action: ${clip(selectedContext.action, CHAT_METADATA_LIMIT)}
 
 ${instruction}
 
@@ -44,8 +51,23 @@ function formatLandingPageContent(content: string | undefined): string {
   return content
 }
 
+// Each listed email adds a fixed template block, so thousands of tiny emails
+// would still blow up the prompt. List at most a full-length sequence, and
+// always include the current email.
+function listedEmails(
+  allEmails: CampaignContext['allEmails'],
+  currentEmailId: number,
+): CampaignContext['allEmails'] {
+  const listed = allEmails.slice(0, CHAT_MAX_LISTED_EMAILS)
+  if (!listed.some((e) => e.id === currentEmailId)) {
+    const current = allEmails.find((e) => e.id === currentEmailId)
+    if (current) listed.push(current)
+  }
+  return listed
+}
+
 function formatEmailsList(allEmails: CampaignContext['allEmails'], currentEmailId: number): string {
-  return allEmails
+  return listedEmails(allEmails, currentEmailId)
     .map((email) => {
       const isCurrent = email.id === currentEmailId
       const contentPreview =
@@ -55,8 +77,8 @@ function formatEmailsList(allEmails: CampaignContext['allEmails'], currentEmailI
 
       return `
 Email ${email.day}${isCurrent ? ' ⬅️ CURRENT EMAIL' : ''}:
-Subject: ${email.subject}
-Preview: ${email.preview}
+Subject: ${clip(email.subject, CHAT_METADATA_LIMIT)}
+Preview: ${clip(email.preview, CHAT_METADATA_LIMIT)}
 Content (first ${EMAIL_CONTENT_PREVIEW_LIMIT} chars): ${contentPreview}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`
     })
@@ -74,11 +96,11 @@ export function buildCampaignContextSection(campaignContext: CampaignContext | u
 CAMPAIGN CONTEXT:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎯 PRODUCT/LANDING PAGE INFORMATION:
-URL: ${landingPageData.url}
-${landingPageData.metadata?.title ? `Title: ${landingPageData.metadata.title}` : ''}
+URL: ${clip(landingPageData.url, CHAT_METADATA_LIMIT)}
+${landingPageData.metadata?.title ? `Title: ${clip(landingPageData.metadata.title, CHAT_METADATA_LIMIT)}` : ''}
 ${
   landingPageData.metadata?.description
-    ? `Description: ${landingPageData.metadata.description}`
+    ? `Description: ${clip(landingPageData.metadata.description, CHAT_METADATA_LIMIT)}`
     : ''
 }
 
@@ -98,9 +120,9 @@ ${prompts.CONTEXT_USAGE_GUIDELINES}
 
 CURRENT EMAIL BEING EDITED:
 - Day: ${currentEmailId}
-- Subject: ${currentEmail?.subject}
+- Subject: ${clip(currentEmail?.subject, CHAT_METADATA_LIMIT)}
 - Content:
-${currentEmail?.content}
+${clip(currentEmail?.content, CHAT_EMAIL_CONTENT_LIMIT)}
 
 `
 }
@@ -118,10 +140,10 @@ export function buildLegacyEmailContext(
   return `
 
 CURRENT EMAIL CONTEXT:
-- Subject: ${emailContext.subject}
-- Campaign Type: ${emailContext.campaignType}
+- Subject: ${clip(emailContext.subject, CHAT_METADATA_LIMIT)}
+- Campaign Type: ${clip(emailContext.campaignType, CHAT_METADATA_LIMIT)}
 - Content:
-${emailContext.content}`
+${clip(emailContext.content, CHAT_EMAIL_CONTENT_LIMIT)}`
 }
 
 // ============================================================================

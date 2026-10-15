@@ -32,6 +32,8 @@ vi.mock('@/lib/utils/rate-limit', () => ({
     'X-RateLimit-Reset': '0',
   }),
   generateEmailsRateLimit: null,
+  generateEmailsIpRateLimit: 'generate-ip-limiter',
+  checkUserAndIpRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
 }))
 
 vi.mock('@/lib/utils/get-client-ip', () => ({
@@ -203,6 +205,16 @@ describe('POST /api/generate-emails', () => {
     expect(response.status).toBe(429)
     const body = await response.json()
     expect(body.error).toContain('Too many requests')
+  })
+
+  it('applies the per-IP limit on top of the per-user one', async () => {
+    await POST(buildRequest(validRequestBody) as never)
+    expect(checkRateLimitMock).toHaveBeenCalledWith(
+      null,
+      'generate-ip-limiter',
+      'user-123',
+      '127.0.0.1',
+    )
   })
 
   it('happy path: generates and returns emails without campaignId', async () => {
