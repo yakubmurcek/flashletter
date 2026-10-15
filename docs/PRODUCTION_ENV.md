@@ -92,6 +92,17 @@ machines without Chromium installed). Has no effect in production.
 Used by the JSON-LD block in the root layout. Defaults to
 `https://flashletter.app` if unset.
 
+## Database changes
+
+The schema and RLS policies live in the Supabase dashboard, not in this repo.
+SQL that must be run by hand is kept in `supabase/sql/`, one dated file per
+change; each is safe to run twice.
+
+- `2026-10-15-lock-waitlist.sql`: closes the `waitlist` table to the anon and
+  authenticated roles; the waitlist routes and `/admin/waitlist` call its
+  `waitlist_join`, `waitlist_unsubscribe` and `waitlist_admin_list` functions.
+  The app code that calls them must not deploy before this SQL has run.
+
 ## What to verify after each deploy
 
 1. Sign in with a non-admin account → `/admin/waitlist` should 404.
@@ -100,5 +111,8 @@ Used by the JSON-LD block in the root layout. Defaults to
    redirects there (e.g. `https://httpbin.org/redirect-to?url=http://169.254.169.254/`),
    on the home page → both should show "That address isn't reachable from the
    internet" (SSRF guard, checked on every redirect hop).
-4. POST to `/api/chat` ~15 times in a minute as the same user → should start
+4. A count-only request for the waitlist with the public anon key must fail:
+   `curl -sI "$SUPABASE_URL/rest/v1/waitlist?select=id" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -H "Prefer: count=exact"`
+   → 401/403, not 200 with a `content-range`.
+5. POST to `/api/chat` ~15 times in a minute as the same user → should start
    getting 429s (rate-limit Redis is wired up).
