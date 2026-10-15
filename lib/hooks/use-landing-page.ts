@@ -136,9 +136,13 @@ export function useLandingPage(): UseLandingPageReturn {
         return null
       }
       const message =
-        err instanceof Error
-          ? err.message
-          : 'Failed to analyze landing page. Please check the URL and try again.'
+        err instanceof TypeError
+          ? // fetch itself failed: offline, DNS, CORS. Its text ('Failed to fetch',
+            // 'Load failed') means nothing to a visitor.
+            'Network error. Check your connection and try again.'
+          : err instanceof Error
+            ? err.message
+            : 'Failed to analyze landing page. Please check the URL and try again.'
       setError(message)
       lastResultRef.current = 'failure'
       return null

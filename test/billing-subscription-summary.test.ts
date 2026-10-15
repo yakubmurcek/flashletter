@@ -54,4 +54,13 @@ describe('getSubscriptionSummary', () => {
     const s = await getSubscriptionSummary({ id: USER, email: 'a@b.c' }, { fresh: true })
     expect(s.cancelAtPeriodEnd).toBe(true)
   })
+
+  // Stripe lists newest first. A newer canceled subscription must not hide
+  // an unpaid one, or checkout would sell the user a second subscription.
+  it('reports a past_due subscription over a newer canceled one', async () => {
+    list.mockResolvedValue({ data: [sub({ status: 'canceled' }), sub({ status: 'past_due' })] })
+    const { getSubscriptionSummary } = await import('@/lib/billing/stripe')
+    const s = await getSubscriptionSummary({ id: USER, email: 'a@b.c' }, { fresh: true })
+    expect(s.status).toBe('past_due')
+  })
 })

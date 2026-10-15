@@ -34,16 +34,17 @@ export function extractTextFromHTML(html: string): ScrapedContent {
     '.page-content',
     '.text-content',
     '[role="main"]',
-    'section',
-    '.section',
   ]
 
   let mainElement: cheerio.Cheerio<AnyNode> | null = null
   let structuredHtml = ''
 
   for (const selector of contentSelectors) {
-    const candidate = $(selector).first()
-    if (candidate.length === 0) {
+    const candidate = $(selector)
+    // Only a single match can be the page's main content. Several matches are
+    // repeated blocks (cards, sections); taking the first one dropped the
+    // rest of the page, so fall through to the whole body instead.
+    if (candidate.length !== 1) {
       continue
     }
 
@@ -89,7 +90,6 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
     'script',
     'style',
     'nav',
-    'header',
     'footer',
     'aside',
     '.advertisement',
@@ -119,6 +119,12 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
   noiseSelectors.forEach((selector) => {
     $(selector).remove()
   })
+
+  // The site header (logo, menu links) is noise, but a <header> inside the
+  // content is usually a hero or section heading, so keep those.
+  $('header')
+    .filter((_, el) => $(el).parents('main, article, section, [role="main"]').length === 0)
+    .remove()
 }
 
 function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {

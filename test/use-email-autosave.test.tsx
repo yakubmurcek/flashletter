@@ -282,7 +282,9 @@ describe('useEmailAutosave', () => {
     expect(updateEmailDbMock).not.toHaveBeenCalled()
   })
 
-  it('unmounting cancels pending debounced write', async () => {
+  // Leaving the editor (History, All campaigns) inside the debounce window
+  // used to drop the write, so the edit was gone after a reload.
+  it('unmounting writes a pending edit right away instead of dropping it', async () => {
     const updateEmail = vi.fn()
     const emails = [makeEmail(1)]
     const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
@@ -290,11 +292,28 @@ describe('useEmailAutosave', () => {
     await act(async () => {
       await result.current.saveEmail(1, { subject: 'X' })
     })
-    unmount()
     await act(async () => {
+      unmount()
+    })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'X' }))
+  })
+
+  // The preview flushes its own pending edit while the page unmounts; that
+  // write must carry the new text even though the page will not re-render.
+  it('a save made during unmount still writes the new text', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+    const { saveEmail } = result.current
+
+    await act(async () => {
+      unmount()
+      await saveEmail(1, { subject: 'Late' })
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
     })
-    expect(updateEmailDbMock).not.toHaveBeenCalled()
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'Late' }))
   })
 
   it('swallows DB errors and resets isSaving', async () => {
@@ -313,5 +332,59 @@ describe('useEmailAutosave', () => {
     expect(result.current.isSaving).toBe(false)
     expect(result.current.lastSaved).toBeNull()
     errSpy.mockRestore()
+  })
+  // Bug: day ids are 1..N in every campaign, so after switching campaigns
+  // the version history baseline was the previous campaign's text.
+  it('seeds version snapshots per campaign, not from the previous campaign', async () => {
+    const updateEmail = vi.fn()
+    const emailA = makeEmail(1)
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [emailA], campaignId: 'camp-a' } },
+    )
+
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'B edited' })
+    })
+    rerender({ list: [{ ...emailB, subject: 'B edited' }], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(saveVersionMock).toHaveBeenCalledTimes(1)
+    expect(saveVersionMock).toHaveBeenCalledWith('uuid-b1', 1, {
+      subject: 'B subject',
+      content: 'B body',
+    })
+  })
+
+  // Same id collision: a pending write for campaign A read the emails list
+  // when its timer fired, by then campaign B's, and wrote B's text into A.
+  it('switching campaign writes a pending edit with the old campaign text', async () => {
+    const updateEmail = vi.fn()
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [makeEmail(1)], campaignId: 'camp-a' } },
+    )
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'A edited' })
+    })
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock).toHaveBeenCalledWith('camp-a', 1, {
+      subject: 'A edited',
+      content: 'C1',
+      preview: 'P1',
+    })
   })
 })

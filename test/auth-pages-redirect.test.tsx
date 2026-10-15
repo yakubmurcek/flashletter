@@ -1,0 +1,47 @@
+import { describe, it, expect, vi } from 'vitest'
+import { render } from '@testing-library/react'
+
+vi.mock('@/lib/supabase/server', () => ({
+  createClient: async () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }),
+}))
+vi.mock('@/components/auth/auth-form', () => ({ AuthForm: () => null }))
+vi.mock('@/components/auth/upgrade-prompt', () => ({ UpgradePrompt: () => null }))
+
+import SignupPage from '@/app/(auth)/signup/page'
+import LoginPage from '@/app/(auth)/login/page'
+
+const params = (p: Record<string, string>) => Promise.resolve(p)
+
+// UpgradeButton sends a logged-out visitor to /signup?redirectTo=/account?upgrade=…
+// so checkout resumes after auth. An existing customer then clicks "Sign in".
+describe('auth page cross-links keep redirectTo', () => {
+  it('signup → sign in keeps the checkout to resume', async () => {
+    const { getByRole } = render(
+      await SignupPage({ searchParams: params({ redirectTo: '/account?upgrade=month' }) }),
+    )
+    expect(getByRole('link', { name: 'Sign in' }).getAttribute('href')).toBe(
+      '/login?redirectTo=%2Faccount%3Fupgrade%3Dmonth',
+    )
+  })
+
+  it('login → sign up keeps where the visitor was going', async () => {
+    const { getByRole } = render(
+      await LoginPage({ searchParams: params({ redirectTo: '/account' }) }),
+    )
+    expect(getByRole('link', { name: 'Sign up' }).getAttribute('href')).toBe(
+      '/signup?redirectTo=%2Faccount',
+    )
+  })
+
+  it('plain links when there is nowhere special to return to', async () => {
+    const { getByRole } = render(await LoginPage({ searchParams: params({}) }))
+    expect(getByRole('link', { name: 'Sign up' }).getAttribute('href')).toBe('/signup')
+  })
+
+  it('drops an off-site redirectTo', async () => {
+    const { getByRole } = render(
+      await SignupPage({ searchParams: params({ redirectTo: '/\\evil.example' }) }),
+    )
+    expect(getByRole('link', { name: 'Sign in' }).getAttribute('href')).toBe('/login')
+  })
+})

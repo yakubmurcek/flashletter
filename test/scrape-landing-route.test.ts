@@ -218,7 +218,20 @@ describe('POST /api/scrape-landing', () => {
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.error).toBeDefined()
+    expect(body.error).toMatch(/having trouble/i)
+    expect(JSON.stringify(body)).not.toMatch(/500|Internal Server Error|Failed to fetch/)
+  })
+
+  it('does not leak a raw network error', async () => {
+    vi.spyOn(global, 'fetch').mockRejectedValue(
+      new TypeError('fetch failed', {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND x'), { code: 'ECONNRESET' }),
+      }),
+    )
+    const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
+    const body = await response.json()
+    expect(body.error).toMatch(/couldn't reach/i)
+    expect(JSON.stringify(body)).not.toMatch(/fetch failed|ECONNRESET|ENOTFOUND/)
   })
 
   it('includes rate limit headers in response', async () => {

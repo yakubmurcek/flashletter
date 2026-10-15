@@ -6,33 +6,96 @@ import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
  * Large prompt templates moved here to reduce webpack cache warnings
  */
 
+/**
+ * Spreads days `first`..`last` over the phases in order, as evenly as possible.
+ * A phase that gets no days at this length is left out, so short sequences
+ * never print an empty range like "Days 2-1".
+ */
+function spreadDays(first: number, last: number, phases: string[]): string[] {
+  const span = last - first + 1
+  const lines: string[] = []
+  phases.forEach((text, i) => {
+    const from = first + Math.round((i * span) / phases.length)
+    const to = first - 1 + Math.round(((i + 1) * span) / phases.length)
+    if (from > to) return
+    lines.push(`${from === to ? `Day ${from}` : `Days ${from}-${to}`}: ${text}`)
+  })
+  return lines
+}
+
+/** Day 1, the middle phases spread over the days between, then the last day. */
+function plan(days: number, opening: string, middle: string[], closing?: string): string {
+  const lines = [`Day 1: ${opening}`]
+  if (closing && days > 1) {
+    lines.push(...spreadDays(2, days - 1, middle), `Day ${days}: ${closing}`)
+  } else {
+    lines.push(...spreadDays(2, days, middle))
+  }
+  return `\n${lines.join('\n')}`
+}
+
 export function getCampaignStructure(type: string, days: number): string {
-  const structures: Record<string, string> = {
-    nurture: `
-Day 1: Welcome & Introduction
-Days 2-${Math.floor(days / 2)}: Value-building content, educational resources
-Days ${Math.floor(days / 2) + 1}-${days - 1}: Social proof and success stories if the page has real proof; otherwise a concrete use case built from the page's own features and examples
-Day ${days}: Strong call-to-action`,
+  const structures: Record<string, () => string> = {
+    nurture: () =>
+      plan(
+        days,
+        'Welcome & Introduction',
+        [
+          'Value-building content, educational resources',
+          "Social proof and success stories if the page has real proof; otherwise a concrete use case built from the page's own features and examples",
+        ],
+        'Strong call-to-action',
+      ),
 
-    onboarding: `
-Day 1: Warm welcome, set expectations
-Days 2-${Math.floor(days / 3)}: Getting started guide, basic features
-Days ${Math.floor(days / 3) + 1}-${Math.floor((2 * days) / 3)}: Advanced features, pro tips
-Days ${Math.floor((2 * days) / 3) + 1}-${days}: Completion celebration, next steps`,
+    onboarding: () =>
+      plan(days, 'Warm welcome, set expectations', [
+        'Getting started guide, basic features',
+        'Advanced features, pro tips',
+        'Completion celebration, next steps',
+      ]),
 
-    promotional: `
-Day 1: Introduce offer, create awareness
-Days 2-${Math.floor(days / 2)}: Build urgency, showcase benefits
-Days ${Math.floor(days / 2) + 1}-${days - 1}: Overcome objections, testimonials (only real ones from the page)
-Day ${days}: Final push, last chance messaging`,
+    promotional: () =>
+      plan(
+        days,
+        'Introduce offer, create awareness',
+        [
+          'Build urgency, showcase benefits',
+          'Overcome objections, testimonials (only real ones from the page)',
+        ],
+        'Final push, last chance messaging',
+      ),
+
+    educational: () =>
+      plan(
+        days,
+        'What the reader will learn in this series and why it matters to them',
+        [
+          "One core lesson per email, each grounded in a concrete example from the page's own features",
+          'Putting it into practice: common mistakes and a short worked example',
+        ],
+        'Recap the key lessons and point to the next step with the product',
+      ),
+
+    're-engagement': () =>
+      plan(
+        days,
+        'A friendly check-in: remind them what they signed up for and what they are missing',
+        [
+          'What is new or better since they last looked (only what the page shows)',
+          'One quick win they can get in a few minutes',
+        ],
+        'Last call: one clear reason to come back now',
+      ),
   }
 
-  return structures[type] || structures.nurture
+  return (structures[type] ?? structures.nurture)()
 }
 
 export function getToneGuidelines(tone: string): string {
   const tones: Record<string, string> = {
     professional: 'Formal language, clear and direct, industry expertise, authoritative',
+    formal:
+      'Strictly business, precise and serious: complete sentences, no slang, no exclamation points, measured claims',
     friendly: 'Conversational, warm, approachable, use "you" and "we", casual but respectful',
     enthusiastic: 'Energetic, exciting, use exclamation points (moderately), positive language',
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',

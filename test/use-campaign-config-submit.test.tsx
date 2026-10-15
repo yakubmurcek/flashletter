@@ -19,19 +19,21 @@ import { usePlan } from '@/lib/hooks/use-plan'
 const push = vi.fn()
 const applyConfigToCampaign = vi.fn().mockResolvedValue(undefined)
 const generateEmails = vi.fn()
+const createNewCampaign = vi.fn()
 
-function setup(maxEmails: number) {
+function setup(maxEmails: number, currentCampaignId: string | null = 'camp-1') {
   vi.mocked(useRouter).mockReturnValue({ push } as unknown as ReturnType<typeof useRouter>)
   vi.mocked(useCampaignData).mockReturnValue({
     landingPageData: { url: 'https://e.com', content: 'x' },
     isLoading: false,
-    currentCampaignId: 'camp-1',
+    currentCampaignId,
   } as unknown as ReturnType<typeof useCampaignData>)
   vi.mocked(useCampaignActions).mockReturnValue({
     setConfig: vi.fn(),
     setGeneratedEmails: vi.fn(),
     updateCampaignConfig: vi.fn(),
     applyConfigToCampaign,
+    createNewCampaign,
     loadCampaign: vi.fn(),
   } as unknown as ReturnType<typeof useCampaignActions>)
   vi.mocked(useEmailGeneration).mockReturnValue({
@@ -70,5 +72,32 @@ describe('useCampaignConfig submit', () => {
     )
     expect(push).toHaveBeenCalledWith('/create/editor?campaign=camp-1&email=1&autogen=1')
     expect(generateEmails).not.toHaveBeenCalled()
+  })
+
+  // Generation is counted per saved campaign, so the server refuses one with
+  // no campaign id. The fallback used to generate without one.
+  it('creates the campaign first when there is none yet', async () => {
+    setup(5, null)
+    createNewCampaign.mockResolvedValueOnce('camp-new')
+    const { result } = renderHook(() => useCampaignConfig(null))
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault() {} } as FormEvent)
+    })
+    expect(createNewCampaign).toHaveBeenCalledWith({ url: 'https://e.com', content: 'x' })
+    expect(applyConfigToCampaign).toHaveBeenCalledWith('camp-new', expect.anything())
+    expect(push).toHaveBeenCalledWith('/create/editor?campaign=camp-new&email=1&autogen=1')
+    expect(generateEmails).not.toHaveBeenCalled()
+  })
+
+  it('shows an error and re-enables the form when saving fails', async () => {
+    setup(5, null)
+    createNewCampaign.mockRejectedValueOnce(new Error('insert failed'))
+    const { result } = renderHook(() => useCampaignConfig(null))
+    await act(async () => {
+      await result.current.handleSubmit({ preventDefault() {} } as FormEvent)
+    })
+    expect(result.current.error).toMatch(/try again/i)
+    expect(result.current.isSubmitting).toBe(false)
+    expect(push).not.toHaveBeenCalled()
   })
 })

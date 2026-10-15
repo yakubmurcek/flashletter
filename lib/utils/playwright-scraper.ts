@@ -1,8 +1,14 @@
-import { chromium as playwrightChromium, type Browser, type Page } from 'playwright-core'
+import {
+  chromium as playwrightChromium,
+  type Browser,
+  type Page,
+  type Request,
+  type Route,
+} from 'playwright-core'
 import { PLAYWRIGHT_TIMEOUT } from '@/lib/constants/app'
 import { extractTextFromHTML } from './scraper'
 import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
-import { assertSafeUrl } from './url-safety'
+import { assertSafeUrl, isUnsafeUrlError } from './url-safety'
 
 // Only import @sparticuz/chromium in production/serverless environments
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,6 +34,66 @@ export interface PlaywrightScrapeResult {
   extractionMethod: 'dynamic'
   loadTime: number
   finalUrl: string
+}
+
+/**
+ * `page.route` handler that aborts any request to a private/internal host, so
+ * a page can't make Chromium fetch 169.254.169.254 or localhost for it (JS
+ * navigations, meta refresh, iframes, fetch/XHR, subresources).
+ *
+ * Gaps, covered by the checks in scrapeWithPlaywright: Playwright continues
+ * HTTP redirect hops on its own without calling the route, and Chromium does
+ * its own DNS lookup (rebinding). Either can still send a blind request to an
+ * internal host; the redirect-chain and final-URL checks make sure its
+ * response is never returned to the user.
+ */
+export function createSafeRouteHandler(
+  check: (url: string) => Promise<unknown> = assertSafeUrl,
+): (route: Route) => Promise<void> {
+  // One verdict per hostname — a page loads dozens of assets from one CDN.
+  const verdicts = new Map<string, Promise<boolean>>()
+
+  return async (route) => {
+    const url = route.request().url()
+    let allowed = false
+    try {
+      const { protocol, hostname } = new URL(url)
+      if (protocol === 'data:' || protocol === 'blob:') {
+        allowed = true // inline content, no network request
+      } else if (protocol === 'http:' || protocol === 'https:') {
+        let verdict = verdicts.get(hostname)
+        if (!verdict) {
+          verdict = check(url).then(
+            () => true,
+            () => false,
+          )
+          verdicts.set(hostname, verdict)
+        }
+        allowed = await verdict
+      }
+    } catch {
+      allowed = false
+    }
+
+    try {
+      if (allowed) {
+        await route.continue()
+      } else {
+        await route.abort('blockedbyclient')
+      }
+    } catch {
+      // The page closed while the request was in flight — nothing to do.
+    }
+  }
+}
+
+/** Every URL the main-frame navigation passed through, first to last. */
+function redirectChain(request: Request): string[] {
+  const urls: string[] = []
+  for (let r: Request | null = request; r; r = r.redirectedFrom()) {
+    urls.unshift(r.url())
+  }
+  return urls
 }
 
 /**
@@ -81,7 +147,12 @@ export async function scrapeWithPlaywright(
     page = await browser.newPage({
       userAgent,
       viewport,
+      // Service-worker requests bypass page.route, so don't let pages register one.
+      serviceWorkers: 'block',
     })
+
+    // Abort any request (navigation or subresource) aimed at a private host.
+    await page.route('**/*', createSafeRouteHandler())
 
     // Set timeout
     page.setDefaultTimeout(timeout)
@@ -92,6 +163,13 @@ export async function scrapeWithPlaywright(
       timeout,
     })
 
+    // Redirect hops skip page.route, so check where the navigation went.
+    if (response) {
+      for (const hop of redirectChain(response.request())) {
+        await assertSafeUrl(hop)
+      }
+    }
+
     if (!response || !response.ok()) {
       throw new Error(`Failed to load page: ${response?.status()} ${response?.statusText()}`)
     }
@@ -99,8 +177,10 @@ export async function scrapeWithPlaywright(
     // Wait for additional content to load
     await waitForContent(page)
 
-    // Get final URL (in case of redirects)
+    // Get final URL (in case of redirects) and re-check it: a late JS
+    // navigation may have moved the page since goto() returned.
     const finalUrl = page.url()
+    await assertSafeUrl(finalUrl)
 
     // Extract HTML content
     const html = await page.content()
@@ -123,6 +203,8 @@ export async function scrapeWithPlaywright(
     }
   } catch (error) {
     console.error('Playwright scraping failed:', error)
+    // Keep the UnsafeUrlError as-is so callers map it like the first-URL check.
+    if (isUnsafeUrlError(error)) throw error
     throw new Error(
       `Dynamic scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
     )

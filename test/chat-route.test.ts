@@ -2,9 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Anthropic from '@anthropic-ai/sdk'
 
 const captureExceptionMock = vi.fn()
+const consumeAiRewriteMock = vi.fn()
+const refundAiRewriteMock = vi.fn()
 vi.mock('@/lib/billing/limits', () => ({
   getPlan: async () => 'free',
-  consumeAiRewrite: async () => null,
+  consumeAiRewrite: (...args: unknown[]) => consumeAiRewriteMock(...args),
+  refundAiRewrite: (...args: unknown[]) => refundAiRewriteMock(...args),
   checkEmailCount: () => null,
   checkCampaignAllowed: async () => null,
 }))
@@ -96,6 +99,8 @@ describe('POST /api/chat', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     captureExceptionMock.mockReset()
+    consumeAiRewriteMock.mockReset().mockResolvedValue(null)
+    refundAiRewriteMock.mockReset().mockResolvedValue(undefined)
     checkRateLimitMock.mockReset().mockResolvedValue({
       success: true,
       limit: 100,
@@ -294,5 +299,40 @@ describe('POST /api/chat', () => {
     expect(body.error).toBe('Failed to process chat request')
     expect(body.details).toBe('AI returned malformed JSON')
     expect(captureExceptionMock).not.toHaveBeenCalled()
+  })
+  describe('AI rewrite allowance', () => {
+    it('keeps the rewrite counted when the AI answers', async () => {
+      expect((await post(hello)).status).toBe(200)
+      expect(consumeAiRewriteMock).toHaveBeenCalledWith('user-123', 'free')
+      expect(refundAiRewriteMock).not.toHaveBeenCalled()
+    })
+
+    it('gives the rewrite back when the AI call fails', async () => {
+      generateStructuredMock.mockRejectedValue(new Error('AI returned malformed JSON'))
+      expect((await post(hello)).status).toBe(500)
+      expect(refundAiRewriteMock).toHaveBeenCalledWith('user-123', 'free')
+    })
+
+    it('gives the rewrite back when the AI is rate limited', async () => {
+      generateStructuredMock.mockRejectedValue(rateLimitError())
+      expect((await post(hello)).status).toBe(429)
+      expect(refundAiRewriteMock).toHaveBeenCalledOnce()
+    })
+
+    it('still reports the AI error when the refund itself fails', async () => {
+      generateStructuredMock.mockRejectedValue(new Error('boom'))
+      refundAiRewriteMock.mockRejectedValue(new Error('redis down'))
+      const response = await post(hello)
+      expect(response.status).toBe(500)
+      expect((await response.json()).details).toBe('boom')
+    })
+
+    it('refunds nothing when the allowance is used up or the request is invalid', async () => {
+      consumeAiRewriteMock.mockResolvedValue({ error: 'limit_reached', limit: 'ai_rewrites' })
+      expect((await post(hello)).status).toBe(402)
+      expect((await post({ messages: [] })).status).toBe(400)
+      expect(generateStructuredMock).not.toHaveBeenCalled()
+      expect(refundAiRewriteMock).not.toHaveBeenCalled()
+    })
   })
 })

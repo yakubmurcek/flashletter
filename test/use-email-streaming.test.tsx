@@ -4,12 +4,30 @@ import type { Email, LandingPageData, CampaignConfig } from '@/lib/types'
 
 const appendGeneratedEmailMock = vi.fn()
 const replaceGeneratedEmailsLocalMock = vi.fn()
+// What the editor currently shows. Tests change it and rerender to mimic
+// the provider re-rendering after a local edit or a campaign switch.
+let campaignData: { generatedEmails: Email[]; currentCampaignId: string | null } = {
+  generatedEmails: [],
+  currentCampaignId: null,
+}
 
 vi.mock('@/lib/campaign-context', () => ({
   useCampaignActions: () => ({
     appendGeneratedEmail: appendGeneratedEmailMock,
     replaceGeneratedEmailsLocal: replaceGeneratedEmailsLocalMock,
   }),
+  useCampaignData: () => campaignData,
+}))
+
+vi.mock('@/lib/supabase/client', () => ({
+  createClient: () => ({}),
+}))
+
+const updateEmailDbMock = vi.fn()
+vi.mock('@/lib/services/campaign-storage.service', () => ({
+  CampaignStorageService: class {
+    updateEmail = (...args: unknown[]) => updateEmailDbMock(...args)
+  },
 }))
 
 const trackMock = vi.fn()
@@ -17,7 +35,11 @@ vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => trackMock(...args),
 }))
 
-import { CampaignService } from '@/lib/services/campaign.service'
+import {
+  CampaignService,
+  RateLimitedError,
+  type GenerateEmailsStreamEvent,
+} from '@/lib/services/campaign.service'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 
 const landingPageData: LandingPageData = {
@@ -36,12 +58,43 @@ const makeEmail = (day: number, uuid: string | null = null): Email =>
     content: `c${day}`,
   }) as Email
 
+// A stream the test drives event by event, finishing it when it wants to.
+function controlledStream() {
+  let onEvent: (event: GenerateEmailsStreamEvent) => void = () => {}
+  let resolve: (emails: Email[]) => void = () => {}
+  let reject: (err: unknown) => void = () => {}
+  let signal: AbortSignal | undefined
+  vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+    (_u, _c, _cfg, handler, options) => {
+      onEvent = handler
+      signal = options?.signal
+      return new Promise<Email[]>((res, rej) => {
+        resolve = res
+        reject = rej
+      })
+    },
+  )
+  return {
+    emit: (event: GenerateEmailsStreamEvent) => onEvent(event),
+    finish: (emails: Email[]) => {
+      onEvent({ type: 'complete', emails })
+      resolve(emails)
+    },
+    fail: (err: unknown) => reject(err),
+    get signal() {
+      return signal
+    },
+  }
+}
+
 describe('useEmailStreaming', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     appendGeneratedEmailMock.mockReset()
     replaceGeneratedEmailsLocalMock.mockReset()
     trackMock.mockReset()
+    updateEmailDbMock.mockReset().mockResolvedValue(undefined)
+    campaignData = { generatedEmails: [], currentCampaignId: null }
   })
 
   it('initializes clean', () => {
@@ -137,6 +190,15 @@ describe('useEmailStreaming', () => {
     })
     expect(returned).toBeNull()
     expect(result.current.error).toBeTruthy()
+  })
+
+  it('tells the user to wait when the server rate-limits the generation', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockRejectedValue(new RateLimitedError())
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, null)
+    })
+    expect(result.current.error).toMatch(/wait a minute/i)
   })
 
   it('returns null without setting error on AbortError', async () => {
@@ -289,5 +351,200 @@ describe('useEmailStreaming', () => {
     expect(cfg).toEqual(config)
     expect(options?.campaignId).toBe('camp-7')
     expect(options?.landingAnalysis).toEqual(analysis)
+  })
+  // Bug: typing into Day 1 while Days 2..N were still streaming was wiped
+  // when the server's persisted batch replaced the local list.
+  it('keeps an email edited during the stream and still takes its server ids', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-id' }
+    const { result, rerender } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1) }))
+
+    // The user edits Day 1 while Day 2 is still being written.
+    campaignData = {
+      ...campaignData,
+      generatedEmails: [{ ...makeEmail(1), subject: 'My subject', content: 'My body' }],
+    }
+    rerender()
+    act(() => stream.emit({ type: 'email', email: makeEmail(2) }))
+
+    const server = [makeEmail(1, 'u1'), makeEmail(2, 'u2')]
+    let returned: Email[] | null = null
+    await act(async () => {
+      stream.finish(server)
+      returned = await pending
+    })
+
+    const merged = replaceGeneratedEmailsLocalMock.mock.lastCall?.[0] as Email[]
+    expect(merged[0]).toEqual({
+      ...makeEmail(1, 'u1'),
+      subject: 'My subject',
+      content: 'My body',
+    })
+    expect(merged[1]).toEqual(makeEmail(2, 'u2'))
+    expect(returned).toEqual(merged)
+    // The server persisted its own text, so the kept edit is written back.
+    await waitFor(() =>
+      expect(updateEmailDbMock).toHaveBeenCalledWith('camp-id', 1, {
+        subject: 'My subject',
+        content: 'My body',
+        preview: 'p1',
+      }),
+    )
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('takes the server payload for untouched emails even when it differs from the stream', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-id' }
+    const { result, rerender } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1) }))
+    campaignData = { ...campaignData, generatedEmails: [makeEmail(1)] }
+    rerender()
+
+    const server = [{ ...makeEmail(1, 'u1'), subject: 'Cleaned by server' }]
+    await act(async () => {
+      stream.finish(server)
+      await pending
+    })
+
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenLastCalledWith(server)
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+  })
+
+  // Bug: leaving the editor mid-stream kept writing the old campaign's
+  // emails into state, which the next opened campaign then showed.
+  it('stops writing into state once the editor unmounts', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-a' }
+    const { result, unmount } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-a')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1) }))
+    unmount()
+
+    stream.emit({ type: 'email', email: makeEmail(2) })
+    stream.finish([makeEmail(1, 'u1'), makeEmail(2, 'u2')])
+    await expect(pending).resolves.toBeNull()
+
+    expect(appendGeneratedEmailMock).toHaveBeenCalledTimes(1)
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenCalledTimes(1)
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenCalledWith([])
+    // The request itself runs on so the server still saves campaign A.
+    expect(stream.signal?.aborted).toBe(false)
+  })
+
+  it('stops writing into state when another campaign is opened in the same editor', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-a' }
+    const { result, rerender } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-a')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1) }))
+
+    campaignData = { generatedEmails: [makeEmail(1, 'b1')], currentCampaignId: 'camp-b' }
+    rerender()
+    expect(result.current.isStreaming).toBe(false)
+
+    await act(async () => {
+      stream.emit({ type: 'email', email: makeEmail(2) })
+      stream.finish([makeEmail(1, 'u1'), makeEmail(2, 'u2')])
+      await pending
+    })
+
+    expect(appendGeneratedEmailMock).toHaveBeenCalledTimes(1)
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenCalledTimes(1)
+    expect(result.current.isStreaming).toBe(false)
+    expect(result.current.streamedCount).toBe(0)
+  })
+
+  it('a stream that started before the campaign id reached context is not dropped', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: null }
+    const { result, rerender } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-a')
+    })
+    campaignData = { ...campaignData, currentCampaignId: 'camp-a' }
+    rerender()
+    await act(async () => {
+      stream.emit({ type: 'email', email: makeEmail(1) })
+      stream.finish([makeEmail(1, 'u1')])
+      await pending
+    })
+
+    expect(appendGeneratedEmailMock).toHaveBeenCalledTimes(1)
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenLastCalledWith([makeEmail(1, 'u1')])
+  })
+
+  it('an aborted earlier stream does not end the newer stream', async () => {
+    const first = controlledStream()
+    const { result } = renderHook(() => useEmailStreaming())
+    let firstPending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      firstPending = result.current.generateEmailsStream(landingPageData, config, null)
+    })
+    const second = controlledStream()
+    act(() => {
+      void result.current.generateEmailsStream(landingPageData, config, null)
+    })
+    expect(first.signal?.aborted).toBe(true)
+
+    const abortErr = new Error('aborted')
+    abortErr.name = 'AbortError'
+    await act(async () => {
+      first.fail(abortErr)
+      await firstPending
+    })
+    expect(result.current.isStreaming).toBe(true)
+    expect(result.current.error).toBeNull()
+    expect(second.signal?.aborted).toBe(false)
+  })
+
+  // Bug: the server's specific message (e.g. a limit reached) was replaced
+  // by a generic "Please try again" once the service rethrew it.
+  it('keeps the server error message instead of a generic one', async () => {
+    const message = 'You have used all your generations this month.'
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+      async (_u, _c, _cfg, onEvent) => {
+        onEvent({ type: 'error', message })
+        throw new Error(message)
+      },
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, null)
+    })
+    expect(result.current.error).toBe(message)
+  })
+
+  it('falls back to a generic message when there is no specific one', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockRejectedValue(
+      new TypeError('Failed to fetch'),
+    )
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, null)
+    })
+    expect(result.current.error).toBe('Network error. Please check your connection and try again.')
   })
 })

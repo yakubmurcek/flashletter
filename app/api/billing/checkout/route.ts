@@ -13,9 +13,38 @@ import {
 
 const bodySchema = z.object({ interval: z.enum(['month', 'year']).default('month') })
 
+/**
+ * Subscriptions that still exist and can still bill or become Pro, so a new
+ * checkout would start a second one. Past-due, unpaid and paused ones are
+ * fixed by updating the card in the portal. Incomplete means the first
+ * payment is still pending (e.g. 3-D Secure); it can still succeed for about
+ * 23 hours, after which Stripe expires it and a new checkout is allowed again.
+ * Canceled and incomplete_expired can never bill again.
+ */
+const EXISTING_SUBSCRIPTION = new Set<string>([
+  'active',
+  'trialing',
+  'past_due',
+  'unpaid',
+  'paused',
+  'incomplete',
+])
+
 // Return to the host the user is on (production, or a preview while testing).
 function appOrigin(req: NextRequest) {
   return req.nextUrl.origin
+}
+
+/** The hosted page for an incomplete subscription's unpaid first invoice, if any. */
+async function openFirstInvoiceUrl(customer: string): Promise<string | null> {
+  const subs = await getStripe().subscriptions.list({
+    customer,
+    status: 'incomplete',
+    limit: 1,
+    expand: ['data.latest_invoice'],
+  })
+  const invoice = subs.data[0]?.latest_invoice
+  return invoice && typeof invoice !== 'string' ? (invoice.hosted_invoice_url ?? null) : null
 }
 
 /** Starts a Stripe Checkout session for Pro and returns its hosted URL. */
@@ -42,8 +71,14 @@ export async function POST(req: NextRequest) {
     const origin = appOrigin(req)
     const customer = await getOrCreateCustomer(user)
 
+    // First payment still open: finish paying it, not start a second subscription.
+    if (summary.status === 'incomplete') {
+      const invoiceUrl = await openFirstInvoiceUrl(customer)
+      if (invoiceUrl) return NextResponse.json({ url: invoiceUrl })
+    }
+
     // Already subscribed: send them to manage the plan instead of paying twice.
-    if (summary.active) {
+    if (summary.active || (summary.status && EXISTING_SUBSCRIPTION.has(summary.status))) {
       const portal = await getStripe().billingPortal.sessions.create({
         customer,
         return_url: `${origin}/account`,

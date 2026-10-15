@@ -138,7 +138,7 @@ describe('CampaignService.scrapeLandingPageStream', () => {
 
     await expect(
       CampaignService.scrapeLandingPageStream('https://example.com', () => {}),
-    ).rejects.toThrow(/stream closed/i)
+    ).rejects.toThrow(/couldn't read that page/i)
   })
 
   it('throws with error.message when error event arrives', async () => {
