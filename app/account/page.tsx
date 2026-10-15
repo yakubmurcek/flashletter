@@ -60,7 +60,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   if (user.is_anonymous) {
     const upgrade = params.upgrade === 'year' ? 'year' : params.upgrade === 'month' ? 'month' : null
     const resume = upgrade ? `/account?upgrade=${upgrade}` : '/account'
-    redirect(`/signup?redirectTo=${encodeURIComponent(resume)}`)
+    // Carry a failed Google link from /auth/callback along, or /signup can't explain it.
+    const authError =
+      typeof params.authError === 'string'
+        ? `&authError=${encodeURIComponent(params.authError)}`
+        : ''
+    redirect(`/signup?redirectTo=${encodeURIComponent(resume)}${authError}`)
   }
 
   const sessionId = typeof params.session_id === 'string' ? params.session_id : undefined

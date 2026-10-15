@@ -23,7 +23,7 @@ export default async function SignupPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { redirectTo: redirectToParam } = await searchParams
+  const { redirectTo: redirectToParam, authError } = await searchParams
   const redirectTo = safeRedirectPath(redirectToParam)
   const supabase = await createClient()
   const {
@@ -37,6 +37,7 @@ export default async function SignupPage({
       <UpgradePrompt
         variant="save"
         redirectTo={redirectTo}
+        initialError={typeof authError === 'string' ? authError : null}
       />
     )
   }

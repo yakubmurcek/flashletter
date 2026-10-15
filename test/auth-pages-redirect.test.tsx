@@ -1,16 +1,28 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render } from '@testing-library/react'
 
+let serverUser: { id: string; is_anonymous: boolean } | null = null
 vi.mock('@/lib/supabase/server', () => ({
-  createClient: async () => ({ auth: { getUser: async () => ({ data: { user: null } }) } }),
+  createClient: async () => ({ auth: { getUser: async () => ({ data: { user: serverUser } }) } }),
 }))
 vi.mock('@/components/auth/auth-form', () => ({ AuthForm: () => null }))
-vi.mock('@/components/auth/upgrade-prompt', () => ({ UpgradePrompt: () => null }))
+const upgradePromptProps = vi.fn()
+vi.mock('@/components/auth/upgrade-prompt', () => ({
+  UpgradePrompt: (props: Record<string, unknown>) => {
+    upgradePromptProps(props)
+    return null
+  },
+}))
 
 import SignupPage from '@/app/(auth)/signup/page'
 import LoginPage from '@/app/(auth)/login/page'
 
 const params = (p: Record<string, string>) => Promise.resolve(p)
+
+beforeEach(() => {
+  serverUser = null
+  upgradePromptProps.mockReset()
+})
 
 // UpgradeButton sends a logged-out visitor to /signup?redirectTo=/account?upgrade=…
 // so checkout resumes after auth. An existing customer then clicks "Sign in".
@@ -43,5 +55,33 @@ describe('auth page cross-links keep redirectTo', () => {
       await SignupPage({ searchParams: params({ redirectTo: '/\\evil.example' }) }),
     )
     expect(getByRole('link', { name: 'Sign in' }).getAttribute('href')).toBe('/login')
+  })
+})
+
+// /auth/callback appends ?authError=… and /account forwards it to /signup for
+// a guest. The guest view must receive it, or a failed Google link loops silently.
+describe('guest /signup passes the callback error through', () => {
+  it('hands authError to UpgradePrompt', async () => {
+    serverUser = { id: 'anon', is_anonymous: true }
+    render(
+      await SignupPage({
+        searchParams: params({
+          redirectTo: '/account?upgrade=month',
+          authError: 'Identity is already linked to another user',
+        }),
+      }),
+    )
+    expect(upgradePromptProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        redirectTo: '/account?upgrade=month',
+        initialError: 'Identity is already linked to another user',
+      }),
+    )
+  })
+
+  it('passes no error when there is none', async () => {
+    serverUser = { id: 'anon', is_anonymous: true }
+    render(await SignupPage({ searchParams: params({}) }))
+    expect(upgradePromptProps.mock.calls[0][0].initialError ?? null).toBeNull()
   })
 })
