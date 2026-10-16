@@ -56,7 +56,12 @@ export function useEmailAutosave(
   // this hook lifetime. Persists across re-renders without triggering them,
   // and resets naturally if the user navigates away and back.
   const trackedEditsRef = useRef<Set<string>>(new Set())
-  const [isSaving, setIsSaving] = useState(false)
+  // Writes started but not finished. `isSaving` covers these and the ones
+  // still waiting out the debounce, so the UI never says "Saved" early.
+  const inFlightRef = useRef(0)
+  const [inFlight, setInFlight] = useState(0)
+  const [pendingCount, setPendingCount] = useState(0)
+  const isSaving = inFlight > 0 || pendingCount > 0
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
   // A write flushed while switching campaigns finishes after the switch;
@@ -113,7 +118,9 @@ export function useEmailAutosave(
       const write = async () => {
         saveTimerRef.current.delete(id)
         pendingWriteRef.current.delete(id)
-        setIsSaving(true)
+        setPendingCount(pendingWriteRef.current.size)
+        inFlightRef.current += 1
+        setInFlight(inFlightRef.current)
         try {
           const currentEmail = emailsRef.current.find((e) => e.id === id)
           if (!currentEmail) return
@@ -164,12 +171,22 @@ export function useEmailAutosave(
           // No retry here: the next edit writes again, so a failure can't loop.
           if (isCurrentCampaign()) setSaveError(saveErrorMessage(error))
         } finally {
-          setIsSaving(false)
+          inFlightRef.current -= 1
+          setInFlight(inFlightRef.current)
         }
+      }
+
+      // The tab is going away: the debounce would never fire, write now.
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+        pendingWriteRef.current.delete(id)
+        setPendingCount(pendingWriteRef.current.size)
+        await write()
+        return
       }
 
       saveTimerRef.current.set(id, setTimeout(write, EMAIL_SAVE_DEBOUNCE_MS))
       pendingWriteRef.current.set(id, write)
+      setPendingCount(pendingWriteRef.current.size)
     },
     [currentCampaignId, updateEmail, campaignService, versionStorageService],
   )
@@ -180,6 +197,38 @@ export function useEmailAutosave(
     }
     saveTimerRef.current.clear()
     pendingWriteRef.current.clear()
+    setPendingCount(0)
+  }, [])
+
+  // Closing or hiding the tab inside the debounce window: write now, and ask
+  // the browser to hold the page while a write is still on its way.
+  useEffect(() => {
+    const flush = () => {
+      for (const timer of saveTimerRef.current.values()) clearTimeout(timer)
+      saveTimerRef.current.clear()
+      const pending = [...pendingWriteRef.current.values()]
+      pendingWriteRef.current.clear()
+      for (const write of pending) void write()
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      const unsaved = pendingWriteRef.current.size > 0 || inFlightRef.current > 0
+      flush()
+      if (unsaved) {
+        event.preventDefault()
+        event.returnValue = ''
+      }
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', onBeforeUnload)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', onBeforeUnload)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
   }, [])
 
   // Leaving the editor, or opening another campaign in it, inside the

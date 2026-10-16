@@ -144,6 +144,26 @@ function EmailPreviewComponent({
 
   useEffect(() => () => pendingSaveRef.current?.(), [])
 
+  // Closing or hiding the tab: hand the pending edit to autosave right away.
+  // Registered before the page's autosave listeners (child effects run
+  // first), so autosave sees it in the same event.
+  useEffect(() => {
+    const flush = () => pendingSaveRef.current?.()
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') flush()
+    }
+    window.addEventListener('pagehide', flush)
+    window.addEventListener('beforeunload', flush)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      window.removeEventListener('beforeunload', flush)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [])
+
+  const showSaving = isSaving || hasChanges
+
   const selectionsMatch = (
     range: Range | null,
     selectionDetails: {
@@ -292,8 +312,8 @@ function EmailPreviewComponent({
           </div>
           <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
             <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
-              {!isSaving && !saveFailed && <Check className="w-3 h-3 text-muted-foreground" />}
-              {isSaving ? 'Saving...' : saveFailed ? 'Not saved' : 'Saved'}
+              {!showSaving && !saveFailed && <Check className="w-3 h-3 text-muted-foreground" />}
+              {isSaving ? 'Saving...' : saveFailed ? 'Not saved' : showSaving ? 'Saving...' : 'Saved'}
             </span>
             <Button
               variant="outline"

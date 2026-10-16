@@ -316,6 +316,55 @@ describe('useEmailAutosave', () => {
     expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'Late' }))
   })
 
+  // "Saved" showed while the edit still waited out the debounce.
+  it('reports isSaving while a write is waiting out the debounce', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
+    expect(updateEmailDbMock).not.toHaveBeenCalled()
+    expect(result.current.isSaving).toBe(true)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+    expect(result.current.isSaving).toBe(false)
+  })
+
+  // Closing the tab inside the debounce window lost the edit.
+  it('writes a pending edit right away when the page is hidden', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'Closing' })
+    })
+    await act(async () => {
+      window.dispatchEvent(new Event('pagehide'))
+    })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(
+      expect.objectContaining({ subject: 'Closing' }),
+    )
+  })
+
+  it('asks the browser to hold the page on unload while a write is pending', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'Closing' })
+    })
+    const event = new Event('beforeunload', { cancelable: true })
+    await act(async () => {
+      window.dispatchEvent(event)
+    })
+    expect(event.defaultPrevented).toBe(true)
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+  })
+
   it('swallows DB errors and resets isSaving', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     updateEmailDbMock.mockRejectedValue(new Error('db err'))

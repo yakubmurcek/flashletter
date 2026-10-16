@@ -85,3 +85,26 @@ describe('EmailPreview autosave', () => {
     expect((getByLabelText('Subject') as HTMLTextAreaElement).value).toBe('Day two')
   })
 })
+
+describe('EmailPreview save status and tab close', () => {
+  it('says Saving while an edit waits out the debounce, not Saved', () => {
+    vi.useFakeTimers()
+    const { getByLabelText, getByText, queryByText } = render(<EditorHarness onSave={vi.fn()} />)
+
+    fireEvent.change(getByLabelText('Subject'), { target: { value: 'Not yet saved' } })
+    expect(getByText('Saving...')).toBeTruthy()
+    expect(queryByText('Saved')).toBeNull()
+  })
+
+  it('hands a pending edit to autosave when the tab is closed', () => {
+    vi.useFakeTimers()
+    const onSave = vi.fn()
+    const { getByLabelText } = render(<EditorHarness onSave={onSave} />)
+
+    fireEvent.change(getByLabelText('Subject'), { target: { value: 'Last words' } })
+    act(() => {
+      window.dispatchEvent(new Event('pagehide'))
+    })
+    expect(onSave).toHaveBeenCalledWith(1, { subject: 'Last words', content: 'Body one' })
+  })
+})
