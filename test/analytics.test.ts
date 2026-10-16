@@ -243,26 +243,96 @@ describe('lib/analytics', () => {
       expect(identifyMock).toHaveBeenCalledWith('user-123', { is_anonymous: false })
     })
 
-    it('never fires signup_completed itself (a guest logging into an existing account is not a signup)', () => {
+  })
+
+  describe('signup_completed transition detection', () => {
+    beforeEach(() => {
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       initPostHog()
+    })
+
+    it('does not fire on a returning authed user (no prior anon marker)', () => {
+      identify('user-123', { is_anonymous: false })
+
+      // identify itself runs, but capture('signup_completed') must not.
+      const signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(0)
+    })
+
+    it('fires once when the same user id goes from anon to identified', () => {
       identify('anon-1', { is_anonymous: true })
-      identify('existing-user', { is_anonymous: false })
+      // Still no fire — they're entering the funnel, not completing it.
+      let signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(0)
+
+      // linkIdentity / updateUser keep the Supabase user id.
+      identify('anon-1', { is_anonymous: false })
+      signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(1)
+    })
+
+    it('does not double-fire if identify is called repeatedly for an authed user', () => {
+      identify('anon-1', { is_anonymous: true })
+      identify('anon-1', { is_anonymous: false })
+      identify('anon-1', { is_anonymous: false })
+      identify('anon-1', { is_anonymous: false })
+
+      const signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(1)
+    })
+
+    it('does not re-fire after a sign-out + new-anon cycle in the same browser', () => {
+      // First conversion in this browser.
+      identify('anon-1', { is_anonymous: true })
+      identify('anon-1', { is_anonymous: false })
+      expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(1)
+
+      // User signs out, a fresh anon session begins, and they log back into
+      // the account they already made. Not a new signup.
+      identify('anon-2', { is_anonymous: true })
+      identify('anon-1', { is_anonymous: false })
+
+      expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(1)
+    })
+
+    it('treats undefined traits as identified (does not set anon marker)', () => {
+      identify('user-123')
+      identify('user-123', { is_anonymous: false })
+
+      // No anon was ever marked, so no signup fires.
+      const signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(0)
+    })
+
+    it('does not fire when a guest logs into an existing (older) account', () => {
+      identify('anon-1', { is_anonymous: true })
+      identify('existing-user', { is_anonymous: false }, { createdAt: '2025-01-01T00:00:00Z' })
+
       expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(0)
+    })
+
+    it('fires for a fresh account that never was a guest (pricing → signup, Google)', () => {
+      const justNow = new Date(Date.now() - 30_000).toISOString()
+      identify('new-user', { is_anonymous: false }, { createdAt: justNow })
+      identify('new-user', { is_anonymous: false }, { createdAt: justNow })
+
+      const signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
+      expect(signupCalls).toHaveLength(1)
+      expect(signupCalls[0][1]).toEqual({ method: 'direct' })
     })
   })
 
   describe('resetAnalytics', () => {
-    it('no-ops before init', () => {
-      resetAnalytics()
-      expect(resetMock).not.toHaveBeenCalled()
-    })
-
-    it('resets the posthog identity after init', () => {
+    it('resets posthog so the next user in the browser starts clean', () => {
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       initPostHog()
       resetAnalytics()
       expect(resetMock).toHaveBeenCalledTimes(1)
+    })
+
+    it('no-ops before init', () => {
+      resetAnalytics()
+      expect(resetMock).not.toHaveBeenCalled()
     })
   })
 })
