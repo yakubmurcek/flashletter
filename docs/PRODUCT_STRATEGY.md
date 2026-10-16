@@ -1,6 +1,6 @@
 # Flashletter — Product Strategy
 
-> Living strategy doc. Captures the _why_ behind product decisions so we can revisit, course-correct, and onboard collaborators without re-deriving the reasoning each time. Update as positions change. Last meaningful update: 2026-04.
+> Living strategy doc. Captures the _why_ behind product decisions so we can revisit, course-correct, and onboard collaborators without re-deriving the reasoning each time. Update as positions change. Last meaningful update: 2026-10-16 (market check, section 11).
 
 ---
 
@@ -9,7 +9,7 @@
 - **Who we serve:** indie hackers / solo founders / build-in-public operators on X. Not enterprise, not non-technical small biz.
 - **Job to be done:** "I have a landing page and need a welcome / nurture email sequence, but I don't want to write it from scratch."
 - **Strategic position:** be a **tool** that plugs into the user's existing email platform — _not_ an ESP ourselves.
-- **Moat:** AI generation from a landing page URL → real, on-brand sequence in ~2 minutes (first email in under a minute). Defensible only if we stay focused on it.
+- **Moat:** ~~AI generation from a landing page URL → real, on-brand sequence in ~2 minutes.~~ **Contradicted by the 2026-10-16 market check (section 11):** the generation step is becoming a free ESP/agent feature, and no standalone tool shows paying demand.
 - **Immediate next move:** ship test-send to inbox + Resend integration as the post-generation experience. Move the paywall to those value-confirming actions. Skipping the teaser/wait-for-data phase because AI-coded integration work is cheap enough to commit early.
 
 ---
@@ -197,7 +197,65 @@ The 2nd-campaign limit can stay as a backstop for users who never convert via th
 
 ---
 
+## 11. Market check 2026-10-16 (data, not gut)
+
+Researched 2026-10-16 from fetched sources. Own usage data: **unknown**, not zero. Production has no funnel analytics (PostHog/Sentry keys missing, task #597), and Vercel keeps only the last ~30 minutes of logs. Stripe is still in test mode (task #381), so the product cannot take money yet.
+
+**The core feature is becoming free**
+
+- Resend's AI editor turns a URL into one email draft ([resend.com/blog/ai-email-editor](https://www.resend.com/blog/ai-email-editor)).
+- Official MCP servers let Claude write sequences straight into the user's own account as drafts: Resend (create automations, templates, broadcasts; [docs](https://resend.com/docs/mcp-server)), beehiiv (builds automations, cannot activate; [support](https://www.beehiiv.com/support/article/39255979546263-how-to-access-the-beehiiv-mcp-to-connect-your-ai-tools)), Loops (Workflows API, drafts; [changelog](https://loops.so/changelog/workflows-api-claude-connector)).
+- The planned paid tier, "Push to Resend" (section 7), is what Resend's own MCP already does for free.
+
+**Standalone generators show no paying demand**
+
+- Email Sequence AI: $3 all-time, $0 MRR, Stripe-verified ([trustmrr.com](https://trustmrr.com/startup/email-sequence-ai)).
+- Lumail, the best verified result: $580 MRR, and it is a full ESP rather than a generator ([trustmrr.com](https://trustmrr.com/startup/lumail.md)).
+- Vayno, "AI Email Sequence Generator from Any Landing Page", is nearly this product: 2 points and 0 comments on HN ([HN](https://news.ycombinator.com/item?id=45802673)).
+
+**Search demand is tiny**
+
+- "email sequence generator": 30 searches/month, US.
+- "email sequence": 480 searches/month, US ([seodata.dev](https://www.seodata.dev/keyword/email-sequence-generator)).
+
+**Pain threads are rare (HN only)**
+
+- Only two organic asks on HN since 2025-01. Reddit and Indie Hackers could not be read, so this means no willingness-to-pay evidence was found, not that there is no demand.
+
+**What still pays is a person doing the work**
+
+- Czech agencies list 4,000–14,000 Kč per flow and from 6,400 Kč for an audit ([pudeto.cz](https://pudeto.cz/e-mail-marketing/)).
+- Digismoothie lists 7,500 Kč per flow ([digismoothie.com](https://www.digismoothie.com/cs/services/e-mail-marketing)).
+- These are list prices, not proof of sales.
+
+**Czech ESPs already include AI**
+
+- Ecomail includes AI on every plan ([ecomail.cz/cenik](https://www.ecomail.cz/cenik)).
+- SmartEmailing has AI in your brand voice and a Shoptet abandoned-cart setup ([smartemailing.cz/cenik](https://www.smartemailing.cz/cenik/)).
+- So a Czech self-serve tool would compete with free.
+
+**Labeled, not relied on**
+
+- Klaviyo claims "with just a website URL" for flows, but only on a marketing page, and the feature is in beta.
+- Jasper traffic sources conflict.
+- AI-writing market-size estimates differ by roughly 40x.
+
+**Proposed direction (pending founder decision)**
+
+- Use flashletter as the in-house engine behind a Czech done-for-you sequence service, not as a self-serve SaaS. Generation already writes in the landing page's language (`app/api/generate-emails/prompts.ts`); Czech output quality is unverified.
+- Test: one-page offer, a 5-email welcome series at 4,900 Kč with a money-back guarantee, pitched in person or by DM to 20 Ostrava SMBs and shop owners.
+  - **Pass:** at least 2 paid orders, or at least 3 accepted quotes of 4,000 Kč or more.
+  - **Kill:** 0 yeses from 20 pitches.
+- Rejected:
+  - SaaS lifecycle emails: they sell through pages, and Loops and Sequenzy are already there.
+  - Shoptet self-serve: the ESPs give the AI away.
+  - Paid MCP server: no paid precedent found.
+  - Self-serve audit tool: weak demand. An audit can work as the free way into a conversation.
+
+---
+
 ## Changelog
 
 - **2026-04** — Initial doc. Captures the strategy session covering onboarding, paywall placement, ESP landscape, post-generation experience, and build sequencing.
 - **2026-04 (revision)** — Killed copy-to-clipboard (chore, not product). Killed teaser/interest-capture interim. Resend integration moved from "deferred until ~50 signups" to "next real build after test-send" — justified by AI-coded development making integration cheap. Paid tier now lives on Resend push, not a future placeholder. Open questions updated to reflect new shape (Resend integration spec, pricing model, second-integration choice).
+- **2026-10-16** — Market check (section 11): the URL→sequence moat and the Resend-push paid tier are contradicted by checked sources; proposed a Czech done-for-you service test instead, pending decision.
