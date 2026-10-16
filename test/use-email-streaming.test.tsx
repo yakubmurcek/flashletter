@@ -41,6 +41,7 @@ import {
   type GenerateEmailsStreamEvent,
 } from '@/lib/services/campaign.service'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
+import { PlanLimitError } from '@/lib/billing/errors'
 
 const landingPageData: LandingPageData = {
   url: 'https://example.com',
@@ -229,7 +230,7 @@ describe('useEmailStreaming', () => {
 
     const { result } = renderHook(() => useEmailStreaming())
     await act(async () => {
-      await result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+      await result.current.generateEmailsStream(landingPageData, config, 'once-camp')
     })
 
     // 3 email events but only one funnel event — the metric is "did the user
@@ -237,10 +238,10 @@ describe('useEmailStreaming', () => {
     // funnel and double-count time-to-first-email downstream.
     const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
     expect(fired).toHaveLength(1)
-    expect(fired[0][1]).toEqual({ campaignId: 'camp-id' })
+    expect(fired[0][1]).toEqual({ campaignId: 'once-camp' })
   })
 
-  it('first_email_streamed re-arms across separate stream invocations', async () => {
+  it('first_email_streamed re-arms for a different campaign', async () => {
     vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
       async (_u, _c, _cfg, onEvent) => {
         onEvent({ type: 'email', email: makeEmail(1) })
@@ -259,6 +260,40 @@ describe('useEmailStreaming', () => {
 
     const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
     expect(fired).toHaveLength(2)
+  })
+
+  it('does not re-fire first_email_streamed when the same campaign is regenerated', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+      async (_u, _c, _cfg, onEvent) => {
+        onEvent({ type: 'email', email: makeEmail(1) })
+        onEvent({ type: 'complete', emails: [] })
+        return []
+      },
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'regen-camp')
+    })
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'regen-camp')
+    })
+
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
+    expect(fired).toHaveLength(1)
+  })
+
+  it('logs limit_reached with the limit the server named (emails, not campaigns)', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockRejectedValue(
+      new PlanLimitError('Up to 7 emails on your plan.', 'free', 'emails'),
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'limit-camp')
+    })
+
+    expect(trackMock).toHaveBeenCalledWith('limit_reached', { plan: 'free', limit: 'emails' })
   })
 
   it('aborts previous stream when called again', async () => {

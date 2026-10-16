@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { getRedis } from '@/lib/utils/rate-limit'
 import { PLAN_LIMITS, currentPeriodStart, type PlanId } from './plans'
+import type { LimitKind } from './errors'
 import { getSubscriptionSummary, isBillingEnabled } from './stripe'
 
 export async function getPlan(user: User): Promise<PlanId> {
@@ -19,7 +20,7 @@ export async function getPlan(user: User): Promise<PlanId> {
 
 export type LimitDenial = {
   error: 'limit_reached'
-  limit: 'campaigns' | 'emails' | 'ai_rewrites'
+  limit: LimitKind
   plan: PlanId
   message: string
 }
