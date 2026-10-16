@@ -53,4 +53,25 @@ export const landingPageAnalysisSchema = z.object({
 
 export type LandingPageAnalysis = z.infer<typeof landingPageAnalysisSchema>
 
+/**
+ * The analysis as the user may have edited it on /create/configure: any text
+ * field can be cleared and list items can be blank. Used wherever an edited
+ * analysis comes back in (generation requests, stored campaigns) so one
+ * cleared field never turns every later generation into a 400.
+ */
+export const editedLandingPageAnalysisSchema = z.object({
+  valueProp: z.string().trim(),
+  targetAudience: z.string().trim(),
+  primaryCTA: z.string().trim(),
+  toneFingerprint: z.string().trim(),
+  objections: z.array(z.string()).transform(dropBlank),
+  proofPoints: z.array(z.string()).transform(dropBlank),
+  angles: z.array(z.string()).transform(dropBlank),
+  opportunities: z.array(z.string()).transform(dropBlank),
+})
+
+function dropBlank(items: string[]): string[] {
+  return items.map((item) => item.trim()).filter(Boolean)
+}
+
 export const landingPageAnalysisOptionalSchema = landingPageAnalysisSchema.partial()

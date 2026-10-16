@@ -111,16 +111,19 @@ function formatList(items: string[] | undefined, prefix: string, emptyNote: stri
   return `${prefix}:\n${items.map((item) => `- ${item}`).join('\n')}`
 }
 
+// The user can clear any analysis field on /create/configure.
+const orInfer = (value: string) => value.trim() || 'Not given; infer it from the page content.'
+
 function buildAnalysisBlock(analysis: LandingPageAnalysis | undefined): string {
   if (!analysis) return ''
 
   return `
 LANDING PAGE ANALYSIS (use this directly in the copy — do not ignore):
 
-Value proposition: ${analysis.valueProp}
-Target audience: ${analysis.targetAudience}
-Primary CTA (every email must drive toward this same action): ${analysis.primaryCTA}
-Voice fingerprint to match: ${analysis.toneFingerprint}
+Value proposition: ${orInfer(analysis.valueProp)}
+Target audience: ${orInfer(analysis.targetAudience)}
+Primary CTA (every email must drive toward this same action): ${orInfer(analysis.primaryCTA)}
+Voice fingerprint to match: ${orInfer(analysis.toneFingerprint)}
 
 ${formatList(analysis.proofPoints, 'Proof points (cite these verbatim — do NOT fabricate numbers or customer names)', 'No concrete proof on the page. Do NOT invent stats or testimonials.')}
 

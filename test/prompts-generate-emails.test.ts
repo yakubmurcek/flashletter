@@ -297,6 +297,19 @@ describe('buildFirstEmailInstructions', () => {
   })
 })
 
+describe('analysis block with a cleared field', () => {
+  it('tells the model to infer a field the user cleared instead of leaving it blank', () => {
+    const prompt = buildRemainingEmailsInstructions(
+      { days: 3, campaignType: 'nurture', tone: 'friendly' },
+      'https://example.com',
+      { subject: 'S', preview: 'P', content: 'C' },
+      'page content',
+      { ...analysis, valueProp: '' },
+    )
+    expect(prompt).toMatch(/Value proposition: Not given; infer it from the page content\./)
+  })
+})
+
 describe('buildRemainingEmailsInstructions', () => {
   const config = { days: 5, campaignType: 'nurture', tone: 'friendly' }
   const firstEmail = {

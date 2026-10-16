@@ -171,3 +171,45 @@ describe('landingPageDataSchema', () => {
     expect(parsed.metadata).toBeUndefined()
   })
 })
+
+describe('generateEmailsRequestSchema with an edited analysis', () => {
+  // Clearing a field on /create/configure used to 400 every later generation.
+  it('accepts an analysis with a cleared field and blank list items', () => {
+    const parsed = generateEmailsRequestSchema.parse({
+      landingUrl: 'https://example.com',
+      landingAnalysis: {
+        valueProp: '',
+        targetAudience: 'Founders',
+        primaryCTA: '  ',
+        toneFingerprint: 'Direct',
+        objections: [],
+        proofPoints: ['Used by 1,200 founders', '  '],
+        angles: ['Time saved'],
+        opportunities: [],
+      },
+      config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
+    })
+    expect(parsed.landingAnalysis?.valueProp).toBe('')
+    expect(parsed.landingAnalysis?.primaryCTA).toBe('')
+    expect(parsed.landingAnalysis?.proofPoints).toEqual(['Used by 1,200 founders'])
+  })
+})
+
+describe('landingPageDataSchema with an edited analysis', () => {
+  it('still loads a stored campaign whose analysis field was cleared', () => {
+    const parsed = landingPageDataSchema.safeParse({
+      url: 'https://example.com',
+      analysis: {
+        valueProp: '',
+        targetAudience: '',
+        primaryCTA: 'Start trial',
+        toneFingerprint: '',
+        objections: [],
+        proofPoints: [],
+        angles: [],
+        opportunities: [],
+      },
+    })
+    expect(parsed.success).toBe(true)
+  })
+})
