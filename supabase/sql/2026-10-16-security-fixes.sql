@@ -1,12 +1,17 @@
--- Lock down the waitlist table (2026-10-15).
+-- Security fixes, one paste (2026-10-16). Safe to run more than once.
+-- Run it in the Supabase SQL editor. Three parts:
+--   1. Waitlist: close the table to client roles (it was publicly readable).
+--   2. Guest claims: move a guest's campaigns to the account they sign in to.
+--   3. campaigns.created_at: the database sets it, clients can't backdate it
+--      (a backdated campaign skipped the monthly plan limit).
+
+-- 1. Waitlist ------------------------------------------------------------------
 --
 -- Before this, the public anon key (shipped in the JS bundle) could read the
 -- whole waitlist straight from PostgREST: emails, names, consent, region.
 -- After it, no client role can touch the table; the app goes through the
 -- three SECURITY DEFINER functions below instead. Guests signed in with
 -- signInAnonymously() use the `authenticated` role, so both roles lose access.
---
--- Safe to run more than once. Run it in the Supabase SQL editor.
 
 begin;
 
@@ -118,5 +123,92 @@ revoke all on function public.waitlist_admin_list() from public;
 grant execute on function public.waitlist_join(text, text, boolean, boolean, text, text) to anon, authenticated;
 grant execute on function public.waitlist_unsubscribe(text) to anon, authenticated;
 grant execute on function public.waitlist_admin_list() to authenticated;
+
+-- 2. Guest claims -------------------------------------------------------------
+--
+-- A guest (anonymous sign-in) who then signs in to a real account used to
+-- leave their campaigns behind. While still a guest, the app asks for a claim
+-- token (bound to auth.uid(), single use, one hour); after sign-in it redeems
+-- it and the guest's campaigns move to the account. The guest id is never a
+-- parameter, so nobody can claim someone else's campaigns.
+
+create table if not exists public.guest_claims (
+  token uuid primary key default gen_random_uuid(),
+  guest_id uuid not null,
+  expires_at timestamptz not null default now() + interval '1 hour'
+);
+alter table public.guest_claims enable row level security;
+revoke all on table public.guest_claims from anon, authenticated;
+
+create or replace function public.create_guest_claim()
+returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_token uuid;
+begin
+  if v_uid is null or coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) = false then
+    raise exception 'only a guest can create a claim' using errcode = '42501';
+  end if;
+  delete from public.guest_claims where guest_id = v_uid or expires_at < now();
+  insert into public.guest_claims (guest_id) values (v_uid) returning token into v_token;
+  return v_token;
+end
+$$;
+
+create or replace function public.redeem_guest_claim(p_token uuid)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_uid uuid := auth.uid();
+  v_guest uuid;
+  v_moved integer;
+begin
+  if v_uid is null or coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) then
+    raise exception 'sign in before claiming guest campaigns' using errcode = '42501';
+  end if;
+  delete from public.guest_claims
+  where token = p_token and expires_at > now()
+  returning guest_id into v_guest;
+  if v_guest is null or v_guest = v_uid then
+    return 0;
+  end if;
+  update public.campaigns set user_id = v_uid where user_id = v_guest;
+  get diagnostics v_moved = row_count;
+  return v_moved;
+end
+$$;
+
+revoke all on function public.create_guest_claim() from public;
+revoke all on function public.redeem_guest_claim(uuid) from public;
+grant execute on function public.create_guest_claim() to authenticated;
+grant execute on function public.redeem_guest_claim(uuid) to authenticated;
+
+-- 3. campaigns.created_at -----------------------------------------------------
+
+create or replace function public.campaigns_keep_created_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.created_at := now();
+  else
+    new.created_at := old.created_at;
+  end if;
+  return new;
+end
+$$;
+
+drop trigger if exists campaigns_keep_created_at on public.campaigns;
+create trigger campaigns_keep_created_at
+  before insert or update on public.campaigns
+  for each row execute function public.campaigns_keep_created_at();
 
 commit;
