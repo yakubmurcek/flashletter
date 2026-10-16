@@ -17,6 +17,14 @@ import { buildFirstEmailInstructions, buildRemainingEmailsInstructions } from '.
 import { fixEmailLinks } from '@/lib/utils/email-links'
 import type { Email } from '@/lib/schemas'
 
+// Long Pro sequences (up to 30 emails) take minutes; let the function run up
+// to Vercel's limit instead of the platform default.
+export const maxDuration = 300
+
+// Days 2..N are written in parallel batches of this size, so a 30-email run
+// costs about as much wall time as a 10-email one.
+const DAYS_PER_BATCH = 10
+
 type StreamEvent =
   | { type: 'start'; total: number }
   | { type: 'email'; email: Email }
@@ -166,33 +174,52 @@ export async function POST(req: NextRequest) {
         allEmails.push(firstEmail)
         send({ type: 'email', email: firstEmail })
 
-        // Phase 2: generate Days 2..N referencing Day 1 for coherence.
-        const rest: Email[] = []
-        if (config.days > 1) {
-          const remainingParsed = await generateStructured({
+        // Phase 2: generate Days 2..N referencing Day 1 for coherence, in
+        // parallel batches. A batch that comes back short is asked once more
+        // for its missing days.
+        const firstForPrompt = {
+          subject: firstEmail.subject,
+          preview: firstEmail.preview,
+          content: firstEmail.content,
+        }
+        const generateRange = async (from: number, to: number) => {
+          const parsed = await generateStructured({
             system: buildRemainingEmailsInstructions(
               config,
               landingUrl,
-              {
-                subject: firstEmail.subject,
-                preview: firstEmail.preview,
-                content: firstEmail.content,
-              },
+              firstForPrompt,
               landingContent,
               landingAnalysis,
+              { from, to },
             ),
-            messages: [{ role: 'user', content: `Generate Days 2 through ${config.days}.` }],
+            messages: [{ role: 'user', content: `Generate Days ${from} through ${to}.` }],
             schema: aiEmailsResponseSchema,
           })
+          // Cap at the range so an over-long response can't clobber.
+          return parsed.emails.slice(0, to - from + 1)
+        }
+        const fillRange = async (from: number, to: number) => {
+          const got = await generateRange(from, to)
+          if (from + got.length > to) return got
+          const more = await generateRange(from + got.length, to)
+          return [...got, ...more]
+        }
 
-          // Force the day number from the index — never trust the model. Phase 2
-          // is asked for Days 2..N, so position i (0-based) maps to day i + 2.
-          // We also cap at config.days so an over-long response can't clobber.
-          const slots = config.days - 1
-          const usable = remainingParsed.emails.slice(0, slots)
-          for (let i = 0; i < usable.length; i++) {
-            const raw = usable[i]
-            const day = i + 2
+        const batches: Promise<Awaited<ReturnType<typeof generateRange>>>[] = []
+        for (let from = 2; from <= config.days; from += DAYS_PER_BATCH) {
+          const batch = fillRange(from, Math.min(from + DAYS_PER_BATCH - 1, config.days))
+          // Awaited in order below; this keeps a later batch's failure from
+          // surfacing as an unhandled rejection while an earlier one runs.
+          batch.catch(() => undefined)
+          batches.push(batch)
+        }
+
+        const rest: Email[] = []
+        for (const batch of batches) {
+          for (const raw of await batch) {
+            // Number days by position (never trust the model) and keep them
+            // contiguous even if a batch stayed short.
+            const day = rest.length + 2
             rest.push({
               id: day,
               uuid: null,
@@ -204,10 +231,15 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        const shortWarning =
+          rest.length + 1 < config.days
+            ? `Claude wrote ${rest.length + 1} of the ${config.days} emails you asked for. Regenerate to try for the full sequence.`
+            : undefined
+
         // Persist the rest, then drop any old days past the new end. Day 1
         // is not written again (unless its early save failed): the user may
         // have edited it while the rest was generating.
-        let saveWarning: string | undefined
+        let saveWarning: string | undefined = shortWarning
         let savedRest = rest
         if (storage && campaignId && (savedDay1 || !cancelled)) {
           const unsaved = [...(savedDay1 ? [] : [firstEmail]), ...rest]
@@ -225,7 +257,9 @@ export async function POST(req: NextRequest) {
             // Surface the failure to the client so the UI can react. Emails are
             // still returned (without UUIDs) so the user doesn't lose generated
             // content, but version tracking won't work until they re-save.
-            saveWarning = 'Could not persist emails; returned without persistence'
+            saveWarning = [shortWarning, 'Could not persist emails; returned without persistence']
+              .filter(Boolean)
+              .join(' ')
           }
         }
 

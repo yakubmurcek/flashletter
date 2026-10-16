@@ -320,6 +320,20 @@ describe('buildRemainingEmailsInstructions', () => {
     expect(prompt).toMatch(/Days?\s*2\s*(through|to|–|-)\s*5/i)
   })
 
+  it('asks for just its batch when given a day range', () => {
+    const batch = buildRemainingEmailsInstructions(
+      { ...config, days: 30 },
+      'https://example.com',
+      firstEmail,
+      'page content',
+      analysis,
+      { from: 12, to: 21 },
+    )
+    expect(batch).toMatch(/Days 12 through 21/)
+    expect(batch).toMatch(/exactly 10 emails/)
+    expect(batch).toMatch(/written separately/)
+  })
+
   it('includes the day-1 subject, preview, and body for context', () => {
     expect(prompt).toContain(firstEmail.subject)
     expect(prompt).toContain(firstEmail.preview)

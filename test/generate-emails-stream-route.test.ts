@@ -369,6 +369,81 @@ describe('POST /api/generate-emails/stream', () => {
     ])
   })
 
+  it('asks again for the days a short reply left out', async () => {
+    const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [email(1)] })
+      .mockResolvedValueOnce({ emails: [email(2)] })
+      .mockResolvedValueOnce({ emails: [email(3), email(4)] })
+
+    const response = await POST(
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 4 },
+      }) as never,
+    )
+    const events = await readStreamEvents(response)
+
+    expect(generateStructuredMock.mock.calls[2][0].messages).toEqual([
+      { role: 'user', content: 'Generate Days 3 through 4.' },
+    ])
+    expect(events.filter((e) => e.type === 'email').map((e) => e.email?.day)).toEqual([1, 2, 3, 4])
+    expect(events.at(-1)?.warning).toBeUndefined()
+  })
+
+  it('says so when the sequence still comes back short', async () => {
+    const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [email(1)] })
+      .mockResolvedValueOnce({ emails: [email(2)] })
+      .mockResolvedValueOnce({ emails: [] })
+
+    const response = await POST(
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 4 },
+      }) as never,
+    )
+    const events = await readStreamEvents(response)
+    const complete = events.at(-1)
+
+    expect(complete?.type).toBe('complete')
+    expect(complete?.warning).toMatch(/2 of the 4 emails/)
+  })
+
+  it('writes a 30-email sequence in parallel batches', async () => {
+    const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
+    generateStructuredMock.mockImplementation(async ({ messages }) => {
+      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const from = Number(m[1])
+      const to = Number(m[2] ?? m[1])
+      return { emails: Array.from({ length: to - from + 1 }, (_, i) => email(from + i)) }
+    })
+
+    const response = await POST(
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 30 },
+      }) as never,
+    )
+    const events = await readStreamEvents(response)
+
+    expect(generateStructuredMock.mock.calls.map((c) => c[0].messages[0].content)).toEqual([
+      'Generate Day 1 only.',
+      'Generate Days 2 through 11.',
+      'Generate Days 12 through 21.',
+      'Generate Days 22 through 30.',
+    ])
+    expect(events.filter((e) => e.type === 'email').map((e) => e.email?.day)).toEqual(
+      Array.from({ length: 30 }, (_, i) => i + 1),
+    )
+  })
+
+  it('lets the function run up to the 300s limit', async () => {
+    const route = await import('@/app/api/generate-emails/stream/route')
+    expect(route.maxDuration).toBe(300)
+  })
+
   const withCampaign = (days = 2) =>
     buildRequest({
       ...validRequestBody,
@@ -396,6 +471,8 @@ describe('POST /api/generate-emails/stream', () => {
       .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
       // Asked for Days 2..4, got only one back: the old Days 3 and 4 must go.
       .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
+      // The re-ask for Days 3..4 comes back empty too.
+      .mockResolvedValueOnce({ emails: [] })
 
     const events = await readStreamEvents(await POST(withCampaign(4)))
     const completeEvent = events.find((e) => e.type === 'complete')
@@ -411,7 +488,7 @@ describe('POST /api/generate-emails/stream', () => {
       [1, uuidForDay(1)],
       [2, uuidForDay(2)],
     ])
-    expect(completeEvent?.warning).toBeUndefined()
+    expect(completeEvent?.warning).toMatch(/2 of the 4 emails/)
   })
 
   it('trims old days after Day 1 for a one-day sequence', async () => {

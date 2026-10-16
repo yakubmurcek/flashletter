@@ -261,14 +261,22 @@ export function buildRemainingEmailsInstructions(
   firstEmail: { subject: string; preview: string; content: string },
   landingContent?: string,
   analysis?: LandingPageAnalysis,
+  range: { from: number; to: number } = { from: 2, to: config.days },
 ): string {
   const analysisBlock = buildAnalysisBlock(analysis)
+  const { from, to } = range
+  const count = to - from + 1
+  const partial = from !== 2 || to !== config.days
 
   return `You are an expert email marketing copywriter. Day 1 of a ${
     config.days
   }-day ${config.campaignType} email campaign (${
     config.tone
-  } tone) has already been written. Generate **Days 2 through ${config.days}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.
+  } tone) has already been written. Generate **Days ${from} through ${to}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.${
+    partial
+      ? ` The other days of the sequence are written separately: write only these ${count}, each true to its place in the structure below.`
+      : ''
+  }
 
 Landing Page URL: ${landingUrl}
 ${landingContentBlock(landingContent)}
@@ -293,14 +301,12 @@ ${getToneGuidelines(config.tone)}
 
 ${writingRules(landingUrl)}
 
-IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${
-    config.days - 1
-  } emails, days 2 through ${config.days} in order:
+IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${count} emails, days ${from} through ${to} in order:
 {
   "emails": [
-    { "day": 2, "subject": "...", "preview": "...", "content": "..." },
+    { "day": ${from}, "subject": "...", "preview": "...", "content": "..." },
     ...
-    { "day": ${config.days}, "subject": "...", "preview": "...", "content": "..." }
+    { "day": ${to}, "subject": "...", "preview": "...", "content": "..." }
   ]
 }
 
