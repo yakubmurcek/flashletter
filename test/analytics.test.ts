@@ -242,7 +242,6 @@ describe('lib/analytics', () => {
       identify('user-123', { is_anonymous: false })
       expect(identifyMock).toHaveBeenCalledWith('user-123', { is_anonymous: false })
     })
-
   })
 
   describe('signup_completed transition detection', () => {
