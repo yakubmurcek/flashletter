@@ -14,6 +14,7 @@ import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/li
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { checkCampaignAllowed, checkEmailCount, getPlan } from '@/lib/billing/limits'
 import { buildFirstEmailInstructions, buildRemainingEmailsInstructions } from '../prompts'
+import { fixEmailLinks } from '@/lib/utils/email-links'
 import type { Email } from '@/lib/schemas'
 
 type StreamEvent =
@@ -142,7 +143,8 @@ export async function POST(req: NextRequest) {
           day: 1,
           subject: rawFirst.subject || '',
           preview: rawFirst.preview || '',
-          content: rawFirst.content || '',
+          // Relative or unsafe links are dead once pasted into an email tool.
+          content: fixEmailLinks(rawFirst.content || '', landingUrl),
         }
 
         // Save Day 1 before showing it, so the editor gets its real id and
@@ -197,7 +199,7 @@ export async function POST(req: NextRequest) {
               day,
               subject: raw.subject || '',
               preview: raw.preview || '',
-              content: raw.content || '',
+              content: fixEmailLinks(raw.content || '', landingUrl),
             })
           }
         }

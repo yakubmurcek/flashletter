@@ -129,13 +129,37 @@ describe('buildInstructions (without analysis)', () => {
     expect(prompt).toContain('Page content here')
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '\u2603' // snowman — doesn't appear elsewhere in the prompt
-    const longContent = sentinel.repeat(7000) + 'TAIL_MARKER'
+    const longContent = sentinel.repeat(12000) + 'TAIL_MARKER'
     const p = buildInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/\u2603/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
     expect(p).not.toContain('TAIL_MARKER')
+  })
+
+  it('counts text, not markup, so a testimonial after heavy markup reaches the writer', () => {
+    const linkWall = Array.from(
+      { length: 200 },
+      (_, i) => `<p><a href="https://example.com/features/section/item-${i}">Item ${i}</a></p>`,
+    ).join('\n')
+    expect(linkWall.length).toBeGreaterThan(8000)
+    const content = `${linkWall}\n<p>"It saved us 10 hours a week." Jane Doe, TESTIMONIAL_MARKER</p>`
+
+    for (const p of [
+      buildInstructions(config, 'https://e.com', content),
+      buildFirstEmailInstructions(config, 'https://e.com', content),
+      buildRemainingEmailsInstructions(
+        config,
+        'https://e.com',
+        { subject: 's', preview: 'p', content: 'c' },
+        content,
+      ),
+    ]) {
+      expect(p).toContain('TESTIMONIAL_MARKER')
+      // Links stay available so the CTA can point at a real deeper page.
+      expect(p).toContain('href="https://example.com/features/section/item-199"')
+    }
   })
 
   it('does not include analysis block when analysis is undefined', () => {
@@ -255,12 +279,12 @@ describe('buildFirstEmailInstructions', () => {
     expect(prompt.toLowerCase()).toMatch(/do not invent/i)
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(7000)
+    const longContent = sentinel.repeat(12000)
     const p = buildFirstEmailInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
   })
 
   it('omits the analysis block when analysis is undefined', () => {
@@ -326,12 +350,12 @@ describe('buildRemainingEmailsInstructions', () => {
     expect(p).not.toContain('LANDING PAGE ANALYSIS')
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(7000)
+    const longContent = sentinel.repeat(12000)
     const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
   })
 
   it('handles a 2-day campaign (only day 2 to write)', () => {

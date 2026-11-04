@@ -611,4 +611,29 @@ describe('POST /api/generate-emails/stream', () => {
     expect(response.headers.get('X-RateLimit-Remaining')).toBeDefined()
     expect(response.headers.get('X-RateLimit-Reset')).toBeDefined()
   })
+
+  it('makes every link in the generated emails absolute before saving or streaming', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({
+        emails: [{ subject: 'S1', preview: 'P1', content: 'Hi,\n\n[Sign up](/register)' }],
+      })
+      .mockResolvedValueOnce({
+        emails: [
+          { subject: 'S2', preview: 'P2', content: '[Pricing](#pricing) [x](javascript:x)' },
+        ],
+      })
+
+    const events = await readStreamEvents(await POST(withCampaign()))
+    const streamed = events
+      .filter((e) => e.type === 'email')
+      .map((e) => (e.email as { content?: string }).content)
+    const saved = upsertEmailsMock.mock.calls.flatMap(([, emails]) =>
+      (emails as Array<{ content: string }>).map((e) => e.content),
+    )
+
+    const day1 = 'Hi,\n\n[Sign up](https://example.com/register)'
+    const day2 = '[Pricing](https://example.com/#pricing) [x](https://example.com/)'
+    expect(streamed).toEqual([day1, day2])
+    expect(saved).toEqual([day1, day2])
+  })
 })

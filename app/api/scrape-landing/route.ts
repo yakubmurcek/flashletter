@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
 
         const html = response.text
         const finalUrl = response.finalUrl
-        const scrapedContent = extractTextFromHTML(html)
+        const scrapedContent = extractTextFromHTML(html, finalUrl)
         const metadata = extractMetadata(html, finalUrl)
 
         scrapeResult = {
@@ -185,7 +185,7 @@ export async function POST(req: NextRequest) {
             playwrightError,
           )
           // Fallback to static scraping if Playwright fails
-          const scrapedContent = extractTextFromHTML(html)
+          const scrapedContent = extractTextFromHTML(html, finalUrl)
           const metadata = extractMetadata(html, finalUrl)
 
           scrapeResult = {
@@ -198,7 +198,7 @@ export async function POST(req: NextRequest) {
         }
       } else {
         // Use static scraping
-        const scrapedContent = extractTextFromHTML(html)
+        const scrapedContent = extractTextFromHTML(html, finalUrl)
         const metadata = extractMetadata(html, finalUrl)
 
         scrapeResult = {

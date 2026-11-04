@@ -258,6 +258,42 @@ describe('POST /api/chat', () => {
     })
   })
 
+  it('makes links in AI edits absolute against the campaign landing URL', async () => {
+    generateStructuredMock.mockResolvedValue({
+      message: 'Added a CTA.',
+      shouldEdit: true,
+      edits: { content: 'Hi,\n\n[Register](/register) or [see prices](#pricing)' },
+    })
+
+    const body = await (
+      await post({
+        ...hello,
+        campaignContext: {
+          landingPageData: { url: 'https://acme.com/landing' },
+          config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
+          allEmails: [],
+          currentEmailId: 1,
+        },
+      })
+    ).json()
+
+    expect(body.edits.content).toBe(
+      'Hi,\n\n[Register](https://acme.com/register) or [see prices](https://acme.com/landing#pricing)',
+    )
+  })
+
+  it('unwraps relative links in AI edits when there is no landing URL', async () => {
+    generateStructuredMock.mockResolvedValue({
+      message: 'Added a CTA.',
+      shouldEdit: true,
+      edits: { subject: 'New', content: '[Register](/register) [ok](https://acme.com/)' },
+    })
+
+    const body = await (await post(hello)).json()
+
+    expect(body.edits).toEqual({ subject: 'New', content: 'Register [ok](https://acme.com/)' })
+  })
+
   it('drops edits when shouldEdit is false', async () => {
     generateStructuredMock.mockResolvedValue({
       message: 'Here is an idea.',

@@ -1,8 +1,12 @@
 import { generateStructured } from '@/lib/ai'
 import { landingPageAnalysisSchema, type LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ExtractedMetadata } from '@/lib/utils/metadata-extractor'
+import { truncateContentByTextLength } from '@/lib/utils/scraper'
+import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
-const ANALYSIS_CONTENT_LIMIT = 8000
+// Counted in visible text, not markup, and equal to what the scraper keeps:
+// proof points (testimonials, FAQ, pricing) sit at the bottom of the page.
+const ANALYSIS_CONTENT_LIMIT = LANDING_PAGE_CONTENT_LIMIT
 
 const SYSTEM_INSTRUCTIONS = `You analyze landing pages to power cold-email and newsletter copy that actually converts.
 
@@ -26,7 +30,7 @@ interface AnalyzeLandingPageInput {
 export async function analyzeLandingPage(
   input: AnalyzeLandingPageInput,
 ): Promise<LandingPageAnalysis> {
-  const truncatedContent = input.content.slice(0, ANALYSIS_CONTENT_LIMIT)
+  const truncatedContent = truncateContentByTextLength(input.content, ANALYSIS_CONTENT_LIMIT)
   const title = input.metadata.ogTitle || input.metadata.title || 'Untitled page'
   const description = input.metadata.ogDescription || input.metadata.description || ''
   const siteName = input.metadata.ogSiteName || ''

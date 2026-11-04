@@ -98,7 +98,7 @@ export async function POST(req: NextRequest) {
         schema: chatOutputSchema,
         maxTokens: 16000,
       })
-      parsedResponse = toChatResponse(output)
+      parsedResponse = toChatResponse(output, campaignContext?.landingPageData.url)
     } catch (error) {
       await refundAiRewrite(user.id, plan).catch(() => undefined)
       throw error

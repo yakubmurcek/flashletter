@@ -333,4 +333,27 @@ describe('POST /api/generate-emails', () => {
     expect(response.headers.get('X-RateLimit-Remaining')).toBeDefined()
     expect(response.headers.get('X-RateLimit-Reset')).toBeDefined()
   })
+
+  it('makes every link in the generated emails absolute before saving', async () => {
+    generateStructuredMock.mockResolvedValue({
+      emails: [
+        { subject: 'S1', preview: 'P1', content: '[Sign up](/register)' },
+        { subject: 'S2', preview: 'P2', content: '[Docs](//docs.example.com/a)' },
+        { subject: 'S3', preview: 'P3', content: '[Mail](mailto:a@example.com)' },
+      ],
+    })
+
+    const response = await POST(buildRequest(validRequestBody) as never)
+    const body = await response.json()
+    expect(body.emails.map((e: { content: string }) => e.content)).toEqual([
+      '[Sign up](https://example.com/register)',
+      '[Docs](https://docs.example.com/a)',
+      '[Mail](mailto:a@example.com)',
+    ])
+
+    await POST(buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never)
+    expect(saveEmailsMock.mock.calls[0][1][0].content).toBe(
+      '[Sign up](https://example.com/register)',
+    )
+  })
 })

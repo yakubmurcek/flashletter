@@ -16,12 +16,16 @@ export interface ScrapedContent {
 /**
  * Extract clean structured content from HTML with smart prioritization
  * @param html Raw HTML content
+ * @param baseUrl The page's final URL (after redirects). Every link is resolved
+ *   against it, so the content (and the emails written from it) never carries
+ *   a relative href that dies once pasted into an email.
  * @returns Structured HTML content with word count
  */
-export function extractTextFromHTML(html: string): ScrapedContent {
+export function extractTextFromHTML(html: string, baseUrl?: string): ScrapedContent {
   const $ = cheerio.load(html)
 
   removeNoiseElements($)
+  resolveLinks($, baseUrl)
 
   const contentSelectors = [
     'main',
@@ -127,6 +131,8 @@ function removeNoiseElements($: cheerio.CheerioAPI): void {
     .remove()
 }
 
+const BLOCK_TAGS = 'h1,h2,h3,h4,h5,h6,p,div,section,article,ul,ol,li,table,blockquote'
+
 function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.CheerioAPI): string {
   const parts: string[] = []
 
@@ -163,6 +169,18 @@ function buildStructuredHtml(element: cheerio.Cheerio<AnyNode>, $: cheerio.Cheer
 
     if (tagName === 'p' || tagName === 'span') {
       const content = sanitizeInlineContent($(node), $)
+      if (content) {
+        parts.push(`<p>${content}</p>`)
+      }
+      return
+    }
+
+    // A bare CTA link straight inside a block (a button-styled <a> in a hero)
+    // keeps its href; recursing into it below would keep only its text.
+    // Links that wrap whole cards (headings, paragraphs) still recurse.
+    if (tagName === 'a' && $(node).find(BLOCK_TAGS).length === 0) {
+      const wrapper = $('<span></span>').append($(node).clone())
+      const content = sanitizeInlineContent(wrapper, $)
       if (content) {
         parts.push(`<p>${content}</p>`)
       }
@@ -298,17 +316,56 @@ function sanitizeInlineContent(element: cheerio.Cheerio<AnyNode>, $: cheerio.Che
   return collapseWhitespace(result)
 }
 
+const ALLOWED_LINK_PROTOCOLS = new Set(['http:', 'https:', 'mailto:'])
+
+function parseUrl(value: string, base?: string): URL | null {
+  try {
+    return new URL(value, base)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Rewrites every href to an absolute http(s) or mailto: URL resolved against
+ * the page URL, and drops any other (javascript:, tel:, data:, ...). Without a
+ * usable page URL, relative hrefs are left for `sanitizeHref` as before.
+ */
+function resolveLinks($: cheerio.CheerioAPI, baseUrl?: string): void {
+  const base = baseUrl ? parseUrl(baseUrl) : null
+  if (!base || (base.protocol !== 'http:' && base.protocol !== 'https:')) {
+    return
+  }
+
+  $('a[href]').each((_, el) => {
+    const link = $(el)
+    const href = (link.attr('href') || '').trim()
+    const resolved = href ? parseUrl(href, base.href) : null
+    if (resolved && ALLOWED_LINK_PROTOCOLS.has(resolved.protocol)) {
+      link.attr('href', resolved.href)
+    } else {
+      link.removeAttr('href')
+    }
+  })
+}
+
+/**
+ * Keeps absolute http(s)/mailto: links and relative ones; drops any other
+ * scheme. The scheme is read the way a browser parses it, so " javascript:"
+ * or "JaVaScRiPt:" can't slip through.
+ */
 function sanitizeHref(href: string): string {
-  if (!href) {
+  const trimmed = href.trim()
+  if (!trimmed) {
     return ''
   }
 
-  const lowerHref = href.toLowerCase()
-  if (lowerHref.startsWith('javascript:')) {
+  const absolute = parseUrl(trimmed)
+  if (absolute && !ALLOWED_LINK_PROTOCOLS.has(absolute.protocol)) {
     return ''
   }
 
-  return href
+  return trimmed
 }
 
 function escapeHtml(text: string): string {
@@ -391,6 +448,29 @@ function smartTruncateWithMetadata(text: string, maxLength: number): TruncationM
     truncated: true,
     appendEllipsis: true,
   }
+}
+
+/**
+ * Cuts scraped content to `maxTextLength` characters of visible text, keeping
+ * its markup (and links). Prompt budgets must count text, not markup: a
+ * link-heavy page is 1.5-2x longer as HTML, and cutting the HTML string
+ * dropped the testimonials, FAQ and pricing at the bottom of the page.
+ * Plain text input works too. Content within the budget is returned as is.
+ */
+export function truncateContentByTextLength(content: string, maxTextLength: number): string {
+  if (!content) {
+    return ''
+  }
+
+  const plainText = cleanPlainText(cheerio.load(`<div>${content}</div>`).text())
+  const truncation = smartTruncateWithMetadata(plainText, maxTextLength)
+  if (!truncation.truncated) {
+    return content
+  }
+
+  return normalizeHtml(
+    truncateHtmlByTextLength(content, truncation.cutoff, truncation.appendEllipsis),
+  )
 }
 
 function truncateHtmlByTextLength(html: string, cutoff: number, appendEllipsis: boolean): string {

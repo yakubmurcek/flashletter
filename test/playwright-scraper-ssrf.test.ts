@@ -132,6 +132,20 @@ describe('scrapeWithPlaywright SSRF guard', () => {
     expect(result.content).toContain('Hello world')
   })
 
+  // Links on a rendered page are resolved against where it ended up, so a
+  // relative CTA never reaches the writer (and from there an email).
+  it('resolves relative links against the final URL', async () => {
+    const { page } = fakeBrowser({
+      redirects: ['https://public.example/', 'https://public.example/start'],
+      finalUrl: 'https://public.example/start',
+    })
+    page.content.mockResolvedValue(
+      '<html><body><main><p>Hello world</p><a href="/register">Sign up</a></main></body></html>',
+    )
+    const result = await scrapeWithPlaywright('https://public.example/')
+    expect(result.content).toContain('href="https://public.example/register"')
+  })
+
   it('refuses a page that redirected through a private address', async () => {
     const { page } = fakeBrowser({
       redirects: ['https://public.example/', 'http://169.254.169.254/', 'https://public.example/x'],

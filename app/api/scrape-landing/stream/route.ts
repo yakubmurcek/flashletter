@@ -171,7 +171,7 @@ export async function POST(req: NextRequest) {
                   `Dynamic scraping failed for ${url}, falling back to static:`,
                   playwrightError,
                 )
-                const scraped = extractTextFromHTML(html)
+                const scraped = extractTextFromHTML(html, fetchedUrl)
                 metadata = extractMetadata(html, fetchedUrl)
                 content = scraped.content
                 wordCount = scraped.wordCount
@@ -179,7 +179,7 @@ export async function POST(req: NextRequest) {
                 finalUrl = fetchedUrl
               }
             } else {
-              const scraped = extractTextFromHTML(html)
+              const scraped = extractTextFromHTML(html, fetchedUrl)
               metadata = extractMetadata(html, fetchedUrl)
               content = scraped.content
               wordCount = scraped.wordCount

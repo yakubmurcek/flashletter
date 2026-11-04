@@ -150,6 +150,43 @@ describe('Content Extraction', () => {
     expect(textContent.length < longContent.length || textContent.trim().endsWith('...')).toBe(true)
   })
 
+  it('resolves every link against the page URL so emails never get relative hrefs', () => {
+    const html = `
+      <html><body><main>
+        <p>${'Plenty of real copy about the product. '.repeat(5)}</p>
+        <p><a href="/register">Register</a> <a href="cenik">Prices</a> <a href="#pricing">Jump</a>
+        <a href="//cdn.acme.com/guide">Guide</a> <a href="https://other.com/x">Other</a>
+        <a href="mailto:hi@acme.com">Mail us</a> <a href=" javascript:alert(1)">Evil</a>
+        <a href="tel:+420123">Call</a></p>
+      </main></body></html>
+    `
+
+    const { content } = extractTextFromHTML(html, 'https://acme.com/en/landing')
+    const $ = cheerio.load(content)
+    const hrefs = $('a')
+      .map((_, a) => $(a).attr('href'))
+      .get()
+
+    expect(hrefs).toEqual([
+      'https://acme.com/register',
+      'https://acme.com/en/cenik',
+      'https://acme.com/en/landing#pricing',
+      'https://cdn.acme.com/guide',
+      'https://other.com/x',
+      'mailto:hi@acme.com',
+    ])
+    // Unsafe or non-web links lose the href but keep their text.
+    expect(content).toContain('Evil')
+    expect(content).toContain('Call')
+    expect(content).not.toContain('javascript')
+  })
+
+  it('also resolves links when the page is long enough to be truncated', () => {
+    const html = `<html><body><main><p><a href="/start">Start</a> ${'This is a sentence. '.repeat(1000)}</p></main></body></html>`
+    const { content } = extractTextFromHTML(html, 'https://acme.com/')
+    expect(content).toContain('href="https://acme.com/start"')
+  })
+
   it('should detect meaningful content', () => {
     const meaningfulContent =
       'This is a comprehensive article about web development and programming. It contains detailed information about HTML, CSS, and JavaScript technologies. The content provides valuable insights for developers and programmers. It has multiple paragraphs and meaningful text that would be useful for newsletter generation. This article covers various aspects of web development including frontend frameworks, backend technologies, and best practices. The information is well-structured and provides comprehensive details about modern web development techniques and methodologies.'

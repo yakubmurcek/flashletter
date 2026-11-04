@@ -14,6 +14,7 @@ import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/li
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { checkCampaignAllowed, checkEmailCount, getPlan } from '@/lib/billing/limits'
 import { buildInstructions } from './prompts'
+import { fixEmailLinks } from '@/lib/utils/email-links'
 
 export async function POST(req: NextRequest) {
   try {
@@ -100,7 +101,8 @@ export async function POST(req: NextRequest) {
         day,
         subject: email.subject || '',
         preview: email.preview || '',
-        content: email.content || '',
+        // Relative or unsafe links are dead once pasted into an email tool.
+        content: fixEmailLinks(email.content || '', landingUrl),
       }
     })
 

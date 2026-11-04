@@ -9,10 +9,11 @@ import { landingPageAnalysisSchema } from './analysis'
 
 // Generate emails API request
 //
-// `landingContent` is capped well above what our prompt actually consumes
-// (it's truncated to 2_000 chars before being handed to the model) — the cap
-// just exists so a malicious payload can't spend memory + Zod cycles parsing
-// a megabyte string before we get to the truncation step.
+// `landingContent` is the scraped page as HTML. The prompt cuts it to
+// LANDING_PAGE_CONTENT_LIMIT (10k) characters of visible text, which is
+// roughly 15-20k characters with markup, so 50k leaves room for link-heavy
+// pages. The cap just exists so a malicious payload can't spend memory + Zod
+// cycles parsing a megabyte string before we get to the truncation step.
 export const generateEmailsRequestSchema = z.object({
   landingUrl: z.string().url().max(2048),
   landingContent: z.string().max(50_000).optional(),
