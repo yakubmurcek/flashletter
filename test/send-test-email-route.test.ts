@@ -78,6 +78,7 @@ const validBody = { campaignId: VALID_CAMPAIGN_ID, emailDay: 1 }
 describe('POST /api/send-test-email', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
+    process.env.NEXT_PUBLIC_ENABLE_TEST_SEND = 'true'
     process.env.RESEND_API_KEY = 'test-key'
     process.env.RESEND_FROM_ADDRESS = 'test@flashletter.app'
 
@@ -105,6 +106,25 @@ describe('POST /api/send-test-email', () => {
     })
 
     resendSendMock.mockReset().mockResolvedValue({ error: null })
+  })
+
+  it('returns 404 when test send is not enabled, before touching auth or Resend', async () => {
+    delete process.env.NEXT_PUBLIC_ENABLE_TEST_SEND
+
+    const res = await POST(buildRequest(validBody) as never)
+
+    expect(res.status).toBe(404)
+    expect(getUserMock).not.toHaveBeenCalled()
+    expect(resendSendMock).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 when the flag is set to anything other than "true"', async () => {
+    process.env.NEXT_PUBLIC_ENABLE_TEST_SEND = '1'
+
+    const res = await POST(buildRequest(validBody) as never)
+
+    expect(res.status).toBe(404)
+    expect(resendSendMock).not.toHaveBeenCalled()
   })
 
   it('returns 401 when unauthenticated', async () => {
@@ -200,50 +220,44 @@ describe('POST /api/send-test-email', () => {
     expect(body).toEqual({ ok: true, sentTo: 'real@user.com', upgradeStarted: false })
   })
 
-  it('anonymous user: sends to recipientEmail and triggers the upgrade flow', async () => {
+  it('guest with a recipientEmail: 401, no send, never converts the guest into an account', async () => {
     getUserMock.mockResolvedValue({
       data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
     })
 
     const res = await POST(buildRequest({ ...validBody, recipientEmail: 'new@user.com' }) as never)
 
-    expect(res.status).toBe(200)
-    expect(resendSendMock).toHaveBeenCalledTimes(1)
-    expect(resendSendMock.mock.calls[0][0].to).toBe('new@user.com')
-    expect(updateUserMock).toHaveBeenCalledWith({ email: 'new@user.com' })
-
-    const body = await res.json()
-    expect(body).toEqual({ ok: true, sentTo: 'new@user.com', upgradeStarted: true })
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Create a free account to send test emails.' })
+    expect(resendSendMock).not.toHaveBeenCalled()
+    expect(updateUserMock).not.toHaveBeenCalled()
   })
 
-  it('anonymous user without recipientEmail: returns 400', async () => {
+  it('guest without a recipientEmail: same 401', async () => {
     getUserMock.mockResolvedValue({
       data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
     })
 
     const res = await POST(buildRequest(validBody) as never)
 
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(401)
+    expect(await res.json()).toEqual({ error: 'Create a free account to send test emails.' })
     expect(resendSendMock).not.toHaveBeenCalled()
+    expect(updateUserMock).not.toHaveBeenCalled()
   })
 
-  it('anonymous user: send succeeds even if updateUser fails — upgradeStarted=false', async () => {
+  it('signed-in user without an account email: 400, no send', async () => {
     getUserMock.mockResolvedValue({
-      data: { user: { id: 'anon-1', email: undefined, is_anonymous: true } },
+      data: { user: { id: 'user-123', email: undefined, is_anonymous: false } },
     })
-    updateUserMock.mockResolvedValue({ error: { message: 'email taken' } })
 
     const res = await POST(
-      buildRequest({ ...validBody, recipientEmail: 'taken@user.com' }) as never,
+      buildRequest({ ...validBody, recipientEmail: 'someone@else.com' }) as never,
     )
 
-    // The magic moment (the test send) is what the user actually paid attention
-    // for — keep returning 200 even when the upgrade signal silently fails, so
-    // a flaky linkIdentity path doesn't swallow a successful send.
-    expect(res.status).toBe(200)
-    expect(resendSendMock).toHaveBeenCalledTimes(1)
-    const body = await res.json()
-    expect(body.upgradeStarted).toBe(false)
+    expect(res.status).toBe(400)
+    expect(resendSendMock).not.toHaveBeenCalled()
+    expect(updateUserMock).not.toHaveBeenCalled()
   })
 
   it('returns 502 when Resend rejects the send', async () => {
@@ -252,8 +266,6 @@ describe('POST /api/send-test-email', () => {
     const res = await POST(buildRequest(validBody) as never)
 
     expect(res.status).toBe(502)
-    // Bug guard: do not start the upgrade signal when the actual send failed —
-    // otherwise an anon user's email gets linked despite no test ever arriving.
     expect(updateUserMock).not.toHaveBeenCalled()
   })
 

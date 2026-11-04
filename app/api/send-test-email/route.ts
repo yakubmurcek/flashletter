@@ -16,6 +16,12 @@ import { getClientIp } from '@/lib/utils/get-client-ip'
 import { markdownToHtml } from '@/lib/utils/markdown'
 
 export async function POST(req: NextRequest) {
+  // Same flag that shows the button, so the route is dark whenever the button
+  // is. Read here (not via FEATURE_FLAGS) so tests can toggle it.
+  if (process.env.NEXT_PUBLIC_ENABLE_TEST_SEND !== 'true') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
   try {
     const supabase = await createClient()
     const {
@@ -24,6 +30,17 @@ export async function POST(req: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    // Guests have no verified address of their own. Letting them type one would
+    // let anyone mail our content to any inbox from our domain, and setting it
+    // on the guest (updateUser) would turn them into a passwordless account
+    // under a possibly mistyped email that they could never sign in to.
+    if (user.is_anonymous) {
+      return NextResponse.json(
+        { error: 'Create a free account to send test emails.' },
+        { status: 401 },
+      )
     }
 
     const userRateLimit = await checkRateLimit(sendTestEmailRateLimit, user.id)
@@ -56,17 +73,13 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
-    const { campaignId, emailDay, recipientEmail } = sendTestEmailRequestSchema.parse(body)
+    // recipientEmail is still accepted by the schema but never used: a test
+    // only ever goes to the signed-in user's own account email.
+    const { campaignId, emailDay } = sendTestEmailRequestSchema.parse(body)
 
-    // Pick the target inbox. For real users, ignore the dialog input — sending
-    // to their account email keeps a typo in the form from misrouting the test
-    // and aligns with how every other "send to me" button in SaaS works.
-    // Anonymous users have no auth.users.email yet, so we require the form to
-    // supply one (which doubles as the upgrade-flow trigger below).
-    const isAnonymous = user.is_anonymous ?? false
-    const targetEmail = isAnonymous ? recipientEmail : user.email
+    const targetEmail = user.email
     if (!targetEmail) {
-      return NextResponse.json({ error: 'Recipient email required' }, { status: 400 })
+      return NextResponse.json({ error: 'Your account has no email address' }, { status: 400 })
     }
 
     const apiKey = process.env.RESEND_API_KEY
@@ -115,32 +128,10 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // For anon users, kick off the email-link upgrade in parallel with the
-    // test send. updateUser({ email }) sends a confirmation magic link to the
-    // address — clicking it links the email to the existing user.id, so all
-    // their work persists. We don't await success/failure of the link signal
-    // separately; the test arriving is the magic moment, the upgrade is the
-    // bonus prompt waiting in their inbox.
-    let upgradeStarted = false
-    if (isAnonymous && recipientEmail) {
-      const { error: updateError } = await supabase.auth.updateUser({ email: recipientEmail })
-      if (updateError) {
-        // Don't fail the request — the test send already succeeded. Log so we
-        // notice if the upgrade path is consistently broken.
-        console.warn('[send-test-email] updateUser failed:', updateError.message)
-        Sentry.captureMessage('send-test-email: anon upgrade updateUser failed', {
-          level: 'warning',
-          extra: { error: updateError.message },
-        })
-      } else {
-        upgradeStarted = true
-      }
-    }
-
     const responseBody = sendTestEmailResponseSchema.parse({
       ok: true,
       sentTo: targetEmail,
-      upgradeStarted,
+      upgradeStarted: false,
     })
 
     return NextResponse.json(responseBody, {
