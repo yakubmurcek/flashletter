@@ -5,6 +5,7 @@ import { render, cleanup } from '@testing-library/react'
 const trackMock = vi.fn()
 vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => trackMock(...args),
+  isCapturing: () => true,
 }))
 
 import { CheckoutCompletedTracker } from '@/components/billing/checkout-completed-tracker'

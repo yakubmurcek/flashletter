@@ -246,8 +246,20 @@ describe('lib/analytics', () => {
 
   describe('signup_completed transition detection', () => {
     beforeEach(() => {
+      storeConsent(true)
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       initPostHog()
+    })
+
+    it('without consent sends nothing and marks nothing, so it can still count later', () => {
+      window.localStorage.removeItem(CONSENT_STORAGE_KEY)
+      identify('fresh', { is_anonymous: false }, { createdAt: new Date().toISOString() })
+      expect(captureMock).not.toHaveBeenCalled()
+      expect(window.localStorage.getItem('fl_analytics_signup_fired')).toBeNull()
+
+      storeConsent(true)
+      identify('fresh', { is_anonymous: false }, { createdAt: new Date().toISOString() })
+      expect(captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')).toHaveLength(1)
     })
 
     it('does not fire on a returning authed user (no prior anon marker)', () => {

@@ -11,7 +11,7 @@ import { createClient } from '../supabase/client'
 import { useCampaignActions, useCampaignData } from '../campaign-context'
 import type { CampaignConfig, Email, LandingPageData } from '../types'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
-import { track } from '../analytics'
+import { isCapturing, track } from '../analytics'
 import { PlanLimitError } from '../billing/errors'
 import type { PlanId } from '../billing/plans'
 
@@ -191,7 +191,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           } else if (event.type === 'email') {
             if (!firstEmailFired) {
               firstEmailFired = true
-              if (claimFirstEmailStreamed(campaignId))
+              if (isCapturing() && claimFirstEmailStreamed(campaignId))
                 track('first_email_streamed', {
                   campaignId: campaignId ?? undefined,
                 })

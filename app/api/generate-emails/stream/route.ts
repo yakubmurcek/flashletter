@@ -205,20 +205,29 @@ export async function POST(req: NextRequest) {
           return [...got, ...more]
         }
 
-        const batches: Promise<Awaited<ReturnType<typeof generateRange>>>[] = []
+        const ranges: Array<{ from: number; to: number }> = []
         for (let from = 2; from <= config.days; from += DAYS_PER_BATCH) {
-          const batch = fillRange(from, Math.min(from + DAYS_PER_BATCH - 1, config.days))
-          // Awaited in order below; this keeps a later batch's failure from
-          // surfacing as an unhandled rejection while an earlier one runs.
-          batch.catch(() => undefined)
-          batches.push(batch)
+          ranges.push({ from, to: Math.min(from + DAYS_PER_BATCH - 1, config.days) })
         }
+        const settled = await Promise.allSettled(ranges.map(({ from, to }) => fillRange(from, to)))
 
+        // Keep batches in order up to the first one that failed or stayed
+        // short: a later batch's emails were written for later days, so
+        // appending them after a gap would shift every email a day early.
+        // Whatever is missing is reported through the short warning.
         const rest: Email[] = []
-        for (const batch of batches) {
-          for (const raw of await batch) {
-            // Number days by position (never trust the model) and keep them
-            // contiguous even if a batch stayed short.
+        for (let b = 0; b < settled.length; b++) {
+          const result = settled[b]
+          if (result.status === 'rejected') {
+            Sentry.captureException(result.reason, {
+              tags: { error_type: 'generate_batch', api_route: '/api/generate-emails/stream' },
+              extra: { from: ranges[b].from, to: ranges[b].to },
+            })
+            // Nothing after Day 1 came back: fail like before.
+            if (rest.length === 0) throw result.reason
+            break
+          }
+          for (const raw of result.value) {
             const day = rest.length + 2
             rest.push({
               id: day,
@@ -229,6 +238,7 @@ export async function POST(req: NextRequest) {
               content: fixEmailLinks(raw.content || '', landingUrl),
             })
           }
+          if (result.value.length < ranges[b].to - ranges[b].from + 1) break
         }
 
         const shortWarning =

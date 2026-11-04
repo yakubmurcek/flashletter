@@ -55,6 +55,15 @@ export function hasAnalyticsConsent(): boolean {
 }
 
 /**
+ * True when an event sent now would really be recorded: PostHog is set up and
+ * the visitor accepted analytics. Code that marks an event as sent once (so it
+ * never repeats) checks this first, or a dropped event would count as sent.
+ */
+export function isCapturing(): boolean {
+  return initialized && hasAnalyticsConsent()
+}
+
+/**
  * Run `listener` once analytics consent exists: right away when it already
  * does, otherwise when the visitor accepts. Used to start Sentry session
  * replay only after consent. Returns an unsubscribe function.
@@ -197,7 +206,9 @@ export function identify(
   if (!initialized) return
   posthog.identify(distinctId, traits)
 
-  if (typeof window === 'undefined') return
+  // Without consent nothing is captured and nothing goes to storage; marking
+  // a dropped signup_completed as fired would lose it for good.
+  if (typeof window === 'undefined' || !hasAnalyticsConsent()) return
   const isAnon = traits?.is_anonymous === true
 
   if (isAnon) {

@@ -33,6 +33,7 @@ vi.mock('@/lib/services/campaign-storage.service', () => ({
 const trackMock = vi.fn()
 vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => trackMock(...args),
+  isCapturing: () => true,
 }))
 
 import {

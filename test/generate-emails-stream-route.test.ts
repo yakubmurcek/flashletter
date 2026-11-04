@@ -439,6 +439,61 @@ describe('POST /api/generate-emails/stream', () => {
     )
   })
 
+  it('keeps the finished batches when a later one fails', async () => {
+    const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
+    generateStructuredMock.mockImplementation(async ({ messages }) => {
+      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const from = Number(m[1])
+      const to = Number(m[2] ?? m[1])
+      if (from === 12) throw new Error('Overloaded')
+      return { emails: Array.from({ length: to - from + 1 }, (_, i) => email(from + i)) }
+    })
+
+    const events = await readStreamEvents(
+      await POST(
+        buildRequest({
+          ...validRequestBody,
+          config: { ...validRequestBody.config, days: 15 },
+        }) as never,
+      ),
+    )
+    const complete = events.at(-1)
+
+    expect(complete?.type).toBe('complete')
+    expect(complete?.emails?.map((e) => e.day)).toEqual(Array.from({ length: 11 }, (_, i) => i + 1))
+    expect(complete?.warning).toMatch(/11 of the 15 emails/)
+  })
+
+  it('does not shift later days when an earlier batch stays short', async () => {
+    const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
+    generateStructuredMock.mockImplementation(async ({ messages }) => {
+      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const from = Number(m[1])
+      const to = Number(m[2] ?? m[1])
+      // Days 2..11 never include Day 11, even when asked again.
+      const last = from <= 11 && to >= 11 ? 10 : to
+      return {
+        emails: Array.from({ length: Math.max(0, last - from + 1) }, (_, i) => email(from + i)),
+      }
+    })
+
+    const events = await readStreamEvents(
+      await POST(
+        buildRequest({
+          ...validRequestBody,
+          config: { ...validRequestBody.config, days: 15 },
+        }) as never,
+      ),
+    )
+    const complete = events.at(-1)
+
+    // Day 12's email must never be saved as Day 11.
+    expect(complete?.emails?.map((e) => e.subject)).toEqual(
+      Array.from({ length: 10 }, (_, i) => `S${i + 1}`),
+    )
+    expect(complete?.warning).toMatch(/10 of the 15 emails/)
+  })
+
   it('lets the function run up to the 300s limit', async () => {
     const route = await import('@/app/api/generate-emails/stream/route')
     expect(route.maxDuration).toBe(300)

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { track } from '@/lib/analytics'
+import { isCapturing, track } from '@/lib/analytics'
 import type { BillingInterval } from '@/lib/billing/plans'
 
 const storageKey = (sessionId: string) => `fl_checkout_completed_${sessionId}`
@@ -36,7 +36,7 @@ export function CheckoutCompletedTracker({
   const fired = useRef(false)
 
   useEffect(() => {
-    if (fired.current) return
+    if (fired.current || !isCapturing()) return
     fired.current = true
     if (alreadyTracked(sessionId)) return
     markTracked(sessionId)
