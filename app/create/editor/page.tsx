@@ -11,6 +11,7 @@ import { useEmailState } from '@/lib/hooks/use-email-state'
 import { useVersionTracking } from '@/lib/hooks/use-version-tracking'
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
+import { useChatEditGuard } from '@/lib/hooks/use-ai-chat'
 import type { Email, SelectedContext } from '@/lib/types'
 import { createClient } from '@/lib/supabase/client'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
@@ -177,6 +178,11 @@ function EditorPageContent() {
     },
     [saveEmail],
   )
+
+  // An AI chat reply is written from the email as it was when sent. If the
+  // user edited that email meanwhile (saved or still in the editor), the
+  // chat offers the reply instead of overwriting their words.
+  const { reportDraft, applyChatEdits } = useChatEditGuard(emails, handleUpdateEmail)
 
   const handleToggleChat = useCallback(() => {
     if (showChat) {
@@ -486,6 +492,7 @@ function EditorPageContent() {
                 onTextSelected={handleTextSelected}
                 isSaving={isSaving}
                 saveFailed={!!saveError}
+                onDraftChange={(draft) => reportDraft(selectedEmail.id, draft)}
               />
             ) : isStreaming || streamError || (autogenFlag && emails.length === 0) ? (
               <GeneratingState
@@ -519,11 +526,11 @@ function EditorPageContent() {
           }
           email={selectedEmail || undefined}
           campaignType={config?.campaignType}
-          onApplyEdits={(edits) => {
-            if (selectedEmail) {
-              handleUpdateEmail(selectedEmail.id, edits)
-            }
-          }}
+          // Bound to the email open when the request was sent, so a reply
+          // that lands after switching emails still goes to the right one.
+          onApplyEdits={(edits, basis) =>
+            selectedEmail ? applyChatEdits(selectedEmail.id, edits, basis) : false
+          }
           selectedContext={selectedContext}
           onClearContext={handleClearContext}
           autoSubmitMessage={autoSubmitMessage}

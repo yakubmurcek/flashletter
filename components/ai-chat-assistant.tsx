@@ -4,16 +4,12 @@ import type React from 'react'
 import { useEffect, useRef } from 'react'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 import { useAIChat } from '@/lib/hooks'
+import type { ApplyEmailEdits } from '@/lib/hooks/use-ai-chat'
 import { AIChatHeader } from '@/components/ai-chat/header'
 import { AIChatMessageList } from '@/components/ai-chat/message-list'
 import { AIChatQuickActions } from '@/components/ai-chat/quick-actions'
 import { AIChatInputForm } from '@/components/ai-chat/input-form'
 import { AIChatErrorBoundary } from '@/components/ai-chat/error-boundary'
-
-interface EmailEdits {
-  subject?: string
-  content?: string
-}
 
 interface AIChatAssistantProps {
   onClose: () => void
@@ -23,7 +19,7 @@ interface AIChatAssistantProps {
     content?: string
     campaignType?: string
   }
-  onApplyEdits?: (edits: EmailEdits) => void
+  onApplyEdits?: ApplyEmailEdits
   selectedContext?: SelectedContext | null
   onClearContext?: () => void
   autoSubmitMessage?: string | null
