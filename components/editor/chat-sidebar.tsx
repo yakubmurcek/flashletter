@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { AIChatAssistant } from '@/components/ai-chat-assistant'
 import type { FullCampaignContext, SelectedContext, Email } from '@/lib/types'
+import type { ApplyEmailEdits } from '@/lib/hooks/use-ai-chat'
 
 interface ChatSidebarProps {
   isOpen: boolean
@@ -12,7 +13,7 @@ interface ChatSidebarProps {
   campaignContext?: FullCampaignContext
   email?: Email
   campaignType?: string
-  onApplyEdits: (edits: Partial<Email>) => void
+  onApplyEdits: ApplyEmailEdits
   selectedContext: SelectedContext | null
   onClearContext: () => void
   autoSubmitMessage: string | null

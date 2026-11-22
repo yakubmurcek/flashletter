@@ -4,36 +4,15 @@ vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
 }))
 
+// The waitlist table is closed to client roles (supabase/sql/2026-10-15-lock-waitlist.sql);
+// the routes must go through the SECURITY DEFINER functions, never the table.
+const rpc = vi.fn()
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
-    from: () => ({
-      select: () => ({
-        eq: () => ({
-          single: vi.fn().mockResolvedValue({ data: null }),
-        }),
-      }),
-      insert: () => ({
-        select: () => ({
-          single: vi.fn().mockResolvedValue({
-            data: {
-              id: 'waitlist-1',
-              email: 'test@example.com',
-              order: 1,
-            },
-          }),
-        }),
-      }),
-      delete: () => ({
-        eq: vi.fn().mockResolvedValue({ data: null, error: null }),
-      }),
-      update: () => ({
-        eq: () => ({
-          select: vi.fn().mockResolvedValue({
-            data: [{ id: 'waitlist-1', email: 'test@example.com' }],
-          }),
-        }),
-      }),
-    }),
+    rpc: (...args: unknown[]) => rpc(...args),
+    from: () => {
+      throw new Error('waitlist routes must not query the table directly')
+    },
   }),
 }))
 
@@ -58,7 +37,10 @@ function buildUnsubscribeRequest(body: unknown): Request {
 
 describe('POST /api/waitlist', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
+    rpc.mockReset().mockResolvedValue({
+      data: { id: 'waitlist-1', order: 1, total_count: 1, already_joined: false },
+      error: null,
+    })
   })
 
   it('returns 400 for invalid email format', async () => {
@@ -76,30 +58,14 @@ describe('POST /api/waitlist', () => {
   it('returns 200 (not 400) when email already exists — anti-enumeration', async () => {
     // Audit fix #9: signups for already-listed addresses must not leak
     // existence via a 400. Same shape as a successful signup.
-    const supabaseMod = await import('@/lib/supabase/server')
-    const spy = vi.spyOn(supabaseMod, 'createClient').mockResolvedValue({
-      from: () => ({
-        select: () => ({
-          eq: () => ({
-            single: vi.fn().mockResolvedValue({
-              data: { id: 'waitlist-1' },
-            }),
-          }),
-        }),
-      }),
-    } as never)
-
-    try {
-      const response = await POST_WAITLIST(
-        buildWaitlistRequest({ email: 'test@example.com' }) as never,
-      )
-      expect(response.status).toBe(200)
-      const body = await response.json()
-      expect(body.message).toContain('Successfully joined')
-      expect(body.alreadyJoined).toBe(true)
-    } finally {
-      spy.mockRestore()
-    }
+    rpc.mockResolvedValueOnce({ data: { id: 'waitlist-1', already_joined: true }, error: null })
+    const response = await POST_WAITLIST(
+      buildWaitlistRequest({ email: 'test@example.com' }) as never,
+    )
+    expect(response.status).toBe(200)
+    const body = await response.json()
+    expect(body.message).toContain('Successfully joined')
+    expect(body.alreadyJoined).toBe(true)
   })
 
   it('successfully adds new email to waitlist', async () => {
@@ -114,6 +80,20 @@ describe('POST /api/waitlist', () => {
     const body = await response.json()
     expect(body.message).toContain('Successfully joined')
     expect(body.id).toBeDefined()
+    expect(rpc).toHaveBeenCalledWith('waitlist_join', {
+      p_email: 'new@example.com',
+      p_name: 'John Doe',
+      p_privacy_consent: true,
+      p_marketing_consent: false,
+      p_consent_timestamp: null,
+      p_user_region: 'OTHER',
+    })
+  })
+
+  it('returns 500 when the database refuses the signup', async () => {
+    rpc.mockResolvedValueOnce({ data: null, error: { message: 'boom' } })
+    const response = await POST_WAITLIST(buildWaitlistRequest({ email: 'x@example.com' }) as never)
+    expect(response.status).toBe(500)
   })
 
   it('applies default values for optional fields', async () => {
@@ -126,7 +106,7 @@ describe('POST /api/waitlist', () => {
 
 describe('POST /api/waitlist/unsubscribe', () => {
   beforeEach(() => {
-    vi.restoreAllMocks()
+    rpc.mockReset().mockResolvedValue({ data: null, error: null })
   })
 
   it('returns 400 when neither email nor token is provided', async () => {
@@ -155,9 +135,10 @@ describe('POST /api/waitlist/unsubscribe', () => {
 
   it('returns 200 for a known email and uses uniform success shape', async () => {
     const response = await POST_UNSUBSCRIBE(
-      buildUnsubscribeRequest({ email: 'test@example.com' }) as never,
+      buildUnsubscribeRequest({ email: 'Test@Example.com' }) as never,
     )
     expect(response.status).toBe(200)
+    expect(rpc).toHaveBeenCalledWith('waitlist_unsubscribe', { p_email: 'test@example.com' })
     const body = await response.json()
     expect(body.email).toBeUndefined()
     expect(body.message).toBeDefined()

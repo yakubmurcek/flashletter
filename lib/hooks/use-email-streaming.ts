@@ -11,7 +11,7 @@ import { createClient } from '../supabase/client'
 import { useCampaignActions, useCampaignData } from '../campaign-context'
 import type { CampaignConfig, Email, LandingPageData } from '../types'
 import { logError, getUserFriendlyMessage } from '../utils/error-handling'
-import { track } from '../analytics'
+import { isCapturing, track } from '../analytics'
 import { PlanLimitError } from '../billing/errors'
 import type { PlanId } from '../billing/plans'
 
@@ -53,12 +53,38 @@ const textOf = (email: EmailText): EmailText => ({
 const sameText = (a: EmailText, b: EmailText) =>
   a.subject === b.subject && a.content === b.content && a.preview === b.preview
 
-async function persistEdits(campaignId: string, emails: Email[]) {
+// first_email_streamed measures time to the first email of a campaign, so a
+// regenerate (same campaign, same browser) must not count again.
+const FIRST_STREAMED_KEY = 'fl_analytics_first_streamed'
+const firstStreamedInMemory = new Set<string>()
+
+function claimFirstEmailStreamed(campaignId: string | null): boolean {
+  if (!campaignId) return true
+  if (firstStreamedInMemory.has(campaignId)) return false
+  firstStreamedInMemory.add(campaignId)
+  try {
+    const seen: unknown = JSON.parse(window.localStorage.getItem(FIRST_STREAMED_KEY) ?? '[]')
+    const ids = Array.isArray(seen) ? (seen as string[]) : []
+    if (ids.includes(campaignId)) return false
+    window.localStorage.setItem(
+      FIRST_STREAMED_KEY,
+      JSON.stringify([...ids, campaignId].slice(-200)),
+    )
+  } catch {
+    // Storage unavailable: the in-memory set still dedupes this page session.
+  }
+  return true
+}
+
+/** Writes the edits; resolves to how many of them could not be saved. */
+async function persistEdits(campaignId: string, emails: Email[]): Promise<number> {
   const storage = new CampaignStorageService(createClient())
+  let failed = 0
   for (const email of emails) {
     try {
       await storage.updateEmail(campaignId, email.day, textOf(email))
     } catch (err) {
+      failed++
       logError(err, {
         operation: 'save edit made during generation',
         component: 'useEmailStreaming',
@@ -66,7 +92,11 @@ async function persistEdits(campaignId: string, emails: Email[]) {
       })
     }
   }
+  return failed
 }
+
+const EDITS_NOT_SAVED_WARNING =
+  'An edit you made while the sequence was generating was not saved. Check the email and make it again.'
 
 export function useEmailStreaming(): UseEmailStreamingReturn {
   const { appendGeneratedEmail, replaceGeneratedEmailsLocal } = useCampaignActions()
@@ -161,9 +191,10 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           } else if (event.type === 'email') {
             if (!firstEmailFired) {
               firstEmailFired = true
-              track('first_email_streamed', {
-                campaignId: campaignId ?? undefined,
-              })
+              if (isCapturing() && claimFirstEmailStreamed(campaignId))
+                track('first_email_streamed', {
+                  campaignId: campaignId ?? undefined,
+                })
             }
             session.streamed.set(event.email.day, textOf(event.email))
             appendGeneratedEmail(event.email)
@@ -203,9 +234,17 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
           return kept
         })
         replaceGeneratedEmailsLocal(merged)
-        // The server saved the streamed text, so write the edits back.
+        // Make sure the kept edits are what the database holds: the server
+        // writes Day 1's streamed text again when its early save failed.
         if (campaignId && edited.length > 0) {
-          void persistEdits(campaignId, edited)
+          void persistEdits(campaignId, edited).then((failed) => {
+            // Still this campaign, and no newer run has started.
+            const shown = currentCampaignIdRef.current
+            const sameCampaign = shown === campaignId || shown === session.contextCampaignId
+            if (failed > 0 && !unmountedRef.current && !sessionRef.current && sameCampaign) {
+              setWarning(EDITS_NOT_SAVED_WARNING)
+            }
+          })
         }
         return merged
       } catch (err) {
@@ -215,7 +254,7 @@ export function useEmailStreaming(): UseEmailStreamingReturn {
         if (err instanceof PlanLimitError) {
           setLimitPlan(err.plan)
           setError(err.message)
-          track('limit_reached', { plan: err.plan, limit: 'campaigns' })
+          track('limit_reached', { plan: err.plan, limit: err.limit })
           return null
         }
         if (err instanceof RateLimitedError) {

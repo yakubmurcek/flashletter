@@ -40,6 +40,19 @@ afterEach(() => {
 })
 
 describe('EmailPreview autosave', () => {
+  // The editor shows a "couldn't save" banner; the header must not say Saved next to it.
+  it('says Not saved when the last save failed', () => {
+    const { getByText, queryByText } = render(
+      <EmailPreview
+        email={EMAILS[0]}
+        onUpdate={() => {}}
+        saveFailed
+      />,
+    )
+    expect(getByText('Not saved')).toBeTruthy()
+    expect(queryByText('Saved')).toBeNull()
+  })
+
   it('saves an edit after the debounce', () => {
     vi.useFakeTimers()
     const onSave = vi.fn()
@@ -70,5 +83,28 @@ describe('EmailPreview autosave', () => {
     expect(onSave).toHaveBeenCalledWith(1, { subject: 'Sharper day one', content: 'Body one' })
     expect(onSave).not.toHaveBeenCalledWith(2, expect.anything())
     expect((getByLabelText('Subject') as HTMLTextAreaElement).value).toBe('Day two')
+  })
+})
+
+describe('EmailPreview save status and tab close', () => {
+  it('says Saving while an edit waits out the debounce, not Saved', () => {
+    vi.useFakeTimers()
+    const { getByLabelText, getByText, queryByText } = render(<EditorHarness onSave={vi.fn()} />)
+
+    fireEvent.change(getByLabelText('Subject'), { target: { value: 'Not yet saved' } })
+    expect(getByText('Saving...')).toBeTruthy()
+    expect(queryByText('Saved')).toBeNull()
+  })
+
+  it('hands a pending edit to autosave when the tab is closed', () => {
+    vi.useFakeTimers()
+    const onSave = vi.fn()
+    const { getByLabelText } = render(<EditorHarness onSave={onSave} />)
+
+    fireEvent.change(getByLabelText('Subject'), { target: { value: 'Last words' } })
+    act(() => {
+      window.dispatchEvent(new Event('pagehide'))
+    })
+    expect(onSave).toHaveBeenCalledWith(1, { subject: 'Last words', content: 'Body one' })
   })
 })

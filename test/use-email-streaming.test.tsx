@@ -33,6 +33,7 @@ vi.mock('@/lib/services/campaign-storage.service', () => ({
 const trackMock = vi.fn()
 vi.mock('@/lib/analytics', () => ({
   track: (...args: unknown[]) => trackMock(...args),
+  isCapturing: () => true,
 }))
 
 import {
@@ -41,6 +42,7 @@ import {
   type GenerateEmailsStreamEvent,
 } from '@/lib/services/campaign.service'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
+import { PlanLimitError } from '@/lib/billing/errors'
 
 const landingPageData: LandingPageData = {
   url: 'https://example.com',
@@ -229,7 +231,7 @@ describe('useEmailStreaming', () => {
 
     const { result } = renderHook(() => useEmailStreaming())
     await act(async () => {
-      await result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+      await result.current.generateEmailsStream(landingPageData, config, 'once-camp')
     })
 
     // 3 email events but only one funnel event — the metric is "did the user
@@ -237,10 +239,10 @@ describe('useEmailStreaming', () => {
     // funnel and double-count time-to-first-email downstream.
     const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
     expect(fired).toHaveLength(1)
-    expect(fired[0][1]).toEqual({ campaignId: 'camp-id' })
+    expect(fired[0][1]).toEqual({ campaignId: 'once-camp' })
   })
 
-  it('first_email_streamed re-arms across separate stream invocations', async () => {
+  it('first_email_streamed re-arms for a different campaign', async () => {
     vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
       async (_u, _c, _cfg, onEvent) => {
         onEvent({ type: 'email', email: makeEmail(1) })
@@ -259,6 +261,40 @@ describe('useEmailStreaming', () => {
 
     const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
     expect(fired).toHaveLength(2)
+  })
+
+  it('does not re-fire first_email_streamed when the same campaign is regenerated', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockImplementation(
+      async (_u, _c, _cfg, onEvent) => {
+        onEvent({ type: 'email', email: makeEmail(1) })
+        onEvent({ type: 'complete', emails: [] })
+        return []
+      },
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'regen-camp')
+    })
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'regen-camp')
+    })
+
+    const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
+    expect(fired).toHaveLength(1)
+  })
+
+  it('logs limit_reached with the limit the server named (emails, not campaigns)', async () => {
+    vi.spyOn(CampaignService, 'generateEmailsStream').mockRejectedValue(
+      new PlanLimitError('Up to 7 emails on your plan.', 'free', 'emails'),
+    )
+
+    const { result } = renderHook(() => useEmailStreaming())
+    await act(async () => {
+      await result.current.generateEmailsStream(landingPageData, config, 'limit-camp')
+    })
+
+    expect(trackMock).toHaveBeenCalledWith('limit_reached', { plan: 'free', limit: 'emails' })
   })
 
   it('aborts previous stream when called again', async () => {
@@ -546,5 +582,58 @@ describe('useEmailStreaming', () => {
       await result.current.generateEmailsStream(landingPageData, config, null)
     })
     expect(result.current.error).toBe('Network error. Please check your connection and try again.')
+  })
+
+  // Bug: when Days 2..N failed, Day 1 stayed on screen with no database row.
+  // The server now saves Day 1 before sending it; the editor must keep that
+  // saved Day 1 (with its id) next to the error, not clear it.
+  it('keeps the saved Day 1 on screen when the rest of the sequence fails', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-id' }
+    const { result } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1, 'u1') }))
+    await act(async () => {
+      stream.emit({ type: 'error', message: 'The AI service is busy right now.' })
+      stream.fail(new Error('The AI service is busy right now.'))
+      await pending
+    })
+
+    expect(appendGeneratedEmailMock).toHaveBeenCalledWith(makeEmail(1, 'u1'))
+    // Only the clear at the start; nothing wiped Day 1 afterwards.
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenCalledTimes(1)
+    expect(replaceGeneratedEmailsLocalMock).toHaveBeenCalledWith([])
+    expect(result.current.error).toBe('The AI service is busy right now.')
+    expect(result.current.isStreaming).toBe(false)
+  })
+
+  it('warns when an edit made during generation could not be saved', async () => {
+    const stream = controlledStream()
+    campaignData = { generatedEmails: [], currentCampaignId: 'camp-id' }
+    updateEmailDbMock.mockRejectedValue(
+      Object.assign(new Error('Day 1 is not saved yet'), { name: 'EmailNotSavedError' }),
+    )
+    const { result, rerender } = renderHook(() => useEmailStreaming())
+
+    let pending: Promise<Email[] | null> = Promise.resolve(null)
+    act(() => {
+      pending = result.current.generateEmailsStream(landingPageData, config, 'camp-id')
+    })
+    act(() => stream.emit({ type: 'email', email: makeEmail(1) }))
+    campaignData = {
+      ...campaignData,
+      generatedEmails: [{ ...makeEmail(1), subject: 'My subject' }],
+    }
+    rerender()
+    await act(async () => {
+      stream.finish([makeEmail(1, 'u1')])
+      await pending
+    })
+
+    await waitFor(() => expect(result.current.warning).toMatch(/edit.*not saved/i))
   })
 })

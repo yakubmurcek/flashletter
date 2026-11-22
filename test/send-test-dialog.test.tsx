@@ -80,38 +80,40 @@ describe('<SendTestDialog />', () => {
     await waitFor(() => expect(toastSuccessMock).toHaveBeenCalled())
   })
 
-  it('anonymous user: includes recipientEmail in the request body', async () => {
+  it('guest: asks them to create an account and never calls the send route', async () => {
     getUserMock.mockResolvedValue({
       data: { user: { id: 'anon', email: undefined, is_anonymous: true } },
     })
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ ok: true, sentTo: 'new@user.com', upgradeStarted: true }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }),
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+    window.history.replaceState(null, '', '/create/editor?campaign=abc')
+
+    renderDialog()
+    fireEvent.click(screen.getByRole('button', { name: /open send dialog/i }))
+
+    await screen.findByText('Create a free account to send test emails.')
+    // No address field: a guest can't pick where our domain sends mail.
+    expect(screen.queryByLabelText(/your email/i)).toBeNull()
+    expect(screen.queryByRole('button', { name: /send test/i })).toBeNull()
+
+    const link = screen.getByRole('link', { name: /create a free account/i })
+    expect(link.getAttribute('href')).toBe(
+      `/signup?redirectTo=${encodeURIComponent('/create/editor?campaign=abc')}`,
     )
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('signed-out visitor: same account prompt, no send', async () => {
+    getUserMock.mockResolvedValue({ data: { user: null } })
+    const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
 
     renderDialog()
     fireEvent.click(screen.getByRole('button', { name: /open send dialog/i }))
 
-    const input = await screen.findByLabelText(/your email/i)
-    fireEvent.change(input, { target: { value: 'new@user.com' } })
-    fireEvent.click(screen.getByRole('button', { name: /send test/i }))
-
-    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-    const [, init] = fetchMock.mock.calls[0]
-    expect(JSON.parse(init.body)).toEqual({
-      campaignId: VALID_CAMPAIGN_ID,
-      emailDay: 1,
-      recipientEmail: 'new@user.com',
-    })
-    // The success copy diverges based on upgradeStarted; assert we picked the
-    // upgrade-aware branch so the anon user actually sees the "save your
-    // campaign" hint that justifies the email capture.
-    await waitFor(() =>
-      expect(toastSuccessMock).toHaveBeenCalledWith(expect.stringMatching(/confirmation link/i)),
-    )
+    await screen.findByText('Create a free account to send test emails.')
+    expect(screen.queryByRole('button', { name: /send test/i })).toBeNull()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('error response: surfaces a toast and does not close the dialog', async () => {

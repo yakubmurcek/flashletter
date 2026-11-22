@@ -39,7 +39,9 @@ vi.mock('@/lib/utils/analyzer', () => ({
 const checkRateLimitMock = vi.fn()
 vi.mock('@/lib/utils/rate-limit', () => ({
   scrapeLandingRateLimit: null,
+  scrapeLandingIpRateLimit: 'scrape-ip-limiter',
   checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  checkUserAndIpRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
   getRateLimitHeaders: () => ({}),
 }))
 
@@ -160,6 +162,16 @@ describe('POST /api/scrape-landing/stream', () => {
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
     expect(response.status).toBe(429)
     expect(response.headers.get('Content-Type')).toContain('application/json')
+  })
+
+  it('applies the per-IP limit on top of the per-user one', async () => {
+    await POST(buildRequest({ url: 'https://example.com' }) as never)
+    expect(checkRateLimitMock).toHaveBeenCalledWith(
+      null,
+      'scrape-ip-limiter',
+      'user-123',
+      '127.0.0.1',
+    )
   })
 
   it('happy path emits expected events in order', async () => {

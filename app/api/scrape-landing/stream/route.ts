@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'
-import { checkRateLimit, scrapeLandingRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import {
+  checkUserAndIpRateLimit,
+  scrapeLandingIpRateLimit,
+  scrapeLandingRateLimit,
+  getRateLimitHeaders,
+} from '@/lib/utils/rate-limit'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-cache'
 import { extractTextFromHTML } from '@/lib/utils/scraper'
@@ -66,8 +71,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const identifier = user.id || getClientIp(req)
-  const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
+  const rateLimitResult = await checkUserAndIpRateLimit(
+    scrapeLandingRateLimit,
+    scrapeLandingIpRateLimit,
+    user.id,
+    getClientIp(req),
+  )
 
   if (!rateLimitResult.success) {
     return NextResponse.json(
@@ -162,7 +171,7 @@ export async function POST(req: NextRequest) {
                   `Dynamic scraping failed for ${url}, falling back to static:`,
                   playwrightError,
                 )
-                const scraped = extractTextFromHTML(html)
+                const scraped = extractTextFromHTML(html, fetchedUrl)
                 metadata = extractMetadata(html, fetchedUrl)
                 content = scraped.content
                 wordCount = scraped.wordCount
@@ -170,7 +179,7 @@ export async function POST(req: NextRequest) {
                 finalUrl = fetchedUrl
               }
             } else {
-              const scraped = extractTextFromHTML(html)
+              const scraped = extractTextFromHTML(html, fetchedUrl)
               metadata = extractMetadata(html, fetchedUrl)
               content = scraped.content
               wordCount = scraped.wordCount

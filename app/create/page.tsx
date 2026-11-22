@@ -20,6 +20,7 @@ import { ScrapeProgressOverlay } from '@/components/campaign/scrape-progress-ove
 import { CAMPAIGN_STEPS } from '@/lib/constants/campaign'
 import { useAnonymousLimit } from '@/lib/hooks/use-anonymous-limit'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
+import { track } from '@/lib/analytics'
 
 export default function CreatePage() {
   const router = useRouter()
@@ -54,6 +55,16 @@ export default function CreatePage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const outOfCampaigns = !isLoading && !isCheckingLimit && !canCreate
+  useEffect(() => {
+    if (!outOfCampaigns) return
+    track('limit_reached', {
+      plan: isAnonymous ? 'guest' : 'free',
+      limit: 'campaigns',
+      surface: 'create',
+    })
+  }, [outOfCampaigns, isAnonymous])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

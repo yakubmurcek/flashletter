@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
-import type { SelectedContext, FullCampaignContext } from '@/lib/types'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { SelectedContext, FullCampaignContext, Email } from '@/lib/types'
 import { MESSAGE_HISTORY_LIMIT } from '@/lib/constants/app'
 import { logError, getUserFriendlyMessage } from '@/lib/utils/error-handling'
 import { planLimitFromResponse } from '../billing/errors'
@@ -12,6 +12,13 @@ export interface ChatMessage {
   content: string
   timestamp: Date
   appliedEdit?: boolean
+  /**
+   * The AI's edit, held back because the email changed while it was being
+   * written. The chat shows it with an "Apply anyway" button.
+   */
+  proposedEdit?: EmailEdits
+  /** Applies `proposedEdit` to the email it was written for. Gone once used. */
+  applyProposedEdit?: () => void
   context?: {
     text: string
     action: string
@@ -23,6 +30,26 @@ export interface EmailEdits {
   content?: string
 }
 
+/** The email text a chat request was written from. */
+export interface EmailBasis {
+  subject: string
+  content: string
+}
+
+/**
+ * Applies an AI edit. With a `basis`, the receiver may refuse (return false)
+ * when the email no longer matches it; without one, it applies regardless.
+ */
+export type ApplyEmailEdits = (edits: EmailEdits, basis?: EmailBasis) => boolean | void
+
+function basisOf(email: { subject?: string; content?: string }): EmailBasis {
+  return { subject: email.subject ?? '', content: email.content ?? '' }
+}
+
+function sameText(a: EmailBasis, b: EmailBasis): boolean {
+  return a.subject === b.subject && a.content === b.content
+}
+
 interface UseAIChatParams {
   campaignContext?: FullCampaignContext
   emailContext?: {
@@ -31,7 +58,7 @@ interface UseAIChatParams {
     campaignType?: string
   }
   selectedContext?: SelectedContext | null
-  onApplyEdits?: (edits: EmailEdits) => void
+  onApplyEdits?: ApplyEmailEdits
   onClearContext?: () => void
 }
 
@@ -73,6 +100,13 @@ export function useAIChat({
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
 
+  // The email as it is now, read when a reply lands: the request's own
+  // closure only knows the text from when it was sent.
+  const liveEmailRef = useRef({ emailContext, emailId: campaignContext?.currentEmailId })
+  useEffect(() => {
+    liveEmailRef.current = { emailContext, emailId: campaignContext?.currentEmailId }
+  }, [emailContext, campaignContext?.currentEmailId])
+
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
@@ -88,6 +122,10 @@ export function useAIChat({
     if (!campaignContext && !emailContext) return
 
     const contextForThisRequest = selectedContext
+    // The reply is computed from this text. If the email changes before it
+    // lands, applying it would wipe what the user typed meanwhile.
+    const basis = emailContext ? basisOf(emailContext) : undefined
+    const basisEmailId = campaignContext?.currentEmailId
     if (selectedContext && onClearContext) {
       onClearContext()
     }
@@ -142,16 +180,44 @@ export function useAIChat({
 
       const data = await response.json()
 
+      const aiMessageId = messages.length + 2
+      let heldBack: EmailEdits | null = null
       if (data.shouldEdit && data.edits && onApplyEdits) {
-        onApplyEdits(data.edits)
+        const live = liveEmailRef.current
+        // Same email, different text: the user edited it while waiting. When
+        // the open email is another one, the page checks the right email.
+        const changedHere =
+          !!basis &&
+          !!live.emailContext &&
+          live.emailId === basisEmailId &&
+          !sameText(basis, basisOf(live.emailContext))
+        if (changedHere || onApplyEdits(data.edits, basis) === false) {
+          heldBack = data.edits
+        }
       }
 
       const aiMessage: ChatMessage = {
-        id: messages.length + 2,
+        id: aiMessageId,
         role: 'assistant',
         content: data.message,
         timestamp: new Date(),
-        appliedEdit: data.shouldEdit || false,
+        appliedEdit: heldBack ? false : data.shouldEdit || false,
+      }
+      if (heldBack && onApplyEdits) {
+        const edits = heldBack
+        const apply = onApplyEdits
+        let used = false
+        aiMessage.proposedEdit = edits
+        aiMessage.applyProposedEdit = () => {
+          if (used) return
+          used = true
+          apply(edits)
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === aiMessageId ? { ...m, appliedEdit: true, applyProposedEdit: undefined } : m,
+            ),
+          )
+        }
       }
 
       setMessages((prev) => [...prev, aiMessage])
@@ -256,4 +322,42 @@ export function useAIChat({
     quickActions,
     handleSubmit,
   }
+}
+
+/**
+ * Lets the editor page refuse an AI edit when the email it was written from
+ * has changed, including typing the preview has not saved yet (it saves after
+ * a pause, so the page's state can lag the screen by up to a second).
+ */
+export function useChatEditGuard(
+  emails: Email[],
+  applyEdit: (id: number, edits: EmailEdits) => void,
+) {
+  const emailsRef = useRef(emails)
+  const applyRef = useRef(applyEdit)
+  useEffect(() => {
+    emailsRef.current = emails
+    applyRef.current = applyEdit
+  }, [emails, applyEdit])
+  // What the open email's editor shows right now, saved or not.
+  const draftRef = useRef<({ id: number } & EmailBasis) | null>(null)
+
+  const reportDraft = useCallback((id: number, draft: EmailBasis) => {
+    draftRef.current = { id, ...draft }
+  }, [])
+
+  const applyChatEdits = useCallback(
+    (id: number, edits: EmailEdits, basis?: EmailBasis): boolean => {
+      if (basis) {
+        const draft = draftRef.current
+        const live = draft?.id === id ? draft : emailsRef.current.find((e) => e.id === id)
+        if (!live || !sameText(basis, basisOf(live))) return false
+      }
+      applyRef.current(id, edits)
+      return true
+    },
+    [],
+  )
+
+  return { reportDraft, applyChatEdits }
 }

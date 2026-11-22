@@ -108,7 +108,21 @@ describe('analyzeLandingPage', () => {
     expect(userInput()).toContain('Untitled page')
   })
 
-  it('truncates long content (>8000 chars)', async () => {
+  it('cuts content by visible text, so a testimonial after heavy markup still arrives', async () => {
+    // 200 short links: ~13k chars of markup but only ~1.6k chars of text.
+    const linkWall = Array.from(
+      { length: 200 },
+      (_, i) => `<p><a href="https://example.com/features/section/item-${i}">Item ${i}</a></p>`,
+    ).join('\n')
+    expect(linkWall.length).toBeGreaterThan(8000)
+    const content = `${linkWall}\n<p>"It saved us 10 hours a week." Jane Doe, TESTIMONIAL_MARKER</p>`
+
+    await analyzeLandingPage({ url: 'https://example.com', content, metadata: {} })
+
+    expect(userInput()).toContain('TESTIMONIAL_MARKER')
+  })
+
+  it('still cuts content whose visible text is over the 10k budget', async () => {
     const bigContent = 'x'.repeat(15000) + 'END_MARKER'
     await analyzeLandingPage({
       url: 'https://example.com',
@@ -117,8 +131,8 @@ describe('analyzeLandingPage', () => {
     })
     const input = userInput()
     expect(input).not.toContain('END_MARKER')
-    // Hard upper bound: truncated content + framing, well under 10k
-    expect(input.length).toBeLessThan(10000)
+    // Truncated content (10k text) + framing.
+    expect(input.length).toBeLessThan(11000)
   })
 
   it('sends a system prompt with email-copywriting rules', async () => {

@@ -62,7 +62,8 @@ export async function POST(request: NextRequest) {
     // Actual erasure (GDPR right-to-be-forgotten) rather than the previous
     // soft-flag (privacy_consent: false). The waitlist is a marketing
     // signup, so we have no reason to keep the row once the user opts out.
-    const { error } = await supabase.from('waitlist').delete().eq('email', resolvedEmail)
+    // The table is closed to client roles; this function does the delete.
+    const { error } = await supabase.rpc('waitlist_unsubscribe', { p_email: resolvedEmail })
 
     if (error) {
       console.error('Unsubscribe error:', error)

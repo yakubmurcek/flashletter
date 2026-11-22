@@ -34,6 +34,14 @@ if (!result.success) {
 - `generateEmailsRateLimit` - 5 requests per hour
 - `scrapeLandingRateLimit` - 20 requests per hour
 
+Per-IP limiters, checked after the per-user one with `checkUserAndIpRateLimit`
+(a guest gets a new user id per anonymous session, so the user limit alone
+can be reset; the IP comes from Vercel's `x-real-ip`, never `cf-connecting-ip`):
+
+- `chatIpRateLimit` - 60 requests per 10 minutes
+- `scrapeLandingIpRateLimit` - 20 requests per 10 minutes (both scrape routes)
+- `generateEmailsIpRateLimit` - 10 requests per hour (both generate routes)
+
 ### Claude calls
 
 Retries live in the Anthropic SDK (`maxRetries: 3`, backoff on 429/5xx). Every AI call goes

@@ -74,3 +74,80 @@ describe('RichTextEditor external content changes', () => {
     expect(onChange).toHaveBeenCalledTimes(1)
   })
 })
+
+// The user can click into the email while a chat request runs. When the AI
+// edit lands, the editor is focused, but it must still show the new text;
+// otherwise the next keystroke saves the stale text over the AI edit.
+describe('RichTextEditor while focused', () => {
+  function focus(editor: Editor) {
+    vi.spyOn(editor, 'isFocused', 'get').mockReturnValue(true)
+  }
+
+  it('shows an outside (AI) change that arrives while focused, without reporting it', async () => {
+    const { container, onChange, swapTo, getEditor } = setup()
+    await waitFor(() => expect(getEditor()).not.toBeNull())
+    const editor = getEditor()!
+    focus(editor)
+    act(() => {
+      editor.commands.setTextSelection(5)
+    })
+
+    swapTo(DAY_2)
+    await waitFor(() => expect(container.textContent).toContain('Book a demo'))
+
+    expect(container.textContent).not.toContain('Create your first project')
+    expect(onChange).not.toHaveBeenCalled()
+    const { from } = editor.state.selection
+    expect(from).toBeGreaterThan(0)
+    expect(from).toBeLessThanOrEqual(editor.state.doc.content.size)
+  })
+
+  it('saves the next keystroke on top of the AI text, not the stale text', async () => {
+    const { onChange, swapTo, getEditor } = setup()
+    await waitFor(() => expect(getEditor()).not.toBeNull())
+    const editor = getEditor()!
+    focus(editor)
+
+    swapTo(DAY_2)
+    await waitFor(() => expect(editor.getText()).toContain('Book a demo'))
+    act(() => {
+      editor.commands.insertContent('x')
+    })
+
+    expect(onChange).toHaveBeenCalledTimes(1)
+    expect(onChange.mock.calls[0][0]).toContain('Book a demo')
+    expect(onChange.mock.calls[0][0]).not.toContain('Create your first project')
+  })
+
+  // tiptap-markdown does not round-trip `**[CTA](url)**` verbatim, so the
+  // markdown echoed back through the parent differs from DAY_1. That echo is
+  // the user's own edit and must not reset the doc or move the cursor.
+  it('does not re-apply its own echoed markdown while the user types', async () => {
+    const { onChange, swapTo, getEditor } = setup()
+    await waitFor(() => expect(getEditor()).not.toBeNull())
+    const editor = getEditor()!
+    focus(editor)
+
+    act(() => {
+      editor.commands.setTextSelection(5)
+      editor.commands.insertContent('X')
+    })
+    expect(onChange).toHaveBeenCalledTimes(1)
+    const emitted = onChange.mock.calls[0][0] as string
+    expect(emitted).not.toBe(DAY_1) // the round trip really is unstable
+    const docBefore = editor.getJSON()
+    const selBefore = editor.state.selection.from
+    let transactions = 0
+    editor.on('transaction', () => {
+      transactions++
+    })
+
+    swapTo(emitted)
+    await act(async () => {})
+
+    expect(transactions).toBe(0)
+    expect(editor.getJSON()).toEqual(docBefore)
+    expect(editor.state.selection.from).toBe(selBefore)
+    expect(onChange).toHaveBeenCalledTimes(1)
+  })
+})

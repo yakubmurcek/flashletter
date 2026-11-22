@@ -7,14 +7,43 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { createClient } from '@/lib/supabase/client'
 import { Sparkles, ArrowRight, Loader2 } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
 import { PLAN_LIMITS } from '@/lib/billing/plans'
+import { withRedirectTo } from '@/lib/utils/safe-redirect'
+
+const ALREADY_HAVE_ACCOUNT =
+  'You already have an account with that email. Sign in to pick up where you left off.'
+const GENERIC_URL_ERROR = 'Creating your account didn\u2019t go through. Please try again.'
+
+// Supabase says "already registered", "already been registered", "already
+// exists" or "already linked" (codes email_exists, user_already_exists,
+// identity_already_exists) when the email or Google identity belongs to
+// another account. For a guest that means a returning customer.
+function isAlreadyHaveAccount(message: string) {
+  return /already[ _](been[ _])?(registered|exists|linked)|email_exists/i.test(message)
+}
+
+/** An in-page Supabase error: the sign-in nudge when it applies, else as is. */
+function friendlyError(message: string) {
+  return isAlreadyHaveAccount(message) ? ALREADY_HAVE_ACCOUNT : message
+}
+
+/**
+ * An error carried in the URL (`?authError=` from /auth/callback). Anyone can
+ * craft that link, so only known errors become copy; the rest get a fixed line.
+ */
+function friendlyUrlError(message: string | null | undefined) {
+  if (!message) return null
+  return isAlreadyHaveAccount(message) ? ALREADY_HAVE_ACCOUNT : GENERIC_URL_ERROR
+}
 
 interface UpgradePromptProps {
   campaignCount?: number
   redirectTo?: string
+  /** Raw `?authError=` from the URL; shown only as mapped, never verbatim. */
   initialError?: string | null
   /** Shown when a guest opens /signup directly rather than hitting the limit. */
   variant?: 'limit' | 'save'
@@ -29,7 +58,7 @@ export function UpgradePrompt({
   const router = useRouter()
   const [oauthLoading, setOauthLoading] = useState(false)
   const [emailLoading, setEmailLoading] = useState(false)
-  const [error, setError] = useState<string | null>(initialError)
+  const [error, setError] = useState<string | null>(() => friendlyUrlError(initialError))
   const [pendingMessage, setPendingMessage] = useState<string | null>(null)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -64,7 +93,9 @@ export function UpgradePrompt({
       }
     } catch (err) {
       console.error('Error linking identity:', err)
-      setError(err instanceof Error ? err.message : 'Failed to connect Google account')
+      setError(
+        err instanceof Error ? friendlyError(err.message) : 'Failed to connect Google account',
+      )
       setOauthLoading(false)
     }
   }
@@ -104,7 +135,7 @@ export function UpgradePrompt({
       )
     } catch (err) {
       console.error('Error upgrading anonymous user with email:', err)
-      setError(err instanceof Error ? err.message : 'Failed to create account')
+      setError(err instanceof Error ? friendlyError(err.message) : 'Failed to create account')
     } finally {
       setEmailLoading(false)
     }
@@ -233,6 +264,22 @@ export function UpgradePrompt({
           <p className="text-xs text-center text-muted-foreground">
             Your campaign will be saved and linked to your new account.
           </p>
+
+          <div className="pt-2 border-t border-border text-center space-y-1">
+            <p className="text-sm text-muted-foreground">
+              Already have an account?{' '}
+              <Link
+                href={withRedirectTo('/login', redirectTo)}
+                className="font-medium text-primary hover:text-primary/80 transition-colors"
+              >
+                Sign in
+              </Link>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Campaigns you made as a guest stay in this browser and won&rsquo;t move to that
+              account.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

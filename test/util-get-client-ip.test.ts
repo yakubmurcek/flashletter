@@ -26,32 +26,45 @@ describe('getClientIp', () => {
     expect(getClientIp(req)).toBe('192.168.1.1')
   })
 
-  it('prefers cf-connecting-ip over x-forwarded-for', () => {
-    // Cloudflare sets cf-connecting-ip directly from the connecting client and
-    // it cannot be forged when fronted by CF — trust it before XFF.
+  // Production is served straight by Vercel, not Cloudflare, so a client can
+  // send its own cf-connecting-ip. It must never decide the rate-limit key.
+  it('ignores a client-sent cf-connecting-ip', () => {
     const req = createMockRequest({
-      'x-forwarded-for': 'attacker-spoof, 203.0.113.5',
+      'x-real-ip': '172.16.0.1',
       'cf-connecting-ip': '198.51.100.7',
     })
-    expect(getClientIp(req)).toBe('198.51.100.7')
+    expect(getClientIp(req)).toBe('172.16.0.1')
   })
 
-  it('uses cf-connecting-ip when x-forwarded-for is absent', () => {
+  it('ignores cf-connecting-ip even when it is the only header', () => {
     const req = createMockRequest({ 'cf-connecting-ip': '10.0.0.1' })
-    expect(getClientIp(req)).toBe('10.0.0.1')
+    expect(getClientIp(req)).toBe('anonymous')
   })
 
-  it('prefers cf-connecting-ip over x-real-ip', () => {
-    const req = createMockRequest({
-      'cf-connecting-ip': '10.0.0.1',
-      'x-real-ip': '172.16.0.1',
-    })
-    expect(getClientIp(req)).toBe('10.0.0.1')
-  })
-
-  it('uses x-real-ip when neither cf-connecting-ip nor xff is present', () => {
+  it('uses x-real-ip (set by Vercel) when present', () => {
     const req = createMockRequest({ 'x-real-ip': '172.16.0.1' })
     expect(getClientIp(req)).toBe('172.16.0.1')
+  })
+
+  it('prefers x-real-ip over x-vercel-forwarded-for', () => {
+    const req = createMockRequest({
+      'x-real-ip': '172.16.0.1',
+      'x-vercel-forwarded-for': '203.0.113.9',
+    })
+    expect(getClientIp(req)).toBe('172.16.0.1')
+  })
+
+  it('falls back to x-vercel-forwarded-for before x-forwarded-for', () => {
+    const req = createMockRequest({
+      'x-vercel-forwarded-for': '203.0.113.9',
+      'x-forwarded-for': 'attacker-spoof, 203.0.113.5',
+    })
+    expect(getClientIp(req)).toBe('203.0.113.9')
+  })
+
+  it('takes the first x-vercel-forwarded-for entry, trimmed', () => {
+    const req = createMockRequest({ 'x-vercel-forwarded-for': ' 203.0.113.9 , 10.0.0.1' })
+    expect(getClientIp(req)).toBe('203.0.113.9')
   })
 
   it('prefers x-real-ip over x-forwarded-for', () => {

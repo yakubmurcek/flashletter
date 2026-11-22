@@ -186,7 +186,7 @@ export async function scrapeWithPlaywright(
     const html = await page.content()
 
     // Extract text content using our cheerio-based scraper
-    const scrapedContent = extractTextFromHTML(html)
+    const scrapedContent = extractTextFromHTML(html, finalUrl)
 
     // Extract metadata
     const metadata = extractMetadata(html, finalUrl)

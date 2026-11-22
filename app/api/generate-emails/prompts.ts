@@ -1,4 +1,6 @@
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { truncateContentByTextLength } from '@/lib/utils/scraper'
+import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 /**
  * Email Generation Prompts
@@ -109,16 +111,19 @@ function formatList(items: string[] | undefined, prefix: string, emptyNote: stri
   return `${prefix}:\n${items.map((item) => `- ${item}`).join('\n')}`
 }
 
+// The user can clear any analysis field on /create/configure.
+const orInfer = (value: string) => value.trim() || 'Not given; infer it from the page content.'
+
 function buildAnalysisBlock(analysis: LandingPageAnalysis | undefined): string {
   if (!analysis) return ''
 
   return `
 LANDING PAGE ANALYSIS (use this directly in the copy — do not ignore):
 
-Value proposition: ${analysis.valueProp}
-Target audience: ${analysis.targetAudience}
-Primary CTA (every email must drive toward this same action): ${analysis.primaryCTA}
-Voice fingerprint to match: ${analysis.toneFingerprint}
+Value proposition: ${orInfer(analysis.valueProp)}
+Target audience: ${orInfer(analysis.targetAudience)}
+Primary CTA (every email must drive toward this same action): ${orInfer(analysis.primaryCTA)}
+Voice fingerprint to match: ${orInfer(analysis.toneFingerprint)}
 
 ${formatList(analysis.proofPoints, 'Proof points (cite these verbatim — do NOT fabricate numbers or customer names)', 'No concrete proof on the page. Do NOT invent stats or testimonials.')}
 
@@ -136,12 +141,14 @@ Rules derived from the analysis:
 - Fill a gap only when the page content gives you real material for it. Never write an email whose point is "we can't say, check the site" (e.g. about pricing the page doesn't state).`
 }
 
-// Landing content sent to the writer; the analysis already distilled the rest.
-const LANDING_CONTENT_LIMIT = 6000
+// The whole scraped page (the scraper already caps it at this much visible
+// text), counted in text rather than markup. The writer keeps the HTML so it
+// can see the page's real links for the call to action.
+const LANDING_CONTENT_LIMIT = LANDING_PAGE_CONTENT_LIMIT
 
 function landingContentBlock(landingContent?: string): string {
   return landingContent
-    ? `Landing Page Content:\n${landingContent.substring(0, LANDING_CONTENT_LIMIT)}`
+    ? `Landing Page Content:\n${truncateContentByTextLength(landingContent, LANDING_CONTENT_LIMIT)}`
     : ''
 }
 
@@ -159,7 +166,7 @@ function writingRules(landingUrl: string): string {
 - Write every word in the language of the landing page, including the greeting, the call to action and the sign-off.
 - Open with a short greeting line (in English "Hi," or "Hey,"), then make the point in the first sentence. Do not open with "Welcome. We're glad you're here." or similar filler.
 - Use at most one subheading per email, and only if it genuinely helps scanning. Use a bullet list only for 3+ concrete items.
-- End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here".
+- End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here". Every link is a full URL starting with http:// or https://, never a relative path like /register or #pricing (it breaks once the email is sent).
 - Sign off on its own line with the product's real name, in the form "The <product name> team" (translated for other languages, e.g. "Tým Fakturoid").
 - Subject lines: specific and curiosity-driven, under 60 characters, no clickbait, no ALL CAPS. At most one emoji per email, and only if the page's own voice uses them.
 - No em dashes (—). Use commas, periods, colons or parentheses instead.
@@ -257,14 +264,22 @@ export function buildRemainingEmailsInstructions(
   firstEmail: { subject: string; preview: string; content: string },
   landingContent?: string,
   analysis?: LandingPageAnalysis,
+  range: { from: number; to: number } = { from: 2, to: config.days },
 ): string {
   const analysisBlock = buildAnalysisBlock(analysis)
+  const { from, to } = range
+  const count = to - from + 1
+  const partial = from !== 2 || to !== config.days
 
   return `You are an expert email marketing copywriter. Day 1 of a ${
     config.days
   }-day ${config.campaignType} email campaign (${
     config.tone
-  } tone) has already been written. Generate **Days 2 through ${config.days}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.
+  } tone) has already been written. Generate **Days ${from} through ${to}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.${
+    partial
+      ? ` The other days of the sequence are written separately: write only these ${count}, each true to its place in the structure below.`
+      : ''
+  }
 
 Landing Page URL: ${landingUrl}
 ${landingContentBlock(landingContent)}
@@ -289,14 +304,12 @@ ${getToneGuidelines(config.tone)}
 
 ${writingRules(landingUrl)}
 
-IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${
-    config.days - 1
-  } emails, days 2 through ${config.days} in order:
+IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${count} emails, days ${from} through ${to} in order:
 {
   "emails": [
-    { "day": 2, "subject": "...", "preview": "...", "content": "..." },
+    { "day": ${from}, "subject": "...", "preview": "...", "content": "..." },
     ...
-    { "day": ${config.days}, "subject": "...", "preview": "...", "content": "..." }
+    { "day": ${to}, "subject": "...", "preview": "...", "content": "..." }
   ]
 }
 
