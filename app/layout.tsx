@@ -8,6 +8,7 @@ import { CampaignProvider } from '@/lib/campaign-context'
 import { RegionProvider } from '@/lib/utils/location-detection'
 import { PostHogIdentifier } from '@/components/analytics/posthog-identifier'
 import { CookieConsentBanner } from '@/components/cookie-consent-banner'
+import { safeJsonLd } from '@/lib/utils'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -100,7 +101,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'WebApplication',
               name: 'Flashletter',
