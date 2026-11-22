@@ -112,7 +112,7 @@ export const emailEditSchema = z.object({
 })
 
 /**
- * OpenAI response schemas
+ * AI (Claude) output schemas
  *
  * The AI doesn't see (and shouldn't have to invent) `id` / `uuid` — those are
  * server/database concerns. We use a stripped-down schema for the structured-

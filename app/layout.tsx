@@ -15,9 +15,12 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  title: 'Flashletter - Join the Newsletter Revolution',
+  title: {
+    default: 'Flashletter - Turn your landing page into a newsletter campaign',
+    template: '%s | Flashletter',
+  },
   description:
-    'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform your landing page into personalized email newsletter campaigns in seconds.',
+    'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
   keywords: [
     'newsletter campaigns',
     'AI email generator',
@@ -26,8 +29,7 @@ export const metadata: Metadata = {
     'AI copywriting',
     'email automation',
     'marketing automation',
-    'waitlist',
-    'coming soon',
+    'launch email sequence',
   ],
   authors: [{ name: 'Flashletter' }],
   creator: 'Flashletter',
@@ -37,26 +39,26 @@ export const metadata: Metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://flashletter.app',
-    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
+    title: 'Flashletter - Turn your landing page into a newsletter campaign',
     description:
-      'Join the waitlist for Flashletter - the AI-powered email campaign generator. Transform landing pages into personalized email sequences in seconds.',
+      'Paste your landing page URL and get a ready-to-send newsletter launch sequence in your own voice. Written by Claude. Free plan, no credit card.',
     siteName: 'Flashletter',
     images: [
       {
         url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`,
         width: 1200,
         height: 630,
-        alt: 'Flashletter - Lightning-fast AI newsletter campaigns',
+        alt: 'Flashletter - Turn your landing page into a newsletter campaign',
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Flashletter - Lightning-fast AI newsletter campaigns',
-    description: 'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
+    title: 'Flashletter - Turn your landing page into a newsletter campaign',
+    description: 'Turn your landing page into a ready-to-send newsletter campaign in 2 minutes.',
     images: [`${process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app'}/og-image.png`],
-    creator: '@flashletter',
+    creator: '@ykbmck',
   },
   robots: {
     index: true,
@@ -103,15 +105,14 @@ export default function RootLayout({
               '@type': 'WebApplication',
               name: 'Flashletter',
               description:
-                'Generate complete newsletter campaigns in seconds with AI - Join the waitlist',
+                'Turn your landing page into a ready-to-send newsletter campaign in 2 minutes.',
               url: process.env.NEXT_PUBLIC_APP_URL || 'https://flashletter.app',
               applicationCategory: 'BusinessApplication',
-              applicationStatus: 'ComingSoon',
               offers: {
                 '@type': 'Offer',
                 price: '0',
                 priceCurrency: 'USD',
-                availability: 'https://schema.org/PreOrder',
+                availability: 'https://schema.org/InStock',
               },
             }),
           }}

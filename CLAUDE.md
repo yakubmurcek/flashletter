@@ -2,7 +2,7 @@
 
 Turns a landing-page URL into a multi-email campaign sequence: scrape → analyze →
 AI-generate → edit in browser. Next.js App Router on Vercel, Supabase for auth +
-storage, OpenAI for generation, Vitest + jsdom for tests.
+storage, Claude (Anthropic API, `lib/ai.ts`) for generation, Vitest + jsdom for tests.
 
 **Goal:** solo dev shipping their first meaningful product — priority is what
 converts and sells (paying users, real demand), not feature breadth, technical

@@ -4,7 +4,12 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useCampaignData, useCampaignActions } from '@/lib/campaign-context'
 import { useEmailGeneration } from '@/lib/hooks/use-email-generation'
-import { CAMPAIGN_TONES, CAMPAIGN_TYPES, CAMPAIGN_DURATION } from '@/lib/constants/campaign'
+import {
+  CAMPAIGN_TONES,
+  CAMPAIGN_TYPES,
+  SMART_DEFAULT_CAMPAIGN_CONFIG,
+} from '@/lib/constants/campaign'
+import { usePlan } from '@/lib/hooks/use-plan'
 
 interface CampaignConfig {
   tone: string
@@ -16,15 +21,18 @@ export function useCampaignConfig(validCampaignId: string | null) {
   const router = useRouter()
   const { landingPageData, isLoading, currentCampaignId } = useCampaignData()
 
-  const { setConfig, setGeneratedEmails, updateCampaignConfig, loadCampaign } = useCampaignActions()
+  const { applyConfigToCampaign, createNewCampaign, loadCampaign } = useCampaignActions()
+  const { plan, maxEmails } = usePlan()
 
-  const { isGenerating, error, warning, generateEmails } = useEmailGeneration()
+  const { isGenerating, error: generationError, warning } = useEmailGeneration()
 
   const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
   const [campaignType, setCampaignType] = useState<string>(CAMPAIGN_TYPES[0].value)
-  const [days, setDays] = useState<number[]>([CAMPAIGN_DURATION.DEFAULT])
+  // Same default as the hero flow, so it fits every plan's email limit.
+  const [days, setDays] = useState<number[]>([SMART_DEFAULT_CAMPAIGN_CONFIG.days])
   const [campaignLoaded, setCampaignLoaded] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   // Load campaign from database if campaignId is in URL
   useEffect(() => {
@@ -47,12 +55,18 @@ export function useCampaignConfig(validCampaignId: string | null) {
     }
   }, [landingPageData, router, isLoading, validCampaignId, campaignLoaded])
 
+  // Never offer more emails than the plan can generate (the server answers 402).
+  useEffect(() => {
+    setDays((prev) => (prev[0] > maxEmails ? [maxEmails] : prev))
+  }, [maxEmails])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!landingPageData) return
 
     setIsSubmitting(true)
+    setSubmitError(null)
     try {
       const config: CampaignConfig = {
         tone,
@@ -60,26 +74,20 @@ export function useCampaignConfig(validCampaignId: string | null) {
         days: days[0],
       }
 
-      await updateCampaignConfig(config)
-
-      const result = await generateEmails(
-        landingPageData.url,
-        landingPageData.content || '',
-        config,
-        currentCampaignId || undefined,
-        landingPageData.analysis,
-      )
-
-      if (result) {
-        setConfig(config)
-        await setGeneratedEmails(result.emails)
-        const editorUrl = currentCampaignId
-          ? `/create/editor?campaign=${currentCampaignId}`
-          : '/create/editor'
-        router.push(editorUrl)
-      }
-    } finally {
-      // Don't set false - let navigation complete
+      // Same path as the hero flow: save the settings and let the editor stream
+      // the emails in (first email in seconds, plan limits shown in context).
+      // No campaign yet (creating it failed on /create): create it now. Plans
+      // count generations per saved campaign, so the server refuses one
+      // without an id.
+      const campaignId =
+        validCampaignId || currentCampaignId || (await createNewCampaign(landingPageData))
+      await applyConfigToCampaign(campaignId, config)
+      router.push(`/create/editor?campaign=${campaignId}&email=1&autogen=1`)
+      // Leave isSubmitting set while the editor loads.
+    } catch (err) {
+      console.error('Failed to start campaign:', err)
+      setSubmitError('Could not save your campaign. Please try again.')
+      setIsSubmitting(false)
     }
   }
 
@@ -93,6 +101,8 @@ export function useCampaignConfig(validCampaignId: string | null) {
     setCampaignType,
     days,
     setDays,
+    maxEmails,
+    plan,
 
     // Data
     landingPageData,
@@ -105,7 +115,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
     isReady,
 
     // Error
-    error,
+    error: submitError ?? generationError,
     warning,
 
     // Actions

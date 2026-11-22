@@ -1,23 +1,27 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import Anthropic from '@anthropic-ai/sdk'
+
+const captureExceptionMock = vi.fn()
+vi.mock('@/lib/billing/limits', () => ({
+  getPlan: async () => 'free',
+  consumeAiRewrite: async () => null,
+  checkEmailCount: () => null,
+  checkCampaignAllowed: async () => null,
+}))
 
 vi.mock('@sentry/nextjs', () => ({
-  captureException: vi.fn(),
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
 }))
 
-const openaiResponsesParseMock = vi.fn()
-vi.mock('@/lib/openai', () => ({
-  openai: {
-    responses: {
-      parse: (...args: unknown[]) => openaiResponsesParseMock(...args),
-    },
-  },
-}))
-
-const retryWithBackoffMock = vi.fn()
-vi.mock('@/lib/utils/openai-retry', () => ({
-  retryWithBackoff: (...args: unknown[]) => retryWithBackoffMock(...args),
-  extractRateLimitInfo: (error: unknown) => ({ remaining: 0, reset: 100 }),
-}))
+const generateStructuredMock = vi.fn()
+vi.mock('@/lib/ai', async () => {
+  const { default: SDK } = await import('@anthropic-ai/sdk')
+  return {
+    generateStructured: (...args: unknown[]) => generateStructuredMock(...args),
+    isRateLimitError: (error: unknown) => error instanceof SDK.RateLimitError,
+    extractRateLimitInfo: () => ({ limit: 50, remaining: 0, resetTime: '2026-10-07T12:00:00Z' }),
+  }
+})
 
 const checkRateLimitMock = vi.fn()
 vi.mock('@/lib/utils/rate-limit', () => ({
@@ -60,9 +64,16 @@ vi.mock('@/app/api/generate-emails/prompts', () => ({
 
 // Import after all vi.mock calls
 import { POST } from '@/app/api/generate-emails/stream/route'
+import { aiEmailsResponseSchema } from '@/lib'
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type StreamEvent = any
+interface StreamEvent {
+  type: 'start' | 'email' | 'complete' | 'error'
+  total?: number
+  email?: { day: number; subject: string }
+  emails?: Array<{ day: number; subject: string }>
+  warning?: string
+  message?: string
+}
 async function readStreamEvents(response: Response): Promise<StreamEvent[]> {
   if (!response.body) return []
   const reader = response.body.getReader()
@@ -144,6 +155,8 @@ describe('POST /api/generate-emails/stream', () => {
     // Audit-fix: routes call CampaignStorageService.isOwnedBy() before
     // saving. Default to true so happy-path tests don't 403.
     isOwnedByMock.mockReset().mockResolvedValue(true)
+    captureExceptionMock.mockReset()
+    generateStructuredMock.mockReset()
   })
 
   it('returns 400 for invalid body', async () => {
@@ -166,18 +179,12 @@ describe('POST /api/generate-emails/stream', () => {
   })
 
   it('happy path returns NDJSON stream with start event', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
-      },
-      usage: { prompt_tokens: 100, completion_tokens: 200 },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
-      },
-      usage: { prompt_tokens: 50, completion_tokens: 100 },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     const response = await POST(buildRequest(validRequestBody) as never)
@@ -187,27 +194,23 @@ describe('POST /api/generate-emails/stream', () => {
     const events = await readStreamEvents(response)
     expect(events.length).toBeGreaterThan(0)
 
-    const startEvent = events.find((e: any) => e.type === 'start')
+    const startEvent = events.find((e) => e.type === 'start')
     expect(startEvent).toBeDefined()
     expect(startEvent?.total).toBe(2)
   })
 
   it('emits email events in correct order', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
-      },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
-      },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     const response = await POST(buildRequest(validRequestBody) as never)
     const events = await readStreamEvents(response)
-    const emailEvents = events.filter((e: any) => e.type === 'email')
+    const emailEvents = events.filter((e) => e.type === 'email')
 
     expect(emailEvents.length).toBe(2)
     expect(emailEvents[0]?.email?.day).toBe(1)
@@ -215,21 +218,17 @@ describe('POST /api/generate-emails/stream', () => {
   })
 
   it('includes complete event with emails at end', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
-      },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: {
-        emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
-      },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     const response = await POST(buildRequest(validRequestBody) as never)
     const events = await readStreamEvents(response)
-    const completeEvent = events.find((e: any) => e.type === 'complete')
+    const completeEvent = events.find((e) => e.type === 'complete')
 
     expect(completeEvent).toBeDefined()
     expect(completeEvent?.type).toBe('complete')
@@ -238,12 +237,12 @@ describe('POST /api/generate-emails/stream', () => {
   })
 
   it('sets correct streaming headers', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     const response = await POST(buildRequest(validRequestBody) as never)
@@ -251,28 +250,137 @@ describe('POST /api/generate-emails/stream', () => {
     expect(response.headers.get('X-Accel-Buffering')).toBe('no')
   })
 
-  it('handles OpenAI error and emits error event', async () => {
-    retryWithBackoffMock.mockRejectedValue(new Error('OpenAI failed'))
+  it('emits an error event with the message when the AI call fails', async () => {
+    generateStructuredMock.mockRejectedValue(new Error('AI returned an unexpected format'))
 
     const response = await POST(buildRequest(validRequestBody) as never)
     expect(response.status).toBe(200)
     expect(response.headers.get('Content-Type')).toContain('application/x-ndjson')
 
     const events = await readStreamEvents(response)
-    const errorEvent = events.find((e: any) => e.type === 'error')
+    const errorEvent = events.find((e) => e.type === 'error')
 
-    expect(errorEvent).toBeDefined()
-    expect(errorEvent?.type).toBe('error')
-    expect(errorEvent?.message).toBeDefined()
+    expect(errorEvent?.message).toBe('AI returned an unexpected format')
+    expect(events.some((e) => e.type === 'complete')).toBe(false)
+    expect(captureExceptionMock).not.toHaveBeenCalled()
+  })
+
+  it('emits a friendly error event on an AI rate limit and reports it', async () => {
+    const error = new Anthropic.RateLimitError(
+      429,
+      { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limit exceeded' } },
+      'Rate limit exceeded',
+      new Headers(),
+    )
+    generateStructuredMock.mockRejectedValue(error)
+
+    const response = await POST(buildRequest(validRequestBody) as never)
+    const events = await readStreamEvents(response)
+    const errorEvent = events.find((e) => e.type === 'error')
+
+    expect(errorEvent?.message).toBe('Too many requests to AI service. Please try again later.')
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({
+        level: 'warning',
+        tags: { error_type: 'ai_rate_limit', api_route: '/api/generate-emails/stream' },
+        extra: {
+          rateLimitInfo: { limit: 50, remaining: 0, resetTime: '2026-10-07T12:00:00Z' },
+        },
+      }),
+    )
+  })
+
+  it('emits Day 1 before failing when phase 2 fails', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockRejectedValueOnce(new Error('AI response was cut off before it finished'))
+
+    const response = await POST(buildRequest(validRequestBody) as never)
+    const events = await readStreamEvents(response)
+
+    expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
+    expect(events[1].email?.day).toBe(1)
+    expect(events[2].message).toBe('AI response was cut off before it finished')
+  })
+
+  it('generates Day 1 first, then the remaining days, with the email schema', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
+
+    await readStreamEvents(await POST(buildRequest(validRequestBody) as never))
+
+    expect(generateStructuredMock).toHaveBeenCalledTimes(2)
+    const [first, second] = generateStructuredMock.mock.calls.map(
+      (call) =>
+        call[0] as {
+          system: string
+          messages: Array<{ role: string; content: string }>
+          schema: unknown
+        },
+    )
+    expect(first.system).toBe('First email instructions')
+    expect(first.schema).toBe(aiEmailsResponseSchema)
+    expect(first.messages).toEqual([{ role: 'user', content: 'Generate Day 1 only.' }])
+    expect(second.system).toBe('Remaining emails instructions')
+    expect(second.schema).toBe(aiEmailsResponseSchema)
+    expect(second.messages).toEqual([{ role: 'user', content: 'Generate Days 2 through 2.' }])
+  })
+
+  it('numbers phase 2 days by position and caps them at config.days', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 7, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockResolvedValueOnce({
+        emails: [
+          { day: 1, subject: 'S2', preview: 'P2', content: 'C2' },
+          { day: 1, subject: 'S3', preview: 'P3', content: 'C3' },
+          { day: 9, subject: 'extra', preview: '', content: '' },
+        ],
+      })
+
+    const response = await POST(
+      buildRequest({
+        ...validRequestBody,
+        config: { ...validRequestBody.config, days: 3 },
+      }) as never,
+    )
+    const events = await readStreamEvents(response)
+    const emailEvents = events.filter((e) => e.type === 'email')
+
+    expect(emailEvents.map((e) => [e.email?.day, e.email?.subject])).toEqual([
+      [1, 'S1'],
+      [2, 'S2'],
+      [3, 'S3'],
+    ])
+  })
+
+  it('saves the full batch when a campaignId is given', async () => {
+    generateStructuredMock
+      .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
+      .mockResolvedValueOnce({ emails: [{ day: 2, subject: 'S2', preview: 'P2', content: 'C2' }] })
+
+    const response = await POST(
+      buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
+    )
+    const events = await readStreamEvents(response)
+    const completeEvent = events.find((e) => e.type === 'complete')
+
+    expect(saveEmailsMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, [
+      expect.objectContaining({ day: 1, subject: 'S1' }),
+      expect.objectContaining({ day: 2, subject: 'S2' }),
+    ])
+    expect(completeEvent?.emails?.map((e) => e.subject)).toEqual(['Subject 1', 'Subject 2'])
+    expect(completeEvent?.warning).toBeUndefined()
   })
 
   it('includes warning when save fails', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     saveEmailsMock.mockRejectedValue(new Error('Save failed'))
@@ -281,14 +389,14 @@ describe('POST /api/generate-emails/stream', () => {
       buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never,
     )
     const events = await readStreamEvents(response)
-    const completeEvent = events.find((e: any) => e.type === 'complete')
+    const completeEvent = events.find((e) => e.type === 'complete')
 
     expect(completeEvent?.warning).toContain('Could not persist')
   })
 
   it('handles single day generation', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
     const response = await POST(
@@ -300,18 +408,19 @@ describe('POST /api/generate-emails/stream', () => {
     expect(response.status).toBe(200)
 
     const events = await readStreamEvents(response)
-    const emailEvents = events.filter((e: any) => e.type === 'email')
+    const emailEvents = events.filter((e) => e.type === 'email')
     expect(emailEvents.length).toBe(1)
     expect(emailEvents[0]?.email?.day).toBe(1)
+    expect(generateStructuredMock).toHaveBeenCalledOnce()
   })
 
   it('includes rate limit headers in stream response', async () => {
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S1', preview: 'P1', content: 'C1' }],
     })
 
-    retryWithBackoffMock.mockResolvedValueOnce({
-      output_parsed: { emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }] },
+    generateStructuredMock.mockResolvedValueOnce({
+      emails: [{ subject: 'S2', preview: 'P2', content: 'C2' }],
     })
 
     const response = await POST(buildRequest(validRequestBody) as never)

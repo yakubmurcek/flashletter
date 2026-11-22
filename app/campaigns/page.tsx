@@ -4,14 +4,14 @@ import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Mail, Plus } from 'lucide-react'
+import { Mail, Plus, Save } from 'lucide-react'
 import { SignOutButton } from '@/components/auth/sign-out-button'
 import { AppShell } from '@/components/layouts/app-shell'
 
 import { CampaignCard } from '@/components/campaign/campaign-card'
 
 export const metadata = {
-  title: 'My Campaigns - Flashletter',
+  title: 'Campaigns',
   description: 'Manage your email campaigns',
 }
 
@@ -30,14 +30,39 @@ export default async function CampaignsPage() {
 
   return (
     <AppShell
-      headerRight={<SignOutButton />}
+      headerRight={
+        // Signing a guest out would throw their campaigns away; offer to save them instead.
+        user.is_anonymous ? (
+          <Button
+            asChild
+            size="sm"
+            className="gap-2"
+          >
+            <Link href="/signup">
+              <Save className="h-4 w-4" />
+              Sign up to save
+            </Link>
+          </Button>
+        ) : (
+          <>
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+            >
+              <Link href="/account">Account</Link>
+            </Button>
+            <SignOutButton />
+          </>
+        )
+      }
       withFooter={false}
     >
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
         <div>
-          <h1 className="text-display text-3xl md:text-5xl mb-3">My Campaigns</h1>
+          <h1 className="text-display text-3xl md:text-5xl mb-3">Campaigns</h1>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Manage and view all your email campaigns
+            Every sequence you have generated. Open one to keep editing.
           </p>
         </div>
         <Button
@@ -50,7 +75,7 @@ export default async function CampaignsPage() {
             prefetch
           >
             <Plus className="w-5 h-5" />
-            New Campaign
+            New campaign
           </Link>
         </Button>
       </div>
@@ -63,14 +88,14 @@ export default async function CampaignsPage() {
             </div>
             <h3 className="text-display text-2xl md:text-3xl mb-3">No campaigns yet</h3>
             <p className="text-muted-foreground mb-8">
-              Get started by creating your first email campaign
+              Paste a landing page URL and get a five-email sequence in about a minute.
             </p>
             <Button asChild>
               <Link
                 href="/create"
                 prefetch
               >
-                Create Your First Campaign
+                Generate your first sequence
               </Link>
             </Button>
           </CardContent>

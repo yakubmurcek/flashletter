@@ -1,5 +1,9 @@
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
+import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
+import { createClient } from '@/lib/supabase/server'
+import { safeRedirectPath, withRedirectTo } from '@/lib/utils/safe-redirect'
 import {
   Card,
   CardContent,
@@ -10,19 +14,41 @@ import {
 } from '@/components/ui/card'
 
 export const metadata = {
-  title: 'Sign Up - Flashletter',
+  title: 'Create your account',
   description: 'Create a new account',
 }
 
-export default function SignupPage() {
+export default async function SignupPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const { redirectTo: redirectToParam } = await searchParams
+  const redirectTo = safeRedirectPath(redirectToParam)
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  // A guest already has campaigns on an anonymous user; signing up fresh would
+  // orphan them, so upgrade that user in place instead.
+  if (user?.is_anonymous) {
+    return (
+      <UpgradePrompt
+        variant="save"
+        redirectTo={redirectTo}
+      />
+    )
+  }
+
   return (
     <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
-        <CardTitle className="text-display text-2xl md:text-3xl">Create an account</CardTitle>
+        <CardTitle className="text-display text-2xl md:text-3xl">
+          <h1>Create an account</h1>
+        </CardTitle>
         <CardDescription>
-          Enter your email and password to get started
-          <br />
-          with AI-powered email campaigns
+          Free plan: {PLAN_LIMITS.free.campaignsPerMonth} campaigns a month. No credit card.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -32,7 +58,7 @@ export default function SignupPage() {
         <div className="text-sm text-center text-muted-foreground">
           Already have an account?{' '}
           <Link
-            href="/login"
+            href={withRedirectTo('/login', redirectTo)}
             className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Sign in

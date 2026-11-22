@@ -9,11 +9,12 @@ let redis: Redis | undefined
 let redisAvailable = false
 
 // Initialize Redis client if credentials are available
-if (process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN) {
-  redis = new Redis({
-    url: process.env.UPSTASH_REDIS_REST_URL,
-    token: process.env.UPSTASH_REDIS_REST_TOKEN,
-  })
+// Same env fallback as rate-limit.ts (Vercel Marketplace injects KV_REST_API_*).
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
+
+if (redisUrl && redisToken) {
+  redis = new Redis({ url: redisUrl, token: redisToken })
   redisAvailable = true
 }
 
@@ -59,6 +60,7 @@ export async function withRedisFallback<T>(
  * Cache key generators for different data types
  */
 export const CacheKeys = {
-  scrape: (url: string) => `scrape:${Buffer.from(url).toString('base64')}`,
-  metadata: (url: string) => `metadata:${Buffer.from(url).toString('base64')}`,
+  // Prefixed like every other key: the Redis store is shared with other apps.
+  scrape: (url: string) => `flashletter:scrape:${Buffer.from(url).toString('base64')}`,
+  metadata: (url: string) => `flashletter:metadata:${Buffer.from(url).toString('base64')}`,
 } as const

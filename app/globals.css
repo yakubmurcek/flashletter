@@ -15,10 +15,11 @@
   --popover: oklch(0.99 0.004 85);
   --popover-foreground: var(--foreground);
 
-  /* Brand accent — used sparingly: primary CTA, focus, brand mark */
-  --primary: oklch(0.66 0.18 42);
-  --primary-hover: oklch(0.6 0.18 42);
-  --primary-active: oklch(0.55 0.18 42);
+  /* Brand accent, used sparingly: primary CTA, focus, brand mark. L=0.57 keeps
+     white text on it and it on the background at 4.5:1+ (WCAG AA). */
+  --primary: oklch(0.57 0.18 42);
+  --primary-hover: oklch(0.52 0.18 42);
+  --primary-active: oklch(0.48 0.17 42);
   --primary-foreground: oklch(0.99 0 0);
 
   --secondary: oklch(0.96 0.006 85);
@@ -36,7 +37,7 @@
   --ring: var(--primary);
 
   /* Charts (kept minimal; in-app charts may still reference) */
-  --chart-1: oklch(0.66 0.18 42);
+  --chart-1: oklch(0.57 0.18 42);
   --chart-2: oklch(0.55 0.012 60);
   --chart-3: oklch(0.7 0.012 60);
   --chart-4: oklch(0.4 0.012 60);
@@ -55,6 +56,8 @@
 }
 
 @theme inline {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -237,10 +240,10 @@
 @keyframes pulse-glow {
   0%,
   100% {
-    box-shadow: 0 0 0 0 oklch(0.66 0.18 42 / 0.35);
+    box-shadow: 0 0 0 0 oklch(0.57 0.18 42 / 0.35);
   }
   50% {
-    box-shadow: 0 0 0 10px oklch(0.66 0.18 42 / 0);
+    box-shadow: 0 0 0 10px oklch(0.57 0.18 42 / 0);
   }
 }
 
@@ -267,4 +270,18 @@
   .cursor-behind::after {
     animation: none;
   }
+}
+
+/* Sheen sweeping across progress bars so long waits never look frozen */
+@keyframes progressSheen {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.animate-progress-sheen {
+  animation: progressSheen 1.4s ease-in-out infinite;
 }

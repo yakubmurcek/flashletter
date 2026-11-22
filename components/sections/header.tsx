@@ -32,13 +32,13 @@ export function Header() {
   }, [])
 
   const navItems = [
-    { href: '#features', label: 'Features', show: true },
+    { href: '/#features', label: 'Features', show: true },
     {
-      href: '#pricing',
+      href: '/pricing',
       label: 'Pricing',
       show: LANDING_PAGE_CONFIG.showProductFeatures,
     },
-    { href: '#faq', label: 'FAQ', show: true },
+    { href: '/#faq', label: 'FAQ', show: true },
   ].filter((item) => item.show)
 
   return (
@@ -74,7 +74,16 @@ export function Header() {
               >
                 <Link href="/campaigns">My campaigns</Link>
               </Button>
-              <UserMenu user={user} />
+              {user.is_anonymous ? (
+                <Button
+                  size="sm"
+                  asChild
+                >
+                  <Link href="/signup">Sign up to save</Link>
+                </Button>
+              ) : (
+                <UserMenu user={user} />
+              )}
             </>
           ) : (
             <>
@@ -92,7 +101,7 @@ export function Header() {
                 asChild
               >
                 {LANDING_PAGE_CONFIG.showProductFeatures ? (
-                  <Link href="/signup">Try free</Link>
+                  <Link href="/#try">Try free</Link>
                 ) : (
                   <Link href="/login">Sign in</Link>
                 )}

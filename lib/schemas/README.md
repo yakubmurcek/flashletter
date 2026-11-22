@@ -30,9 +30,9 @@ lib/schemas/
 - `chatRequestSchema` - Chat API request
 - `emailEditSchema` - AI email edit response
 
-### OpenAI Responses
+### AI Responses
 
-- `emailsResponseSchema` - Email generation response
+- `aiEmailsResponseSchema` - Email generation output from Claude
 
 ## API Schemas (`api.ts`)
 
@@ -68,20 +68,19 @@ export async function POST(req: NextRequest) {
 }
 ```
 
-### OpenAI Structured Outputs
+### Claude Structured Outputs
 
-Use schemas with OpenAI's structured output helpers:
+Pass a schema to `generateStructured()`; it is converted to JSON Schema for Claude's
+structured outputs and the response is validated with the same zod schema:
 
 ```typescript
-import { zodTextFormat } from 'openai/helpers/zod'
-import { emailsResponseSchema } from '@/lib'
+import { generateStructured } from '@/lib/ai'
+import { aiEmailsResponseSchema } from '@/lib'
 
-const response = await openai.responses.parse({
-  model: 'gpt-4o',
-  input: [...],
-  text: {
-    format: zodTextFormat(emailsResponseSchema, 'emails_response'),
-  },
+const { emails } = await generateStructured({
+  system: instructions,
+  messages: [{ role: 'user', content: 'Generate Day 1 only.' }],
+  schema: aiEmailsResponseSchema,
 })
 ```
 

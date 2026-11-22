@@ -15,6 +15,8 @@ import { isIP } from 'node:net'
  *  - reject IP-literal hostnames in private/loopback/link-local ranges
  *  - DNS-resolve hostnames and reject if any A/AAAA record sits in those
  *    same ranges (blocks `evil.com → 127.0.0.1` style attacks)
+ *  - follow redirects by hand and run the same checks on every hop before
+ *    requesting it (blocks `public.com → 302 → 169.254.169.254`)
  *  - response size + timeout caps, to also turn slow/huge URLs into errors
  *
  * Not defended against here: full DNS-rebinding (the resolver could return a
@@ -44,25 +46,42 @@ function isPrivateIPv4(ip: string): boolean {
   return false
 }
 
+/** Expand an IPv6 address into its eight 16-bit groups, or null if malformed. */
+function ipv6Groups(ip: string): number[] | null {
+  let s = ip.toLowerCase().replace(/%.*$/, '') // drop a zone id (fe80::1%eth0)
+  // A dotted IPv4 tail (::ffff:1.2.3.4) becomes two hex groups
+  const dotted = s.match(/^(.*:)(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
+  if (dotted) {
+    const [a, b, c, d] = dotted.slice(2).map(Number)
+    s = `${dotted[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`
+  }
+  const halves = s.split('::')
+  if (halves.length > 2) return null
+  const head = halves[0] ? halves[0].split(':') : []
+  const tail = halves.length === 2 && halves[1] ? halves[1].split(':') : []
+  const missing = 8 - head.length - tail.length
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null
+  const groups = [...head, ...Array<string>(halves.length === 2 ? missing : 0).fill('0'), ...tail]
+  if (!groups.every((g) => /^[0-9a-f]{1,4}$/.test(g))) return null
+  return groups.map((g) => parseInt(g, 16))
+}
+
 function isPrivateIPv6(ip: string): boolean {
-  const lower = ip.toLowerCase()
-  if (lower === '::' || lower === '::1') return true
-  if (
-    lower.startsWith('fe80:') ||
-    lower.startsWith('fe9') ||
-    lower.startsWith('fea') ||
-    lower.startsWith('feb')
-  ) {
-    return true // fe80::/10 link-local
-  }
-  if (lower.startsWith('fc') || lower.startsWith('fd')) {
-    return true // fc00::/7 unique local
-  }
-  if (lower.startsWith('::ffff:')) {
-    // IPv4-mapped IPv6 — extract and re-check
-    const v4 = lower.slice(7)
-    if (isIP(v4) === 4) return isPrivateIPv4(v4)
-  }
+  const g = ipv6Groups(ip)
+  if (!g) return true // Unparseable → treat as unsafe
+  const v4 = (hi: number, lo: number) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`
+  const zeros = (from: number, to: number) => g.slice(from, to).every((x) => x === 0)
+
+  // ::/128, ::1 and the deprecated IPv4-compatible ::a.b.c.d (:: and ::1 land in 0.0.0.0/8)
+  if (zeros(0, 6)) return isPrivateIPv4(v4(g[6], g[7]))
+  // ::ffff:0:0/96 IPv4-mapped — Node and WHATWG print it as ::ffff:7f00:1
+  if (zeros(0, 5) && g[5] === 0xffff) return isPrivateIPv4(v4(g[6], g[7]))
+  // 64:ff9b::/96 NAT64 and 2002::/16 6to4 both carry an IPv4 address
+  if (g[0] === 0x64 && g[1] === 0xff9b && zeros(2, 6)) return isPrivateIPv4(v4(g[6], g[7]))
+  if (g[0] === 0x2002) return isPrivateIPv4(v4(g[1], g[2]))
+  if ((g[0] & 0xffc0) === 0xfe80) return true // fe80::/10 link-local
+  if ((g[0] & 0xfe00) === 0xfc00) return true // fc00::/7 unique local
+  if ((g[0] & 0xff00) === 0xff00) return true // ff00::/8 multicast
   return false
 }
 
@@ -77,6 +96,31 @@ export function isUnsafeUrlError(error: unknown): error is UnsafeUrlError {
   return error instanceof Error && error.name === 'UnsafeUrlError'
 }
 
+/**
+ * What to tell the visitor. The internal messages ("Cannot resolve host",
+ * "Refusing to fetch localhost") stay in logs; a visitor who mistyped a URL
+ * should not read "URL not allowed" as if we were blocking them.
+ */
+export function userMessageForUnsafeUrl(error: Error): string {
+  const msg = error.message
+  if (msg.startsWith('Cannot resolve host')) {
+    const host = msg.slice('Cannot resolve host: '.length)
+    return host.includes('.')
+      ? `We couldn't find ${host}. Check the address for typos and try again.`
+      : "That doesn't look like a web address. Try something like https://yourproduct.com."
+  }
+  if (msg === 'Invalid URL' || msg === 'URL is missing a hostname') {
+    return "That doesn't look like a web address. Try something like https://yourproduct.com."
+  }
+  if (msg === 'Only http(s) URLs are allowed') {
+    return 'Use a web address that starts with http:// or https://.'
+  }
+  if (msg.startsWith('Refusing to fetch')) {
+    return "That address isn't reachable from the internet. Paste your live landing page URL."
+  }
+  return "We couldn't open that page. Check the address and try again."
+}
+
 export async function assertSafeUrl(rawUrl: string): Promise<URL> {
   let url: URL
   try {
@@ -89,7 +133,8 @@ export async function assertSafeUrl(rawUrl: string): Promise<URL> {
     throw new UnsafeUrlError('Only http(s) URLs are allowed')
   }
 
-  const host = url.hostname
+  // WHATWG keeps IPv6 literals bracketed ("[::1]"); isIP() needs them bare.
+  const host = url.hostname.replace(/^\[(.*)\]$/, '$1')
   if (!host) {
     throw new UnsafeUrlError('URL is missing a hostname')
   }
@@ -135,34 +180,57 @@ export interface SafeFetchResult {
   text: string
 }
 
+const MAX_REDIRECTS = 5
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308])
+
+async function discardBody(response: Response): Promise<void> {
+  try {
+    await response.body?.cancel()
+  } catch {
+    // ignore
+  }
+}
+
 /**
  * Fetch a user-supplied URL with SSRF guards, a timeout, and a body-size cap.
- * Re-validates after redirects so a 302 → internal-IP can't slip through.
+ * Redirects are followed by hand so every hop is checked BEFORE it is
+ * requested — with `redirect: 'follow'` a public URL could 302 us onto
+ * 169.254.169.254 and the request would already be out by the time we looked.
  */
 export async function safeFetch(url: string, init?: RequestInit): Promise<SafeFetchResult> {
-  await assertSafeUrl(url)
-
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS)
 
   try {
-    const response = await fetch(url, {
-      ...init,
-      signal: controller.signal,
-      redirect: 'follow',
-    })
+    let currentUrl = url
+    let requestInit: RequestInit = { ...init }
+    let response: Response
 
-    if (response.url && response.url !== url) {
+    for (let redirects = 0; ; redirects++) {
+      await assertSafeUrl(currentUrl)
+      response = await fetch(currentUrl, {
+        ...requestInit,
+        signal: controller.signal,
+        redirect: 'manual',
+      })
+
+      const location = response.headers.get('location')
+      if (!REDIRECT_STATUSES.has(response.status) || !location) break
+
+      // Free the socket before moving on to the next hop.
+      await discardBody(response)
+      if (redirects >= MAX_REDIRECTS) {
+        throw new UnsafeUrlError('Too many redirects')
+      }
       try {
-        await assertSafeUrl(response.url)
-      } catch (err) {
-        // Swallow the body if we can't safely report on it.
-        try {
-          await response.body?.cancel()
-        } catch {
-          // ignore
-        }
-        throw err
+        currentUrl = new URL(location, currentUrl).toString()
+      } catch {
+        throw new UnsafeUrlError('Invalid redirect URL')
+      }
+      // Same method rewrite browsers do: 303 always, 301/302 for POST, become GET.
+      const method = requestInit.method?.toUpperCase()
+      if (response.status === 303 || (response.status <= 302 && method === 'POST')) {
+        requestInit = { ...requestInit, method: 'GET', body: undefined }
       }
     }
 
@@ -171,7 +239,7 @@ export async function safeFetch(url: string, init?: RequestInit): Promise<SafeFe
         ok: response.ok,
         status: response.status,
         statusText: response.statusText,
-        finalUrl: response.url || url,
+        finalUrl: currentUrl,
         text: '',
       }
     }
@@ -207,7 +275,7 @@ export async function safeFetch(url: string, init?: RequestInit): Promise<SafeFe
       ok: response.ok,
       status: response.status,
       statusText: response.statusText,
-      finalUrl: response.url || url,
+      finalUrl: currentUrl,
       text,
     }
   } finally {

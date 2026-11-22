@@ -50,19 +50,31 @@ function EmailPreviewComponent({
     return editedSubject !== email.subject || editedContent !== email.content
   }, [editedSubject, editedContent, email.subject, email.content])
 
+  // The save still waiting out the debounce below. The editor page keys this
+  // component by email id, so switching emails unmounts it: flush the pending
+  // edit then instead of dropping what was typed in the last second.
+  const pendingSaveRef = useRef<(() => void) | null>(null)
+
   // Auto-save when changes occur
   useEffect(() => {
-    if (hasChanges) {
-      const timeoutId = setTimeout(() => {
-        onUpdate({
-          subject: editedSubject,
-          content: editedContent,
-        })
-      }, 1000)
-
-      return () => clearTimeout(timeoutId)
+    if (!hasChanges) {
+      pendingSaveRef.current = null
+      return
     }
+    const save = () => {
+      pendingSaveRef.current = null
+      onUpdate({
+        subject: editedSubject,
+        content: editedContent,
+      })
+    }
+    pendingSaveRef.current = save
+    const timeoutId = setTimeout(save, 1000)
+
+    return () => clearTimeout(timeoutId)
   }, [hasChanges, editedSubject, editedContent, onUpdate])
+
+  useEffect(() => () => pendingSaveRef.current?.(), [])
 
   const selectionsMatch = (
     range: Range | null,
@@ -177,15 +189,22 @@ function EmailPreviewComponent({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="px-6 py-4 bg-background border-b border-border">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-xl font-semibold tracking-tight">Day {email.day}</h2>
-            <p className="text-sm text-muted-foreground/80 truncate">
-              Review and edit your campaign email
+      <div className="px-4 py-3 sm:px-6 sm:py-4 bg-background border-b border-border">
+        <div className="flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-semibold tracking-tight">Day {email.day}</h2>
+            <p className="text-sm text-muted-foreground truncate">
+              {email.preview ? (
+                <>
+                  <span className="hidden sm:inline">Inbox preview: </span>
+                  {email.preview}
+                </>
+              ) : (
+                'Click anywhere in the email to edit it'
+              )}
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
             <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
               {!isSaving && <Check className="w-3 h-3 text-muted-foreground" />}
               {isSaving ? 'Saving...' : 'Saved'}
@@ -198,14 +217,14 @@ function EmailPreviewComponent({
               disabled={!editor}
             >
               {isCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
-              Copy HTML
+              <span className="hidden sm:inline">{isCopied ? 'Copied' : 'Copy HTML'}</span>
             </Button>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden px-6 pb-6 pt-4 min-h-0 flex flex-col items-center">
-        <div className="w-full max-w-4xl h-full flex flex-col min-h-0">
+      <div className="flex-1 overflow-hidden min-h-0 flex flex-col">
+        <div className="w-full h-full flex flex-col min-h-0">
           <EmailPreviewContent
             subject={editedSubject}
             content={editedContent}

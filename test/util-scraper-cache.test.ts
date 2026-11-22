@@ -61,7 +61,9 @@ describe('getCachedScrapeData', () => {
       }),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCachedScrapeData('http://example.com')
 
@@ -84,7 +86,9 @@ describe('getCachedScrapeData', () => {
       del: vi.fn().mockResolvedValue(1),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCachedScrapeData('http://example.com')
 
@@ -108,7 +112,9 @@ describe('getCachedScrapeData', () => {
       }),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCachedScrapeData('http://example.com')
 
@@ -128,7 +134,9 @@ describe('setCachedScrapeData', () => {
       setex: mockSetex,
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const data: Omit<CachedScrapeData, 'cachedAt' | 'ttl'> = {
       content: 'test',
@@ -171,7 +179,9 @@ describe('invalidateCachedScrapeData', () => {
       del: mockDel,
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await invalidateCachedScrapeData('http://example.com')
 
@@ -206,10 +216,17 @@ describe('getCacheStats', () => {
     // the loop terminates when cursor returns to '0'. One round-trip suffices
     // when cursor === '0' on the first response.
     const mockRedis = {
-      scan: vi.fn().mockResolvedValue(['0', ['scrape:key1', 'scrape:key2', 'other:key']]),
+      scan: vi
+        .fn()
+        .mockResolvedValue([
+          '0',
+          ['flashletter:scrape:key1', 'flashletter:scrape:key2', 'flashletter:other:key'],
+        ]),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCacheStats()
 
@@ -229,7 +246,9 @@ describe('clearAllScrapeCache', () => {
       scan: vi.fn().mockResolvedValue(['0', []]),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await clearAllScrapeCache()
 
@@ -243,7 +262,9 @@ describe('clearAllScrapeCache', () => {
       del: mockDel,
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await clearAllScrapeCache()
 
@@ -270,7 +291,9 @@ describe('getCacheTTL', () => {
       ttl: vi.fn().mockResolvedValue(3600),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCacheTTL('http://example.com')
 
@@ -282,7 +305,9 @@ describe('getCacheTTL', () => {
       ttl: vi.fn().mockResolvedValue(-1),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await getCacheTTL('http://example.com')
 
@@ -308,7 +333,9 @@ describe('isUrlCached', () => {
       }),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await isUrlCached('http://example.com')
 
@@ -320,7 +347,9 @@ describe('isUrlCached', () => {
       get: vi.fn().mockResolvedValue(null),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const result = await isUrlCached('http://example.com')
 
@@ -349,7 +378,9 @@ describe('ScrapeCacheBatch', () => {
         .mockResolvedValueOnce(null),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const batch = new ScrapeCacheBatch(['http://example1.com', 'http://example2.com'])
     const results = await batch.loadAll()
@@ -373,7 +404,9 @@ describe('ScrapeCacheBatch', () => {
         .mockResolvedValueOnce(null),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const batch = new ScrapeCacheBatch(['http://example1.com', 'http://example2.com'])
     await batch.loadAll()
@@ -399,7 +432,9 @@ describe('ScrapeCacheBatch', () => {
         .mockResolvedValueOnce(null),
     }
 
-    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(mockRedis as any)
+    vi.mocked(redisClientModule.getRedisClient).mockReturnValue(
+      mockRedis as unknown as ReturnType<typeof redisClientModule.getRedisClient>,
+    )
 
     const batch = new ScrapeCacheBatch(['http://example1.com', 'http://example2.com'])
     await batch.loadAll()

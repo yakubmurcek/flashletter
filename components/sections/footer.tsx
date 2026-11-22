@@ -14,7 +14,7 @@ export function Footer() {
               <BrandMark href="/" />
             </div>
             <p className="text-sm text-muted-foreground max-w-xs">
-              Turn your landing page into a newsletter campaign in 30 seconds.
+              Turn your landing page into a newsletter campaign in 2 minutes.
             </p>
           </div>
 
@@ -24,30 +24,30 @@ export function Footer() {
             </h3>
             <ul className="space-y-3 text-sm">
               <li>
-                <a
-                  href="#features"
+                <Link
+                  href="/#features"
                   className="text-foreground hover:text-primary transition-colors"
                 >
                   Features
-                </a>
+                </Link>
               </li>
               {LANDING_PAGE_CONFIG.showProductFeatures && (
                 <li>
-                  <a
-                    href="#pricing"
+                  <Link
+                    href="/pricing"
                     className="text-foreground hover:text-primary transition-colors"
                   >
                     Pricing
-                  </a>
+                  </Link>
                 </li>
               )}
               <li>
-                <a
-                  href="#faq"
+                <Link
+                  href="/#faq"
                   className="text-foreground hover:text-primary transition-colors"
                 >
                   FAQ
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -74,6 +74,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <a
+                  href="mailto:jakub@flashletter.app"
+                  className="text-foreground hover:text-primary transition-colors"
+                >
+                  Contact
+                </a>
+              </li>
+              <li>
                 <Link
                   href="/unsubscribe"
                   className="text-foreground hover:text-primary transition-colors"
@@ -87,7 +95,7 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="font-mono text-xs text-muted-foreground">
-            © {year} flashletter — Jakub Murcek, IČO 08294593
+            © {year} flashletter · Jakub Murcek, IČO 08294593
           </div>
           <a
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"

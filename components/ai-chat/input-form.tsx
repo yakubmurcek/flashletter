@@ -15,6 +15,8 @@ interface AIChatInputFormProps {
   onSubmit: (e: React.FormEvent) => void
   shouldFocus?: boolean
   onFocusHandled?: () => void
+  /** False while the campaign is still loading; sending then would reach the AI without context. */
+  contextReady?: boolean
 }
 
 function InputFormBase({
@@ -26,6 +28,7 @@ function InputFormBase({
   onSubmit,
   shouldFocus = false,
   onFocusHandled,
+  contextReady = true,
 }: AIChatInputFormProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -87,6 +90,7 @@ function InputFormBase({
                 variant="ghost"
                 size="sm"
                 onClick={onClearContext}
+                aria-label="Remove selected text"
                 className="h-5 w-5 p-0 hover:bg-primary/20 transition-colors"
               >
                 <X className="w-3 h-3" />
@@ -103,15 +107,16 @@ function InputFormBase({
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything..."
+          placeholder={contextReady ? 'Ask me anything...' : 'Loading your campaign...'}
           className="flex-1"
-          disabled={isLoading}
+          disabled={isLoading || !contextReady}
           data-ai-chat-input
         />
         <Button
           type="submit"
           size="icon"
-          disabled={isLoading || !input.trim()}
+          aria-label="Send message"
+          disabled={isLoading || !contextReady || !input.trim()}
         >
           <Send className="w-4 h-4" />
         </Button>

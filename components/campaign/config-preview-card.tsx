@@ -9,7 +9,7 @@ interface ConfigPreviewCardProps {
 export function ConfigPreviewCard({ tone, campaignType, emailCount }: ConfigPreviewCardProps) {
   return (
     <Card className="bg-primary/5 p-6 border-primary/20 hover:border-primary/30 transition duration-300">
-      <h3 className="font-semibold mb-4 text-lg">Campaign Preview</h3>
+      <h3 className="font-semibold mb-4 text-lg">Summary</h3>
       <div className="space-y-3 text-sm">
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground">Tone:</span>

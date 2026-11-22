@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 import { MESSAGE_HISTORY_LIMIT } from '@/lib/constants/app'
 import { logError, getUserFriendlyMessage } from '@/lib/utils/error-handling'
+import { planLimitFromResponse } from '../billing/errors'
 
 export interface ChatMessage {
   id: number
@@ -34,6 +35,15 @@ interface UseAIChatParams {
   onClearContext?: () => void
 }
 
+const GREETING_READY =
+  "I've read your landing page and every email in this sequence. Ask me to sharpen a subject line, cut an email down, or change the tone. Select any text in the email to rework just that part."
+const GREETING_WAITING =
+  'Claude is writing your sequence. Once the first email is in, ask me to sharpen a subject line, cut an email down, or change the tone.'
+
+function greetingFor(contextReady: boolean): string {
+  return contextReady ? GREETING_READY : GREETING_WAITING
+}
+
 export function useAIChat({
   campaignContext,
   emailContext,
@@ -45,11 +55,20 @@ export function useAIChat({
     {
       id: 1,
       role: 'assistant',
-      content:
-        "Hi! I'm your AI assistant. I can help you refine your email content, suggest improvements, or answer questions about your campaign. How can I help you today?",
+      content: greetingFor(!!campaignContext || !!emailContext),
       timestamp: new Date(),
     },
   ])
+  // The greeting only claims to have read the emails once it actually has them.
+  const contextReady = !!campaignContext || !!emailContext
+  useEffect(() => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === 1 && m.role === 'assistant' ? { ...m, content: greetingFor(contextReady) } : m,
+      ),
+    )
+  }, [contextReady])
+
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -65,6 +84,8 @@ export function useAIChat({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!input.trim() || isLoading) return
+    // Without the campaign the AI would answer blind ("paste your email").
+    if (!campaignContext && !emailContext) return
 
     const contextForThisRequest = selectedContext
     if (selectedContext && onClearContext) {
@@ -102,6 +123,20 @@ export function useAIChat({
       })
 
       if (!response.ok) {
+        const raw = await response.json().catch(() => null)
+        const limit = planLimitFromResponse(response.status, raw)
+        if (limit) {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: messages.length + 2,
+              role: 'assistant',
+              content: `${limit.message} See plans at /pricing.`,
+              timestamp: new Date(),
+            },
+          ])
+          return
+        }
         throw new Error('Failed to get response')
       }
 

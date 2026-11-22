@@ -6,11 +6,11 @@ Clean, maintainable structure for the AI chat assistant endpoint.
 
 ```
 /app/api/chat/
-├── route.ts              # Main API route handler (58 lines)
+├── route.ts              # Main API route handler
 ├── schemas.ts            # Zod validation schemas
 ├── prompts.ts            # All AI prompts organized by section
 ├── prompt-builder.ts     # Logic for assembling prompts
-├── response-handler.ts   # OpenAI response parsing
+├── response-handler.ts   # Chat output schema + edit gating
 └── README.md            # This file
 ```
 
@@ -19,7 +19,7 @@ Clean, maintainable structure for the AI chat assistant endpoint.
 ### `route.ts` - Main Handler
 
 - Clean, simple request/response flow
-- Validates input, calls OpenAI, returns parsed response
+- Validates input, sends the conversation to Claude, returns the structured reply
 - All business logic extracted to other modules
 
 ### `schemas.ts` - Data Validation
@@ -50,9 +50,8 @@ All prompts are exported constants for easy editing.
 
 ### `response-handler.ts` - Response Processing
 
-- Parses OpenAI responses
-- Error handling and fallbacks
-- Type-safe response formatting
+- `chatOutputSchema`: the JSON shape Claude must return (structured outputs)
+- `toChatResponse`: only passes edits through when `shouldEdit` is true
 
 ## ✏️ How to Edit Prompts
 

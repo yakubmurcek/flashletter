@@ -19,7 +19,7 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
         <div>
           <div className="flex items-center gap-2">
             <h3 className="font-semibold text-sm">AI Assistant</h3>
-            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-primary/10 text-primary rounded-full border border-primary/20">
+            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-muted text-muted-foreground rounded-full border border-border">
               BETA
             </span>
           </div>
@@ -27,10 +27,10 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
             {hasCampaignContext ? (
               <span className="flex items-center gap-1.5">
                 <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                Full context ready
+                Read your page and emails
               </span>
             ) : (
-              'Always here to help'
+              'Waiting for your emails'
             )}
           </p>
         </div>
@@ -39,6 +39,7 @@ function HeaderBase({ onClose, hasCampaignContext }: AIChatHeaderProps) {
         variant="ghost"
         size="icon"
         onClick={onClose}
+        aria-label="Close AI assistant"
         className="hover:bg-primary/10 transition-colors"
       >
         <X className="w-4 h-4" />

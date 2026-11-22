@@ -8,8 +8,8 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
     data: { user },
   } = await supabase.auth.getUser()
 
-  // If user is already logged in, redirect to home
-  if (user) {
+  // If user is already logged in, redirect to home (guests may still sign up)
+  if (user && !user.is_anonymous) {
     redirect('/')
   }
 

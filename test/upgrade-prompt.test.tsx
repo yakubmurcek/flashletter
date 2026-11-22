@@ -17,11 +17,21 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: routerPushMock }),
 }))
 
+let region: 'US' | 'OTHER' = 'US'
+vi.mock('@/lib/utils/location-detection', () => ({
+  useRegionDetection: () => ({
+    locationInfo: { region, requiresGDPR: region === 'OTHER' },
+    isLoading: false,
+  }),
+}))
+
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 
 const ANON_USER_ID = '11111111-1111-1111-1111-111111111111'
 
 beforeEach(() => {
+  region = 'US'
+  Element.prototype.scrollIntoView = vi.fn()
   updateUserMock.mockReset()
   linkIdentityMock.mockReset()
   routerPushMock.mockReset()
@@ -117,5 +127,25 @@ describe('<UpgradePrompt /> — email upgrade path', () => {
     fireEvent.click(screen.getByRole('button', { name: /create account/i }))
     await new Promise((r) => setTimeout(r, 0))
     expect(updateUserMock).not.toHaveBeenCalled()
+  })
+})
+
+describe('<UpgradePrompt /> — consent gate', () => {
+  it('blocks Google and email signup until the consent box is ticked outside the US', async () => {
+    region = 'OTHER'
+    render(<UpgradePrompt />)
+
+    fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
+    expect(screen.getByRole('alert').textContent).toMatch(/tick this box/i)
+    expect(linkIdentityMock).not.toHaveBeenCalled()
+
+    fillForm()
+    fireEvent.click(screen.getByRole('button', { name: /create account/i }))
+    expect(updateUserMock).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('checkbox'))
+    linkIdentityMock.mockResolvedValue({ data: { url: null }, error: null })
+    fireEvent.click(screen.getByRole('button', { name: /continue with google/i }))
+    await waitFor(() => expect(linkIdentityMock).toHaveBeenCalledTimes(1))
   })
 })

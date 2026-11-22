@@ -14,7 +14,7 @@ interface NewsletterPlaybook {
 const playbook = playbookData as NewsletterPlaybook
 
 export const CAMPAIGN_STEPS = [
-  { number: 1, label: 'URL Input' },
+  { number: 1, label: 'Landing page' },
   { number: 2, label: 'Configuration' },
   { number: 3, label: 'Generate' },
 ]
@@ -42,5 +42,5 @@ export const CAMPAIGN_DURATION = {
 export const SMART_DEFAULT_CAMPAIGN_CONFIG = {
   tone: 'friendly',
   campaignType: 'nurture',
-  days: 3,
+  days: 5,
 } as const

@@ -12,8 +12,21 @@ import {
 } from '@/components/ui/select'
 import { Slider } from '@/components/ui/slider'
 import { CAMPAIGN_TONES, CAMPAIGN_TYPES, CAMPAIGN_DURATION } from '@/lib/constants/campaign'
+import Link from 'next/link'
+import { usePlan } from '@/lib/hooks/use-plan'
+import { PLAN_LIMITS } from '@/lib/billing/plans'
 import type { CampaignConfig } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 
 interface CampaignConfigPanelProps {
   config: CampaignConfig | null
@@ -23,6 +36,8 @@ interface CampaignConfigPanelProps {
   streamedCount: number
   totalExpected: number | null
   defaultOpen?: boolean
+  /** When there are emails to lose, Regenerate asks before replacing them. */
+  hasEmails?: boolean
 }
 
 export function CampaignConfigPanel({
@@ -33,8 +48,11 @@ export function CampaignConfigPanel({
   streamedCount,
   totalExpected,
   defaultOpen = false,
+  hasEmails = false,
 }: CampaignConfigPanelProps) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
+  const [confirmRegenerate, setConfirmRegenerate] = useState(false)
+  const { plan, maxEmails } = usePlan()
 
   if (!config) {
     return null
@@ -62,17 +80,17 @@ export function CampaignConfigPanel({
         )}
         aria-expanded={isOpen}
       >
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 shrink-0">
           {isOpen ? (
             <ChevronDown className="w-4 h-4 text-muted-foreground shrink-0" />
           ) : (
             <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
           )}
-          <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-semibold whitespace-nowrap">
             Sequence settings
           </span>
         </div>
-        <span className="text-xs text-muted-foreground truncate ml-3">
+        <span className="min-w-0 text-xs text-muted-foreground truncate ml-3">
           {typeLabel} · {toneLabel} · {days}d
         </span>
       </button>
@@ -132,19 +150,31 @@ export function CampaignConfigPanel({
             </div>
             <Slider
               min={CAMPAIGN_DURATION.MIN}
-              max={CAMPAIGN_DURATION.MAX}
+              max={Math.min(CAMPAIGN_DURATION.MAX, maxEmails)}
               step={1}
               value={[days]}
               onValueChange={(v) => setDays(v[0])}
               disabled={isStreaming}
             />
+            {plan !== 'pro' && plan !== null && (
+              <p className="text-xs text-muted-foreground">
+                Up to {maxEmails} emails on your plan.{' '}
+                <Link
+                  href="/pricing"
+                  className="text-primary hover:underline"
+                >
+                  Pro writes up to {PLAN_LIMITS.pro.maxEmailsPerCampaign}
+                </Link>
+                .
+              </p>
+            )}
           </div>
 
           <Button
             type="button"
             variant="outline"
             size="sm"
-            onClick={onRegenerate}
+            onClick={() => (hasEmails ? setConfirmRegenerate(true) : onRegenerate())}
             disabled={isStreaming}
             className="w-full"
           >
@@ -166,6 +196,25 @@ export function CampaignConfigPanel({
           </p>
         </div>
       )}
+
+      <AlertDialog
+        open={confirmRegenerate}
+        onOpenChange={setConfirmRegenerate}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Replace all emails?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Claude writes a new sequence with these settings. Your current emails and any edits
+              you made to them are replaced.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep my emails</AlertDialogCancel>
+            <AlertDialogAction onClick={onRegenerate}>Regenerate</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }

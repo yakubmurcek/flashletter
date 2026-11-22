@@ -7,6 +7,7 @@ import {
   getToneGuidelines,
 } from '@/app/api/generate-emails/prompts'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { CAMPAIGN_TONES, CAMPAIGN_TYPES } from '@/lib/constants/campaign'
 
 const analysis: LandingPageAnalysis = {
   valueProp: 'Turn landing pages into email sequences.',
@@ -47,6 +48,26 @@ describe('getCampaignStructure', () => {
     const result = getCampaignStructure('nurture', 14)
     expect(result).toContain('Day 14')
   })
+
+  // Every day from 1 to N appears in exactly one phase, in order. The old
+  // templates printed "Days 2-1" for a 5-email onboarding sequence.
+  it.each(['nurture', 'onboarding', 'promotional'])(
+    'plans each day of a %s sequence exactly once',
+    (type) => {
+      for (let days = 3; days <= 30; days++) {
+        const covered: number[] = []
+        for (const [, from, to] of getCampaignStructure(type, days).matchAll(
+          /Days? (\d+)(?:-(\d+))?:/g,
+        )) {
+          const start = Number(from)
+          const end = to === undefined ? start : Number(to)
+          expect(start, `${type} ${days}: Days ${start}-${end}`).toBeLessThan(end + (to ? 0 : 1))
+          for (let d = start; d <= end; d++) covered.push(d)
+        }
+        expect(covered, `${type} ${days}`).toEqual(Array.from({ length: days }, (_, i) => i + 1))
+      }
+    },
+  )
 })
 
 describe('getToneGuidelines', () => {
@@ -69,6 +90,23 @@ describe('getToneGuidelines', () => {
   it('falls back to friendly for unknown tone', () => {
     expect(getToneGuidelines('unknown-tone')).toEqual(getToneGuidelines('friendly'))
   })
+
+  // The tone pickers offer every playbook tone; none may silently fall back.
+  it.each(CAMPAIGN_TONES.map((t) => t.value).filter((v) => v !== 'friendly'))(
+    'has its own guidelines for the %s tone',
+    (tone) => {
+      expect(getToneGuidelines(tone)).not.toEqual(getToneGuidelines('friendly'))
+    },
+  )
+})
+
+describe('getCampaignStructure covers every campaign type offered', () => {
+  it.each(CAMPAIGN_TYPES.map((t) => t.value).filter((v) => v !== 'nurture'))(
+    'has its own plan for %s',
+    (type) => {
+      expect(getCampaignStructure(type, 5)).not.toEqual(getCampaignStructure('nurture', 5))
+    },
+  )
 })
 
 describe('buildInstructions (without analysis)', () => {
@@ -91,12 +129,12 @@ describe('buildInstructions (without analysis)', () => {
     expect(prompt).toContain('Page content here')
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '\u2603' // snowman — doesn't appear elsewhere in the prompt
-    const longContent = sentinel.repeat(3000) + 'TAIL_MARKER'
+    const longContent = sentinel.repeat(7000) + 'TAIL_MARKER'
     const p = buildInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/\u2603/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
     expect(p).not.toContain('TAIL_MARKER')
   })
 
@@ -217,12 +255,12 @@ describe('buildFirstEmailInstructions', () => {
     expect(prompt.toLowerCase()).toMatch(/do not invent/i)
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(3000)
+    const longContent = sentinel.repeat(7000)
     const p = buildFirstEmailInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
   })
 
   it('omits the analysis block when analysis is undefined', () => {
@@ -288,12 +326,12 @@ describe('buildRemainingEmailsInstructions', () => {
     expect(p).not.toContain('LANDING PAGE ANALYSIS')
   })
 
-  it('truncates landing content at 2000 chars', () => {
+  it('truncates landing content at 6000 chars', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(3000)
+    const longContent = sentinel.repeat(7000)
     const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(2000)
+    expect(count).toBe(6000)
   })
 
   it('handles a 2-day campaign (only day 2 to write)', () => {
@@ -333,5 +371,37 @@ describe('buildInstructions (empty list fields in analysis)', () => {
   it('still includes the non-list analysis fields', () => {
     expect(prompt).toContain(emptyAnalysis.valueProp)
     expect(prompt).toContain(emptyAnalysis.primaryCTA)
+  })
+})
+
+describe('writing rules', () => {
+  const config = { days: 5, campaignType: 'nurture', tone: 'friendly' }
+  const builders = [
+    () => buildInstructions(config, 'https://e.com'),
+    () => buildFirstEmailInstructions(config, 'https://e.com'),
+    () =>
+      buildRemainingEmailsInstructions(config, 'https://e.com', {
+        subject: 's',
+        preview: 'p',
+        content: 'c',
+      }),
+  ]
+
+  it.each(builders.map((b, i) => [i, b]))('builder %i carries the craft rules', (_i, build) => {
+    const p = (build as () => string)()
+    expect(p).toContain('How to write each email:')
+    expect(p).toContain('Never mention day numbers')
+    expect(p).toContain('Markdown link to https://e.com')
+  })
+})
+
+describe('language rule', () => {
+  it('asks for the page language everywhere, sign-off included', () => {
+    const p = buildFirstEmailInstructions(
+      { days: 5, campaignType: 'nurture', tone: 'friendly' },
+      'https://e.cz',
+    )
+    expect(p).toContain('Write every word in the language of the landing page')
+    expect(p).toContain('Tým Fakturoid')
   })
 })

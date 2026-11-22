@@ -153,10 +153,10 @@ function UnsubscribePageContent() {
           <p className="text-sm text-muted-foreground">
             Need help? Contact us at{' '}
             <a
-              href="mailto:support@flashletter.com"
-              className="text-primary hover:underline"
+              href="mailto:jakub@flashletter.app"
+              className="text-primary underline underline-offset-2 hover:text-primary/80"
             >
-              support@flashletter.com
+              jakub@flashletter.app
             </a>
           </p>
         </div>
