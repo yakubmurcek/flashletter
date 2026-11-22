@@ -7,6 +7,7 @@ import {
   getToneGuidelines,
 } from '@/app/api/generate-emails/prompts'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { CAMPAIGN_TONES, CAMPAIGN_TYPES } from '@/lib/constants/campaign'
 
 const analysis: LandingPageAnalysis = {
   valueProp: 'Turn landing pages into email sequences.',
@@ -47,6 +48,26 @@ describe('getCampaignStructure', () => {
     const result = getCampaignStructure('nurture', 14)
     expect(result).toContain('Day 14')
   })
+
+  // Every day from 1 to N appears in exactly one phase, in order. The old
+  // templates printed "Days 2-1" for a 5-email onboarding sequence.
+  it.each(['nurture', 'onboarding', 'promotional'])(
+    'plans each day of a %s sequence exactly once',
+    (type) => {
+      for (let days = 3; days <= 30; days++) {
+        const covered: number[] = []
+        for (const [, from, to] of getCampaignStructure(type, days).matchAll(
+          /Days? (\d+)(?:-(\d+))?:/g,
+        )) {
+          const start = Number(from)
+          const end = to === undefined ? start : Number(to)
+          expect(start, `${type} ${days}: Days ${start}-${end}`).toBeLessThan(end + (to ? 0 : 1))
+          for (let d = start; d <= end; d++) covered.push(d)
+        }
+        expect(covered, `${type} ${days}`).toEqual(Array.from({ length: days }, (_, i) => i + 1))
+      }
+    },
+  )
 })
 
 describe('getToneGuidelines', () => {
@@ -69,6 +90,23 @@ describe('getToneGuidelines', () => {
   it('falls back to friendly for unknown tone', () => {
     expect(getToneGuidelines('unknown-tone')).toEqual(getToneGuidelines('friendly'))
   })
+
+  // The tone pickers offer every playbook tone; none may silently fall back.
+  it.each(CAMPAIGN_TONES.map((t) => t.value).filter((v) => v !== 'friendly'))(
+    'has its own guidelines for the %s tone',
+    (tone) => {
+      expect(getToneGuidelines(tone)).not.toEqual(getToneGuidelines('friendly'))
+    },
+  )
+})
+
+describe('getCampaignStructure covers every campaign type offered', () => {
+  it.each(CAMPAIGN_TYPES.map((t) => t.value).filter((v) => v !== 'nurture'))(
+    'has its own plan for %s',
+    (type) => {
+      expect(getCampaignStructure(type, 5)).not.toEqual(getCampaignStructure('nurture', 5))
+    },
+  )
 })
 
 describe('buildInstructions (without analysis)', () => {
@@ -91,13 +129,37 @@ describe('buildInstructions (without analysis)', () => {
     expect(prompt).toContain('Page content here')
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '\u2603' // snowman — doesn't appear elsewhere in the prompt
-    const longContent = sentinel.repeat(7000) + 'TAIL_MARKER'
+    const longContent = sentinel.repeat(12000) + 'TAIL_MARKER'
     const p = buildInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/\u2603/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
     expect(p).not.toContain('TAIL_MARKER')
+  })
+
+  it('counts text, not markup, so a testimonial after heavy markup reaches the writer', () => {
+    const linkWall = Array.from(
+      { length: 200 },
+      (_, i) => `<p><a href="https://example.com/features/section/item-${i}">Item ${i}</a></p>`,
+    ).join('\n')
+    expect(linkWall.length).toBeGreaterThan(8000)
+    const content = `${linkWall}\n<p>"It saved us 10 hours a week." Jane Doe, TESTIMONIAL_MARKER</p>`
+
+    for (const p of [
+      buildInstructions(config, 'https://e.com', content),
+      buildFirstEmailInstructions(config, 'https://e.com', content),
+      buildRemainingEmailsInstructions(
+        config,
+        'https://e.com',
+        { subject: 's', preview: 'p', content: 'c' },
+        content,
+      ),
+    ]) {
+      expect(p).toContain('TESTIMONIAL_MARKER')
+      // Links stay available so the CTA can point at a real deeper page.
+      expect(p).toContain('href="https://example.com/features/section/item-199"')
+    }
   })
 
   it('does not include analysis block when analysis is undefined', () => {
@@ -217,12 +279,12 @@ describe('buildFirstEmailInstructions', () => {
     expect(prompt.toLowerCase()).toMatch(/do not invent/i)
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(7000)
+    const longContent = sentinel.repeat(12000)
     const p = buildFirstEmailInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
   })
 
   it('omits the analysis block when analysis is undefined', () => {
@@ -232,6 +294,19 @@ describe('buildFirstEmailInstructions', () => {
 
   it('preserves the campaign structure for the chosen type', () => {
     expect(prompt).toContain(getCampaignStructure('nurture', 5))
+  })
+})
+
+describe('analysis block with a cleared field', () => {
+  it('tells the model to infer a field the user cleared instead of leaving it blank', () => {
+    const prompt = buildRemainingEmailsInstructions(
+      { days: 3, campaignType: 'nurture', tone: 'friendly' },
+      'https://example.com',
+      { subject: 'S', preview: 'P', content: 'C' },
+      'page content',
+      { ...analysis, valueProp: '' },
+    )
+    expect(prompt).toMatch(/Value proposition: Not given; infer it from the page content\./)
   })
 })
 
@@ -256,6 +331,20 @@ describe('buildRemainingEmailsInstructions', () => {
 
   it('asks for days 2 through N', () => {
     expect(prompt).toMatch(/Days?\s*2\s*(through|to|–|-)\s*5/i)
+  })
+
+  it('asks for just its batch when given a day range', () => {
+    const batch = buildRemainingEmailsInstructions(
+      { ...config, days: 30 },
+      'https://example.com',
+      firstEmail,
+      'page content',
+      analysis,
+      { from: 12, to: 21 },
+    )
+    expect(batch).toMatch(/Days 12 through 21/)
+    expect(batch).toMatch(/exactly 10 emails/)
+    expect(batch).toMatch(/written separately/)
   })
 
   it('includes the day-1 subject, preview, and body for context', () => {
@@ -288,12 +377,12 @@ describe('buildRemainingEmailsInstructions', () => {
     expect(p).not.toContain('LANDING PAGE ANALYSIS')
   })
 
-  it('truncates landing content at 6000 chars', () => {
+  it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '☃'
-    const longContent = sentinel.repeat(7000)
+    const longContent = sentinel.repeat(12000)
     const p = buildRemainingEmailsInstructions(config, 'https://e.com', firstEmail, longContent)
     const count = (p.match(/☃/g) || []).length
-    expect(count).toBe(6000)
+    expect(count).toBe(10000)
   })
 
   it('handles a 2-day campaign (only day 2 to write)', () => {

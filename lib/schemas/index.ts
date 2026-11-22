@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { landingPageAnalysisSchema } from './analysis'
+import { editedLandingPageAnalysisSchema } from './analysis'
 
 /**
  * Core domain schemas
@@ -42,7 +42,7 @@ export const landingPageDataSchema = z.object({
       ogSiteName: z.string().optional(),
     })
     .optional(),
-  analysis: landingPageAnalysisSchema.optional(),
+  analysis: editedLandingPageAnalysisSchema.optional(),
 })
 
 // Campaign schema (from database)

@@ -84,7 +84,8 @@ function createLimiter(max: number, window: Window, prefix: string): Limiter {
 }
 
 /**
- * Limits (per user, IP for the test-send daily cap):
+ * Per-user limits (per-IP limits for the AI routes and the test-send daily
+ * cap are defined below):
  * - Chat endpoint: 10 requests per minute
  * - Generate emails: 5 requests per hour
  * - Scrape landing: 20 requests per hour
@@ -96,6 +97,19 @@ export const generateEmailsRateLimit = createLimiter(
   'flashletter:ratelimit:generate-emails',
 )
 export const scrapeLandingRateLimit = createLimiter(20, '1 h', 'flashletter:ratelimit:scrape')
+
+// Per-IP limits on the AI routes, applied on top of the per-user ones above.
+// Anonymous sign-in mints a fresh user id on every call, so per-user limits
+// alone don't stop one client from looping. Kept generous because offices and
+// mobile carriers put many real users behind one IP. Both scrape routes share
+// one budget.
+export const chatIpRateLimit = createLimiter(60, '10 m', 'flashletter:ratelimit:chat-ip')
+export const generateEmailsIpRateLimit = createLimiter(
+  10,
+  '1 h',
+  'flashletter:ratelimit:generate-emails-ip',
+)
+export const scrapeLandingIpRateLimit = createLimiter(20, '10 m', 'flashletter:ratelimit:scrape-ip')
 
 // Test-send: 5/hr/user keeps a curious user from spamming themselves; the
 // route also applies a 20/day/IP cap separately to slow shared-IP abuse and
@@ -131,6 +145,26 @@ export async function checkRateLimit(ratelimit: Limiter | null, identifier: stri
     remaining: result.remaining,
     reset: result.reset,
   }
+}
+
+/**
+ * Checks the per-user limit, then (only if that passes) the per-IP one.
+ * Returns the result of whichever limit refused the request, so the route's
+ * 429 headers describe the limit that actually blocked; on success, returns
+ * the per-user result. An unknown IP ('anonymous', e.g. local dev with no
+ * proxy headers) skips the IP check instead of sharing one global bucket.
+ */
+export async function checkUserAndIpRateLimit(
+  userLimiter: Limiter | null,
+  ipLimiter: Limiter | null,
+  userId: string,
+  ip: string,
+) {
+  const userResult = await checkRateLimit(userLimiter, userId)
+  if (!userResult.success || ip === 'anonymous') return userResult
+
+  const ipResult = await checkRateLimit(ipLimiter, `ip:${ip}`)
+  return ipResult.success ? userResult : ipResult
 }
 
 /**

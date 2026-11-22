@@ -3,12 +3,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requestSchema } from './schemas'
 import { buildSystemInstructions } from './prompt-builder'
+import { CHAT_HISTORY_LIMIT, CHAT_MAX_BODY_BYTES, CHAT_MESSAGE_LIMIT, clip } from './limits'
 import { chatOutputSchema, toChatResponse } from './response-handler'
 import { createClient } from '@/lib/supabase/server'
-import { checkRateLimit, chatRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import {
+  checkUserAndIpRateLimit,
+  chatIpRateLimit,
+  chatRateLimit,
+  getRateLimitHeaders,
+} from '@/lib/utils/rate-limit'
 import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
-import { consumeAiRewrite, getPlan } from '@/lib/billing/limits'
+import { consumeAiRewrite, getPlan, refundAiRewrite } from '@/lib/billing/limits'
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,9 +28,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const identifier = user.id || getClientIp(req)
-
-    const rateLimitResult = await checkRateLimit(chatRateLimit, identifier)
+    // Per user, plus a per-IP cap: anonymous sign-in mints a fresh user id on
+    // every call, so the per-user limit alone can be sidestepped.
+    const rateLimitResult = await checkUserAndIpRateLimit(
+      chatRateLimit,
+      chatIpRateLimit,
+      user.id,
+      getClientIp(req),
+    )
 
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -43,16 +54,27 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const body = await req.json()
+    // Reject absurd bodies before parsing. Normal editor payloads are a few
+    // dozen KB; the cap is generous because trimming below bounds the cost.
+    const tooLarge = NextResponse.json({ error: 'Request too large' }, { status: 413 })
+    if (Number(req.headers.get('content-length')) > CHAT_MAX_BODY_BYTES) return tooLarge
+    const raw = await req.text()
+    if (new TextEncoder().encode(raw).length > CHAT_MAX_BODY_BYTES) return tooLarge
+
+    const body = JSON.parse(raw)
     const { messages, campaignContext, emailContext, selectedContext } = requestSchema.parse(body)
 
     const instructions = buildSystemInstructions(campaignContext, emailContext, selectedContext)
 
-    // Send the whole conversation so follow-ups ("make it shorter") have context.
+    // Send the recent conversation so follow-ups ("make it shorter") have context.
     // Client-sent system messages are ignored; only the server sets instructions.
     const history = messages
       .filter((m) => m.role !== 'system')
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+      .slice(-CHAT_HISTORY_LIMIT)
+      .map((m) => ({
+        role: m.role as 'user' | 'assistant',
+        content: clip(m.content, CHAT_MESSAGE_LIMIT),
+      }))
     // The conversation must start and end on a user turn (no assistant prefill).
     while (history.length && history[0].role !== 'user') history.shift()
     while (history.length && history[history.length - 1].role !== 'user') history.pop()
@@ -60,19 +82,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No user message' }, { status: 400 })
     }
 
-    const rewriteDenial = await consumeAiRewrite(user.id, await getPlan(user))
+    // Counted before the call so parallel requests can't overshoot the limit;
+    // given back below if the AI fails, since the user got nothing for it.
+    const plan = await getPlan(user)
+    const rewriteDenial = await consumeAiRewrite(user.id, plan)
     if (rewriteDenial) {
       return NextResponse.json(rewriteDenial, { status: 402 })
     }
 
-    const output = await generateStructured({
-      system: instructions,
-      messages: history,
-      schema: chatOutputSchema,
-      maxTokens: 16000,
-    })
-
-    const parsedResponse = toChatResponse(output)
+    let parsedResponse: ReturnType<typeof toChatResponse>
+    try {
+      const output = await generateStructured({
+        system: instructions,
+        messages: history,
+        schema: chatOutputSchema,
+        maxTokens: 16000,
+      })
+      parsedResponse = toChatResponse(output, campaignContext?.landingPageData.url)
+    } catch (error) {
+      await refundAiRewrite(user.id, plan).catch(() => undefined)
+      throw error
+    }
 
     return NextResponse.json(parsedResponse, {
       headers: getRateLimitHeaders(

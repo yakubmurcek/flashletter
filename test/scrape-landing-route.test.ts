@@ -31,7 +31,9 @@ vi.mock('@/lib/utils/playwright-scraper', () => ({
 const checkRateLimitMock = vi.fn()
 vi.mock('@/lib/utils/rate-limit', () => ({
   scrapeLandingRateLimit: null,
+  scrapeLandingIpRateLimit: 'scrape-ip-limiter',
   checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  checkUserAndIpRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
   getRateLimitHeaders: () => ({
     'X-RateLimit-Limit': '20',
     'X-RateLimit-Remaining': '19',
@@ -118,6 +120,16 @@ describe('POST /api/scrape-landing', () => {
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
     expect(response.status).toBe(429)
     expect(response.headers.get('Content-Type')).toContain('application/json')
+  })
+
+  it('applies the per-IP limit on top of the per-user one', async () => {
+    await POST(buildRequest({ url: 'https://example.com' }) as never)
+    expect(checkRateLimitMock).toHaveBeenCalledWith(
+      null,
+      'scrape-ip-limiter',
+      'user-123',
+      '127.0.0.1',
+    )
   })
 
   it('returns cached result when available', async () => {
@@ -218,7 +230,20 @@ describe('POST /api/scrape-landing', () => {
     const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
     expect(response.status).toBe(400)
     const body = await response.json()
-    expect(body.error).toBeDefined()
+    expect(body.error).toMatch(/having trouble/i)
+    expect(JSON.stringify(body)).not.toMatch(/500|Internal Server Error|Failed to fetch/)
+  })
+
+  it('does not leak a raw network error', async () => {
+    vi.spyOn(global, 'fetch').mockRejectedValue(
+      new TypeError('fetch failed', {
+        cause: Object.assign(new Error('getaddrinfo ENOTFOUND x'), { code: 'ECONNRESET' }),
+      }),
+    )
+    const response = await POST(buildRequest({ url: 'https://example.com' }) as never)
+    const body = await response.json()
+    expect(body.error).toMatch(/couldn't reach/i)
+    expect(JSON.stringify(body)).not.toMatch(/fetch failed|ECONNRESET|ENOTFOUND/)
   })
 
   it('includes rate limit headers in response', async () => {

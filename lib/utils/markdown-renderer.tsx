@@ -1,74 +1,51 @@
 import { cn } from '@/lib/utils'
 
-export function processInlineFormattingForPreview(text: string) {
+export function processInlineFormattingForPreview(
+  text: string,
+  keyPrefix = '',
+): string | (string | React.ReactElement)[] {
   const parts: (string | React.ReactElement)[] = []
   let lastIndex = 0
 
-  const patterns: Array<{
-    type: string
-    index: number
-    length: number
-    text: string
-    url?: string
-  }> = []
-
-  // Updated regex to handle multiline matches if necessary, though line-by-line parsing usually avoids this.
-  // Using [\s\S] ensures we match across newlines if they somehow exist in the chunk.
-  const boldRegex = /\*\*([\s\S]*?)\*\*/g
-  const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g
+  // One left-to-right scan for bold OR link, so a match consumes its span and
+  // nested formatting (`**[CTA](url)**`, `[**CTA**](url)`) is rendered by
+  // recursing into the inner text instead of being emitted twice.
+  // [\s\S] lets bold span a newline if one survives into the chunk.
+  const inlineRegex = /\*\*([\s\S]*?)\*\*|\[([^\]]+)\]\(([^)]+)\)/g
 
   let match
-  while ((match = boldRegex.exec(text)) !== null) {
-    patterns.push({
-      type: 'bold',
-      index: match.index,
-      length: match[0].length,
-      text: match[1],
-    })
-  }
-
-  while ((match = linkRegex.exec(text)) !== null) {
-    patterns.push({
-      type: 'link',
-      index: match.index,
-      length: match[0].length,
-      text: match[1],
-      url: match[2],
-    })
-  }
-
-  patterns.sort((a, b) => a.index - b.index)
-
-  patterns.forEach((pattern, idx) => {
-    if (pattern.index > lastIndex) {
-      parts.push(text.slice(lastIndex, pattern.index))
+  let idx = 0
+  while ((match = inlineRegex.exec(text)) !== null) {
+    if (match.index > lastIndex) {
+      parts.push(text.slice(lastIndex, match.index))
     }
 
-    if (pattern.type === 'bold') {
+    const key = `${keyPrefix}${idx++}`
+    if (match[3] === undefined) {
       parts.push(
         <strong
-          key={`bold-${idx}`}
+          key={`bold-${key}`}
           className="font-semibold"
         >
-          {pattern.text}
+          {processInlineFormattingForPreview(match[1], `${key}-`)}
         </strong>,
       )
-    } else if (pattern.type === 'link') {
+    } else {
       parts.push(
         <a
-          key={`link-${idx}`}
-          href={pattern.url}
+          key={`link-${key}`}
+          href={match[3]}
           target="_blank"
           rel="noopener noreferrer"
           className="text-primary underline hover:text-primary/80 transition-colors"
         >
-          {pattern.text}
+          {processInlineFormattingForPreview(match[2], `${key}-`)}
         </a>,
       )
     }
 
-    lastIndex = pattern.index + pattern.length
-  })
+    lastIndex = match.index + match[0].length
+  }
 
   if (lastIndex < text.length) {
     parts.push(text.slice(lastIndex))
@@ -84,7 +61,7 @@ export function renderMarkdown(text: string) {
   const lines = text.split('\n')
   const elements: React.ReactNode[] = []
 
-  let currentBlockType: 'paragraph' | 'list' | null = null
+  let currentBlockType: 'paragraph' | 'list' | 'ordered-list' | null = null
   let currentBlockLines: string[] = []
 
   // Helper to flush valid blocks
@@ -104,6 +81,19 @@ export function renderMarkdown(text: string) {
         >
           {listItems}
         </ul>,
+      )
+    } else if (currentBlockType === 'ordered-list') {
+      const listItems = currentBlockLines.map((line, idx) => {
+        const content = line.replace(/^\d{1,2}[.)]\s+/, '')
+        return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
+      })
+      elements.push(
+        <ol
+          key={`olist-${keyPrefix}`}
+          className="list-decimal list-inside space-y-1 mb-4"
+        >
+          {listItems}
+        </ol>,
       )
     } else if (currentBlockType === 'paragraph') {
       // Join lines with space for standard markdown behavior
@@ -179,9 +169,17 @@ export function renderMarkdown(text: string) {
         currentBlockType = 'list'
       }
       currentBlockLines.push(trimmed)
+    } else if (trimmed.match(/^\d{1,2}[.)]\s/)) {
+      // Numbered items ("3 subject lines" answers) would otherwise be joined
+      // into one run-on paragraph.
+      if (currentBlockType !== 'ordered-list') {
+        flushBlock(index)
+        currentBlockType = 'ordered-list'
+      }
+      currentBlockLines.push(trimmed)
     } else {
       // Regular text
-      if (currentBlockType === 'list') {
+      if (currentBlockType === 'list' || currentBlockType === 'ordered-list') {
         // If we encounter a non-list line while in a list, close the list
         flushBlock(index)
         currentBlockType = 'paragraph'

@@ -74,6 +74,71 @@ describe('Content Extraction', () => {
     expect(result.content).not.toContain('Sidebar content')
   })
 
+  // Landing pages built in page builders often have no <main>: just a stack
+  // of sections. Taking the first match dropped everything after the hero.
+  it('keeps every section of a page made of sections', () => {
+    const html = `
+      <html><body>
+        <section><h1>Ship your launch emails today</h1><p>${'Paste a URL and get a full sequence. '.repeat(5)}</p></section>
+        <section><h2>Pricing</h2><p>Pro is $19 a month.</p></section>
+        <section><h2>What customers say</h2><p>Saved me a week. Dana, founder</p></section>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('Ship your launch emails today')
+    expect(result.content).toContain('Pro is $19 a month.')
+    expect(result.content).toContain('Saved me a week.')
+  })
+
+  it('keeps all repeated cards, not only the first', () => {
+    const html = `
+      <html><body>
+        <article><p>${'First testimonial text here. '.repeat(5)}</p></article>
+        <article><p>Second testimonial text.</p></article>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('First testimonial text here.')
+    expect(result.content).toContain('Second testimonial text.')
+  })
+
+  it('keeps a hero headline wrapped in <header>', () => {
+    const html = `
+      <html><body>
+        <main>
+          <header><h1>Value prop headline</h1><nav>Menu link</nav></header>
+          <p>${'Supporting copy for the product. '.repeat(5)}</p>
+        </main>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).toContain('Value prop headline')
+    expect(result.content).not.toContain('Menu link')
+  })
+
+  it('still drops the site header outside the content', () => {
+    const html = `
+      <html><body>
+        <header><a href="/">Acme logo</a><a href="/login">Log in</a></header>
+        <section><h1>Hero headline</h1><p>${'Supporting copy for the product. '.repeat(5)}</p></section>
+        <section><h2>Pricing</h2><p>Pro is $19 a month.</p></section>
+      </body></html>
+    `
+
+    const result = extractTextFromHTML(html)
+
+    expect(result.content).not.toContain('Acme logo')
+    expect(result.content).not.toContain('Log in')
+    expect(result.content).toContain('Hero headline')
+    expect(result.content).toContain('Pro is $19 a month.')
+  })
+
   it('should handle smart truncation', () => {
     const longContent = 'This is a sentence. '.repeat(1000)
     const html = `<html><body><p>${longContent}</p></body></html>`
@@ -83,6 +148,43 @@ describe('Content Extraction', () => {
     const textContent = cheerio.load(result.content).text()
     expect(textContent.length).toBeLessThanOrEqual(10000)
     expect(textContent.length < longContent.length || textContent.trim().endsWith('...')).toBe(true)
+  })
+
+  it('resolves every link against the page URL so emails never get relative hrefs', () => {
+    const html = `
+      <html><body><main>
+        <p>${'Plenty of real copy about the product. '.repeat(5)}</p>
+        <p><a href="/register">Register</a> <a href="cenik">Prices</a> <a href="#pricing">Jump</a>
+        <a href="//cdn.acme.com/guide">Guide</a> <a href="https://other.com/x">Other</a>
+        <a href="mailto:hi@acme.com">Mail us</a> <a href=" javascript:alert(1)">Evil</a>
+        <a href="tel:+420123">Call</a></p>
+      </main></body></html>
+    `
+
+    const { content } = extractTextFromHTML(html, 'https://acme.com/en/landing')
+    const $ = cheerio.load(content)
+    const hrefs = $('a')
+      .map((_, a) => $(a).attr('href'))
+      .get()
+
+    expect(hrefs).toEqual([
+      'https://acme.com/register',
+      'https://acme.com/en/cenik',
+      'https://acme.com/en/landing#pricing',
+      'https://cdn.acme.com/guide',
+      'https://other.com/x',
+      'mailto:hi@acme.com',
+    ])
+    // Unsafe or non-web links lose the href but keep their text.
+    expect(content).toContain('Evil')
+    expect(content).toContain('Call')
+    expect(content).not.toContain('javascript')
+  })
+
+  it('also resolves links when the page is long enough to be truncated', () => {
+    const html = `<html><body><main><p><a href="/start">Start</a> ${'This is a sentence. '.repeat(1000)}</p></main></body></html>`
+    const { content } = extractTextFromHTML(html, 'https://acme.com/')
+    expect(content).toContain('href="https://acme.com/start"')
   })
 
   it('should detect meaningful content', () => {

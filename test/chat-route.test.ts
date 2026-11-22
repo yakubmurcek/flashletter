@@ -2,9 +2,12 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import Anthropic from '@anthropic-ai/sdk'
 
 const captureExceptionMock = vi.fn()
+const consumeAiRewriteMock = vi.fn()
+const refundAiRewriteMock = vi.fn()
 vi.mock('@/lib/billing/limits', () => ({
   getPlan: async () => 'free',
-  consumeAiRewrite: async () => null,
+  consumeAiRewrite: (...args: unknown[]) => consumeAiRewriteMock(...args),
+  refundAiRewrite: (...args: unknown[]) => refundAiRewriteMock(...args),
   checkEmailCount: () => null,
   checkCampaignAllowed: async () => null,
 }))
@@ -32,6 +35,8 @@ vi.mock('@/lib/utils/rate-limit', () => ({
     'X-RateLimit-Reset': '0',
   }),
   chatRateLimit: null,
+  chatIpRateLimit: 'chat-ip-limiter',
+  checkUserAndIpRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
 }))
 
 vi.mock('@/lib/utils/get-client-ip', () => ({
@@ -54,6 +59,7 @@ vi.mock('@/app/api/chat/prompt-builder', () => ({
 // shouldEdit gating is tested end to end.
 import { POST } from '@/app/api/chat/route'
 import { chatOutputSchema } from '@/app/api/chat/response-handler'
+import { CHAT_HISTORY_LIMIT, CHAT_MAX_BODY_BYTES, CHAT_MESSAGE_LIMIT } from '@/app/api/chat/limits'
 
 function buildRequest(body: unknown): Request {
   return new Request('http://localhost/api/chat', {
@@ -96,6 +102,8 @@ describe('POST /api/chat', () => {
   beforeEach(() => {
     vi.restoreAllMocks()
     captureExceptionMock.mockReset()
+    consumeAiRewriteMock.mockReset().mockResolvedValue(null)
+    refundAiRewriteMock.mockReset().mockResolvedValue(undefined)
     checkRateLimitMock.mockReset().mockResolvedValue({
       success: true,
       limit: 100,
@@ -134,6 +142,16 @@ describe('POST /api/chat', () => {
     const body = await response.json()
     expect(body.error).toContain('Too many requests')
     expect(generateStructuredMock).not.toHaveBeenCalled()
+  })
+
+  it('applies the per-IP limit on top of the per-user one', async () => {
+    await post(hello)
+    expect(checkRateLimitMock).toHaveBeenCalledWith(
+      null,
+      'chat-ip-limiter',
+      'user-123',
+      '127.0.0.1',
+    )
   })
 
   it('returns rate limit headers in response', async () => {
@@ -240,6 +258,42 @@ describe('POST /api/chat', () => {
     })
   })
 
+  it('makes links in AI edits absolute against the campaign landing URL', async () => {
+    generateStructuredMock.mockResolvedValue({
+      message: 'Added a CTA.',
+      shouldEdit: true,
+      edits: { content: 'Hi,\n\n[Register](/register) or [see prices](#pricing)' },
+    })
+
+    const body = await (
+      await post({
+        ...hello,
+        campaignContext: {
+          landingPageData: { url: 'https://acme.com/landing' },
+          config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
+          allEmails: [],
+          currentEmailId: 1,
+        },
+      })
+    ).json()
+
+    expect(body.edits.content).toBe(
+      'Hi,\n\n[Register](https://acme.com/register) or [see prices](https://acme.com/landing#pricing)',
+    )
+  })
+
+  it('unwraps relative links in AI edits when there is no landing URL', async () => {
+    generateStructuredMock.mockResolvedValue({
+      message: 'Added a CTA.',
+      shouldEdit: true,
+      edits: { subject: 'New', content: '[Register](/register) [ok](https://acme.com/)' },
+    })
+
+    const body = await (await post(hello)).json()
+
+    expect(body.edits).toEqual({ subject: 'New', content: 'Register [ok](https://acme.com/)' })
+  })
+
   it('drops edits when shouldEdit is false', async () => {
     generateStructuredMock.mockResolvedValue({
       message: 'Here is an idea.',
@@ -294,5 +348,144 @@ describe('POST /api/chat', () => {
     expect(body.error).toBe('Failed to process chat request')
     expect(body.details).toBe('AI returned malformed JSON')
     expect(captureExceptionMock).not.toHaveBeenCalled()
+  })
+  describe('request size', () => {
+    // What the editor really sends for the largest plan: all 30 emails (here
+    // edited long, 5k chars each with Czech diacritics), the scraped landing
+    // page (capped at 10k by the scraper), the analysis, the duplicated
+    // current email as emailContext, and the last 5 messages + the new one.
+    function proPayload() {
+      const long = 'Příliš žluťoučký kůň úpěl ďábelské ódy. '.repeat(125)
+      const allEmails = Array.from({ length: 30 }, (_, i) => ({
+        id: i + 1,
+        day: i + 1,
+        subject: `Subject line for day ${i + 1}`,
+        preview: 'A preview line that teases the email body.',
+        content: long,
+      }))
+      return {
+        messages: [
+          { role: 'assistant', content: 'Hi! '.repeat(50) },
+          ...Array.from({ length: 5 }, (_, i) => ({
+            role: i % 2 ? 'assistant' : 'user',
+            content: 'Make it punchier. '.repeat(20),
+          })),
+        ],
+        campaignContext: {
+          landingPageData: {
+            url: 'https://example.com/product',
+            content: 'Landing page copy. '.repeat(526),
+            metadata: { title: 'Product', description: 'What it does' },
+            analysis: {
+              valueProp: 'v'.repeat(200),
+              targetAudience: 't'.repeat(200),
+              primaryCTA: 'Start free trial',
+              toneFingerprint: 'f'.repeat(200),
+              objections: ['o'.repeat(120), 'o'.repeat(120), 'o'.repeat(120), 'o'.repeat(120)],
+              proofPoints: Array.from({ length: 6 }, () => 'p'.repeat(120)),
+              angles: Array.from({ length: 5 }, () => 'a'.repeat(90)),
+              opportunities: Array.from({ length: 3 }, () => 'q'.repeat(120)),
+            },
+          },
+          config: { tone: 'friendly', campaignType: 'welcome', days: 30 },
+          allEmails,
+          currentEmailId: 1,
+        },
+        emailContext: { subject: allEmails[0].subject, content: long, campaignType: 'welcome' },
+        selectedContext: { text: long.slice(0, 2000), action: 'Make this shorter' },
+      }
+    }
+
+    function rawRequest(body: string, headers: Record<string, string> = {}) {
+      return POST(
+        new Request('http://localhost/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', ...headers },
+          body,
+        }) as never,
+      )
+    }
+
+    it('accepts the largest real payload with at least 2x headroom under the cap', async () => {
+      const body = JSON.stringify(proPayload())
+      const bytes = new TextEncoder().encode(body).length
+      expect(bytes * 2).toBeLessThan(CHAT_MAX_BODY_BYTES)
+      const response = await rawRequest(body, { 'Content-Length': String(bytes) })
+      expect(response.status).toBe(200)
+    })
+
+    it('rejects an absurd Content-Length with 413 before reading anything', async () => {
+      const response = await rawRequest(JSON.stringify(hello), {
+        'Content-Length': String(CHAT_MAX_BODY_BYTES + 1),
+      })
+      expect(response.status).toBe(413)
+      expect(generateStructuredMock).not.toHaveBeenCalled()
+      expect(consumeAiRewriteMock).not.toHaveBeenCalled()
+    })
+
+    it('rejects an oversized body even without Content-Length (chunked)', async () => {
+      const body = JSON.stringify({
+        messages: [{ role: 'user', content: 'x'.repeat(5 * 1024 * 1024) }],
+      })
+      const response = await rawRequest(body)
+      expect(response.status).toBe(413)
+      expect(generateStructuredMock).not.toHaveBeenCalled()
+      expect(consumeAiRewriteMock).not.toHaveBeenCalled()
+    })
+
+    it(`keeps only the last ${CHAT_HISTORY_LIMIT} messages`, async () => {
+      const messages = Array.from({ length: 41 }, (_, i) => ({
+        role: i % 2 ? 'assistant' : 'user',
+        content: `message ${i}`,
+      }))
+      await post({ messages })
+      const sent = lastCall().messages
+      expect(sent.length).toBeLessThanOrEqual(CHAT_HISTORY_LIMIT)
+      expect(sent.at(-1)).toEqual({ role: 'user', content: 'message 40' })
+      expect(sent[0].role).toBe('user')
+    })
+
+    it('truncates a single very long message', async () => {
+      await post({ messages: [{ role: 'user', content: 'y'.repeat(100_000) }] })
+      const [only] = lastCall().messages
+      expect(only.content.length).toBeLessThanOrEqual(CHAT_MESSAGE_LIMIT + 20)
+      expect(only.content.startsWith('y'.repeat(1000))).toBe(true)
+    })
+  })
+
+  describe('AI rewrite allowance', () => {
+    it('keeps the rewrite counted when the AI answers', async () => {
+      expect((await post(hello)).status).toBe(200)
+      expect(consumeAiRewriteMock).toHaveBeenCalledWith('user-123', 'free')
+      expect(refundAiRewriteMock).not.toHaveBeenCalled()
+    })
+
+    it('gives the rewrite back when the AI call fails', async () => {
+      generateStructuredMock.mockRejectedValue(new Error('AI returned malformed JSON'))
+      expect((await post(hello)).status).toBe(500)
+      expect(refundAiRewriteMock).toHaveBeenCalledWith('user-123', 'free')
+    })
+
+    it('gives the rewrite back when the AI is rate limited', async () => {
+      generateStructuredMock.mockRejectedValue(rateLimitError())
+      expect((await post(hello)).status).toBe(429)
+      expect(refundAiRewriteMock).toHaveBeenCalledOnce()
+    })
+
+    it('still reports the AI error when the refund itself fails', async () => {
+      generateStructuredMock.mockRejectedValue(new Error('boom'))
+      refundAiRewriteMock.mockRejectedValue(new Error('redis down'))
+      const response = await post(hello)
+      expect(response.status).toBe(500)
+      expect((await response.json()).details).toBe('boom')
+    })
+
+    it('refunds nothing when the allowance is used up or the request is invalid', async () => {
+      consumeAiRewriteMock.mockResolvedValue({ error: 'limit_reached', limit: 'ai_rewrites' })
+      expect((await post(hello)).status).toBe(402)
+      expect((await post({ messages: [] })).status).toBe(400)
+      expect(generateStructuredMock).not.toHaveBeenCalled()
+      expect(refundAiRewriteMock).not.toHaveBeenCalled()
+    })
   })
 })

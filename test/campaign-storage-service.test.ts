@@ -278,20 +278,111 @@ describe('CampaignStorageService', () => {
     })
   })
 
-  describe('updateEmail', () => {
-    it('updates email successfully', async () => {
-      // updateEmail chains update().eq('campaign_id', …).eq('day', …); the
-      // second .eq() is the call that actually awaits, so it has to resolve.
-      const secondEq = vi.fn().mockResolvedValue({ error: null })
-      const firstEq = vi.fn().mockReturnValue({ eq: secondEq })
+  describe('upsertEmails', () => {
+    it('updates days that exist, inserts new ones, and never deletes other days', async () => {
+      // A regenerate saves Day 1 on its own first. Days 2..N of the old run
+      // must survive that (with their version history) until they are replaced.
+      const deleteSpy = vi.fn()
+      const updatePayload = vi.fn().mockReturnThis()
+      mockSupabase.from
+        .mockReturnValueOnce({
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockResolvedValue({
+            data: [
+              { id: EMAIL_ID, day: 1 },
+              { id: EMAIL_ID_2, day: 2 },
+            ],
+            error: null,
+          }),
+          delete: deleteSpy,
+        })
+        .mockReturnValueOnce({
+          update: updatePayload,
+          eq: vi.fn().mockReturnThis(),
+          select: vi.fn().mockReturnThis(),
+          single: vi.fn().mockResolvedValue({
+            data: { ...baseEmailRow, subject: 'New Day 1' },
+            error: null,
+          }),
+          delete: deleteSpy,
+        })
 
+      const result = await service.upsertEmails(CAMPAIGN_ID, [
+        { id: 1, uuid: null, day: 1, subject: 'New Day 1', preview: 'p', content: 'c' },
+      ])
+
+      expect(mockSupabase.from).toHaveBeenCalledTimes(2)
+      expect(updatePayload).toHaveBeenCalledWith(
+        expect.objectContaining({ day: 1, subject: 'New Day 1' }),
+      )
+      expect(deleteSpy).not.toHaveBeenCalled()
+      expect(result).toEqual([expect.objectContaining({ day: 1, uuid: EMAIL_ID })])
+    })
+  })
+
+  describe('deleteEmailsAfterDay', () => {
+    it('deletes only the days after the given one', async () => {
+      const gt = vi.fn().mockResolvedValue({ error: null })
+      const eq = vi.fn().mockReturnValue({ gt })
+      mockSupabase.from.mockReturnValue({ delete: vi.fn().mockReturnValue({ eq }) })
+
+      await service.deleteEmailsAfterDay(CAMPAIGN_ID, 1)
+
+      expect(mockSupabase.from).toHaveBeenCalledWith('emails')
+      expect(eq).toHaveBeenCalledWith('campaign_id', CAMPAIGN_ID)
+      expect(gt).toHaveBeenCalledWith('day', 1)
+    })
+
+    it('throws when the delete fails', async () => {
+      const gt = vi.fn().mockResolvedValue({ error: new Error('Delete failed') })
+      mockSupabase.from.mockReturnValue({
+        delete: vi.fn().mockReturnValue({ eq: vi.fn().mockReturnValue({ gt }) }),
+      })
+
+      await expect(service.deleteEmailsAfterDay(CAMPAIGN_ID, 1)).rejects.toThrow('Delete failed')
+    })
+  })
+
+  describe('updateEmail', () => {
+    // update().eq('campaign_id', …).eq('day', …).select('id') resolves with
+    // the rows it changed.
+    const mockUpdate = (result: { data: unknown; error: unknown }) => {
+      const select = vi.fn().mockResolvedValue(result)
+      const secondEq = vi.fn().mockReturnValue({ select })
+      const firstEq = vi.fn().mockReturnValue({ eq: secondEq })
       mockSupabase.from.mockReturnValue({
         update: vi.fn().mockReturnValue({ eq: firstEq }),
       })
+      return { firstEq, secondEq, select }
+    }
+
+    it('updates email successfully', async () => {
+      const { firstEq, secondEq } = mockUpdate({ data: [{ id: EMAIL_ID }], error: null })
 
       await expect(
         service.updateEmail(CAMPAIGN_ID, 1, { subject: 'Updated' }),
-      ).resolves.not.toThrow()
+      ).resolves.toBeUndefined()
+      expect(firstEq).toHaveBeenCalledWith('campaign_id', CAMPAIGN_ID)
+      expect(secondEq).toHaveBeenCalledWith('day', 1)
+    })
+
+    // Bug: an email that never reached the database (generation failed
+    // before saving) matched 0 rows, returned no error, and the editor said
+    // "Saved" while every edit was lost.
+    it('rejects when no saved email matched, instead of reporting success', async () => {
+      mockUpdate({ data: [], error: null })
+
+      await expect(service.updateEmail(CAMPAIGN_ID, 2, { subject: 'Lost' })).rejects.toMatchObject({
+        name: 'EmailNotSavedError',
+      })
+    })
+
+    it('throws the database error', async () => {
+      mockUpdate({ data: null, error: new Error('Update failed') })
+
+      await expect(service.updateEmail(CAMPAIGN_ID, 1, { subject: 'X' })).rejects.toThrow(
+        'Update failed',
+      )
     })
   })
 

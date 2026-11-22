@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'
-import { checkRateLimit, scrapeLandingRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import {
+  checkUserAndIpRateLimit,
+  scrapeLandingIpRateLimit,
+  scrapeLandingRateLimit,
+  getRateLimitHeaders,
+} from '@/lib/utils/rate-limit'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-cache'
 import { extractTextFromHTML } from '@/lib/utils/scraper'
@@ -18,6 +23,10 @@ import {
 import { analyzeLandingPage } from '@/lib/utils/analyzer'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
+import {
+  UpstreamStatusError,
+  userMessageForScrapeError,
+} from '@/app/api/scrape-landing/scrape-error-message'
 
 function cleanDomain(url: string): string {
   try {
@@ -47,10 +56,7 @@ export async function POST(req: NextRequest) {
     await assertSafeUrl(parsedBody.url)
   } catch (error) {
     if (isUnsafeUrlError(error)) {
-      return NextResponse.json(
-        { error: userMessageForUnsafeUrl(error), message: error.message },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: userMessageForUnsafeUrl(error) }, { status: 400 })
     }
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
   }
@@ -65,8 +71,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const identifier = user.id || getClientIp(req)
-  const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
+  const rateLimitResult = await checkUserAndIpRateLimit(
+    scrapeLandingRateLimit,
+    scrapeLandingIpRateLimit,
+    user.id,
+    getClientIp(req),
+  )
 
   if (!rateLimitResult.success) {
     return NextResponse.json(
@@ -141,7 +151,7 @@ export async function POST(req: NextRequest) {
             })
 
             if (!response.ok) {
-              throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+              throw new UpstreamStatusError(response.status, response.statusText)
             }
 
             const html = response.text
@@ -161,7 +171,7 @@ export async function POST(req: NextRequest) {
                   `Dynamic scraping failed for ${url}, falling back to static:`,
                   playwrightError,
                 )
-                const scraped = extractTextFromHTML(html)
+                const scraped = extractTextFromHTML(html, fetchedUrl)
                 metadata = extractMetadata(html, fetchedUrl)
                 content = scraped.content
                 wordCount = scraped.wordCount
@@ -169,7 +179,7 @@ export async function POST(req: NextRequest) {
                 finalUrl = fetchedUrl
               }
             } else {
-              const scraped = extractTextFromHTML(html)
+              const scraped = extractTextFromHTML(html, fetchedUrl)
               metadata = extractMetadata(html, fetchedUrl)
               content = scraped.content
               wordCount = scraped.wordCount
@@ -240,8 +250,7 @@ export async function POST(req: NextRequest) {
           tags: { api_route: '/api/scrape-landing/stream' },
         })
 
-        const message = error instanceof Error ? error.message : 'Failed to scrape landing page'
-        send({ type: 'error', message })
+        send({ type: 'error', message: userMessageForScrapeError(error) })
       } finally {
         controller.close()
       }

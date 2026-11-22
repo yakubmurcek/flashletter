@@ -9,21 +9,10 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Loader2 } from 'lucide-react'
 import { LegalConsent, useLegalConsent } from '@/components/auth/legal-consent'
+import { safeRedirectPath } from '@/lib/utils/safe-redirect'
 
 interface AuthFormProps {
   mode: 'login' | 'signup'
-}
-
-/**
- * Allow only same-origin paths starting with a single `/`. Blocks
- * `https://evil.com`, `//evil.com`, and `/\evil.com` flavors of open-redirect
- * payloads carried in `?redirectTo=...`.
- */
-function safeRedirectPath(target: string | null, fallback = '/campaigns'): string {
-  if (!target) return fallback
-  if (!target.startsWith('/')) return fallback
-  if (target.startsWith('//') || target.startsWith('/\\')) return fallback
-  return target
 }
 
 export function AuthForm({ mode }: AuthFormProps) {

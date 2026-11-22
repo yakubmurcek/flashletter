@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
-import { CheckCircle2 } from 'lucide-react'
+import { CheckCircle2, Clock } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { AppShell } from '@/components/layouts/app-shell'
 import { SignOutButton } from '@/components/auth/sign-out-button'
@@ -11,10 +11,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { UpgradeButton } from '@/components/billing/upgrade-button'
 import { PortalButton } from '@/components/billing/portal-button'
 import { ResumeCheckout } from '@/components/billing/resume-checkout'
+import { CheckoutCompletedTracker } from '@/components/billing/checkout-completed-tracker'
+import { confirmCheckout } from '@/lib/billing/confirm-checkout'
+import { campaignsUsedThisMonth } from '@/lib/billing/limits'
 import { PLAN_LIMITS, PRO_PRICE_USD, currentPeriodStart } from '@/lib/billing/plans'
 import {
-  clearSubscriptionCache,
-  getStripe,
   getSubscriptionSummary,
   isBillingEnabled,
   type SubscriptionSummary,
@@ -35,19 +36,6 @@ function formatDate(unixSeconds: number | null) {
   })
 }
 
-/** Confirms a just-finished Checkout belongs to this user and refreshes the plan. */
-async function confirmCheckout(userId: string, sessionId: string | undefined): Promise<boolean> {
-  if (!sessionId || !isBillingEnabled()) return false
-  try {
-    const session = await getStripe().checkout.sessions.retrieve(sessionId)
-    if (session.client_reference_id !== userId || session.status !== 'complete') return false
-    await clearSubscriptionCache(userId)
-    return true
-  } catch {
-    return false
-  }
-}
-
 export default async function AccountPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams
   const supabase = await createClient()
@@ -59,11 +47,17 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   if (user.is_anonymous) {
     const upgrade = params.upgrade === 'year' ? 'year' : params.upgrade === 'month' ? 'month' : null
     const resume = upgrade ? `/account?upgrade=${upgrade}` : '/account'
-    redirect(`/signup?redirectTo=${encodeURIComponent(resume)}`)
+    // Carry a failed Google link from /auth/callback along, or /signup can't explain it.
+    const authError =
+      typeof params.authError === 'string'
+        ? `&authError=${encodeURIComponent(params.authError)}`
+        : ''
+    redirect(`/signup?redirectTo=${encodeURIComponent(resume)}${authError}`)
   }
 
   const sessionId = typeof params.session_id === 'string' ? params.session_id : undefined
-  const justUpgraded = params.checkout === 'success' && (await confirmCheckout(user.id, sessionId))
+  const checkout = params.checkout === 'success' ? await confirmCheckout(user.id, sessionId) : null
+  const justUpgraded = checkout === 'paid'
 
   let summary: SubscriptionSummary | null = null
   let billingError = false
@@ -74,11 +68,12 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
   }
   const isPro = !!summary?.active
 
-  const { count: campaignsThisMonth } = await supabase
+  const { count: campaignRows } = await supabase
     .from('campaigns')
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .gte('created_at', currentPeriodStart().toISOString())
+  const campaignsThisMonth = await campaignsUsedThisMonth(user.id, campaignRows ?? 0)
 
   const resumeInterval =
     !isPro && (params.upgrade === 'month' || params.upgrade === 'year') ? params.upgrade : null
@@ -104,6 +99,21 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
             <strong className="font-semibold">Welcome to Pro.</strong> Unlimited campaigns are on. A
             receipt is on its way to your inbox.
           </span>
+          {sessionId && (
+            <CheckoutCompletedTracker
+              sessionId={sessionId}
+              interval={summary?.interval ?? null}
+            />
+          )}
+        </div>
+      )}
+      {checkout === 'processing' && (
+        <div
+          role="status"
+          className="mb-6 flex items-start gap-3 rounded-lg border border-border bg-muted/50 px-4 py-3 text-sm"
+        >
+          <Clock className="w-5 h-5 text-muted-foreground shrink-0" />
+          <span>Your payment is processing. Pro turns on as soon as it clears.</span>
         </div>
       )}
       {resumeInterval && isBillingEnabled() && <ResumeCheckout interval={resumeInterval} />}
@@ -123,7 +133,7 @@ export default async function AccountPage({ searchParams }: { searchParams: Sear
                   : `Pro, billed ${summary?.interval === 'year' ? 'yearly' : 'monthly'}${
                       renewal ? `. Renews on ${renewal}.` : '.'
                     }`
-                : `${campaignsThisMonth ?? 0} of ${PLAN_LIMITS.free.campaignsPerMonth} campaigns used this month.`}
+                : `${campaignsThisMonth} of ${PLAN_LIMITS.free.campaignsPerMonth} campaigns used this month.`}
           </CardDescription>
         </CardHeader>
         <CardContent>

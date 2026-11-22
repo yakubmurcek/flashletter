@@ -282,7 +282,9 @@ describe('useEmailAutosave', () => {
     expect(updateEmailDbMock).not.toHaveBeenCalled()
   })
 
-  it('unmounting cancels pending debounced write', async () => {
+  // Leaving the editor (History, All campaigns) inside the debounce window
+  // used to drop the write, so the edit was gone after a reload.
+  it('unmounting writes a pending edit right away instead of dropping it', async () => {
     const updateEmail = vi.fn()
     const emails = [makeEmail(1)]
     const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
@@ -290,11 +292,77 @@ describe('useEmailAutosave', () => {
     await act(async () => {
       await result.current.saveEmail(1, { subject: 'X' })
     })
-    unmount()
     await act(async () => {
+      unmount()
+    })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'X' }))
+  })
+
+  // The preview flushes its own pending edit while the page unmounts; that
+  // write must carry the new text even though the page will not re-render.
+  it('a save made during unmount still writes the new text', async () => {
+    const updateEmail = vi.fn()
+    const emails = [makeEmail(1)]
+    const { result, unmount } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
+    const { saveEmail } = result.current
+
+    await act(async () => {
+      unmount()
+      await saveEmail(1, { subject: 'Late' })
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
     })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'Late' }))
+  })
+
+  // "Saved" showed while the edit still waited out the debounce.
+  it('reports isSaving while a write is waiting out the debounce', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'X' })
+    })
     expect(updateEmailDbMock).not.toHaveBeenCalled()
+    expect(result.current.isSaving).toBe(true)
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+    expect(result.current.isSaving).toBe(false)
+  })
+
+  // Closing the tab inside the debounce window lost the edit.
+  it('writes a pending edit right away when the page is hidden', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'Closing' })
+    })
+    await act(async () => {
+      window.dispatchEvent(new Event('pagehide'))
+    })
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(
+      expect.objectContaining({ subject: 'Closing' }),
+    )
+  })
+
+  it('asks the browser to hold the page on unload while a write is pending', async () => {
+    const emails = [makeEmail(1)]
+    const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'Closing' })
+    })
+    const event = new Event('beforeunload', { cancelable: true })
+    await act(async () => {
+      window.dispatchEvent(event)
+    })
+    expect(event.defaultPrevented).toBe(true)
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
   })
 
   it('swallows DB errors and resets isSaving', async () => {
@@ -313,5 +381,134 @@ describe('useEmailAutosave', () => {
     expect(result.current.isSaving).toBe(false)
     expect(result.current.lastSaved).toBeNull()
     errSpy.mockRestore()
+  })
+  // Bug: day ids are 1..N in every campaign, so after switching campaigns
+  // the version history baseline was the previous campaign's text.
+  it('seeds version snapshots per campaign, not from the previous campaign', async () => {
+    const updateEmail = vi.fn()
+    const emailA = makeEmail(1)
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [emailA], campaignId: 'camp-a' } },
+    )
+
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'B edited' })
+    })
+    rerender({ list: [{ ...emailB, subject: 'B edited' }], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(saveVersionMock).toHaveBeenCalledTimes(1)
+    expect(saveVersionMock).toHaveBeenCalledWith('uuid-b1', 1, {
+      subject: 'B subject',
+      content: 'B body',
+    })
+  })
+
+  // Same id collision: a pending write for campaign A read the emails list
+  // when its timer fired, by then campaign B's, and wrote B's text into A.
+  it('switching campaign writes a pending edit with the old campaign text', async () => {
+    const updateEmail = vi.fn()
+    const emailB = { ...makeEmail(1, 'uuid-b1'), subject: 'B subject', content: 'B body' }
+    const { result, rerender } = renderHook(
+      ({ list, campaignId }: { list: Email[]; campaignId: string }) =>
+        useEmailAutosave(list, campaignId, updateEmail),
+      { initialProps: { list: [makeEmail(1)], campaignId: 'camp-a' } },
+    )
+
+    await act(async () => {
+      await result.current.saveEmail(1, { subject: 'A edited' })
+    })
+    rerender({ list: [emailB], campaignId: 'camp-b' })
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+    })
+
+    expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+    expect(updateEmailDbMock).toHaveBeenCalledWith('camp-a', 1, {
+      subject: 'A edited',
+      content: 'C1',
+      preview: 'P1',
+    })
+  })
+
+  describe('save errors', () => {
+    const notSaved = () =>
+      Object.assign(new Error('Day 1 is not saved yet'), { name: 'EmailNotSavedError' })
+
+    const editAndFlush = async (
+      result: { current: ReturnType<typeof useEmailAutosave> },
+      subject: string,
+    ) => {
+      await act(async () => {
+        await result.current.saveEmail(1, { subject })
+      })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+      })
+    }
+
+    // Bug: an edit to an email with no database row matched 0 rows and the
+    // header still said "Saved". The hook has to say it wasn't kept.
+    it('reports an edit to an unsaved email instead of passing it as saved', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValue(notSaved())
+      const { result } = renderHook(() => useEmailAutosave([makeEmail(1)], 'camp', vi.fn()))
+
+      expect(result.current.saveError).toBeNull()
+      await editAndFlush(result, 'Lost')
+
+      expect(result.current.saveError).toMatch(/not saved/i)
+      expect(result.current.lastSaved).toBeNull()
+      expect(result.current.isSaving).toBe(false)
+      // One write per pause, no retry loop.
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
+      errSpy.mockRestore()
+    })
+
+    it('reports other failed writes too, and clears once a save works', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValueOnce(new Error('network down'))
+      const { result } = renderHook(() => useEmailAutosave([makeEmail(1)], 'camp', vi.fn()))
+
+      await editAndFlush(result, 'First')
+      expect(result.current.saveError).toMatch(/could not save/i)
+
+      await editAndFlush(result, 'Second')
+      expect(result.current.saveError).toBeNull()
+      expect(result.current.lastSaved).not.toBeNull()
+      errSpy.mockRestore()
+    })
+
+    it('does not carry a save error into the next campaign', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValue(notSaved())
+      const { result, rerender } = renderHook(
+        ({ campaignId }: { campaignId: string }) =>
+          useEmailAutosave([makeEmail(1)], campaignId, vi.fn()),
+        { initialProps: { campaignId: 'camp-a' } },
+      )
+
+      await editAndFlush(result, 'A1')
+      expect(result.current.saveError).not.toBeNull()
+
+      // A pending A edit is flushed on the switch and fails too.
+      await act(async () => {
+        await result.current.saveEmail(1, { subject: 'A2' })
+      })
+      rerender({ campaignId: 'camp-b' })
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
+      })
+
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(2)
+      expect(result.current.saveError).toBeNull()
+      errSpy.mockRestore()
+    })
   })
 })

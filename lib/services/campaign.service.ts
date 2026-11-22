@@ -19,6 +19,9 @@ const generateEmailsStreamEventSchema = z.discriminatedUnion('type', [
 
 export type GenerateEmailsStreamEvent = z.infer<typeof generateEmailsStreamEventSchema>
 
+/** Shown when the scrape response itself is broken; the raw cause means nothing to a visitor. */
+const SCRAPE_BROKEN_MESSAGE = "We couldn't read that page. Please try again."
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
@@ -41,6 +44,14 @@ function extractErrorMessage(payload: unknown, fallback: string): string {
   return fallback
 }
 
+/** The server refused the request because the user is generating too fast. */
+export class RateLimitedError extends Error {
+  constructor() {
+    super("You've started a lot of generations in a short time. Wait a minute and try again.")
+    this.name = 'RateLimitedError'
+  }
+}
+
 export class CampaignService {
   static async scrapeLandingPage(url: string): Promise<LandingPageData> {
     const response = await fetch('/api/scrape-landing', {
@@ -57,7 +68,7 @@ export class CampaignService {
 
     const parsed = scrapeLandingResponseSchema.safeParse(raw)
     if (!parsed.success) {
-      throw new Error('Invalid response from scrape endpoint')
+      throw new Error(SCRAPE_BROKEN_MESSAGE)
     }
 
     const { url: scrapedUrl, content, metadata } = parsed.data
@@ -98,7 +109,7 @@ export class CampaignService {
     }
 
     if (!response.body) {
-      throw new Error('Stream not supported in this environment')
+      throw new Error(SCRAPE_BROKEN_MESSAGE)
     }
 
     const reader = response.body.getReader()
@@ -165,7 +176,7 @@ export class CampaignService {
       throw new Error(streamError)
     }
     if (!completed) {
-      throw new Error('Stream closed before completion')
+      throw new Error(SCRAPE_BROKEN_MESSAGE)
     }
     return completed
   }
@@ -239,6 +250,7 @@ export class CampaignService {
 
     if (!response.ok) {
       const raw = await response.json().catch(() => null)
+      if (response.status === 429) throw new RateLimitedError()
       throw (
         planLimitFromResponse(response.status, raw) ??
         new Error(extractErrorMessage(raw, 'Failed to generate emails'))

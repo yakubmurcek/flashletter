@@ -26,6 +26,11 @@ but a client hitting several instances gets the limit once per instance. The
 Upstash integration on the Vercel Marketplace injects the `KV_REST_API_*` names,
 which the app also reads.
 
+Redis also holds the monthly plan counters: AI rewrites, and the set of
+campaigns each Free or guest user generated this month. Without Redis the
+campaign limit falls back to counting rows, so deleting a campaign frees a
+slot again.
+
 Current setup (2026-10-08): flashletter uses the team's existing Upstash store
 `store_GDbJAU71nVY35Lbf`, which it shares with shouldijev. Every flashletter key is
 prefixed `flashletter:`. `KV_REST_API_URL` and `KV_REST_API_TOKEN` were copied onto
@@ -56,9 +61,10 @@ if your project lives in the EU instance.
 
 Events fired (all client-side via `posthog-js`): `url_pasted`,
 `scrape_succeeded`, `scrape_failed`, `first_email_streamed`, `email_edited`,
-`signup_completed`. The `signup_completed` event piggybacks on a
-`?signedUp=1` marker the auth callback adds to its redirect; the
-`/campaigns` page reads it once, fires the event, then strips the param.
+`limit_reached`, `upgrade_clicked`, `signup_completed`. `signup_completed`
+fires from `identify()` in `lib/analytics.ts` the first time a browser that
+was seen as a guest comes back signed in (two localStorage markers), so
+returning logins don't count.
 
 ### `ADMIN_EMAILS`
 
@@ -86,11 +92,27 @@ machines without Chromium installed). Has no effect in production.
 Used by the JSON-LD block in the root layout. Defaults to
 `https://flashletter.app` if unset.
 
+## Database changes
+
+The schema and RLS policies live in the Supabase dashboard, not in this repo.
+SQL that must be run by hand is kept in `supabase/sql/`, one dated file per
+change; each is safe to run twice.
+
+- `2026-10-15-lock-waitlist.sql`: closes the `waitlist` table to the anon and
+  authenticated roles; the waitlist routes and `/admin/waitlist` call its
+  `waitlist_join`, `waitlist_unsubscribe` and `waitlist_admin_list` functions.
+  The app code that calls them must not deploy before this SQL has run.
+
 ## What to verify after each deploy
 
 1. Sign in with a non-admin account → `/admin/waitlist` should 404.
 2. Sign in with an `ADMIN_EMAILS`-listed account → table renders.
-3. Submit a landing-page URL of `http://169.254.169.254/` to the scraper →
-   should reject with `URL not allowed` (SSRF guard).
-4. POST to `/api/chat` ~15 times in a minute as the same user → should start
+3. Submit a landing-page URL of `http://169.254.169.254/`, and one that
+   redirects there (e.g. `https://httpbin.org/redirect-to?url=http://169.254.169.254/`),
+   on the home page → both should show "That address isn't reachable from the
+   internet" (SSRF guard, checked on every redirect hop).
+4. A count-only request for the waitlist with the public anon key must fail:
+   `curl -sI "$SUPABASE_URL/rest/v1/waitlist?select=id" -H "apikey: $ANON" -H "Authorization: Bearer $ANON" -H "Prefer: count=exact"`
+   → 401/403, not 200 with a `content-range`.
+5. POST to `/api/chat` ~15 times in a minute as the same user → should start
    getting 429s (rate-limit Redis is wired up).

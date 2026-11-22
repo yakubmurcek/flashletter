@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'
-import { checkRateLimit, scrapeLandingRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
+import {
+  checkUserAndIpRateLimit,
+  scrapeLandingIpRateLimit,
+  scrapeLandingRateLimit,
+  getRateLimitHeaders,
+} from '@/lib/utils/rate-limit'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { getCachedScrapeData, setCachedScrapeData } from '@/lib/utils/scraper-cache'
 import { extractTextFromHTML } from '@/lib/utils/scraper'
@@ -15,6 +20,10 @@ import {
   userMessageForUnsafeUrl,
   safeFetch,
 } from '@/lib/utils/url-safety'
+import {
+  UpstreamStatusError,
+  userMessageForScrapeError,
+} from '@/app/api/scrape-landing/scrape-error-message'
 
 export async function POST(req: NextRequest) {
   const startTime = Date.now()
@@ -32,9 +41,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const identifier = user.id || getClientIp(req)
-
-    const rateLimitResult = await checkRateLimit(scrapeLandingRateLimit, identifier)
+    const rateLimitResult = await checkUserAndIpRateLimit(
+      scrapeLandingRateLimit,
+      scrapeLandingIpRateLimit,
+      user.id,
+      getClientIp(req),
+    )
 
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -123,12 +135,12 @@ export async function POST(req: NextRequest) {
         })
 
         if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+          throw new UpstreamStatusError(response.status, response.statusText)
         }
 
         const html = response.text
         const finalUrl = response.finalUrl
-        const scrapedContent = extractTextFromHTML(html)
+        const scrapedContent = extractTextFromHTML(html, finalUrl)
         const metadata = extractMetadata(html, finalUrl)
 
         scrapeResult = {
@@ -148,7 +160,7 @@ export async function POST(req: NextRequest) {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch: ${response.status} ${response.statusText}`)
+        throw new UpstreamStatusError(response.status, response.statusText)
       }
 
       const html = response.text
@@ -173,7 +185,7 @@ export async function POST(req: NextRequest) {
             playwrightError,
           )
           // Fallback to static scraping if Playwright fails
-          const scrapedContent = extractTextFromHTML(html)
+          const scrapedContent = extractTextFromHTML(html, finalUrl)
           const metadata = extractMetadata(html, finalUrl)
 
           scrapeResult = {
@@ -186,7 +198,7 @@ export async function POST(req: NextRequest) {
         }
       } else {
         // Use static scraping
-        const scrapedContent = extractTextFromHTML(html)
+        const scrapedContent = extractTextFromHTML(html, finalUrl)
         const metadata = extractMetadata(html, finalUrl)
 
         scrapeResult = {
@@ -255,29 +267,21 @@ export async function POST(req: NextRequest) {
     }
 
     if (isUnsafeUrlError(error)) {
-      return NextResponse.json(
-        { error: userMessageForUnsafeUrl(error), message: error.message },
-        { status: 400 },
-      )
+      return NextResponse.json({ error: userMessageForUnsafeUrl(error) }, { status: 400 })
     }
 
-    // Handle specific error types
-    if (error instanceof Error) {
-      if (error.message.includes('Failed to fetch')) {
-        return NextResponse.json(
-          { error: 'Failed to fetch URL', message: error.message },
-          { status: 400 },
-        )
-      }
+    // The upstream site failed (bad status, unreachable, too slow): that's about
+    // the visitor's URL, not our server, so it's a 400. Raw messages stay in logs.
+    const errorName = (error as { name?: unknown } | null)?.name
+    const isUpstreamFailure =
+      error instanceof UpstreamStatusError ||
+      errorName === 'AbortError' ||
+      errorName === 'TimeoutError' ||
+      (error instanceof Error && error.message === 'fetch failed')
 
-      if (error.message.includes('Dynamic scraping failed')) {
-        return NextResponse.json(
-          { error: 'Dynamic scraping failed', message: error.message },
-          { status: 500 },
-        )
-      }
-    }
-
-    return NextResponse.json({ error: 'Failed to scrape landing page' }, { status: 500 })
+    return NextResponse.json(
+      { error: userMessageForScrapeError(error) },
+      { status: isUpstreamFailure ? 400 : 500 },
+    )
   }
 }

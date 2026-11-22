@@ -56,6 +56,18 @@ type CampaignUpdateData = CampaignInsertData & {
   status?: 'draft' | 'active' | 'completed'
 }
 
+/**
+ * An edit hit no saved email: the email was shown but never reached the
+ * database (e.g. generation failed before saving it). Callers match on
+ * `name`, so mocks of this module don't need to export the class.
+ */
+export class EmailNotSavedError extends Error {
+  constructor(day: number) {
+    super(`Day ${day} is not saved yet, so this edit was not kept.`)
+    this.name = 'EmailNotSavedError'
+  }
+}
+
 export class CampaignStorageService {
   constructor(private supabase: SupabaseClient) {}
 
@@ -186,28 +198,26 @@ export class CampaignStorageService {
     return data.user_id === userId
   }
 
-  async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
-    // Preserve email UUIDs across re-saves so `email_versions.email_id` (and
-    // any other FKs) stay valid. The previous delete-then-insert pattern
-    // minted fresh UUIDs every time, which silently orphaned (or, with
-    // ON DELETE CASCADE, wiped) the entire version history on every regen.
-    //
-    // Strategy: read existing rows by (campaign_id, day), update in place
-    // when the day matches an existing row, insert when it's new, and only
-    // delete rows whose day is no longer present (e.g. user shrank the
-    // sequence from 7 → 3).
+  private async readEmailIdsByDay(campaignId: string) {
     const { data: existingRows, error: readError } = await this.supabase
       .from('emails')
       .select('id, day')
       .eq('campaign_id', campaignId)
 
     if (readError) throw readError
+    return (existingRows ?? []) as Array<{ id: string; day: number }>
+  }
 
+  /** Update each email in place by day, insert the missing ones. */
+  private async writeEmails(
+    campaignId: string,
+    emails: Email[],
+    existingRows: Array<{ id: string; day: number }>,
+  ): Promise<Email[]> {
     const existingIdByDay = new Map<number, string>()
-    for (const row of (existingRows ?? []) as Array<{ id: string; day: number }>) {
+    for (const row of existingRows) {
       existingIdByDay.set(row.day, row.id)
     }
-    const incomingDays = new Set(emails.map((e) => e.day))
 
     const result: Email[] = []
 
@@ -240,6 +250,22 @@ export class CampaignStorageService {
       }
     }
 
+    return result.sort((a, b) => a.day - b.day)
+  }
+
+  async saveEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
+    // Preserve email UUIDs across re-saves so `email_versions.email_id` (and
+    // any other FKs) stay valid. The previous delete-then-insert pattern
+    // minted fresh UUIDs every time, which silently orphaned (or, with
+    // ON DELETE CASCADE, wiped) the entire version history on every regen.
+    //
+    // Strategy: read existing rows by (campaign_id, day), update in place
+    // when the day matches an existing row, insert when it's new, and only
+    // delete rows whose day is no longer present (e.g. user shrank the
+    // sequence from 7 → 3).
+    const existingRows = await this.readEmailIdsByDay(campaignId)
+    const result = await this.writeEmails(campaignId, emails, existingRows)
+
     // NOTE on FK behavior: this DELETE assumes `email_versions.email_id` has
     // ON DELETE CASCADE — versions of removed days are dropped along with
     // their email. That matches user intent (the user shrank the campaign,
@@ -247,7 +273,8 @@ export class CampaignStorageService {
     // pre-fix behavior (which did `DELETE FROM emails WHERE campaign_id = $1`
     // on every save). If the FK is RESTRICT, this DELETE will throw — which
     // would also have broken the previous code path on every save.
-    const idsToDelete = ((existingRows ?? []) as Array<{ id: string; day: number }>)
+    const incomingDays = new Set(emails.map((e) => e.day))
+    const idsToDelete = existingRows
       .filter((row) => !incomingDays.has(row.day))
       .map((row) => row.id)
     if (idsToDelete.length > 0) {
@@ -258,21 +285,46 @@ export class CampaignStorageService {
       if (deleteError) throw deleteError
     }
 
-    return result.sort((a, b) => a.day - b.day)
+    return result
   }
 
+  /**
+   * Save these days (update in place by day, insert if missing) and leave
+   * every other day alone. Used to save emails one step at a time while a
+   * sequence streams in; `deleteEmailsAfterDay` trims the rest once the
+   * final length is known.
+   */
+  async upsertEmails(campaignId: string, emails: Email[]): Promise<Email[]> {
+    const existingRows = await this.readEmailIdsByDay(campaignId)
+    return this.writeEmails(campaignId, emails, existingRows)
+  }
+
+  /** Drop the days after `lastDay` (and, by cascade, their versions). */
+  async deleteEmailsAfterDay(campaignId: string, lastDay: number): Promise<void> {
+    const { error } = await this.supabase
+      .from('emails')
+      .delete()
+      .eq('campaign_id', campaignId)
+      .gt('day', lastDay)
+
+    if (error) throw error
+  }
+
+  /** Throws `EmailNotSavedError` when no saved email has this day. */
   async updateEmail(
     campaignId: string,
     day: number,
     data: { subject?: string; preview?: string; content?: string },
   ): Promise<void> {
-    const { error } = await this.supabase
+    const { data: rows, error } = await this.supabase
       .from('emails')
       .update(data)
       .eq('campaign_id', campaignId)
       .eq('day', day)
+      .select('id')
 
     if (error) throw error
+    if (!rows || rows.length === 0) throw new EmailNotSavedError(day)
   }
 
   async getEmail(campaignId: string, day: number): Promise<Email | null> {

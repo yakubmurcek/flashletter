@@ -7,6 +7,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { CampaignProvider } from '@/lib/campaign-context'
 import { RegionProvider } from '@/lib/utils/location-detection'
 import { PostHogIdentifier } from '@/components/analytics/posthog-identifier'
+import { CookieConsentBanner } from '@/components/cookie-consent-banner'
+import { safeJsonLd } from '@/lib/utils'
 import './globals.css'
 
 export const viewport: Viewport = {
@@ -99,7 +101,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
+            __html: safeJsonLd({
               '@context': 'https://schema.org',
               '@type': 'WebApplication',
               name: 'Flashletter',
@@ -133,6 +135,8 @@ export default function RootLayout({
             closeButton
           />
           <PostHogIdentifier />
+          {/* PostHog stays off until the visitor accepts; no key, nothing to ask. */}
+          {process.env.NEXT_PUBLIC_POSTHOG_KEY && <CookieConsentBanner />}
           <Analytics />
         </ThemeProvider>
       </body>

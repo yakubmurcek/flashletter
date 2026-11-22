@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
 import { UpgradePrompt } from '@/components/auth/upgrade-prompt'
 import { createClient } from '@/lib/supabase/server'
+import { safeRedirectPath, withRedirectTo } from '@/lib/utils/safe-redirect'
 import {
   Card,
   CardContent,
@@ -17,19 +18,13 @@ export const metadata = {
   description: 'Create a new account',
 }
 
-function safeRedirect(target: string | string[] | undefined, fallback: string) {
-  if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//')) {
-    return fallback
-  }
-  return target.startsWith('/\\') ? fallback : target
-}
-
 export default async function SignupPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  const { redirectTo } = await searchParams
+  const { redirectTo: redirectToParam, authError } = await searchParams
+  const redirectTo = safeRedirectPath(redirectToParam)
   const supabase = await createClient()
   const {
     data: { user },
@@ -41,7 +36,8 @@ export default async function SignupPage({
     return (
       <UpgradePrompt
         variant="save"
-        redirectTo={safeRedirect(redirectTo, '/campaigns')}
+        redirectTo={redirectTo}
+        initialError={typeof authError === 'string' ? authError : null}
       />
     )
   }
@@ -63,7 +59,7 @@ export default async function SignupPage({
         <div className="text-sm text-center text-muted-foreground">
           Already have an account?{' '}
           <Link
-            href="/login"
+            href={withRedirectTo('/login', redirectTo)}
             className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Sign in

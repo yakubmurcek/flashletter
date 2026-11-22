@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AuthForm } from '@/components/auth/auth-form'
+import { safeRedirectPath, withRedirectTo } from '@/lib/utils/safe-redirect'
 import {
   Card,
   CardContent,
@@ -14,7 +15,12 @@ export const metadata = {
   description: 'Sign in to your account',
 }
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const redirectTo = safeRedirectPath((await searchParams).redirectTo)
   return (
     <Card className="bg-card border border-border shadow-sm rounded-xl">
       <CardHeader className="space-y-2 text-center">
@@ -30,7 +36,7 @@ export default function LoginPage() {
         <div className="text-sm text-center text-muted-foreground">
           Don&apos;t have an account?{' '}
           <Link
-            href="/signup"
+            href={withRedirectTo('/signup', redirectTo)}
             className="font-medium text-primary hover:text-primary/80 transition-colors"
           >
             Sign up

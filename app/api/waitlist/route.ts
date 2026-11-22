@@ -33,51 +33,18 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Check if email already exists
-    const { data: existingEntry } = await supabase
-      .from('waitlist')
-      .select('id')
-      .eq('email', email)
-      .single()
+    // The table is closed to client roles; waitlist_join inserts once per
+    // address and reports an existing one (supabase/sql/2026-10-15-lock-waitlist.sql).
+    const { data, error } = await supabase.rpc('waitlist_join', {
+      p_email: email,
+      p_name: name || null,
+      p_privacy_consent: privacyConsent,
+      p_marketing_consent: marketingConsent || false,
+      p_consent_timestamp: consentTimestamp || null,
+      p_user_region: userRegion || 'OTHER',
+    })
 
-    if (existingEntry) {
-      // Return 200 with the same shape as a fresh signup so callers can't
-      // enumerate which addresses are already on the waitlist.
-      return NextResponse.json(
-        {
-          message: 'Successfully joined the waitlist!',
-          id: existingEntry.id,
-          alreadyJoined: true,
-        },
-        { status: 200 },
-      )
-    }
-
-    // Insert new waitlist entry. We deliberately *omit* the `order` field so
-    // the column's DEFAULT (waitlist_order_seq) kicks in — passing NULL
-    // explicitly would override the default and we'd be back to the racy
-    // trigger path.
-    const { data, error } = await supabase
-      .from('waitlist')
-      .insert({
-        email,
-        name: name || null,
-        source: 'landing_page',
-        status: 'pending',
-        privacy_consent: privacyConsent,
-        marketing_consent: marketingConsent || false,
-        consent_timestamp: consentTimestamp || new Date().toISOString(),
-        user_region: userRegion || 'OTHER',
-      })
-      .select()
-      .single()
-
-    // Get the total count for response
-    const { count: totalCount } = await supabase
-      .from('waitlist')
-      .select('*', { count: 'exact', head: true })
-
-    if (error) {
+    if (error || !data) {
       console.error('Waitlist signup error:', error)
 
       // Report to Sentry
@@ -91,12 +58,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const result = data as {
+      id: string
+      order?: number
+      total_count?: number
+      already_joined: boolean
+    }
+    if (result.already_joined) {
+      // Return 200 with the same shape as a fresh signup so callers can't
+      // enumerate which addresses are already on the waitlist.
+      return NextResponse.json(
+        { message: 'Successfully joined the waitlist!', id: result.id, alreadyJoined: true },
+        { status: 200 },
+      )
+    }
+
     return NextResponse.json(
       {
         message: 'Successfully joined the waitlist!',
-        id: data.id,
-        order: data.order,
-        totalCount: totalCount || 0,
+        id: result.id,
+        order: result.order,
+        totalCount: result.total_count || 0,
       },
       { status: 201 },
     )

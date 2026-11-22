@@ -1,4 +1,6 @@
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { truncateContentByTextLength } from '@/lib/utils/scraper'
+import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 /**
  * Email Generation Prompts
@@ -6,33 +8,96 @@ import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
  * Large prompt templates moved here to reduce webpack cache warnings
  */
 
+/**
+ * Spreads days `first`..`last` over the phases in order, as evenly as possible.
+ * A phase that gets no days at this length is left out, so short sequences
+ * never print an empty range like "Days 2-1".
+ */
+function spreadDays(first: number, last: number, phases: string[]): string[] {
+  const span = last - first + 1
+  const lines: string[] = []
+  phases.forEach((text, i) => {
+    const from = first + Math.round((i * span) / phases.length)
+    const to = first - 1 + Math.round(((i + 1) * span) / phases.length)
+    if (from > to) return
+    lines.push(`${from === to ? `Day ${from}` : `Days ${from}-${to}`}: ${text}`)
+  })
+  return lines
+}
+
+/** Day 1, the middle phases spread over the days between, then the last day. */
+function plan(days: number, opening: string, middle: string[], closing?: string): string {
+  const lines = [`Day 1: ${opening}`]
+  if (closing && days > 1) {
+    lines.push(...spreadDays(2, days - 1, middle), `Day ${days}: ${closing}`)
+  } else {
+    lines.push(...spreadDays(2, days, middle))
+  }
+  return `\n${lines.join('\n')}`
+}
+
 export function getCampaignStructure(type: string, days: number): string {
-  const structures: Record<string, string> = {
-    nurture: `
-Day 1: Welcome & Introduction
-Days 2-${Math.floor(days / 2)}: Value-building content, educational resources
-Days ${Math.floor(days / 2) + 1}-${days - 1}: Social proof and success stories if the page has real proof; otherwise a concrete use case built from the page's own features and examples
-Day ${days}: Strong call-to-action`,
+  const structures: Record<string, () => string> = {
+    nurture: () =>
+      plan(
+        days,
+        'Welcome & Introduction',
+        [
+          'Value-building content, educational resources',
+          "Social proof and success stories if the page has real proof; otherwise a concrete use case built from the page's own features and examples",
+        ],
+        'Strong call-to-action',
+      ),
 
-    onboarding: `
-Day 1: Warm welcome, set expectations
-Days 2-${Math.floor(days / 3)}: Getting started guide, basic features
-Days ${Math.floor(days / 3) + 1}-${Math.floor((2 * days) / 3)}: Advanced features, pro tips
-Days ${Math.floor((2 * days) / 3) + 1}-${days}: Completion celebration, next steps`,
+    onboarding: () =>
+      plan(days, 'Warm welcome, set expectations', [
+        'Getting started guide, basic features',
+        'Advanced features, pro tips',
+        'Completion celebration, next steps',
+      ]),
 
-    promotional: `
-Day 1: Introduce offer, create awareness
-Days 2-${Math.floor(days / 2)}: Build urgency, showcase benefits
-Days ${Math.floor(days / 2) + 1}-${days - 1}: Overcome objections, testimonials (only real ones from the page)
-Day ${days}: Final push, last chance messaging`,
+    promotional: () =>
+      plan(
+        days,
+        'Introduce offer, create awareness',
+        [
+          'Build urgency, showcase benefits',
+          'Overcome objections, testimonials (only real ones from the page)',
+        ],
+        'Final push, last chance messaging',
+      ),
+
+    educational: () =>
+      plan(
+        days,
+        'What the reader will learn in this series and why it matters to them',
+        [
+          "One core lesson per email, each grounded in a concrete example from the page's own features",
+          'Putting it into practice: common mistakes and a short worked example',
+        ],
+        'Recap the key lessons and point to the next step with the product',
+      ),
+
+    're-engagement': () =>
+      plan(
+        days,
+        'A friendly check-in: remind them what they signed up for and what they are missing',
+        [
+          'What is new or better since they last looked (only what the page shows)',
+          'One quick win they can get in a few minutes',
+        ],
+        'Last call: one clear reason to come back now',
+      ),
   }
 
-  return structures[type] || structures.nurture
+  return (structures[type] ?? structures.nurture)()
 }
 
 export function getToneGuidelines(tone: string): string {
   const tones: Record<string, string> = {
     professional: 'Formal language, clear and direct, industry expertise, authoritative',
+    formal:
+      'Strictly business, precise and serious: complete sentences, no slang, no exclamation points, measured claims',
     friendly: 'Conversational, warm, approachable, use "you" and "we", casual but respectful',
     enthusiastic: 'Energetic, exciting, use exclamation points (moderately), positive language',
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
@@ -46,16 +111,19 @@ function formatList(items: string[] | undefined, prefix: string, emptyNote: stri
   return `${prefix}:\n${items.map((item) => `- ${item}`).join('\n')}`
 }
 
+// The user can clear any analysis field on /create/configure.
+const orInfer = (value: string) => value.trim() || 'Not given; infer it from the page content.'
+
 function buildAnalysisBlock(analysis: LandingPageAnalysis | undefined): string {
   if (!analysis) return ''
 
   return `
 LANDING PAGE ANALYSIS (use this directly in the copy — do not ignore):
 
-Value proposition: ${analysis.valueProp}
-Target audience: ${analysis.targetAudience}
-Primary CTA (every email must drive toward this same action): ${analysis.primaryCTA}
-Voice fingerprint to match: ${analysis.toneFingerprint}
+Value proposition: ${orInfer(analysis.valueProp)}
+Target audience: ${orInfer(analysis.targetAudience)}
+Primary CTA (every email must drive toward this same action): ${orInfer(analysis.primaryCTA)}
+Voice fingerprint to match: ${orInfer(analysis.toneFingerprint)}
 
 ${formatList(analysis.proofPoints, 'Proof points (cite these verbatim — do NOT fabricate numbers or customer names)', 'No concrete proof on the page. Do NOT invent stats or testimonials.')}
 
@@ -73,12 +141,14 @@ Rules derived from the analysis:
 - Fill a gap only when the page content gives you real material for it. Never write an email whose point is "we can't say, check the site" (e.g. about pricing the page doesn't state).`
 }
 
-// Landing content sent to the writer; the analysis already distilled the rest.
-const LANDING_CONTENT_LIMIT = 6000
+// The whole scraped page (the scraper already caps it at this much visible
+// text), counted in text rather than markup. The writer keeps the HTML so it
+// can see the page's real links for the call to action.
+const LANDING_CONTENT_LIMIT = LANDING_PAGE_CONTENT_LIMIT
 
 function landingContentBlock(landingContent?: string): string {
   return landingContent
-    ? `Landing Page Content:\n${landingContent.substring(0, LANDING_CONTENT_LIMIT)}`
+    ? `Landing Page Content:\n${truncateContentByTextLength(landingContent, LANDING_CONTENT_LIMIT)}`
     : ''
 }
 
@@ -96,7 +166,7 @@ function writingRules(landingUrl: string): string {
 - Write every word in the language of the landing page, including the greeting, the call to action and the sign-off.
 - Open with a short greeting line (in English "Hi," or "Hey,"), then make the point in the first sentence. Do not open with "Welcome. We're glad you're here." or similar filler.
 - Use at most one subheading per email, and only if it genuinely helps scanning. Use a bullet list only for 3+ concrete items.
-- End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here".
+- End with exactly one call to action as a Markdown link to ${landingUrl} (or a deeper page on the same site that the content names), with action text that names the action, such as "[Create your first project](${landingUrl})". Never a bare URL, never "click here". Every link is a full URL starting with http:// or https://, never a relative path like /register or #pricing (it breaks once the email is sent).
 - Sign off on its own line with the product's real name, in the form "The <product name> team" (translated for other languages, e.g. "Tým Fakturoid").
 - Subject lines: specific and curiosity-driven, under 60 characters, no clickbait, no ALL CAPS. At most one emoji per email, and only if the page's own voice uses them.
 - No em dashes (—). Use commas, periods, colons or parentheses instead.
@@ -194,14 +264,22 @@ export function buildRemainingEmailsInstructions(
   firstEmail: { subject: string; preview: string; content: string },
   landingContent?: string,
   analysis?: LandingPageAnalysis,
+  range: { from: number; to: number } = { from: 2, to: config.days },
 ): string {
   const analysisBlock = buildAnalysisBlock(analysis)
+  const { from, to } = range
+  const count = to - from + 1
+  const partial = from !== 2 || to !== config.days
 
   return `You are an expert email marketing copywriter. Day 1 of a ${
     config.days
   }-day ${config.campaignType} email campaign (${
     config.tone
-  } tone) has already been written. Generate **Days 2 through ${config.days}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.
+  } tone) has already been written. Generate **Days ${from} through ${to}** so they form a coherent sequence with Day 1 — do not repeat its hook, voice should match, escalate the narrative.${
+    partial
+      ? ` The other days of the sequence are written separately: write only these ${count}, each true to its place in the structure below.`
+      : ''
+  }
 
 Landing Page URL: ${landingUrl}
 ${landingContentBlock(landingContent)}
@@ -226,14 +304,12 @@ ${getToneGuidelines(config.tone)}
 
 ${writingRules(landingUrl)}
 
-IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${
-    config.days - 1
-  } emails, days 2 through ${config.days} in order:
+IMPORTANT: Return ONLY valid JSON with this exact structure — exactly ${count} emails, days ${from} through ${to} in order:
 {
   "emails": [
-    { "day": 2, "subject": "...", "preview": "...", "content": "..." },
+    { "day": ${from}, "subject": "...", "preview": "...", "content": "..." },
     ...
-    { "day": ${config.days}, "subject": "...", "preview": "...", "content": "..." }
+    { "day": ${to}, "subject": "...", "preview": "...", "content": "..." }
   ]
 }
 

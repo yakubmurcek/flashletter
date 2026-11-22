@@ -16,6 +16,14 @@ function getAdminEmails(): string[] {
     .filter(Boolean)
 }
 
+type WaitlistEntry = {
+  id: string
+  email: string
+  name: string | null
+  status: string
+  created_at: string
+}
+
 export default async function WaitlistAdminPage() {
   const supabase = await createClient()
   const {
@@ -34,10 +42,10 @@ export default async function WaitlistAdminPage() {
     notFound()
   }
 
-  const { data: waitlistEntries, error } = await supabase
-    .from('waitlist')
-    .select('*')
-    .order('order', { ascending: true })
+  // The table is closed to client roles; this function also checks the
+  // caller is a signed-in admin (waitlist_admins) before returning rows.
+  const { data, error } = await supabase.rpc('waitlist_admin_list')
+  const waitlistEntries = data as WaitlistEntry[] | null
 
   if (error) {
     console.error('Error fetching waitlist:', error)

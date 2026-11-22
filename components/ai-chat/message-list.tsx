@@ -2,6 +2,7 @@
 
 import { memo, useEffect, useRef } from 'react'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { MarkdownRenderer } from '@/components/markdown-renderer'
 import { Loader2, Sparkles } from 'lucide-react'
@@ -63,7 +64,16 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
               </div>
             )}
             {message.role === 'assistant' ? (
-              <MarkdownRenderer content={message.content} />
+              <>
+                <MarkdownRenderer content={message.content} />
+                {message.proposedEdit && message.applyProposedEdit && (
+                  <ProposedEdit
+                    subject={message.proposedEdit.subject}
+                    content={message.proposedEdit.content}
+                    onApply={message.applyProposedEdit}
+                  />
+                )}
+              </>
             ) : (
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
             )}
@@ -97,6 +107,40 @@ function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
         </div>
       )}
       <div ref={messagesEndRef} />
+    </div>
+  )
+}
+
+/** An AI edit held back because the user changed the email while it was written. */
+function ProposedEdit({
+  subject,
+  content,
+  onApply,
+}: {
+  subject?: string
+  content?: string
+  onApply: () => void
+}) {
+  return (
+    <div className="mt-2 pt-2 border-t border-border space-y-2">
+      <p className="text-xs text-muted-foreground">
+        You changed this email while I was writing, so I kept your version. Here is mine:
+      </p>
+      <div className="rounded border border-border bg-muted px-2 py-1.5 text-sm space-y-1">
+        {subject !== undefined && (
+          <p>
+            <span className="font-semibold">Subject:</span> {subject}
+          </p>
+        )}
+        {content !== undefined && <MarkdownRenderer content={content} />}
+      </div>
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onApply}
+      >
+        Apply anyway
+      </Button>
     </div>
   )
 }

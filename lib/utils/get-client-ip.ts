@@ -3,17 +3,28 @@ import { NextRequest } from 'next/server'
 /**
  * Extract the real client IP, resilient to header spoofing.
  *
- * Order is deliberate: trust headers set by our edge proxy first, and never
- * trust the leftmost entry of `x-forwarded-for` — on Vercel, Cloudflare, and
- * most proxies, that slot can be set by the client and is preserved as-is.
- * The trusted client IP is appended by the proxy at the *end* of the list.
+ * Production is served directly by Vercel (no Cloudflare in front), so only
+ * headers Vercel sets itself are trusted. `cf-connecting-ip` is deliberately
+ * ignored: without Cloudflare in the path, any client can send it.
+ *
+ * Order:
+ * 1. `x-real-ip` — set by Vercel to the connecting client's IP.
+ * 2. `x-vercel-forwarded-for` — also set by Vercel, a single client IP.
+ * 3. The LAST `x-forwarded-for` entry — the leftmost slots can be set by the
+ *    client; the trusted proxy appends the real IP at the end.
  */
 export function getClientIp(req: NextRequest): string {
-  const cfConnectingIp = req.headers.get('cf-connecting-ip')
-  if (cfConnectingIp) return cfConnectingIp.trim()
+  const realIp = req.headers.get('x-real-ip')?.trim()
+  if (realIp) return realIp
 
-  const realIp = req.headers.get('x-real-ip')
-  if (realIp) return realIp.trim()
+  const vercelForwarded = req.headers.get('x-vercel-forwarded-for')
+  if (vercelForwarded) {
+    const first = vercelForwarded
+      .split(',')
+      .map((s) => s.trim())
+      .find(Boolean)
+    if (first) return first
+  }
 
   const forwarded = req.headers.get('x-forwarded-for')
   if (forwarded) {

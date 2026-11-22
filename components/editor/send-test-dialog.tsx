@@ -1,12 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import { Loader2, Send } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Dialog,
   DialogContent,
@@ -26,11 +25,14 @@ interface SendTestDialogProps {
   trigger: React.ReactNode
 }
 
+// Guests (anonymous or signed out) can't send: the route only ever mails the
+// signed-in user's own account email, so they get an account prompt instead.
 type UserState =
   | { status: 'loading' }
   | { status: 'authed'; email: string }
-  | { status: 'anonymous' }
-  | { status: 'unauthenticated' }
+  | { status: 'guest'; signupHref: string }
+
+const GUEST_MESSAGE = 'Create a free account to send test emails.'
 
 export function SendTestDialog({
   campaignId,
@@ -40,7 +42,6 @@ export function SendTestDialog({
 }: SendTestDialogProps) {
   const [open, setOpen] = useState(false)
   const [userState, setUserState] = useState<UserState>({ status: 'loading' })
-  const [emailInput, setEmailInput] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
@@ -49,10 +50,12 @@ export function SendTestDialog({
     const supabase = createClient()
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (cancelled) return
-      if (!user) {
-        setUserState({ status: 'unauthenticated' })
-      } else if (user.is_anonymous || !user.email) {
-        setUserState({ status: 'anonymous' })
+      if (!user || user.is_anonymous || !user.email) {
+        const back = window.location.pathname + window.location.search
+        setUserState({
+          status: 'guest',
+          signupHref: `/signup?redirectTo=${encodeURIComponent(back)}`,
+        })
       } else {
         setUserState({ status: 'authed', email: user.email })
       }
@@ -64,21 +67,10 @@ export function SendTestDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (userState.status !== 'authed') return
     setSubmitting(true)
     try {
-      const body: { campaignId: string; emailDay: number; recipientEmail?: string } = {
-        campaignId,
-        emailDay,
-      }
-      if (userState.status === 'anonymous') {
-        const trimmed = emailInput.trim()
-        if (!trimmed) {
-          toast.error('Enter your email so we know where to send it.')
-          setSubmitting(false)
-          return
-        }
-        body.recipientEmail = trimmed
-      }
+      const body = { campaignId, emailDay }
 
       const res = await fetch('/api/send-test-email', {
         method: 'POST',
@@ -91,20 +83,18 @@ export function SendTestDialog({
         const msg =
           data.message ||
           (res.status === 429
-            ? 'Hit the rate limit — try again shortly.'
-            : "Couldn't send right now. Try again in a moment.")
+            ? 'Hit the rate limit. Try again shortly.'
+            : res.status === 401 && data.error
+              ? data.error
+              : "Couldn't send right now. Try again in a moment.")
         toast.error(msg)
         setSubmitting(false)
         return
       }
 
       const data = (await res.json()) as SendTestEmailResponse
-      const successMsg = data.upgradeStarted
-        ? `Sent to ${data.sentTo} — and a confirmation link to save your campaign.`
-        : `Sent to ${data.sentTo}. Check your inbox in a few seconds.`
-      toast.success(successMsg)
+      toast.success(`Sent to ${data.sentTo}. Check your inbox in a few seconds.`)
       setOpen(false)
-      setEmailInput('')
     } catch (err) {
       console.error('Failed to send test email:', err)
       toast.error("Couldn't send right now. Try again in a moment.")
@@ -142,41 +132,35 @@ export function SendTestDialog({
               Sending to <span className="font-medium text-foreground">{userState.email}</span>
             </div>
           ) : (
-            <div className="space-y-2">
-              <Label htmlFor="recipientEmail">Your email</Label>
-              <Input
-                id="recipientEmail"
-                type="email"
-                placeholder="you@example.com"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                required
-                autoFocus
-              />
-              <p className="text-xs text-muted-foreground">
-                We&apos;ll also send you a confirmation link so this campaign stays saved.
-              </p>
+            <div className="rounded-md bg-muted/50 px-3 py-2 text-sm">
+              <p>{GUEST_MESSAGE}</p>
             </div>
           )}
 
           <DialogFooter>
-            <Button
-              type="submit"
-              disabled={submitting || userState.status === 'loading'}
-              className="gap-2"
-            >
-              {submitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Sending…
-                </>
-              ) : (
-                <>
-                  <Send className="h-4 w-4" />
-                  Send test
-                </>
-              )}
-            </Button>
+            {userState.status === 'guest' ? (
+              <Button asChild>
+                <Link href={userState.signupHref}>Create a free account</Link>
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={submitting || userState.status === 'loading'}
+                className="gap-2"
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Sending…
+                  </>
+                ) : (
+                  <>
+                    <Send className="h-4 w-4" />
+                    Send test
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>
