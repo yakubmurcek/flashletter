@@ -94,14 +94,13 @@ Used by the JSON-LD block in the root layout. Defaults to
 
 ## Database changes
 
-The schema and RLS policies live in the Supabase dashboard, not in this repo.
-SQL that must be run by hand is kept in `supabase/sql/`, one dated file per
-change; each is safe to run twice.
+The schema and RLS policies live in this repo: `supabase/migrations/` (one file per change, in order)
+and `supabase/schemas/public.sql` (the whole schema, generated). See the README "Start the local
+database". Live already has every migration up to `20261125133200_sync_live_drift.sql`, which records
+what had been changed in the dashboard or the SQL editor before 2026-11-25.
 
-- `2026-10-15-lock-waitlist.sql`: closes the `waitlist` table to the anon and
-  authenticated roles; the waitlist routes and `/admin/waitlist` call its
-  `waitlist_join`, `waitlist_unsubscribe` and `waitlist_admin_list` functions.
-  The app code that calls them must not deploy before this SQL has run.
+Until CI applies migrations to live, a new migration is applied to live by hand before the code
+that needs it deploys, and recorded with `supabase migration repair --status applied <version>`.
 
 ## What to verify after each deploy
 

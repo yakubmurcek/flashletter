@@ -53,11 +53,26 @@ cd flashletter
 pnpm install
 ```
 
-### 3. Set up Supabase
+### 3. Start the local database
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. The database schema will be automatically created when you first start the app
-3. Get your project URL and anon key from the Supabase dashboard
+Development runs against a local Supabase in Docker, never the live project. It is built
+from `supabase/migrations/` and filled with fake users from `supabase/seed.sql`
+(`alice@example.com` and `bob@example.com`, password `password123`).
+
+```bash
+pnpm db:start     # first run downloads the images; prints the local URL and keys
+pnpm db:reset     # rebuild from migrations + seed at any time
+```
+
+Put the printed `API_URL` and `PUBLISHABLE_KEY` into `.env.local` as `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_ANON_KEY`. Live keys live only in the hosting provider's settings.
+
+**Changing the database:** add a migration (`pnpm exec supabase migration new <what>`, or edit the local
+database and run `pnpm exec supabase db diff -f <what>`), run `pnpm db:reset`, then `pnpm db:schema` to
+refresh `supabase/schemas/public.sql`, the whole schema in one readable file. CI rebuilds the database
+from the migrations and fails when that file disagrees. Every migration must keep the running app
+working (add a column, ship the code that uses it, drop the old one later), because a deploy can be
+rolled back but a migration cannot.
 
 ### 4. Configure environment variables
 

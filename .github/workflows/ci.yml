@@ -54,3 +54,30 @@ jobs:
       # omits "· test" only to keep the check label short; tests still gate.
       - name: Test
         run: pnpm test
+
+  database:
+    # Builds an empty database from supabase/migrations + the fake seed data and
+    # checks the schema file matches it. Catches a schema change without its
+    # migration (or a migration without the updated schema file).
+    name: database · migrations match schema
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build the database from migrations + seed
+        run: pnpm exec supabase db start
+
+      - name: Schema file matches the migrations
+        run: pnpm db:check

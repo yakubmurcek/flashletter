@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createClient()
 
     // The table is closed to client roles; waitlist_join inserts once per
-    // address and reports an existing one (supabase/sql/2026-10-15-lock-waitlist.sql).
+    // address and reports an existing one (supabase/migrations/20261125133200_sync_live_drift.sql).
     const { data, error } = await supabase.rpc('waitlist_join', {
       p_email: email,
       p_name: name || null,
