@@ -19,6 +19,9 @@ export default tseslint.config(
         'error',
         // React's act() around synchronous work returns a thenable nobody needs to wait for.
         {
+          // Supabase queries are thenables, not Promises: off by default, they are the
+          // writes that matter most here.
+          checkThenables: true,
           allowForKnownSafeCalls: [
             { from: 'package', name: 'act', package: '@testing-library/react' },
             { from: 'package', name: 'act', package: 'react' },
