@@ -116,6 +116,13 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     Sentry.captureException(error, { tags: { area: 'billing', route: 'checkout' } })
     console.error('[billing] checkout failed:', error)
-    return NextResponse.json({ error: 'Could not start checkout' }, { status: 500 })
+    // Shown to the user as is: what happened, that no money moved, what to do.
+    return NextResponse.json(
+      {
+        error:
+          'Payments are not reachable right now. Nothing was charged; try again in a few minutes.',
+      },
+      { status: 500 },
+    )
   }
 }

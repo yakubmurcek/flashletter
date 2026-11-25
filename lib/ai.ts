@@ -13,12 +13,20 @@ export const CLAUDE_MODEL = 'claude-sonnet-5-5'
 
 let client: Anthropic | null = null
 
+// How long to wait for Claude to start answering (response headers), per attempt; a
+// long stream is not cut off once it has started. Four attempts of one call stay inside
+// a route's 300 s limit, so a call Claude never answers ends in a message, not a spinner.
+const DEFAULT_TIMEOUT_MS = 45_000
+
 function getClient(): Anthropic {
   if (!process.env.ANTHROPIC_API_KEY) {
     throw new Error('Missing ANTHROPIC_API_KEY environment variable')
   }
   // The SDK retries 408/409/429/5xx and connection errors with backoff itself.
-  client ??= new Anthropic({ maxRetries: 3 })
+  client ??= new Anthropic({
+    maxRetries: 3,
+    timeout: Number(process.env.ANTHROPIC_TIMEOUT_MS) || DEFAULT_TIMEOUT_MS,
+  })
   return client
 }
 
@@ -127,4 +135,19 @@ export function extractRateLimitInfo(error: unknown): {
 
 export function isRateLimitError(error: unknown): boolean {
   return error instanceof Anthropic.RateLimitError
+}
+
+/** What a user sees when Claude is down; nothing they set up is lost. */
+export const AI_UNAVAILABLE_MESSAGE =
+  'The AI writer is not reachable right now. Your page and settings are saved, so try again in a few minutes.'
+
+/**
+ * Claude could not be reached or failed on its side (5xx, overloaded, timeout,
+ * connection, or our key refused), after the SDK's own retries.
+ */
+export function isAiUnavailableError(error: unknown): boolean {
+  if (error instanceof Anthropic.APIConnectionError) return true
+  if (!(error instanceof Anthropic.APIError)) return false
+  const status = error.status ?? 0
+  return status >= 500 || status === 401 || status === 403
 }

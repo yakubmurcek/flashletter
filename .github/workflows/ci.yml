@@ -117,6 +117,15 @@ jobs:
           # Not available to PRs from forks, where that one test is skipped.
           STRIPE_SECRET_KEY_TEST: ${{ secrets.STRIPE_SECRET_KEY_TEST }}
 
+      # The same build, restarted with a Stripe key Stripe refuses: Upgrade must say
+      # payments are down and the rest of the app must keep working.
+      - name: Stripe outage
+        run: pnpm exec playwright test e2e/outage-stripe.spec.ts
+        env:
+          E2E_STRIPE_OUTAGE: '1'
+          E2E_SERVER: pnpm start --port 3417
+          STRIPE_SECRET_KEY_TEST: sk_test_invalid-e2e-outage # gitleaks:allow (not a key: Stripe must refuse it)
+
       # The e2e run just built the app with fake server secrets in their real formats set.
       - name: No server secrets in the browser bundle
         run: scripts/check-client-bundle.sh

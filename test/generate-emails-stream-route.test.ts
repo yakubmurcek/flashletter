@@ -14,9 +14,12 @@ vi.mock('@sentry/nextjs', () => ({
 }))
 
 const generateStructuredMock = vi.fn()
-vi.mock('@/lib/ai', async () => {
+vi.mock('@/lib/ai', async (importOriginal) => {
   const { default: SDK } = await import('@anthropic-ai/sdk')
+  const actual = await importOriginal<typeof import('@/lib/ai')>()
   return {
+    AI_UNAVAILABLE_MESSAGE: actual.AI_UNAVAILABLE_MESSAGE,
+    isAiUnavailableError: actual.isAiUnavailableError,
     generateStructured: (...args: unknown[]) => generateStructuredMock(...args),
     isRateLimitError: (error: unknown) => error instanceof SDK.RateLimitError,
     extractRateLimitInfo: () => ({ limit: 50, remaining: 0, resetTime: '2026-10-07T12:00:00Z' }),
@@ -301,6 +304,28 @@ describe('POST /api/generate-emails/stream', () => {
         extra: {
           rateLimitInfo: { limit: 50, remaining: 0, resetTime: '2026-10-07T12:00:00Z' },
         },
+      }),
+    )
+  })
+
+  it('says in plain words that Claude is down, without the raw API error', async () => {
+    const error = Anthropic.APIError.generate(
+      500,
+      { type: 'error', error: { type: 'api_error', message: 'Internal server error' } },
+      undefined,
+      new Headers(),
+    )
+    generateStructuredMock.mockRejectedValue(error)
+
+    const events = await readStreamEvents(await POST(buildRequest(validRequestBody) as never))
+    const errorEvent = events.find((e) => e.type === 'error')
+
+    expect(errorEvent?.message).toMatch(/^The AI writer is not reachable right now\./)
+    expect(errorEvent?.message).not.toContain('api_error')
+    expect(captureExceptionMock).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({
+        tags: { error_type: 'ai_unavailable', api_route: '/api/generate-emails/stream' },
       }),
     )
   })

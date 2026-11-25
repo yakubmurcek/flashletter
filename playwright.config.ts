@@ -31,7 +31,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      // Stands in for Claude: free, instant, never down (e2e/fake-claude.mjs).
+      // Stands in for Claude: free and instant; outage tests switch it off per request (e2e/fake-claude.mjs).
       command: 'node e2e/fake-claude.mjs',
       url: `http://127.0.0.1:${FAKE_CLAUDE_PORT}`,
       reuseExistingServer: false,
@@ -53,6 +53,8 @@ export default defineConfig({
         CRON_SECRET: fakeSecret('cron-'),
         WAITLIST_UNSUBSCRIBE_SECRET: fakeSecret('unsubscribe-'),
         ANTHROPIC_BASE_URL: `http://127.0.0.1:${FAKE_CLAUDE_PORT}`,
+        // Short, so the "Claude never answers" test sees its message within seconds.
+        ANTHROPIC_TIMEOUT_MS: '1500',
         // Stripe TEST mode only (sk_test_...); unset, the upgrade test is skipped.
         STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY_TEST ?? '',
       },

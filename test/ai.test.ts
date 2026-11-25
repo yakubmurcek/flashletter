@@ -13,6 +13,8 @@ vi.mock('@anthropic-ai/sdk', async (importOriginal) => {
   class MockAnthropic {
     static APIError = Real.APIError
     static RateLimitError = Real.RateLimitError
+    static APIConnectionError = Real.APIConnectionError
+    static APIConnectionTimeoutError = Real.APIConnectionTimeoutError
     beta = { messages: { stream: (...args: unknown[]) => streamMock(...args) } }
     constructor(options: unknown) {
       constructorMock(options)
@@ -22,7 +24,13 @@ vi.mock('@anthropic-ai/sdk', async (importOriginal) => {
 })
 
 import Anthropic from '@anthropic-ai/sdk'
-import { CLAUDE_MODEL, generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
+import {
+  CLAUDE_MODEL,
+  extractRateLimitInfo,
+  generateStructured,
+  isAiUnavailableError,
+  isRateLimitError,
+} from '@/lib/ai'
 
 interface FakeMessage {
   content: Array<Record<string, unknown>>
@@ -204,14 +212,14 @@ describe('generateStructured', () => {
     expect(streamMock).not.toHaveBeenCalled()
   })
 
-  it('creates a single client with SDK retries enabled', async () => {
+  it('creates a single client with SDK retries and a timeout for an unanswered call', async () => {
     await generateStructured(baseRequest)
     await generateStructured(baseRequest)
 
     // The client is cached at module level, so across this whole file it is
     // constructed exactly once (constructorMock is never reset).
     expect(constructorMock).toHaveBeenCalledTimes(1)
-    expect(constructorMock).toHaveBeenCalledWith({ maxRetries: 3 })
+    expect(constructorMock).toHaveBeenCalledWith({ maxRetries: 3, timeout: 45_000 })
   })
 
   it('propagates SDK errors such as rate limits unchanged', async () => {
@@ -260,5 +268,25 @@ describe('isRateLimitError', () => {
     )
     expect(isRateLimitError({ status: 429 })).toBe(false)
     expect(isRateLimitError(new Error('Rate limit exceeded'))).toBe(false)
+  })
+})
+
+describe('isAiUnavailableError', () => {
+  const apiError = (status: number) =>
+    Anthropic.APIError.generate(status, {}, 'boom', new Headers())
+
+  it('is true when Claude is down, overloaded, unreachable, slow or refuses our key', () => {
+    expect(isAiUnavailableError(apiError(500))).toBe(true)
+    expect(isAiUnavailableError(apiError(529))).toBe(true)
+    expect(isAiUnavailableError(apiError(401))).toBe(true)
+    expect(isAiUnavailableError(new Anthropic.APIConnectionError({ message: 'reset' }))).toBe(true)
+    expect(isAiUnavailableError(new Anthropic.APIConnectionTimeoutError())).toBe(true)
+  })
+
+  it('is false for our own request errors, rate limits and non-SDK errors', () => {
+    expect(isAiUnavailableError(apiError(400))).toBe(false)
+    expect(isAiUnavailableError(rateLimitError())).toBe(false)
+    expect(isAiUnavailableError(new Error('AI returned malformed JSON'))).toBe(false)
+    expect(isAiUnavailableError({ status: 500 })).toBe(false)
   })
 })

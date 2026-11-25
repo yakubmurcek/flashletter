@@ -2,6 +2,10 @@
 // The app reaches it through ANTHROPIC_BASE_URL (playwright.config.ts), so tests never
 // spend money, never wait on the real model and never fail because Anthropic is down.
 //
+// An outage test switches it off for its own requests only (tests run in parallel):
+// POST /__outage {"marker": "...", "mode": "500" | "hang" | "up"} makes every request
+// whose body contains the marker (e.g. in the landing-page URL) fail that way.
+//
 // It answers every streamed request with JSON that fits the request's output schema
 // (output_config.format.schema). Email requests get exactly the days they ask for
 // ("Generate Day 1 only." / "Generate Days 2 through 5."), like the real model would.
@@ -74,11 +78,39 @@ function sse(res, events) {
   res.end()
 }
 
+/** Markers switched off by an outage test, and how each one fails. */
+const outages = new Map()
+
+function outageFor(raw) {
+  for (const [marker, mode] of outages) if (raw.includes(marker)) return mode
+  return null
+}
+
 createServer((req, res) => {
   if (req.method === 'GET') return res.end('fake-claude ok')
   let raw = ''
   req.on('data', (chunk) => (raw += chunk))
   req.on('end', () => {
+    if (req.url === '/__outage') {
+      const { marker, mode } = JSON.parse(raw || '{}')
+      if (!marker) return res.writeHead(400).end('marker required')
+      if (mode === 'up') outages.delete(marker)
+      else outages.set(marker, mode)
+      return res.end('ok')
+    }
+    const outage = outageFor(raw)
+    // Like Anthropic when it is down: an API error the SDK retries, then gives up on.
+    if (outage === '500') {
+      res.writeHead(500, { 'content-type': 'application/json' })
+      return res.end(
+        JSON.stringify({
+          type: 'error',
+          error: { type: 'api_error', message: 'Internal server error' },
+        }),
+      )
+    }
+    // No answer at all: the app's own timeout has to end the wait.
+    if (outage === 'hang') return
     const body = JSON.parse(raw || '{}')
     const text = answer(body)
     const usage = { input_tokens: 1, output_tokens: 1 }
