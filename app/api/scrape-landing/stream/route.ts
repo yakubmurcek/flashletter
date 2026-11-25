@@ -168,7 +168,8 @@ export async function POST(req: NextRequest) {
                 loadTime = result.loadTime
               } catch (playwrightError) {
                 console.warn(
-                  `Dynamic scraping failed for ${url}, falling back to static:`,
+                  'Dynamic scraping failed for %s, falling back to static:',
+                  url,
                   playwrightError,
                 )
                 const scraped = extractTextFromHTML(html, fetchedUrl)

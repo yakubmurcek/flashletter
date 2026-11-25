@@ -340,6 +340,19 @@ describe('POST /api/scrape-landing/stream', () => {
     expect(events.find((e) => e.type === 'complete')).toBeDefined()
   })
 
+  it('logs the visitor URL as data, never as the format string', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    shouldUseDynamicScrapingMock.mockReturnValue(true)
+    scrapeWithPlaywrightMock.mockRejectedValue(new Error('browser crashed'))
+    await readStreamEvents(await POST(buildRequest({ url: 'https://example.com/%s' }) as never))
+    for (const [format] of warn.mock.calls) expect(String(format)).not.toContain('example.com')
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('%s'),
+      'https://example.com/%s',
+      expect.any(Error),
+    )
+  })
+
   it('uses Playwright directly when useDynamic=true is requested', async () => {
     scrapeWithPlaywrightMock.mockResolvedValue({
       content: '<p>Dyn</p>',

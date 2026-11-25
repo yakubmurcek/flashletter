@@ -90,7 +90,10 @@ export function getCampaignStructure(type: string, days: number): string {
       ),
   }
 
-  return (structures[type] ?? structures.nurture)()
+  // Own keys only: `type` comes from the request, and an inherited name like
+  // "constructor" would otherwise call an Object method instead of a plan.
+  const build = Object.hasOwn(structures, type) ? structures[type] : structures.nurture
+  return build()
 }
 
 export function getToneGuidelines(tone: string): string {
@@ -103,7 +106,7 @@ export function getToneGuidelines(tone: string): string {
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
   }
 
-  return tones[tone] || tones.friendly
+  return (Object.hasOwn(tones, tone) && tones[tone]) || tones.friendly
 }
 
 function formatList(items: string[] | undefined, prefix: string, emptyNote: string): string {

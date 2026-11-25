@@ -124,7 +124,8 @@ export async function POST(req: NextRequest) {
         }
       } catch (playwrightError) {
         console.warn(
-          `Forced dynamic scraping failed for ${url}, falling back to static:`,
+          'Forced dynamic scraping failed for %s, falling back to static:',
+          url,
           playwrightError,
         )
         // Fallback to static scraping if forced dynamic fails
@@ -181,7 +182,8 @@ export async function POST(req: NextRequest) {
           }
         } catch (playwrightError) {
           console.warn(
-            `Dynamic scraping failed for ${url}, falling back to static:`,
+            'Dynamic scraping failed for %s, falling back to static:',
+            url,
             playwrightError,
           )
           // Fallback to static scraping if Playwright fails
