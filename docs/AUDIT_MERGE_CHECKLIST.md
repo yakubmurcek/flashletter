@@ -24,7 +24,7 @@ order minimises rebase work:
 
 In Vercel → project → Environment Variables (Production):
 
-- `ADMIN_EMAILS=murcja812@gmail.com`
+- `ADMIN_EMAILS=you@example.com`
   Without this, `/admin/waitlist` 404s for everyone, including you.
 - Confirm `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` exist.
   Rate-limiting now **fails closed** in production — missing creds means
