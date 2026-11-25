@@ -93,7 +93,7 @@ function HistoryPageContent() {
           setVersions([])
         }
       }
-      loadVersions()
+      void loadVersions()
     }
   }, [validEmailId, generatedEmails, versionStorageService])
 
@@ -299,7 +299,7 @@ function HistoryPageContent() {
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                confirmRestore()
+                void confirmRestore()
                 setShowRestoreConfirm(false)
               }}
             >

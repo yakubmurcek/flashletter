@@ -11,11 +11,10 @@ import { extractMetadata, type ExtractedMetadata } from './metadata-extractor'
 import { assertSafeUrl, isUnsafeUrlError } from './url-safety'
 
 // Only import @sparticuz/chromium in production/serverless environments
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: the optional browser module is loaded untyped
 let chromium: any = null
 if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     chromium = require('@sparticuz/chromium')
   } catch {
     console.warn('@sparticuz/chromium not available, using system browser')
@@ -374,7 +373,7 @@ export async function getBrowserInfo(): Promise<{
  * Helper to get consistent browser launch options
  */
 async function getLaunchOptions() {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: the optional browser module is loaded untyped
   const launchOptions: any = {
     headless: true,
   }

@@ -1,0 +1,268 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": ["**", "!**/.next", "!**/public", "!**/node_modules", "!**/*.html"]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "react": "recommended",
+      "next": "recommended"
+    },
+    "rules": {
+      "preset": "recommended",
+      "nursery": {
+        "noFloatingPromises": "error",
+        "noMisusedPromises": "error"
+      }
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "overrides": [
+    {
+      "includes": ["components/editor/campaign-config-panel.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noLabelWithoutControl": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/diff-viewer.tsx", "components/email-preview-content.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noStaticElementInteractions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "app/global-error.tsx",
+        "components/email-list.tsx",
+        "components/text-selection-popup.tsx",
+        "components/ui/faq.tsx",
+        "test/account-checkout-banner.test.tsx",
+        "test/email-preview-autosave.test.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useButtonType": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["components/diff-viewer.tsx"],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useKeyWithClickEvents": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "components/cookie-consent-banner.tsx",
+        "components/sections/pricing-section.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "useSemanticElements": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["app/globals.css"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noImportantStyles": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["lib/services/campaign.service.ts"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noStaticOnlyClass": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "lib/utils/email-links.ts",
+        "lib/utils/playwright-scraper.ts",
+        "lib/utils/scraper.ts"
+      ],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "useOptionalChain": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["app/globals.css"],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noInvalidPositionAtImportRule": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "components/ai-chat/message-list.tsx",
+        "components/email-preview-content.tsx",
+        "lib/campaign/provider.tsx",
+        "lib/hooks/use-campaign-loader.ts",
+        "lib/hooks/use-email-autosave.ts"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "useExhaustiveDependencies": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["app/layout.tsx"],
+      "linter": {
+        "rules": {
+          "security": {
+            "noDangerouslySetInnerHtml": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "components/editor/editor-header.tsx",
+        "lib/supabase/middleware.ts",
+        "lib/supabase/server.ts",
+        "test/ai.test.ts",
+        "test/analyzer.test.ts",
+        "test/auth-callback-route.test.ts",
+        "test/chat-route.test.ts",
+        "test/create-page.test.tsx",
+        "test/email-preview-ai-edit.test.tsx",
+        "test/email-preview-autosave.test.tsx",
+        "test/generate-emails-route.test.ts",
+        "test/generate-emails-stream-route.test.ts",
+        "test/rich-text-editor.test.tsx",
+        "test/scrape-landing-stream-route.test.ts",
+        "test/use-ai-chat-stale-edit.test.tsx",
+        "test/util-storage.test.ts",
+        "test/util-version-storage.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noNonNullAssertion": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "components/campaign/analysis-card.tsx",
+        "components/diff-viewer.tsx",
+        "components/editor/email-sidebar.tsx",
+        "components/ui/slider.tsx",
+        "lib/utils/markdown-renderer.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noArrayIndexKey": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "lib/services/campaign.service.ts",
+        "lib/utils/markdown-renderer.tsx",
+        "test/generate-emails-stream-route.test.ts",
+        "test/scrape-landing-stream-route.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noAssignInExpressions": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["lib/hooks/use-ai-chat.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noConfusingVoidType": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
+        "test/email-version-storage-service.test.ts",
+        "test/middleware.test.ts",
+        "test/use-anonymous-limit.test.tsx",
+        "test/use-campaign-config.test.tsx",
+        "test/use-campaign-loader.test.tsx",
+        "test/use-url-state.test.tsx",
+        "test/util-error-handling.test.ts",
+        "test/util-storage.test.ts",
+        "test/util-validation.test.ts",
+        "test/util-version-storage.test.ts"
+      ],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["lib/supabase/middleware.ts", "lib/supabase/server.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "useIterableCallbackReturn": "off"
+          }
+        }
+      }
+    }
+  ]
+}

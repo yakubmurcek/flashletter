@@ -21,7 +21,7 @@ export function PostHogIdentifier() {
   useEffect(() => {
     const supabase = createClient()
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    void supabase.auth.getUser().then(({ data: { user } }) => {
       if (user?.id) {
         identify(
           user.id,

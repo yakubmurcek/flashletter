@@ -13,7 +13,7 @@ export function installLocalStoragePolyfill() {
   const ls = new Proxy(
     {
       getItem(key: string): string | null {
-        return Object.prototype.hasOwnProperty.call(store, key) ? store[key] : null
+        return Object.hasOwn(store, key) ? store[key] : null
       },
       setItem(key: string, value: string): void {
         store[key] = String(value)
@@ -36,13 +36,13 @@ export function installLocalStoragePolyfill() {
         return Object.keys(store)
       },
       getOwnPropertyDescriptor(_, key) {
-        if (typeof key === 'string' && Object.prototype.hasOwnProperty.call(store, key)) {
+        if (typeof key === 'string' && Object.hasOwn(store, key)) {
           return { value: store[key], writable: true, enumerable: true, configurable: true }
         }
         return undefined
       },
       has(_, key) {
-        return typeof key === 'string' && Object.prototype.hasOwnProperty.call(store, key)
+        return typeof key === 'string' && Object.hasOwn(store, key)
       },
     },
   )

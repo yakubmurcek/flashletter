@@ -30,18 +30,18 @@ function SubjectField({ value, onChange }: { value: string; onChange: (value: st
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const fit = () => {
+    const fitHeight = () => {
       el.style.height = 'auto'
       el.style.height = `${el.scrollHeight}px`
     }
-    fit()
+    fitHeight()
     // Width changes (rotation, chat panel opening) change how many lines it needs.
     if (typeof ResizeObserver === 'undefined') return
     let lastWidth = el.clientWidth
     const observer = new ResizeObserver(() => {
       if (el.clientWidth === lastWidth) return
       lastWidth = el.clientWidth
-      fit()
+      fitHeight()
     })
     observer.observe(el)
     return () => observer.disconnect()

@@ -123,7 +123,7 @@ describe('analyzeLandingPage', () => {
   })
 
   it('still cuts content whose visible text is over the 10k budget', async () => {
-    const bigContent = 'x'.repeat(15000) + 'END_MARKER'
+    const bigContent = `${'x'.repeat(15000)}END_MARKER`
     await analyzeLandingPage({
       url: 'https://example.com',
       content: bigContent,

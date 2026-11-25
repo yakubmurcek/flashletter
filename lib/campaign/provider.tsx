@@ -249,11 +249,19 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
   const updateCampaignConfig = useCallback(
     async (newConfig: CampaignConfig) => {
       setConfigState(newConfig)
-      if (currentCampaignId) {
+      if (!currentCampaignId) return
+      // Callers change settings without waiting, so a failed save is reported here.
+      try {
         await campaignService.updateCampaign(currentCampaignId, {
           tone: newConfig.tone,
           campaignType: newConfig.campaignType,
           days: newConfig.days,
+        })
+      } catch (error) {
+        logError(error, {
+          operation: 'save campaign config',
+          component: 'CampaignContext',
+          campaignId: currentCampaignId,
         })
       }
     },
@@ -279,7 +287,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     (data: LandingPageData | null) => {
       setLandingPageDataState(data)
       if (currentCampaignId && data) {
-        debouncedSaveLandingPage(currentCampaignId, data)
+        void debouncedSaveLandingPage(currentCampaignId, data)
       }
     },
     [currentCampaignId, debouncedSaveLandingPage],
@@ -289,7 +297,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     (cfg: CampaignConfig | null) => {
       setConfigState(cfg)
       if (currentCampaignId && cfg) {
-        debouncedSaveConfig(currentCampaignId, cfg)
+        void debouncedSaveConfig(currentCampaignId, cfg)
       }
     },
     [currentCampaignId, debouncedSaveConfig],

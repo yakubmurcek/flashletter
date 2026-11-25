@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'

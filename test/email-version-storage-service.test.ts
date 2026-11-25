@@ -6,8 +6,6 @@ vi.mock('@/lib/utils/diff', () => ({
   extractChangeSummary: vi.fn(() => 'subject changed'),
 }))
 
-import { extractChangeSummary } from '@/lib/utils/diff'
-
 describe('EmailVersionStorageService', () => {
   let service: EmailVersionStorageService
   let mockSupabase: any

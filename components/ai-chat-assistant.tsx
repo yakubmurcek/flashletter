@@ -1,6 +1,5 @@
 'use client'
 
-import type React from 'react'
 import { useEffect, useRef } from 'react'
 import type { SelectedContext, FullCampaignContext } from '@/lib/types'
 import { useAIChat } from '@/lib/hooks'

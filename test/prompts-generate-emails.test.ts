@@ -131,7 +131,7 @@ describe('buildInstructions (without analysis)', () => {
 
   it('cuts landing content at 10k chars of visible text', () => {
     const sentinel = '\u2603' // snowman — doesn't appear elsewhere in the prompt
-    const longContent = sentinel.repeat(12000) + 'TAIL_MARKER'
+    const longContent = `${sentinel.repeat(12000)}TAIL_MARKER`
     const p = buildInstructions(config, 'https://e.com', longContent)
     const count = (p.match(/\u2603/g) || []).length
     expect(count).toBe(10000)

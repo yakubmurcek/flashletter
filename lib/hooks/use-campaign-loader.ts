@@ -67,7 +67,7 @@ export function useCampaignLoader(): CampaignLoaderReturn {
   // Load campaign from URL when the id changes (or first appears).
   useEffect(() => {
     if (campaignIdFromUrl && campaignIdFromUrl !== loadedCampaignId && !isLoading) {
-      loadCampaign(campaignIdFromUrl)
+      void loadCampaign(campaignIdFromUrl)
     }
   }, [campaignIdFromUrl, loadedCampaignId, isLoading, loadCampaign])
 

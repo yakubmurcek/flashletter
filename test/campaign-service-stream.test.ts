@@ -19,7 +19,7 @@ function makeStreamResponse(chunks: string[], status = 200): Response {
 }
 
 function serializeEvent(event: ScrapeStreamEvent): string {
-  return JSON.stringify(event) + '\n'
+  return `${JSON.stringify(event)}\n`
 }
 
 const validCompleteData = {
@@ -95,13 +95,13 @@ describe('CampaignService.scrapeLandingPageStream', () => {
   })
 
   it('handles a single event split across multiple chunks', async () => {
-    const full = JSON.stringify({ type: 'complete', data: validCompleteData }) + '\n'
+    const full = `${JSON.stringify({ type: 'complete', data: validCompleteData })}\n`
     const mid = Math.floor(full.length / 2)
     const chunks = [full.slice(0, mid), full.slice(mid)]
 
     // Prepend a stage event split oddly too
     const stagePart1 = JSON.stringify({ type: 'stage', stageId: 'connecting' }).slice(0, 10)
-    const stagePart2 = JSON.stringify({ type: 'stage', stageId: 'connecting' }).slice(10) + '\n'
+    const stagePart2 = `${JSON.stringify({ type: 'stage', stageId: 'connecting' }).slice(10)}\n`
 
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       makeStreamResponse([stagePart1, stagePart2, ...chunks]),

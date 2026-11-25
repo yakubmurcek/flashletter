@@ -184,7 +184,10 @@ export function useEmailAutosave(
         return
       }
 
-      saveTimerRef.current.set(id, setTimeout(write, EMAIL_SAVE_DEBOUNCE_MS))
+      saveTimerRef.current.set(
+        id,
+        setTimeout(() => void write(), EMAIL_SAVE_DEBOUNCE_MS),
+      )
       pendingWriteRef.current.set(id, write)
       setPendingCount(pendingWriteRef.current.size)
     },

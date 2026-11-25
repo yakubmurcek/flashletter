@@ -22,18 +22,17 @@ describe('shouldUseDynamicScraping', () => {
   })
 
   it('returns true when React script is detected', () => {
-    const html =
-      '<html><body>' + 'x'.repeat(2000) + '<script src="/react.min.js"></script></body></html>'
+    const html = `<html><body>${'x'.repeat(2000)}<script src="/react.min.js"></script></body></html>`
     expect(shouldUseDynamicScraping('https://example.com', html)).toBe(true)
   })
 
   it('returns true when root div is present', () => {
-    const html = '<html><body><div id="root"></div></body></html>' + 'x'.repeat(500)
+    const html = `<html><body><div id="root"></div></body></html>${'x'.repeat(500)}`
     expect(shouldUseDynamicScraping('https://example.com', html)).toBe(true)
   })
 
   it('returns true when loading indicators appear', () => {
-    const html = '<html><body>' + 'x'.repeat(2000) + '<div class="skeleton"></div></body></html>'
+    const html = `<html><body>${'x'.repeat(2000)}<div class="skeleton"></div></body></html>`
     expect(shouldUseDynamicScraping('https://example.com', html)).toBe(true)
   })
 })

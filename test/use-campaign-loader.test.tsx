@@ -15,7 +15,7 @@ vi.mock('@/lib/hooks/use-url-state', () => ({
   useUrlState: vi.fn(),
 }))
 
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useCampaign } from '@/lib/campaign-context'
 import { useUrlState } from '@/lib/hooks/use-url-state'
 

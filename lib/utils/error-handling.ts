@@ -8,7 +8,7 @@ export interface ErrorContext {
   userId?: string
   campaignId?: string
   timestamp?: string
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: free-form context for the error log
   additionalData?: Record<string, any>
 }
 
@@ -103,7 +103,7 @@ export function handleComponentError(
   error: unknown,
   component: string,
   operation: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: free-form context for the error log
   additionalData?: Record<string, any>,
 ): string {
   logError(error, {

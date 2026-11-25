@@ -57,7 +57,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
         setIsLoading(false)
       }
 
-      loadVersionCounts()
+      void loadVersionCounts()
     }
   }, [emails, versionStorageService])
 

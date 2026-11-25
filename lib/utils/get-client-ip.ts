@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 /**
  * Extract the real client IP, resilient to header spoofing.

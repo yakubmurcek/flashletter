@@ -21,7 +21,7 @@ export function Header() {
       } = await supabase.auth.getUser()
       setUser(user ?? null)
     }
-    getUser()
+    void getUser()
   }, [])
 
   useEffect(() => {

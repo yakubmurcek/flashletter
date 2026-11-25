@@ -20,7 +20,7 @@ export const isValidCampaignId = (id: string): boolean => {
  */
 export const isValidEmailId = (id: string | number): boolean => {
   const num = typeof id === 'string' ? parseInt(id, 10) : id
-  return !isNaN(num) && num > 0 && num <= 365 // Reasonable email count limit
+  return !Number.isNaN(num) && num > 0 && num <= 365 // Reasonable email count limit
 }
 
 /**

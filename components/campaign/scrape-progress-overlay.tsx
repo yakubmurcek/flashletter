@@ -6,9 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Check, Loader2 } from 'lucide-react'
 import {
   SCRAPE_PROGRESS_STAGES,
-  ProgressState,
+  type ProgressState,
   formatProgressMessage,
-  ProgressStage,
+  type ProgressStage,
 } from '@/lib/types/scrape-progress'
 import { cn } from '@/lib/utils'
 import { EasedProgressBar, useEasedProgress, useRotatingText } from '@/components/ui/eased-progress'

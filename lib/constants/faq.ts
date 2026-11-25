@@ -1,4 +1,4 @@
-import { FAQItem } from '@/components/ui/faq'
+import type { FAQItem } from '@/components/ui/faq'
 
 export const FAQ_ITEMS: FAQItem[] = [
   {
