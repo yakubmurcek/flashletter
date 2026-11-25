@@ -1,33 +1,17 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test } from '@playwright/test'
+import { signIn, signUpNewUser } from './helpers'
 
 /**
  * Main flows a real user goes through, end to end in a browser, against the
  * local database seeded with fake users (supabase/seed.sql).
  */
 
-const PASSWORD = 'password123'
 const ALICE = { email: 'alice@example.com', campaign: 'Alice launch' }
 const BOB_CAMPAIGN_ID = 'bbbbbbbb-0000-0000-0000-000000000001'
 const ALICE_CAMPAIGN_ID = 'aaaaaaaa-0000-0000-0000-000000000001'
 
-async function signIn(page: Page, email: string) {
-  await page.goto('/login')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click()
-  await expect(page).not.toHaveURL(/\/login/)
-}
-
 test('a new visitor signs up and lands signed in', async ({ page }) => {
-  const email = `e2e-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`
-  await page.goto('/signup')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(PASSWORD)
-  // Shown only outside the EU/US; ticking it when present is what a user must do.
-  const consent = page.getByRole('checkbox')
-  if (await consent.isVisible()) await consent.check()
-  await page.getByRole('button', { name: 'Create account', exact: true }).click()
-  await expect(page).not.toHaveURL(/\/signup/)
+  const email = await signUpNewUser(page)
   await page.goto('/account')
   await expect(page.getByText(email)).toBeVisible()
 })

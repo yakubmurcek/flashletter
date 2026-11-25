@@ -14,10 +14,13 @@ polish, or exhaustive coverage. Bias decisions accordingly.
   Work happens on short branches (`feat/...`, `fix/...`) merged into `main` by PR.
 - **Enforced by the ruleset on `main`** (Settings → Rules), not by habit: no direct pushes or force
   pushes, squash-only, and every required check green: `format · lint · typecheck` (tests inside),
-  `database · migrations match schema`, `PR title` (`type(scope): summary`) and `PR size`
+  `database · migrations match schema`, `e2e · main flows`, `PR title` (`type(scope): summary`) and `PR size`
   (400 changed lines, lockfile and generated schema excluded; the `big-ok` label overrides).
 - **Pre-commit:** Husky + lint-staged auto-format on commit.
 - **Database changes:** README "Start the local database".
+- **End-to-end tests** (`e2e/`, `pnpm test:e2e`): every main user flow on desktop and phone against
+  the local database, Claude replaced by `e2e/fake-claude.mjs`, Stripe in test mode. A new user-facing
+  flow gets its test in the same PR.
 
 ## Project state outside the repo
 
