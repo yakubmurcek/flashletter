@@ -29,9 +29,14 @@ async function isOnWaitlist(request: APIRequestContext, email: string) {
 
 async function joinWaitlist(request: APIRequestContext): Promise<string> {
   const email = `e2e-waitlist-${Date.now()}-${Math.floor(Math.random() * 1e6)}@example.com`
-  const res = await request.post('/api/waitlist', { data: { email, privacyConsent: true } })
-  expect(res.ok()).toBe(true)
-  expect(await isOnWaitlist(request, email)).toBe(true)
+  // Retried: two signups at the same moment can collide on the waitlist order
+  // (assign_waitlist_order takes MAX + 1), which drops one of them. That race is
+  // a known separate bug, not what these tests are about.
+  await expect(async () => {
+    const res = await request.post('/api/waitlist', { data: { email, privacyConsent: true } })
+    expect(res.ok()).toBe(true)
+    expect(await isOnWaitlist(request, email)).toBe(true)
+  }).toPass({ timeout: 10_000 })
   return email
 }
 
@@ -53,7 +58,8 @@ test('typing someone else’s email never removes them from the waitlist', async
     headers: { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}` },
     data: { p_email: email },
   })
-  expect(viaDatabase.ok()).toBe(false)
+  // Permission denied for the anon role, not a typo'd URL.
+  expect([401, 403]).toContain(viaDatabase.status())
 
   expect(await isOnWaitlist(request, email)).toBe(true)
 })
