@@ -303,6 +303,13 @@ This app uses Claude Sonnet 5.5 at medium effort ($2 per million input tokens, $
 The system prompt is
 prompt-cached. See [Anthropic pricing](https://www.anthropic.com/pricing#api).
 
+## End-to-end tests
+
+`pnpm test:e2e` runs the main user flows in a real browser (desktop and phone) against a production
+build and the local database (`pnpm db:start` first). Claude is replaced by a local fake
+(`e2e/fake-claude.mjs`), so the tests cost nothing and never depend on the real model. The upgrade
+flow runs when `STRIPE_SECRET_KEY_TEST` holds a Stripe test-mode key and stops at Stripe's checkout page.
+
 ## Development
 
 ### Build for production

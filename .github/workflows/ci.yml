@@ -112,6 +112,10 @@ jobs:
 
       - name: Main flows
         run: pnpm test:e2e
+        env:
+          # Stripe TEST mode key (sk_test_...), for the upgrade-to-checkout flow.
+          # Not available to PRs from forks, where that one test is skipped.
+          STRIPE_SECRET_KEY_TEST: ${{ secrets.STRIPE_SECRET_KEY_TEST }}
 
       - name: Traces of failed tests
         if: failure()
