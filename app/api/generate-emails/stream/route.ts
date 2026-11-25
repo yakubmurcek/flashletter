@@ -10,7 +10,13 @@ import {
   generateEmailsRateLimit,
   getRateLimitHeaders,
 } from '@/lib/utils/rate-limit'
-import { generateStructured, extractRateLimitInfo, isRateLimitError } from '@/lib/ai'
+import {
+  AI_UNAVAILABLE_MESSAGE,
+  extractRateLimitInfo,
+  generateStructured,
+  isAiUnavailableError,
+  isRateLimitError,
+} from '@/lib/ai'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { checkCampaignAllowed, checkEmailCount, getPlan } from '@/lib/billing/limits'
 import { buildFirstEmailInstructions, buildRemainingEmailsInstructions } from '../prompts'
@@ -304,6 +310,13 @@ export async function POST(req: NextRequest) {
               api_route: '/api/generate-emails/stream',
             },
             extra: { rateLimitInfo: extractRateLimitInfo(error) },
+          })
+        } else if (isAiUnavailableError(error)) {
+          // The SDK's message is an HTTP status and raw JSON; the user needs to know what to do.
+          message = AI_UNAVAILABLE_MESSAGE
+          Sentry.captureException(error, {
+            level: 'warning',
+            tags: { error_type: 'ai_unavailable', api_route: '/api/generate-emails/stream' },
           })
         } else if (error instanceof Error) {
           message = error.message

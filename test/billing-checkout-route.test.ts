@@ -114,6 +114,17 @@ describe('POST /api/billing/checkout', () => {
     },
   )
 
+  it('tells the user plainly when Stripe fails, and that nothing was charged', async () => {
+    // Its own user: the in-memory rate limit counts every user's clicks across tests.
+    user = { id: '22222222-2222-2222-2222-222222222222', email: 'c@d.co' }
+    createSession.mockRejectedValue(new Error('Invalid API Key provided: sk_test_***'))
+    const res = await POST(request({ interval: 'month' }))
+    expect(res.status).toBe(500)
+    const { error } = await res.json()
+    expect(error).toMatch(/^Payments are not reachable right now\. Nothing was charged/)
+    expect(error).not.toContain('API Key')
+  })
+
   it('rejects an unknown interval', async () => {
     expect((await POST(request({ interval: 'weekly' }))).status).toBe(400)
   })
