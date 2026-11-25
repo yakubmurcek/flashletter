@@ -20,7 +20,6 @@ vi.mock('next/dynamic', async () => {
     ref.current = content
     React.useEffect(() => {
       onEditorCreated?.({ getHTML: () => `<p>${ref.current}</p>` })
-      // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
     return React.createElement('textarea', {
       'aria-label': 'Body',

@@ -8,7 +8,7 @@ import { useRef, useCallback } from 'react'
  * @param delay - Delay in milliseconds
  * @returns Debounced function
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: wraps functions of any signature
 export function useDebounce<T extends (...args: any[]) => any>(callback: T, delay: number): T {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -44,7 +44,7 @@ export function useDebounce<T extends (...args: any[]) => any>(callback: T, dela
  * @param delay - Delay in milliseconds
  * @returns Debounced function with cancel method
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// biome-ignore lint/suspicious/noExplicitAny: wraps functions of any signature
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
   delay: number,

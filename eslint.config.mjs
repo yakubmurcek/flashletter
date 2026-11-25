@@ -1,19 +1,34 @@
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { FlatCompat } from "@eslint/eslintrc";
+// Biome (biome.json) is the main linter. ESLint stays for the one check Biome cannot do
+// yet: promises nobody waits for, which needs the TypeScript compiler's types. Biome's
+// noFloatingPromises misses library promises such as an un-awaited Supabase query
+// (tested 2026-11-25 on Biome 2.6.6), and a dropped await on a save is a lost save.
+import tseslint from 'typescript-eslint'
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const compat = new FlatCompat({
-  baseDirectory: __dirname,
-});
-
-const eslintConfig = [
-  ...compat.extends("next/core-web-vitals", "next/typescript", "prettier"),
+export default tseslint.config(
+  { ignores: ['node_modules/', '.next/', 'out/', 'public/', '**/*.js', '**/*.mjs'] },
   {
-    ignores: ["node_modules/", ".next/", "out/", "public/"],
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tseslint.parser,
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    plugins: { '@typescript-eslint': tseslint.plugin },
+    linterOptions: { reportUnusedDisableDirectives: 'error' },
+    rules: {
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        // React's act() around synchronous work returns a thenable nobody needs to wait for.
+        {
+          allowForKnownSafeCalls: [
+            { from: 'package', name: 'act', package: '@testing-library/react' },
+            { from: 'package', name: 'act', package: 'react' },
+          ],
+        },
+      ],
+      '@typescript-eslint/no-misused-promises': [
+        'error',
+        { checksVoidReturn: { attributes: false } },
+      ],
+    },
   },
-];
-
-export default eslintConfig;
+)

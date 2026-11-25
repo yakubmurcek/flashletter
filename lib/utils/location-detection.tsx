@@ -165,7 +165,7 @@ export function RegionProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    detectRegion()
+    void detectRegion()
 
     return () => {
       isMounted = false

@@ -9,9 +9,7 @@ import {
 } from '@/lib/utils/error-handling'
 
 describe('logError', () => {
-  let originalEnv: string | undefined
   beforeEach(() => {
-    originalEnv = process.env.NODE_ENV
     // Source only logs when NODE_ENV === 'development'
     vi.stubEnv('NODE_ENV', 'development')
     vi.spyOn(console, 'error').mockImplementation(() => {})

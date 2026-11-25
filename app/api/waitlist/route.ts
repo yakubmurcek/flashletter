@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { getClientIp } from '@/lib/utils/get-client-ip'
 import { checkIpRateLimit, getRateLimitHeaders, waitlistIpRateLimit } from '@/lib/utils/rate-limit'
 import { createClient } from '@/lib/supabase/server'

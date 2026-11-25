@@ -330,6 +330,23 @@ pnpm start
 pnpm lint
 ```
 
+Two linters, both blocking in CI (`format · lint · typecheck`):
+
+- **Biome** (`biome.json`): the main linter, recommended rules plus the React and Next.js sets.
+  Runs on staged files at every commit.
+- **ESLint** (`eslint.config.mjs`): only `no-floating-promises` and `no-misused-promises`, which need
+  TypeScript's types. They catch a save or load nobody waits for, so its failure is never seen.
+  Biome's own version of the rule missed un-awaited Supabase queries (tested on Biome 2.6.6).
+  Ends with `.catch(...)` or is marked `void` when the called function reports its own errors.
+
+### Quality baseline (2026-11-25)
+
+Biome found older code breaking 17 rules in 63 file entries. Those files are listed per rule in
+`biome.json` `overrides`, so the rule is off only there and on for every other and every new file.
+Fixing a file means deleting it from its list; the lists only shrink. The biggest:
+`noNonNullAssertion` 17 files, `noExplicitAny` 10, `useButtonType` 6, `useExhaustiveDependencies` 5,
+`noArrayIndexKey` 5.
+
 ## Troubleshooting
 
 ### "Missing environment variable"

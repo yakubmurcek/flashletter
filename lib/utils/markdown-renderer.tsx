@@ -13,7 +13,7 @@ export function processInlineFormattingForPreview(
   // [\s\S] lets bold span a newline if one survives into the chunk.
   const inlineRegex = /\*\*([\s\S]*?)\*\*|\[([^\]]+)\]\(([^)]+)\)/g
 
-  let match
+  let match: RegExpExecArray | null
   let idx = 0
   while ((match = inlineRegex.exec(text)) !== null) {
     if (match.index > lastIndex) {

@@ -10,7 +10,7 @@ const isValidCampaignId = (id: string): boolean => {
 
 const isValidEmailId = (id: string): boolean => {
   const num = parseInt(id, 10)
-  return !isNaN(num) && num > 0 && num <= 100 // Reasonable email count limit
+  return !Number.isNaN(num) && num > 0 && num <= 100 // Reasonable email count limit
 }
 
 export function useUrlState() {

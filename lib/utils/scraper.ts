@@ -1,5 +1,5 @@
 import * as cheerio from 'cheerio'
-import { AnyNode } from 'domhandler'
+import type { AnyNode } from 'domhandler'
 import { LANDING_PAGE_CONTENT_LIMIT } from '@/lib/constants/app'
 
 /**

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect } from 'vitest'
 import * as cheerio from 'cheerio'
 import { extractTextFromHTML, isContentMeaningful } from '@/lib/utils/scraper'
 import { extractMetadata, getBestTitle, getBestDescription } from '@/lib/utils/metadata-extractor'

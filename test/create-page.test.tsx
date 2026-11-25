@@ -40,7 +40,7 @@ vi.mock('@/components/campaign/scrape-progress-overlay', () => ({
 import CreatePage from '@/app/create/page'
 
 function ndjson(lines: unknown[], status = 200): Response {
-  return new Response(lines.map((l) => JSON.stringify(l)).join('\n') + '\n', {
+  return new Response(`${lines.map((l) => JSON.stringify(l)).join('\n')}\n`, {
     status,
     headers: { 'Content-Type': 'application/x-ndjson' },
   })

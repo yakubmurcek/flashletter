@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { installLocalStoragePolyfill } from './_helpers/storage-polyfill'
 import { versionStorage } from '@/lib/utils/version-storage'
-import type { Email, EmailVersion } from '@/lib/types'
+import type { Email } from '@/lib/types'
 
 describe('versionStorage', () => {
   const mockEmail: Email = {

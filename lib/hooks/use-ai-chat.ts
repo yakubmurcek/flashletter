@@ -331,7 +331,8 @@ export function useAIChat({
  */
 export function useChatEditGuard(
   emails: Email[],
-  applyEdit: (id: number, edits: EmailEdits) => void,
+  // May be async; it reports its own save errors (useEmailAutosave), so it is not awaited.
+  applyEdit: (id: number, edits: EmailEdits) => void | Promise<void>,
 ) {
   const emailsRef = useRef(emails)
   const applyRef = useRef(applyEdit)
@@ -353,7 +354,7 @@ export function useChatEditGuard(
         const live = draft?.id === id ? draft : emailsRef.current.find((e) => e.id === id)
         if (!live || !sameText(basis, basisOf(live))) return false
       }
-      applyRef.current(id, edits)
+      void applyRef.current(id, edits)
       return true
     },
     [],

@@ -39,11 +39,12 @@ export default function CreatePage() {
   const [authError, setAuthError] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once on mount
   useEffect(() => {
     clearAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once on mount
   useEffect(() => {
     const err = searchParams.get('authError')
     if (err) {
@@ -53,7 +54,6 @@ export default function CreatePage() {
       const qs = next.toString()
       router.replace(qs ? `/create?${qs}` : '/create', { scroll: false })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const outOfCampaigns = !isLoading && !isCheckingLimit && !canCreate

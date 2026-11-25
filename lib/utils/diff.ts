@@ -239,5 +239,5 @@ export function extractChangeSummary(
     return 'No changes'
   }
 
-  return changes.join(' and ') + ' changed'
+  return `${changes.join(' and ')} changed`
 }

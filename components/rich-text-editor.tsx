@@ -37,7 +37,7 @@ export function RichTextEditor({ value, onChange }: RichTextEditorProps) {
       const range = selection.getRangeAt(0)
       const selectedText = range.toString()
       if (selectedText) {
-        const markdown = '#'.repeat(level) + ' ' + selectedText
+        const markdown = `${'#'.repeat(level)} ${selectedText}`
         document.execCommand('insertText', false, markdown)
         if (editorRef.current) {
           const html = editorRef.current.innerHTML

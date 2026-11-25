@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, FormEvent } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -29,12 +29,12 @@ export function HeroUrlForm() {
   } = useLandingPage()
   const { setLandingPageData, createNewCampaign, clearAll, applyConfigToCampaign } = useCampaign()
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once on mount
   useEffect(() => {
     // Keep anything typed into the server-rendered input before hydration.
     const typed = inputRef.current?.value
     if (typed) setUrl(typed)
     clearAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // "Try free" links point at #try: land on the box with the cursor in it.

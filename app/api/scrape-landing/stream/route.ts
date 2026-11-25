@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { scrapeLandingRequestSchema, scrapeLandingResponseSchema } from '@/lib/schemas/api'
 import { createClient } from '@/lib/supabase/server'
@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: ScrapeStreamEvent) => {
-        controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
       }
 
       try {

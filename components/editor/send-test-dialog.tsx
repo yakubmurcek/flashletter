@@ -48,7 +48,7 @@ export function SendTestDialog({
     if (!open) return
     let cancelled = false
     const supabase = createClient()
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    void supabase.auth.getUser().then(({ data: { user } }) => {
       if (cancelled) return
       if (!user || user.is_anonymous || !user.email) {
         const back = window.location.pathname + window.location.search

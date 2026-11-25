@@ -19,7 +19,7 @@ function makeStreamResponse(chunks: string[], status = 200): Response {
 }
 
 function serializeEvent(event: GenerateEmailsStreamEvent): string {
-  return JSON.stringify(event) + '\n'
+  return `${JSON.stringify(event)}\n`
 }
 
 const config: CampaignConfig = { tone: 'friendly', campaignType: 'nurture', days: 3 }
@@ -122,9 +122,9 @@ describe('CampaignService.generateEmailsStream', () => {
   })
 
   it('handles a single event split across multiple chunks', async () => {
-    const full = JSON.stringify({ type: 'complete', emails: [email1] }) + '\n'
+    const full = `${JSON.stringify({ type: 'complete', emails: [email1] })}\n`
     const mid = Math.floor(full.length / 2)
-    const startEvent = JSON.stringify({ type: 'start', total: 1 }) + '\n'
+    const startEvent = `${JSON.stringify({ type: 'start', total: 1 })}\n`
 
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(
       makeStreamResponse([startEvent, full.slice(0, mid), full.slice(mid)]),
@@ -221,7 +221,7 @@ describe('CampaignService.generateEmailsStream', () => {
     const chunks = [
       serializeEvent({ type: 'start', total: 3 }),
       // intentionally malformed event — missing required fields on email
-      JSON.stringify({ type: 'email', email: { day: 1 } }) + '\n',
+      `${JSON.stringify({ type: 'email', email: { day: 1 } })}\n`,
       serializeEvent({ type: 'complete', emails: [email1] }),
     ]
     vi.spyOn(global, 'fetch').mockResolvedValueOnce(makeStreamResponse(chunks))

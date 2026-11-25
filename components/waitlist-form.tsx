@@ -120,7 +120,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
                 responseStatus: response.status,
                 responseData: errorData,
                 formData: {
-                  email: email.substring(0, 3) + '***', // Partial email for debugging
+                  email: `${email.substring(0, 3)}***`, // Partial email for debugging
                   hasName: !!name,
                   privacyConsent,
                   marketingConsent,
@@ -185,7 +185,7 @@ export function WaitlistForm({ className = '' }: WaitlistFormProps) {
             },
             extra: {
               formData: {
-                email: email.substring(0, 3) + '***', // Partial email for debugging
+                email: `${email.substring(0, 3)}***`, // Partial email for debugging
                 hasName: !!name,
                 privacyConsent,
                 marketingConsent,

@@ -150,7 +150,7 @@ function EditorPageContent() {
     // Pass the URL-validated id (guaranteed non-null by the guard above) so the
     // stream route persists emails and the client gets back UUIDs for version
     // tracking. `currentCampaignId` is React state and can lag behind here.
-    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
+    void generateEmailsStream(landingPageData, config, campaignIdFromUrl)
   }, [
     autogenFlag,
     loadingState,
@@ -236,7 +236,7 @@ function EditorPageContent() {
 
   const handleConfigChange = useCallback(
     (next: import('@/lib/types').CampaignConfig) => {
-      updateCampaignConfig(next)
+      void updateCampaignConfig(next)
     },
     [updateCampaignConfig],
   )
@@ -245,7 +245,7 @@ function EditorPageContent() {
     if (!landingPageData || !config || isStreaming) return
     // Same reason as the autogen effect: prefer the URL-validated id so the
     // server can persist emails and the client gets back UUIDs for versioning.
-    generateEmailsStream(landingPageData, config, campaignIdFromUrl)
+    void generateEmailsStream(landingPageData, config, campaignIdFromUrl)
   }, [landingPageData, config, isStreaming, generateEmailsStream, campaignIdFromUrl])
 
   useEffect(() => {
@@ -309,7 +309,7 @@ function EditorPageContent() {
         deleteParam('restoreVersion')
       }
     }
-    handleRestore()
+    void handleRestore()
   }, [
     restoreVersionParam,
     saveEmail,

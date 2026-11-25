@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from 'react'
 import { CampaignService } from '../services/campaign.service'
 import type { LandingPageData } from '../types'
 import {
-  ProgressState,
-  ProgressStageId,
+  type ProgressState,
+  type ProgressStageId,
   SCRAPE_PROGRESS_STAGES,
-  ScrapeStreamEvent,
+  type ScrapeStreamEvent,
   getCleanDomain,
 } from '../types/scrape-progress'
 

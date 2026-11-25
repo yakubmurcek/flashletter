@@ -1,5 +1,5 @@
 import * as Sentry from '@sentry/nextjs'
-import { NextRequest, NextResponse } from 'next/server'
+import { type NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { CampaignStorageService } from '@/lib/services/campaign-storage.service'
@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       const send = (event: StreamEvent) => {
-        controller.enqueue(encoder.encode(JSON.stringify(event) + '\n'))
+        controller.enqueue(encoder.encode(`${JSON.stringify(event)}\n`))
       }
       const storage = campaignId ? new CampaignStorageService(supabase) : null
       const reportSaveError = (saveError: unknown, step: string) => {

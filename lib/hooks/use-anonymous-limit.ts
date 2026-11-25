@@ -112,7 +112,7 @@ export function useAnonymousLimit(): AnonymousLimitState {
       })
     }
 
-    checkLimit()
+    void checkLimit()
   }, [])
 
   return state

@@ -25,11 +25,11 @@ export function AuthForm({ mode }: AuthFormProps) {
   const [message, setMessage] = useState<string | null>(null)
   const { ensureConsent, reset: resetConsent, consentProps } = useLegalConsent(mode === 'signup')
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: reset only when the mode changes
   useEffect(() => {
     if (mode !== 'signup') {
       resetConsent()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode])
 
   const supabase = createClient()
