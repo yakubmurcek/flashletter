@@ -10,6 +10,8 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: [],
+    // e2e/ holds Playwright tests (pnpm test:e2e), which need a browser and a server.
+    exclude: ['**/node_modules/**', 'e2e/**'],
   },
   resolve: {
     alias: {
