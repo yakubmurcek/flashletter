@@ -15,6 +15,8 @@ test('a user turns a landing page into an email sequence', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue' }).click()
   await expect(page).toHaveURL(/\/create\/configure/, { timeout: 45_000 })
 
+  // The stream ends with its "complete" event only after every email is saved.
+  const stream = page.waitForResponse((r) => r.url().includes('/api/generate-emails/stream'))
   await page.getByRole('button', { name: 'Generate Campaign' }).click()
   await expect(page).toHaveURL(/\/create\/editor/, { timeout: 45_000 })
   // Day 1 shows first, then the rest of the sequence streams in.
@@ -25,6 +27,7 @@ test('a user turns a landing page into an email sequence', async ({ page }) => {
 
   // The whole sequence was saved: after a reload, every day is still there.
   await expect(page.getByRole('button', { name: /Day 5/ }).first()).toBeVisible({ timeout: 45_000 })
+  await (await stream).finished()
   await page.reload()
   await expect(page.getByText('Fake day 1 subject').filter({ visible: true }).first()).toBeVisible()
   await expect(page.getByRole('button', { name: /Day 5/ }).first()).toBeVisible()
