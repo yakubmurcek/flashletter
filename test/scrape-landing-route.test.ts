@@ -219,6 +219,18 @@ describe('POST /api/scrape-landing', () => {
     expect(body.stats.extractionMethod).toBe('static')
   })
 
+  it('logs the visitor URL as data, never as the format string', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    scrapeWithPlaywrightMock.mockRejectedValue(new Error('Browser crashed'))
+    await POST(buildRequest({ url: 'https://example.com/%s', useDynamic: true }) as never)
+    for (const [format] of warn.mock.calls) expect(String(format)).not.toContain('example.com')
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('%s'),
+      'https://example.com/%s',
+      expect.any(Error),
+    )
+  })
+
   it('returns 400 when fetch fails with bad status', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response('', { status: 500, statusText: 'Internal Server Error' }),

@@ -278,3 +278,18 @@ describe('markdownToHtml backslash escapes', () => {
     expect(html).toContain('&#42;50%&#42;')
   })
 })
+
+describe('htmlToMarkdown leaves no tag fragments behind', () => {
+  it.each([
+    ['<scr<script>ipt>alert(1)</script>', /</],
+    ['text <script', /<script/i],
+    ['<<img src=x onerror=alert(1)>img>', /</],
+    ['a <b', /</],
+  ])('strips %s', (html, forbidden) => {
+    expect(htmlToMarkdown(html)).not.toMatch(forbidden)
+  })
+
+  it('keeps the visible text', () => {
+    expect(htmlToMarkdown('<p>Hi <span>there</span></p>')).toBe('Hi there')
+  })
+})

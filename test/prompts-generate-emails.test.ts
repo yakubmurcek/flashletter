@@ -456,3 +456,19 @@ describe('language rule', () => {
     expect(p).toContain('Tým Fakturoid')
   })
 })
+
+describe('lookups ignore inherited object keys', () => {
+  it.each(['constructor', 'toString', 'valueOf', '__proto__', 'hasOwnProperty'])(
+    'getCampaignStructure(%s) falls back to the nurture plan',
+    (type) => {
+      expect(getCampaignStructure(type, 5)).toBe(getCampaignStructure('nurture', 5))
+    },
+  )
+
+  it.each(['constructor', 'toString', '__proto__'])(
+    'getToneGuidelines(%s) falls back to friendly',
+    (tone) => {
+      expect(getToneGuidelines(tone)).toBe(getToneGuidelines('friendly'))
+    },
+  )
+})

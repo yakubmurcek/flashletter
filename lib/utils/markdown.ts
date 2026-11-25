@@ -94,6 +94,9 @@ export function htmlToMarkdown(html: string): string {
   markdown = markdown.replace(/<\/?ul[^>]*>/gi, '')
   markdown = markdown.replace(/<p[^>]*>(.*?)<\/p>/gi, '$1\n\n')
   markdown = markdown.replace(/<[^>]*>/g, '')
+  // A `<` left now belongs to an unclosed tag ("text <script"); real text
+  // reaches us as `&lt;`, so dropping it never eats what the user typed.
+  markdown = markdown.replace(/</g, '')
   markdown = markdown.replace(/\n{3,}/g, '\n\n')
   return markdown.trim()
 }
