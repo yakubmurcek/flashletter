@@ -87,7 +87,8 @@ jobs:
     # production build and the local database with fake users. A dead button
     # on sign-in or a campaign opening for the wrong user turns this red.
     name: e2e · main flows
-    runs-on: ubuntu-latest
+    # Pinned: Playwright 1.59 has no browser build for ubuntu-latest (26.04) yet.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
 
     steps:
