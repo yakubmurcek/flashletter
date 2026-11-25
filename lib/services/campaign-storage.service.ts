@@ -239,6 +239,7 @@ export class CampaignStorageService {
           .single()
         if (error) throw error
         result.push(mapDbEmailToDomain(dbEmailRowSchema.parse(data)))
+        this.supabase.from('campaigns').update({ updated_at: new Date().toISOString() }).eq('id', campaignId)
       } else {
         const { data, error } = await this.supabase
           .from('emails')

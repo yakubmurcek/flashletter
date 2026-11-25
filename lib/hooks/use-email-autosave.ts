@@ -149,7 +149,7 @@ export function useEmailAutosave(
             }
           }
 
-          await campaignService.updateEmail(currentCampaignId, id, {
+          campaignService.updateEmail(currentCampaignId, id, {
             subject: currentEmail.subject,
             content: currentEmail.content,
             preview: currentEmail.preview,
