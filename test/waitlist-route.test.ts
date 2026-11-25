@@ -193,6 +193,20 @@ describe('waitlist rate limits', () => {
       )
       statuses.push(res.status)
     }
+    expect(statuses.slice(0, 10).every((s) => s < 300)).toBe(true)
     expect(statuses[10]).toBe(429)
+    const other = await POST_UNSUBSCRIBE(
+      fromIp('/api/waitlist/unsubscribe', '198.51.100.5', { email: 'person@example.com' }) as never,
+    )
+    expect(other.status).toBeLessThan(300)
+  })
+
+  it('never puts visitors with an unknown address into one shared limit', async () => {
+    for (let i = 0; i < 12; i++) {
+      const res = await POST_WAITLIST(
+        buildWaitlistRequest({ email: `visitor${i}@example.com` }) as never,
+      )
+      expect(res.status).toBeLessThan(300)
+    }
   })
 })

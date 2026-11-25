@@ -42,6 +42,23 @@ const NONE: SubscriptionSummary = {
 const customerKey = (userId: string) => `flashletter:billing:customer:${userId}`
 const summaryKey = (userId: string) => `flashletter:billing:summary:${userId}`
 const SUMMARY_TTL_SECONDS = 60
+// The plan Stripe last confirmed, kept longer than any billing period, so a Stripe
+// outage falls back to it (lib/billing/limits.ts getPlan) instead of guessing.
+const lastPlanKey = (userId: string) => `flashletter:billing:last-plan:${userId}`
+const LAST_PLAN_TTL_SECONDS = 40 * 24 * 60 * 60
+
+export async function rememberPlan(userId: string, plan: 'pro' | 'free') {
+  await getRedis()
+    ?.set(lastPlanKey(userId), plan, { ex: LAST_PLAN_TTL_SECONDS })
+    .catch(() => undefined)
+}
+
+export async function lastKnownPlan(userId: string): Promise<'pro' | 'free' | null> {
+  const plan = await getRedis()
+    ?.get<string>(lastPlanKey(userId))
+    .catch(() => null)
+  return plan === 'pro' || plan === 'free' ? plan : null
+}
 
 // Stripe search only accepts quoted literals; user ids are UUIDs, but be strict.
 function assertUuid(userId: string) {
@@ -146,6 +163,7 @@ export async function getSubscriptionSummary(
     summary = pick ? summarize(pick, customerId) : { ...NONE, customerId }
   }
   await redis?.set(summaryKey(userId), summary, { ex: SUMMARY_TTL_SECONDS }).catch(() => undefined)
+  await rememberPlan(userId, summary.active ? 'pro' : 'free')
   return summary
 }
 

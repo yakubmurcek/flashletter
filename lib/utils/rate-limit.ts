@@ -160,6 +160,14 @@ export async function checkRateLimit(ratelimit: Limiter | null, identifier: stri
 }
 
 /**
+ * Per-IP limit for public forms. An unknown IP ('anonymous': no proxy headers,
+ * e.g. local dev) is not limited, so visitors never share one global bucket.
+ */
+export async function checkIpRateLimit(ipLimiter: Limiter | null, ip: string) {
+  return checkRateLimit(ip === 'anonymous' ? null : ipLimiter, ip)
+}
+
+/**
  * Checks the per-user limit, then (only if that passes) the per-IP one.
  * Returns the result of whichever limit refused the request, so the route's
  * 429 headers describe the limit that actually blocked; on success, returns

@@ -51,9 +51,12 @@ vi.mock('@/lib/utils/rate-limit', () => ({
 }))
 
 const summaryMock = vi.fn()
+// The plan Stripe last confirmed per user (written by the real module when it reads Stripe).
+const lastPlans = new Map<string, 'pro' | 'free'>()
 vi.mock('@/lib/billing/stripe', () => ({
   isBillingEnabled: () => true,
   getSubscriptionSummary: (...args: unknown[]) => summaryMock(...args),
+  lastKnownPlan: async (userId: string) => lastPlans.get(userId) ?? null,
 }))
 
 import {
@@ -119,6 +122,7 @@ beforeEach(() => {
   zsets.clear()
   redisAvailable = true
   summaryMock.mockReset()
+  lastPlans.clear()
 })
 
 describe('getPlan', () => {
@@ -134,16 +138,14 @@ describe('getPlan', () => {
     expect(await getPlan({ id: 'u' } as User)).toBe('free')
   })
 
-  it('keeps a paying user on Pro while Stripe is unreachable', async () => {
-    summaryMock.mockResolvedValueOnce({ active: true })
-    expect(await getPlan({ id: 'payer' } as User)).toBe('pro')
+  it('keeps a user last seen paying on Pro while Stripe is unreachable', async () => {
+    lastPlans.set('payer', 'pro')
     summaryMock.mockRejectedValueOnce(new Error('stripe down'))
     expect(await getPlan({ id: 'payer' } as User)).toBe('pro')
   })
 
   it('does not hand out Pro to a free user while Stripe is unreachable', async () => {
-    summaryMock.mockResolvedValueOnce({ active: false })
-    expect(await getPlan({ id: 'free-user' } as User)).toBe('free')
+    lastPlans.set('free-user', 'free')
     summaryMock.mockRejectedValueOnce(new Error('stripe down'))
     expect(await getPlan({ id: 'free-user' } as User)).toBe('free')
   })

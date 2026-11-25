@@ -2,7 +2,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const list = vi.fn()
-vi.mock('@/lib/utils/rate-limit', () => ({ getRedis: () => undefined }))
+const redisStore = new Map<string, unknown>()
+vi.mock('@/lib/utils/rate-limit', () => ({
+  getRedis: () => ({
+    get: async (key: string) => redisStore.get(key) ?? null,
+    set: async (key: string, value: unknown) => {
+      redisStore.set(key, value)
+      return 'OK'
+    },
+  }),
+}))
 vi.mock('stripe', () => ({
   default: class {
     customers = {
@@ -29,6 +38,7 @@ describe('getSubscriptionSummary', () => {
   beforeEach(() => {
     process.env.STRIPE_SECRET_KEY = 'sk_test_x'
     list.mockReset()
+    redisStore.clear()
   })
 
   it('reports a renewal when nothing is scheduled', async () => {
@@ -62,5 +72,17 @@ describe('getSubscriptionSummary', () => {
     const { getSubscriptionSummary } = await import('@/lib/billing/stripe')
     const s = await getSubscriptionSummary({ id: USER, email: 'a@b.c' }, { fresh: true })
     expect(s.status).toBe('past_due')
+  })
+
+  // The fallback for a Stripe outage (getPlan) reads the plan Stripe last confirmed.
+  it('remembers the plan it read, for a later Stripe outage', async () => {
+    const { getSubscriptionSummary, lastKnownPlan } = await import('@/lib/billing/stripe')
+    expect(await lastKnownPlan(USER)).toBeNull()
+    list.mockResolvedValue({ data: [sub({})] })
+    await getSubscriptionSummary({ id: USER, email: 'a@b.c' }, { fresh: true })
+    expect(await lastKnownPlan(USER)).toBe('pro')
+    list.mockResolvedValue({ data: [sub({ status: 'canceled' })] })
+    await getSubscriptionSummary({ id: USER, email: 'a@b.c' }, { fresh: true })
+    expect(await lastKnownPlan(USER)).toBe('free')
   })
 })

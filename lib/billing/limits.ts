@@ -3,29 +3,19 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { getRedis } from '@/lib/utils/rate-limit'
 import { PLAN_LIMITS, currentPeriodStart, type PlanId } from './plans'
 import type { LimitKind } from './errors'
-import { getSubscriptionSummary, isBillingEnabled } from './stripe'
-
-// The plan Stripe last confirmed, kept longer than any billing period, for outages.
-const lastPlanKey = (userId: string) => `flashletter:billing:last-plan:${userId}`
-const LAST_PLAN_TTL_SECONDS = 40 * 24 * 60 * 60
+import { getSubscriptionSummary, isBillingEnabled, lastKnownPlan } from './stripe'
 
 export async function getPlan(user: User): Promise<PlanId> {
   if (user.is_anonymous) return 'guest'
   if (!isBillingEnabled()) return 'free'
-  const redis = getRedis()
   try {
     const summary = await getSubscriptionSummary(user)
-    const plan: PlanId = summary.active ? 'pro' : 'free'
-    await redis
-      ?.set(lastPlanKey(user.id), plan, { ex: LAST_PLAN_TTL_SECONDS })
-      .catch(() => undefined)
-    return plan
+    return summary.active ? 'pro' : 'free'
   } catch (error) {
     // Stripe is unreachable. A user last seen paying keeps Pro, so payers are not
     // locked out; everyone else gets Free, so an outage never hands out Pro.
     Sentry.captureException(error, { tags: { area: 'billing' } })
-    const last = await redis?.get<PlanId>(lastPlanKey(user.id)).catch(() => null)
-    return last === 'pro' ? 'pro' : 'free'
+    return (await lastKnownPlan(user.id)) === 'pro' ? 'pro' : 'free'
   }
 }
 
