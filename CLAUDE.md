@@ -10,15 +10,14 @@ polish, or exhaustive coverage. Bias decisions accordingly.
 
 ## Git workflow
 
-- **Default branch:** `dev`. New PRs auto-target it.
-- **Production branch:** `main`. Reachable only via a `dev → main` PR. The
-  `main-guard` workflow fails any PR to `main` whose head isn't `dev`. Otherwise
-  hands-off — see the production-branch rule in the global `CLAUDE.md`.
-- **Merges:** squash-only. Head branch auto-deleted on merge. Linear history
-  required on `main`.
-- **Pre-commit:** Husky + lint-staged auto-format on commit. CI on every PR runs
-  format · lint · typecheck (tests run inside the same job and still gate merges
-  — the check name just omits "test" for brevity).
+- **One branch, `main`, always production** (trunk-based since 2026-11-25; `dev` is retired).
+  Work happens on short branches (`feat/...`, `fix/...`) merged into `main` by PR.
+- **Enforced by the ruleset on `main`** (Settings → Rules), not by habit: no direct pushes or force
+  pushes, squash-only, and every required check green: `format · lint · typecheck` (tests inside),
+  `database · migrations match schema`, `PR title` (`type(scope): summary`) and `PR size`
+  (400 changed lines, lockfile and generated schema excluded; the `big-ok` label overrides).
+- **Pre-commit:** Husky + lint-staged auto-format on commit.
+- **Database changes:** README "Start the local database".
 
 ## Project state outside the repo
 

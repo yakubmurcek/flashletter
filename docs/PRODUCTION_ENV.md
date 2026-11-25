@@ -72,7 +72,7 @@ Comma-separated list of email addresses allowed to view `/admin/waitlist`.
 Without it the page returns 404 — including for you. Example:
 
 ```
-ADMIN_EMAILS=murcja812@gmail.com
+ADMIN_EMAILS=you@example.com
 ```
 
 ### `SENTRY_AUTH_TOKEN`

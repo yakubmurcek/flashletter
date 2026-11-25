@@ -1,0 +1,58 @@
+name: PR rules
+
+# Checks on the pull request itself, not the code. Both are required by the
+# ruleset on main, so a PR that breaks one cannot merge.
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-rules-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  title:
+    # The squash commit takes the PR title, so this keeps main's history readable:
+    # "feat: ...", "fix(billing): ...", one of the types below.
+    name: PR title
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: 'Title follows "type(scope): summary"'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(feat|fix|perf|refactor|test|docs|chore|ci|build|revert)(\([a-z0-9-]+\))?!?: .{3,72}$'
+          if [[ ! "$TITLE" =~ $pattern ]]; then
+            echo "::error::PR title \"$TITLE\" must look like \"feat: add yearly plan\" or \"fix(billing): ...\" (types: feat fix perf refactor test docs chore ci build revert; summary 3-72 chars)."
+            exit 1
+          fi
+          echo "ok: $TITLE"
+
+  size:
+    # Small PRs get real review. Lockfiles and generated files do not count.
+    # A PR that must be bigger gets the "big-ok" label, which shows in the history.
+    name: PR size
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Changed lines under the limit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          BIG_OK: ${{ contains(github.event.pull_request.labels.*.name, 'big-ok') }}
+          LIMIT: 400
+        run: |
+          changed=$(gh api --paginate "repos/$REPO/pulls/$PR/files" \
+            --jq '.[] | select(.filename | test("(^|/)pnpm-lock\\.yaml$|^supabase/schemas/|^supabase/migrations/") | not) | .additions + .deletions' |
+            awk '{s+=$1} END {print s+0}')
+          echo "changed lines (without lockfile and generated schema): $changed, limit $LIMIT"
+          if [ "$changed" -gt "$LIMIT" ] && [ "$BIG_OK" != true ]; then
+            echo "::error::This PR changes $changed lines (limit $LIMIT). Split it, or add the big-ok label if it cannot be split."
+            exit 1
+          fi
