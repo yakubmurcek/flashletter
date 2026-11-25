@@ -153,3 +153,60 @@ describe('POST /api/waitlist/unsubscribe', () => {
     expect(response.status).toBe(200)
   })
 })
+
+describe('waitlist rate limits', () => {
+  beforeEach(() => {
+    rpc.mockReset().mockResolvedValue({
+      data: { id: 'waitlist-1', order: 1, total_count: 1, already_joined: false },
+      error: null,
+    })
+  })
+
+  const fromIp = (path: string, ip: string, body: unknown) =>
+    new Request(`http://localhost${path}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-real-ip': ip },
+      body: JSON.stringify(body),
+    })
+
+  it('refuses a bot flooding the signup form from one address, not other visitors', async () => {
+    const statuses: number[] = []
+    for (let i = 0; i < 11; i++) {
+      const res = await POST_WAITLIST(
+        fromIp('/api/waitlist', '203.0.113.7', { email: `bot${i}@example.com` }) as never,
+      )
+      statuses.push(res.status)
+    }
+    expect(statuses.slice(0, 10).every((s) => s < 300)).toBe(true)
+    expect(statuses[10]).toBe(429)
+    const other = await POST_WAITLIST(
+      fromIp('/api/waitlist', '198.51.100.4', { email: 'person@example.com' }) as never,
+    )
+    expect(other.status).toBeLessThan(300)
+  })
+
+  it('refuses mass unsubscribes from one address', async () => {
+    const statuses: number[] = []
+    for (let i = 0; i < 11; i++) {
+      const res = await POST_UNSUBSCRIBE(
+        fromIp('/api/waitlist/unsubscribe', '203.0.113.8', { email: `a${i}@example.com` }) as never,
+      )
+      statuses.push(res.status)
+    }
+    expect(statuses.slice(0, 10).every((s) => s < 300)).toBe(true)
+    expect(statuses[10]).toBe(429)
+    const other = await POST_UNSUBSCRIBE(
+      fromIp('/api/waitlist/unsubscribe', '198.51.100.5', { email: 'person@example.com' }) as never,
+    )
+    expect(other.status).toBeLessThan(300)
+  })
+
+  it('never puts visitors with an unknown address into one shared limit', async () => {
+    for (let i = 0; i < 12; i++) {
+      const res = await POST_WAITLIST(
+        buildWaitlistRequest({ email: `visitor${i}@example.com` }) as never,
+      )
+      expect(res.status).toBeLessThan(300)
+    }
+  })
+})

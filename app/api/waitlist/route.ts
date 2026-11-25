@@ -1,5 +1,7 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
+import { getClientIp } from '@/lib/utils/get-client-ip'
+import { checkIpRateLimit, getRateLimitHeaders, waitlistIpRateLimit } from '@/lib/utils/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 
@@ -14,6 +16,16 @@ const waitlistSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ipLimit = await checkIpRateLimit(waitlistIpRateLimit, getClientIp(request))
+    if (!ipLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests', message: 'Too many attempts. Try again in a few minutes.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(ipLimit.limit, ipLimit.remaining, ipLimit.reset),
+        },
+      )
+    }
     const body = await request.json()
     const {
       email: rawEmail,

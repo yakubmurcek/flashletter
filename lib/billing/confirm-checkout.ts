@@ -1,4 +1,10 @@
-import { clearSubscriptionCache, getStripe, isBillingEnabled } from '@/lib/billing/stripe'
+import * as Sentry from '@sentry/nextjs'
+import {
+  clearSubscriptionCache,
+  rememberPlan,
+  getStripe,
+  isBillingEnabled,
+} from '@/lib/billing/stripe'
 
 /**
  * - 'paid': the checkout is finished and the money is in (or none was due).
@@ -21,8 +27,12 @@ export async function confirmCheckout(
       return 'processing'
     }
     await clearSubscriptionCache(userId)
+    // Pro from this moment, even if Stripe's API stumbles on the next page load.
+    await rememberPlan(userId, 'pro')
     return 'paid'
-  } catch {
+  } catch (error) {
+    // The user may have just paid and now sees no Pro: this must reach us.
+    Sentry.captureException(error, { tags: { area: 'billing' }, extra: { sessionId } })
     return null
   }
 }

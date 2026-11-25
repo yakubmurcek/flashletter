@@ -114,6 +114,18 @@ export const scrapeLandingIpRateLimit = createLimiter(20, '10 m', 'flashletter:r
 // Test-send: 5/hr/user keeps a curious user from spamming themselves; the
 // route also applies a 20/day/IP cap separately to slow shared-IP abuse and
 // keep us under Resend's free-tier 3k/mo with headroom.
+// Public forms anyone can post to without an account: a bot must not fill the
+// waitlist with junk or unsubscribe people in bulk.
+export const waitlistIpRateLimit = createLimiter(10, '10 m', 'flashletter:ratelimit:waitlist-ip')
+export const unsubscribeIpRateLimit = createLimiter(
+  10,
+  '10 m',
+  'flashletter:ratelimit:unsubscribe-ip',
+)
+
+// Each checkout call creates a Stripe session (and maybe a customer).
+export const checkoutRateLimit = createLimiter(10, '10 m', 'flashletter:ratelimit:checkout')
+
 export const sendTestEmailRateLimit = createLimiter(5, '1 h', 'flashletter:ratelimit:send-test')
 export const sendTestEmailIpRateLimit = createLimiter(
   20,
@@ -145,6 +157,14 @@ export async function checkRateLimit(ratelimit: Limiter | null, identifier: stri
     remaining: result.remaining,
     reset: result.reset,
   }
+}
+
+/**
+ * Per-IP limit for public forms. An unknown IP ('anonymous': no proxy headers,
+ * e.g. local dev) is not limited, so visitors never share one global bucket.
+ */
+export async function checkIpRateLimit(ipLimiter: Limiter | null, ip: string) {
+  return checkRateLimit(ip === 'anonymous' ? null : ipLimiter, ip)
 }
 
 /**

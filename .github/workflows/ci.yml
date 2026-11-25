@@ -117,6 +117,10 @@ jobs:
           # Not available to PRs from forks, where that one test is skipped.
           STRIPE_SECRET_KEY_TEST: ${{ secrets.STRIPE_SECRET_KEY_TEST }}
 
+      # The e2e run just built the app with fake server secrets in their real formats set.
+      - name: No server secrets in the browser bundle
+        run: scripts/check-client-bundle.sh
+
       - name: Traces of failed tests
         if: failure()
         uses: actions/upload-artifact@v4

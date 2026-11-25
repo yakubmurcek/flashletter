@@ -1,5 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
+import { checkRateLimit, checkoutRateLimit, getRateLimitHeaders } from '@/lib/utils/rate-limit'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import { PRICE_LOOKUP_KEYS } from '@/lib/billing/plans'
@@ -59,6 +60,17 @@ export async function POST(req: NextRequest) {
   } = await supabase.auth.getUser()
   if (!user || user.is_anonymous) {
     return NextResponse.json({ error: 'Create an account first' }, { status: 401 })
+  }
+
+  const rate = await checkRateLimit(checkoutRateLimit, user.id)
+  if (!rate.success) {
+    return NextResponse.json(
+      {
+        error: 'Too many requests',
+        message: 'Too many upgrade attempts. Try again in a few minutes.',
+      },
+      { status: 429, headers: getRateLimitHeaders(rate.limit, rate.remaining, rate.reset) },
+    )
   }
 
   const parsed = bodySchema.safeParse(await req.json().catch(() => ({})))

@@ -21,6 +21,10 @@ polish, or exhaustive coverage. Bias decisions accordingly.
 - **End-to-end tests** (`e2e/`, `pnpm test:e2e`): every main user flow on desktop and phone against
   the local database, Claude replaced by `e2e/fake-claude.mjs`, Stripe in test mode. A new user-facing
   flow gets its test in the same PR.
+- **Security rules, each with a test:** every API route checks the session and the database's
+  row-level security checks ownership; public forms and paid actions are rate limited
+  (`lib/utils/rate-limit.ts`); a Stripe outage keeps each user's last confirmed plan, never free Pro;
+  `scripts/check-client-bundle.sh` fails CI when a server secret reaches the browser bundle.
 
 ## Project state outside the repo
 

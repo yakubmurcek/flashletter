@@ -3,7 +3,7 @@ import type { SupabaseClient, User } from '@supabase/supabase-js'
 import { getRedis } from '@/lib/utils/rate-limit'
 import { PLAN_LIMITS, currentPeriodStart, type PlanId } from './plans'
 import type { LimitKind } from './errors'
-import { getSubscriptionSummary, isBillingEnabled } from './stripe'
+import { getSubscriptionSummary, isBillingEnabled, lastKnownPlan } from './stripe'
 
 export async function getPlan(user: User): Promise<PlanId> {
   if (user.is_anonymous) return 'guest'
@@ -12,9 +12,10 @@ export async function getPlan(user: User): Promise<PlanId> {
     const summary = await getSubscriptionSummary(user)
     return summary.active ? 'pro' : 'free'
   } catch (error) {
-    // A Stripe outage must not lock paying users out of their work.
+    // Stripe is unreachable. A user last seen paying keeps Pro, so payers are not
+    // locked out; everyone else gets Free, so an outage never hands out Pro.
     Sentry.captureException(error, { tags: { area: 'billing' } })
-    return 'pro'
+    return (await lastKnownPlan(user.id)) === 'pro' ? 'pro' : 'free'
   }
 }
 

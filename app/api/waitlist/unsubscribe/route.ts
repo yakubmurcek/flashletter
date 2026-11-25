@@ -1,5 +1,11 @@
 import * as Sentry from '@sentry/nextjs'
 import { NextRequest, NextResponse } from 'next/server'
+import { getClientIp } from '@/lib/utils/get-client-ip'
+import {
+  checkIpRateLimit,
+  getRateLimitHeaders,
+  unsubscribeIpRateLimit,
+} from '@/lib/utils/rate-limit'
 import { createClient } from '@/lib/supabase/server'
 import { z } from 'zod'
 import { verifyUnsubscribeToken } from '@/lib/utils/unsubscribe-token'
@@ -22,6 +28,16 @@ const unsubscribeSchema = z
 
 export async function POST(request: NextRequest) {
   try {
+    const ipLimit = await checkIpRateLimit(unsubscribeIpRateLimit, getClientIp(request))
+    if (!ipLimit.success) {
+      return NextResponse.json(
+        { error: 'Too many requests', message: 'Too many attempts. Try again in a few minutes.' },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(ipLimit.limit, ipLimit.remaining, ipLimit.reset),
+        },
+      )
+    }
     const body = await request.json()
     const { email, token } = unsubscribeSchema.parse(body)
 
