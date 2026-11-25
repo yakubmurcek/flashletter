@@ -17,7 +17,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:schema": "scripts/db-schema.sh",
-    "db:check": "scripts/db-schema.sh --check"
+    "db:check": "scripts/db-schema.sh --check",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.131.0",
@@ -94,6 +95,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
+    "@playwright/test": "1.59.1",
     "@tailwindcss/postcss": "^4.2.4",
     "@tailwindcss/typography": "^0.5.19",
     "@testing-library/jest-dom": "^6.9.1",

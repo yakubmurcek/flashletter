@@ -37,3 +37,7 @@ next-env.d.ts
 
 # throwaway local test scripts
 *.tmp.mjs
+
+# Playwright
+/test-results/
+/playwright-report/

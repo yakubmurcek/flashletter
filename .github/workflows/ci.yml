@@ -81,3 +81,42 @@ jobs:
 
       - name: Schema file matches the migrations
         run: pnpm db:check
+
+  e2e:
+    # The main user flows in a real browser (desktop and phone), against a
+    # production build and the local database with fake users. A dead button
+    # on sign-in or a campaign opening for the wrong user turns this red.
+    name: e2e · main flows
+    # Pinned: Playwright 1.59 has no browser build for ubuntu-latest (26.04) yet.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Browser
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Local Supabase (migrations + fake users)
+        run: pnpm exec supabase start
+
+      - name: Main flows
+        run: pnpm test:e2e
+
+      - name: Traces of failed tests
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: test-results/
+          retention-days: 7
