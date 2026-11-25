@@ -12,7 +12,7 @@ import { z } from 'zod'
 export function boundedArray<T extends z.ZodTypeAny>(item: T, max: number) {
   return z
     .custom<unknown[]>((value) => Array.isArray(value) && value.length <= max, {
-      message: `Expected an array of at most ${max} items`,
+      message: `Required: an array of at most ${max} items`,
     })
     .pipe(z.array(item))
 }

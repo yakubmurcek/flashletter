@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { boundedArray } from './bounded-array'
 
-/** Items per edited analysis list. The AI writes at most 3; the cap only stops junk. */
+/** Items per edited analysis list. The AI writes up to about 6; the cap only stops junk. */
 const ANALYSIS_LIST_LIMIT = 50
 
 export const landingPageAnalysisSchema = z.object({
