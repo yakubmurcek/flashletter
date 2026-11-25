@@ -9,7 +9,13 @@ updates:
       time: "09:00"
       timezone: Europe/Prague
     open-pull-requests-limit: 5
-    target-branch: dev
+    # Titles must pass the "PR title" check: "build(deps): bump ...".
+    commit-message:
+      prefix: build
+      include: scope
+    # A new release waits a week first: most hijacked npm releases are pulled within days.
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
     groups:
@@ -32,7 +38,11 @@ updates:
     schedule:
       interval: weekly
       day: monday
-    target-branch: dev
+    commit-message:
+      prefix: ci
+      include: scope
+    cooldown:
+      default-days: 7
     labels:
       - dependencies
       - github-actions
