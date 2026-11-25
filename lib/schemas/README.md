@@ -8,6 +8,8 @@ This directory contains all Zod schemas for the application, organized for clari
 lib/schemas/
 ├── index.ts         # Core domain schemas and types
 ├── api.ts          # API request/response schemas
+├── analysis.ts     # Landing page analysis (AI output and user-edited)
+├── bounded-array.ts # boundedArray(): length-checked array for request bodies
 └── README.md       # This file
 ```
 
@@ -93,6 +95,7 @@ const { emails } = await generateStructured({
    - API-specific schemas in `api.ts`
 4. **Backwards Compatibility**: Old schema locations re-export from centralized location
 5. **Validation**: All API inputs/outputs are validated with Zod schemas
+6. **Bounded request arrays**: an array read from a request body uses `boundedArray(item, max)`, not `z.array()`. Zod 3 checks every element even after `.max()` fails, so a huge junk array costs hundreds of MB of memory (GHSA-mrhx-c7xc-m3w5)
 
 ## Migration Notes
 
