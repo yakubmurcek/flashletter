@@ -4,6 +4,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const retrieveMock = vi.fn()
 const clearCacheMock = vi.fn()
 const billingEnabledMock = vi.fn()
+const captureMock = vi.fn()
+vi.mock('@sentry/nextjs', () => ({
+  captureException: (...args: unknown[]) => captureMock(...args),
+}))
 vi.mock('@/lib/billing/stripe', () => ({
   getStripe: () => ({ checkout: { sessions: { retrieve: (id: string) => retrieveMock(id) } } }),
   clearSubscriptionCache: (userId: string) => clearCacheMock(userId),
@@ -28,6 +32,7 @@ describe('confirmCheckout', () => {
     retrieveMock.mockReset()
     clearCacheMock.mockReset().mockResolvedValue(undefined)
     billingEnabledMock.mockReset().mockReturnValue(true)
+    captureMock.mockReset()
   })
 
   it('paid: complete and paid', async () => {
@@ -69,8 +74,13 @@ describe('confirmCheckout', () => {
     expect(retrieveMock).not.toHaveBeenCalled()
   })
 
-  it('null: Stripe lookup throws', async () => {
-    retrieveMock.mockRejectedValue(new Error('No such checkout.session'))
+  it('null: Stripe lookup throws, and the error is reported (a paid user saw no Pro)', async () => {
+    const error = new Error('No such checkout.session')
+    retrieveMock.mockRejectedValue(error)
     expect(await confirmCheckout(USER, 'cs_1')).toBeNull()
+    expect(captureMock).toHaveBeenCalledWith(
+      error,
+      expect.objectContaining({ tags: { area: 'billing' } }),
+    )
   })
 })

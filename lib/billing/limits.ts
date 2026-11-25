@@ -5,16 +5,27 @@ import { PLAN_LIMITS, currentPeriodStart, type PlanId } from './plans'
 import type { LimitKind } from './errors'
 import { getSubscriptionSummary, isBillingEnabled } from './stripe'
 
+// The plan Stripe last confirmed, kept longer than any billing period, for outages.
+const lastPlanKey = (userId: string) => `flashletter:billing:last-plan:${userId}`
+const LAST_PLAN_TTL_SECONDS = 40 * 24 * 60 * 60
+
 export async function getPlan(user: User): Promise<PlanId> {
   if (user.is_anonymous) return 'guest'
   if (!isBillingEnabled()) return 'free'
+  const redis = getRedis()
   try {
     const summary = await getSubscriptionSummary(user)
-    return summary.active ? 'pro' : 'free'
+    const plan: PlanId = summary.active ? 'pro' : 'free'
+    await redis
+      ?.set(lastPlanKey(user.id), plan, { ex: LAST_PLAN_TTL_SECONDS })
+      .catch(() => undefined)
+    return plan
   } catch (error) {
-    // A Stripe outage must not lock paying users out of their work.
+    // Stripe is unreachable. A user last seen paying keeps Pro, so payers are not
+    // locked out; everyone else gets Free, so an outage never hands out Pro.
     Sentry.captureException(error, { tags: { area: 'billing' } })
-    return 'pro'
+    const last = await redis?.get<PlanId>(lastPlanKey(user.id)).catch(() => null)
+    return last === 'pro' ? 'pro' : 'free'
   }
 }
 

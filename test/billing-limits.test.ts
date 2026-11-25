@@ -2,24 +2,25 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }))
 
-const redisStore = new Map<string, number>()
+const redisStore = new Map<string, unknown>()
 const zsets = new Map<string, Map<string, number>>()
 let redisAvailable = true
 vi.mock('@/lib/utils/rate-limit', () => ({
   getRedis: () =>
     redisAvailable
       ? {
+          get: async (key: string) => redisStore.get(key) ?? null,
           incr: async (key: string) => {
-            const next = (redisStore.get(key) ?? 0) + 1
+            const next = ((redisStore.get(key) as number | undefined) ?? 0) + 1
             redisStore.set(key, next)
             return next
           },
           decr: async (key: string) => {
-            const next = (redisStore.get(key) ?? 0) - 1
+            const next = ((redisStore.get(key) as number | undefined) ?? 0) - 1
             redisStore.set(key, next)
             return next
           },
-          set: async (key: string, value: number) => {
+          set: async (key: string, value: unknown) => {
             redisStore.set(key, value)
             return 'OK'
           },
@@ -133,9 +134,23 @@ describe('getPlan', () => {
     expect(await getPlan({ id: 'u' } as User)).toBe('free')
   })
 
-  it('does not lock users out when Stripe is unreachable', async () => {
+  it('keeps a paying user on Pro while Stripe is unreachable', async () => {
+    summaryMock.mockResolvedValueOnce({ active: true })
+    expect(await getPlan({ id: 'payer' } as User)).toBe('pro')
     summaryMock.mockRejectedValueOnce(new Error('stripe down'))
-    expect(await getPlan({ id: 'u' } as User)).toBe('pro')
+    expect(await getPlan({ id: 'payer' } as User)).toBe('pro')
+  })
+
+  it('does not hand out Pro to a free user while Stripe is unreachable', async () => {
+    summaryMock.mockResolvedValueOnce({ active: false })
+    expect(await getPlan({ id: 'free-user' } as User)).toBe('free')
+    summaryMock.mockRejectedValueOnce(new Error('stripe down'))
+    expect(await getPlan({ id: 'free-user' } as User)).toBe('free')
+  })
+
+  it('gives an unknown user the Free plan while Stripe is unreachable', async () => {
+    summaryMock.mockRejectedValueOnce(new Error('stripe down'))
+    expect(await getPlan({ id: 'never-seen' } as User)).toBe('free')
   })
 })
 
@@ -242,7 +257,7 @@ describe('consumeAiRewrite', () => {
     expect((await consumeAiRewrite('u', 'free'))?.limit).toBe('ai_rewrites')
 
     await refundAiRewrite('fresh', 'free')
-    expect([...redisStore.values()].every((v) => v >= 0)).toBe(true)
+    expect([...redisStore.values()].every((v) => typeof v !== 'number' || v >= 0)).toBe(true)
     for (let i = 0; i < 30; i++) expect(await consumeAiRewrite('fresh', 'free')).toBeNull()
     expect((await consumeAiRewrite('fresh', 'free'))?.limit).toBe('ai_rewrites')
   })

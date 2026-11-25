@@ -1,3 +1,4 @@
+import * as Sentry from '@sentry/nextjs'
 import { clearSubscriptionCache, getStripe, isBillingEnabled } from '@/lib/billing/stripe'
 
 /**
@@ -22,7 +23,9 @@ export async function confirmCheckout(
     }
     await clearSubscriptionCache(userId)
     return 'paid'
-  } catch {
+  } catch (error) {
+    // The user may have just paid and now sees no Pro: this must reach us.
+    Sentry.captureException(error, { tags: { area: 'billing' }, extra: { sessionId } })
     return null
   }
 }

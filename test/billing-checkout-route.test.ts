@@ -117,4 +117,13 @@ describe('POST /api/billing/checkout', () => {
   it('rejects an unknown interval', async () => {
     expect((await POST(request({ interval: 'weekly' }))).status).toBe(400)
   })
+
+  it('refuses a user hammering Upgrade (each click creates a Stripe session)', async () => {
+    user = { id: '33333333-3333-3333-3333-333333333333', email: 'c@d.co' }
+    const statuses: number[] = []
+    for (let i = 0; i < 11; i++) statuses.push((await POST(request({ interval: 'month' }))).status)
+    expect(statuses.slice(0, 10).every((s) => s === 200)).toBe(true)
+    expect(statuses[10]).toBe(429)
+    expect(createSession).toHaveBeenCalledTimes(10)
+  })
 })
