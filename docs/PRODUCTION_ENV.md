@@ -16,6 +16,14 @@ generate-emails / chat / analyzer all 500. Vault name:
 Auth + database. Without them the Supabase client throws on construction and
 the app won't render.
 
+### `WAITLIST_UNSUBSCRIBE_SECRET` and `SUPABASE_SERVICE_ROLE_KEY`
+
+Server only. The first signs and verifies the waitlist unsubscribe links (any long random string;
+keep it stable, rotating it voids every link already sent). The second (Supabase → Settings → API,
+service-role key) lets `/api/waitlist/unsubscribe` delete the row after it verified the link; the
+delete function is closed to the public anon key. Missing secret: every link answers "removed" and
+deletes nothing. Missing service-role key: every link fails with a 500.
+
 ## Recommended
 
 ### `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` / `KV_REST_API_TOKEN`)
@@ -101,6 +109,9 @@ what had been changed in the dashboard or the SQL editor before 2026-11-25.
 
 Until CI applies migrations to live, a new migration is applied to live by hand before the code
 that needs it deploys, and recorded with `supabase migration repair --status applied <version>`.
+Exception: a migration that takes a permission away from the anon key goes live after the code
+that stops using it (e.g. `20261125180000_waitlist_unsubscribe_service_role_only.sql`: set
+`SUPABASE_SERVICE_ROLE_KEY`, deploy, then apply), or the old code fails in between.
 
 ## What to verify after each deploy
 

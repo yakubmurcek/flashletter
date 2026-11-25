@@ -2,17 +2,16 @@
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { AppShell } from '@/components/layouts/app-shell'
-import { CheckCircle, AlertCircle, Mail, Trash2 } from 'lucide-react'
+import { CheckCircle, AlertCircle, Mail } from 'lucide-react'
+
+const CONTACT_EMAIL = 'jakub@flashletter.app'
 
 const SUCCESS_MESSAGE =
   'You have been successfully removed from our waitlist. You will no longer receive updates from us.'
 
-async function submitUnsubscribe(payload: { email?: string; token?: string }): Promise<void> {
+async function submitUnsubscribe(payload: { token: string }): Promise<void> {
   const response = await fetch('/api/waitlist/unsubscribe', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,8 +30,9 @@ function UnsubscribePageContent() {
   const searchParams = useSearchParams()
   const tokenFromUrl = searchParams.get('token')
 
-  const [email, setEmail] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  // Only the signed link from one of our emails can unsubscribe someone; a
+  // typed address could remove anyone, so there is no email form here.
+  const [isSubmitting, setIsSubmitting] = useState(Boolean(tokenFromUrl))
   const [result, setResult] = useState<{
     type: 'success' | 'error'
     message: string
@@ -57,25 +57,6 @@ function UnsubscribePageContent() {
       .finally(() => setIsSubmitting(false))
   }, [tokenFromUrl])
 
-  const handleUnsubscribe = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setResult(null)
-
-    try {
-      await submitUnsubscribe({ email })
-      setResult({ type: 'success', message: SUCCESS_MESSAGE })
-      setEmail('')
-    } catch (err) {
-      setResult({
-        type: 'error',
-        message: err instanceof Error ? err.message : 'Something went wrong',
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
     <AppShell chrome="centered">
       <div className="max-w-md w-full">
@@ -94,58 +75,46 @@ function UnsubscribePageContent() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <form
-              onSubmit={handleUnsubscribe}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="your@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
-
-              {result && (
-                <div
-                  className={`p-3 rounded-md flex items-start gap-3 text-sm ${
-                    result.type === 'success'
-                      ? 'bg-primary/10 border border-primary/30 text-foreground'
-                      : 'bg-destructive/10 border border-destructive/30 text-destructive'
-                  }`}
+            {!tokenFromUrl && (
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Use the unsubscribe link at the bottom of any email we sent you. Lost it? Write to{' '}
+                <a
+                  href={`mailto:${CONTACT_EMAIL}?subject=Unsubscribe`}
+                  className="text-primary underline underline-offset-2 hover:text-primary/80"
                 >
-                  {result.type === 'success' ? (
-                    <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  ) : (
-                    <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-                  )}
-                  <p>{result.message}</p>
-                </div>
-              )}
+                  {CONTACT_EMAIL}
+                </a>{' '}
+                from the address you signed up with and we will remove it.
+              </p>
+            )}
 
-              <Button
-                type="submit"
-                disabled={isSubmitting || !email}
-                className="w-full"
-                variant="destructive"
+            {tokenFromUrl && isSubmitting && (
+              <div
+                role="status"
+                className="flex items-center gap-3 text-sm text-muted-foreground"
               >
-                {isSubmitting ? (
-                  <>
-                    <div className="w-4 h-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Processing...
-                  </>
+                <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                Removing you from the waitlist...
+              </div>
+            )}
+
+            {result && (
+              <div
+                role={result.type === 'error' ? 'alert' : 'status'}
+                className={`p-3 rounded-md flex items-start gap-3 text-sm ${
+                  result.type === 'success'
+                    ? 'bg-primary/10 border border-primary/30 text-foreground'
+                    : 'bg-destructive/10 border border-destructive/30 text-destructive'
+                }`}
+              >
+                {result.type === 'success' ? (
+                  <CheckCircle className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                 ) : (
-                  <>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Unsubscribe
-                  </>
+                  <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
                 )}
-              </Button>
-            </form>
+                <p>{result.message}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -153,10 +122,10 @@ function UnsubscribePageContent() {
           <p className="text-sm text-muted-foreground">
             Need help? Contact us at{' '}
             <a
-              href="mailto:jakub@flashletter.app"
+              href={`mailto:${CONTACT_EMAIL}`}
               className="text-primary underline underline-offset-2 hover:text-primary/80"
             >
-              jakub@flashletter.app
+              {CONTACT_EMAIL}
             </a>
           </p>
         </div>

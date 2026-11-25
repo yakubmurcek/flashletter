@@ -89,6 +89,10 @@ Add your keys to `.env.local`:
 ANTHROPIC_API_KEY=sk-ant-your-key-here
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
+# Server only: the waitlist unsubscribe route verifies the signed link with the first,
+# then deletes with the second (the delete function is closed to the public anon key)
+WAITLIST_UNSUBSCRIBE_SECRET=any-long-random-string
+SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # Billing (optional; without it, upgrade buttons report billing as unavailable)
 STRIPE_SECRET_KEY=sk_test_your-key-here

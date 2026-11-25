@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     } = waitlistSchema.parse(body)
 
     // Store emails in canonical form so the dedup check, unsubscribe-token
-    // verification, and bare-email unsubscribe lookups all line up. Without
+    // verification and the unsubscribe delete all line up. Without
     // this `Foo@Bar.com` and `foo@bar.com` are different rows, and a token
     // that round-trips through `normalizeEmail` (lowercased) wouldn't match
     // the stored mixed-case row.

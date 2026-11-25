@@ -6,9 +6,9 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
  * The previous flow accepted just the email address, so anyone who knew (or
  * guessed) someone's email could unsubscribe them. We now embed an HMAC of
  * the email in the unsubscribe link so the link, not the address, is the
- * authority. The bare-email path is still accepted (the user may forget the
- * link and visit /unsubscribe directly) but the link is what the outbound
- * mail uses.
+ * authority. The bare-email path is gone: /api/waitlist/unsubscribe accepts
+ * only a token, and people without the link write to the contact address.
+ * Every waitlist email must link to /unsubscribe?token=<signUnsubscribeToken(email)>.
  *
  * Token format: `<base64url(email)>.<base64url(hmac-sha256(email))>`
  *

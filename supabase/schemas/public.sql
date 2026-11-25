@@ -714,8 +714,6 @@ GRANT ALL ON FUNCTION public.waitlist_join(p_email text, p_name text, p_privacy_
 --
 
 REVOKE ALL ON FUNCTION public.waitlist_unsubscribe(p_email text) FROM PUBLIC;
-GRANT ALL ON FUNCTION public.waitlist_unsubscribe(p_email text) TO anon;
-GRANT ALL ON FUNCTION public.waitlist_unsubscribe(p_email text) TO authenticated;
 GRANT ALL ON FUNCTION public.waitlist_unsubscribe(p_email text) TO service_role;
 
 --
