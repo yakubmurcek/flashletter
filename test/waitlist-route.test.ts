@@ -4,7 +4,7 @@ vi.mock('@sentry/nextjs', () => ({
   captureException: vi.fn(),
 }))
 
-// The waitlist table is closed to client roles (supabase/sql/2026-10-15-lock-waitlist.sql);
+// The waitlist table is closed to client roles (supabase/migrations/20261125133200_sync_live_drift.sql);
 // the routes must go through the SECURITY DEFINER functions, never the table.
 const rpc = vi.fn()
 vi.mock('@/lib/supabase/server', () => ({
