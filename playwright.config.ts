@@ -12,8 +12,13 @@ const LOCAL_SUPABASE_URL = 'http://127.0.0.1:54321'
 const LOCAL_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0' // gitleaks:allow (public local demo key)
 
+// Supabase's public demo service-role key, the same on every local stack. Server only: the
+// bundle scan fails the build if it reaches the browser.
+const LOCAL_SERVICE_ROLE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImV4cCI6MTk4MzgxMjk5Nn0.EGIM96RAZx35lJzdJsyH-qQwv8Hdp7fsn3W0YpN81IU' // gitleaks:allow (public local demo key)
+
 /** A fake server secret; built at run time so secret scanners do not flag this file. */
-const fakeSecret = (prefix: string) => `${prefix}e2e0canary0${'x'.repeat(24)}`
+export const fakeSecret = (prefix: string) => `${prefix}e2e0canary0${'x'.repeat(24)}`
 
 export default defineConfig({
   testDir: './e2e',
@@ -46,6 +51,7 @@ export default defineConfig({
       env: {
         NEXT_PUBLIC_SUPABASE_URL: LOCAL_SUPABASE_URL,
         NEXT_PUBLIC_SUPABASE_ANON_KEY: LOCAL_ANON_KEY,
+        SUPABASE_SERVICE_ROLE_KEY: LOCAL_SERVICE_ROLE_KEY,
         NEXT_PUBLIC_SITE_URL: `http://localhost:${PORT}`,
         // Server-only secrets get fakes in their real formats, marked e2e0canary0, so the
         // bundle scan after this build (scripts/check-client-bundle.sh) sees any that leak.

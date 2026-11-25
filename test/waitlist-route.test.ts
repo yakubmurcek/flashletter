@@ -9,6 +9,21 @@ vi.mock('@sentry/nextjs', () => ({
 const rpc = vi.fn()
 vi.mock('@/lib/supabase/server', () => ({
   createClient: async () => ({
+    rpc: (name: string, ...args: unknown[]) => {
+      // Closed to anon/authenticated: only the service-role client may call it.
+      if (name === 'waitlist_unsubscribe') {
+        throw new Error('waitlist_unsubscribe must go through the service-role client')
+      }
+      return rpc(name, ...args)
+    },
+    from: () => {
+      throw new Error('waitlist routes must not query the table directly')
+    },
+  }),
+}))
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: () => ({
     rpc: (...args: unknown[]) => rpc(...args),
     from: () => {
       throw new Error('waitlist routes must not query the table directly')
@@ -18,6 +33,7 @@ vi.mock('@/lib/supabase/server', () => ({
 
 import { POST as POST_WAITLIST } from '@/app/api/waitlist/route'
 import { POST as POST_UNSUBSCRIBE } from '@/app/api/waitlist/unsubscribe/route'
+import { signUnsubscribeToken } from '@/lib/utils/unsubscribe-token'
 
 function buildWaitlistRequest(body: unknown): Request {
   return new Request('http://localhost/api/waitlist', {
@@ -106,56 +122,59 @@ describe('POST /api/waitlist', () => {
 
 describe('POST /api/waitlist/unsubscribe', () => {
   beforeEach(() => {
+    process.env.WAITLIST_UNSUBSCRIBE_SECRET = 'test-unsubscribe-secret'
     rpc.mockReset().mockResolvedValue({ data: null, error: null })
   })
 
-  it('returns 400 when neither email nor token is provided', async () => {
+  it('returns 400 when no token is provided', async () => {
     const response = await POST_UNSUBSCRIBE(buildUnsubscribeRequest({}) as never)
     expect(response.status).toBe(400)
+    expect(rpc).not.toHaveBeenCalled()
   })
 
-  it('returns 400 for invalid email format', async () => {
+  it('refuses a bare email: typing an address never removes anyone', async () => {
     const response = await POST_UNSUBSCRIBE(
-      buildUnsubscribeRequest({ email: 'not-email' }) as never,
+      buildUnsubscribeRequest({ email: 'victim@example.com' }) as never,
     )
     expect(response.status).toBe(400)
+    expect(rpc).not.toHaveBeenCalled()
   })
 
-  it('returns 200 for unknown email — anti-enumeration', async () => {
-    // Audit fix #9: never reveal whether the address was on the list.
-    const response = await POST_UNSUBSCRIBE(
-      buildUnsubscribeRequest({ email: 'notfound@example.com' }) as never,
-    )
+  it('unsubscribes through the signed link from a waitlist email', async () => {
+    const token = signUnsubscribeToken('Test@Example.com')
+    const response = await POST_UNSUBSCRIBE(buildUnsubscribeRequest({ token }) as never)
     expect(response.status).toBe(200)
+    expect(rpc).toHaveBeenCalledWith('waitlist_unsubscribe', { p_email: 'test@example.com' })
     const body = await response.json()
     // Uniform success shape — no `email` field, no membership leak.
     expect(body.email).toBeUndefined()
     expect(body.message).toBeDefined()
   })
 
-  it('returns 200 for a known email and uses uniform success shape', async () => {
+  it('uses the token, never a bare email sent alongside it', async () => {
+    const token = signUnsubscribeToken('owner@example.com')
     const response = await POST_UNSUBSCRIBE(
-      buildUnsubscribeRequest({ email: 'Test@Example.com' }) as never,
+      buildUnsubscribeRequest({ token, email: 'victim@example.com' }) as never,
     )
     expect(response.status).toBe(200)
-    expect(rpc).toHaveBeenCalledWith('waitlist_unsubscribe', { p_email: 'test@example.com' })
-    const body = await response.json()
-    expect(body.email).toBeUndefined()
-    expect(body.message).toBeDefined()
+    expect(rpc).toHaveBeenCalledTimes(1)
+    expect(rpc).toHaveBeenCalledWith('waitlist_unsubscribe', { p_email: 'owner@example.com' })
   })
 
-  it('returns 200 for an invalid token without surfacing the failure', async () => {
+  it('returns 200 for an invalid token without surfacing the failure or deleting', async () => {
     // Audit fix #10: an invalid/expired token responds the same as success
     // so callers can't probe which tokens were ever valid.
     const response = await POST_UNSUBSCRIBE(
       buildUnsubscribeRequest({ token: 'totally-malformed-token' }) as never,
     )
     expect(response.status).toBe(200)
+    expect(rpc).not.toHaveBeenCalled()
   })
 })
 
 describe('waitlist rate limits', () => {
   beforeEach(() => {
+    process.env.WAITLIST_UNSUBSCRIBE_SECRET = 'test-unsubscribe-secret'
     rpc.mockReset().mockResolvedValue({
       data: { id: 'waitlist-1', order: 1, total_count: 1, already_joined: false },
       error: null,
@@ -189,14 +208,18 @@ describe('waitlist rate limits', () => {
     const statuses: number[] = []
     for (let i = 0; i < 11; i++) {
       const res = await POST_UNSUBSCRIBE(
-        fromIp('/api/waitlist/unsubscribe', '203.0.113.8', { email: `a${i}@example.com` }) as never,
+        fromIp('/api/waitlist/unsubscribe', '203.0.113.8', {
+          token: signUnsubscribeToken(`a${i}@example.com`),
+        }) as never,
       )
       statuses.push(res.status)
     }
     expect(statuses.slice(0, 10).every((s) => s < 300)).toBe(true)
     expect(statuses[10]).toBe(429)
     const other = await POST_UNSUBSCRIBE(
-      fromIp('/api/waitlist/unsubscribe', '198.51.100.5', { email: 'person@example.com' }) as never,
+      fromIp('/api/waitlist/unsubscribe', '198.51.100.5', {
+        token: signUnsubscribeToken('person@example.com'),
+      }) as never,
     )
     expect(other.status).toBeLessThan(300)
   })

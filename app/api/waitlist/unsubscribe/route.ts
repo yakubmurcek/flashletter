@@ -6,25 +6,21 @@ import {
   getRateLimitHeaders,
   unsubscribeIpRateLimit,
 } from '@/lib/utils/rate-limit'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { z } from 'zod'
 import { verifyUnsubscribeToken } from '@/lib/utils/unsubscribe-token'
 
 /**
- * Accepts EITHER a signed token (preferred — proves the caller had access
- * to the email link we sent) OR a bare email (fallback for users who arrive
- * at /unsubscribe directly and remember their address). The response shape
- * is identical regardless of input or whether the address actually exists,
- * so callers can't enumerate the waitlist.
+ * Only the signed link from a waitlist email can unsubscribe someone: the
+ * token proves the caller had access to that inbox. A bare email is never
+ * accepted (anyone could remove anyone by typing their address); people
+ * without the link write to the contact address on /unsubscribe instead.
+ * The response shape is identical whether the token verified or the address
+ * exists, so callers can't enumerate the waitlist.
  */
-const unsubscribeSchema = z
-  .object({
-    email: z.string().email('Please enter a valid email address').optional(),
-    token: z.string().optional(),
-  })
-  .refine((d) => d.email || d.token, {
-    message: 'Provide an email address or unsubscribe token',
-  })
+const unsubscribeSchema = z.object({
+  token: z.string().min(1, 'Use the unsubscribe link from one of our emails'),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +35,7 @@ export async function POST(request: NextRequest) {
       )
     }
     const body = await request.json()
-    const { email, token } = unsubscribeSchema.parse(body)
+    const { token } = unsubscribeSchema.parse(body)
 
     // Uniform success response — never reveals whether the address was on
     // the list, whether the token verified, or whether the row was actually
@@ -52,33 +48,23 @@ export async function POST(request: NextRequest) {
       { status: 200 },
     )
 
-    let resolvedEmail: string | null = null
-    if (token) {
-      // verifyUnsubscribeToken returns the canonical (lowercased+trimmed)
-      // email, which matches how the signup route stores it.
-      resolvedEmail = verifyUnsubscribeToken(token)
-      // Invalid/expired token → succeed silently. Returning 401/400 here
-      // would let an attacker probe which tokens were ever valid.
-      if (!resolvedEmail) {
-        return successResponse
-      }
-    } else if (email) {
-      // Normalize the bare-email path the same way so a casual unsubscribe
-      // attempt for `Foo@Bar.com` matches the canonical row stored as
-      // `foo@bar.com`.
-      resolvedEmail = email.trim().toLowerCase()
-    }
-
+    // verifyUnsubscribeToken returns the canonical (lowercased+trimmed)
+    // email, which matches how the signup route stores it.
+    const resolvedEmail = verifyUnsubscribeToken(token)
+    // Invalid/expired token → succeed silently. Returning 401/400 here
+    // would let an attacker probe which tokens were ever valid.
     if (!resolvedEmail) {
       return successResponse
     }
 
-    const supabase = await createClient()
+    // Service role: the function is closed to anon/authenticated so the
+    // public anon key can't call it directly and skip the token check above.
+    const supabase = createAdminClient()
 
     // Actual erasure (GDPR right-to-be-forgotten) rather than the previous
     // soft-flag (privacy_consent: false). The waitlist is a marketing
     // signup, so we have no reason to keep the row once the user opts out.
-    // The table is closed to client roles; this function does the delete.
+    // The table and this function are closed to client roles.
     const { error } = await supabase.rpc('waitlist_unsubscribe', { p_email: resolvedEmail })
 
     if (error) {
