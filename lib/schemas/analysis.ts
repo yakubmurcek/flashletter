@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import { boundedArray } from './bounded-array'
+
+/** Items per edited analysis list. The AI writes at most 3; the cap only stops junk. */
+const ANALYSIS_LIST_LIMIT = 50
 
 export const landingPageAnalysisSchema = z.object({
   valueProp: z
@@ -64,10 +68,10 @@ export const editedLandingPageAnalysisSchema = z.object({
   targetAudience: z.string().trim(),
   primaryCTA: z.string().trim(),
   toneFingerprint: z.string().trim(),
-  objections: z.array(z.string()).transform(dropBlank),
-  proofPoints: z.array(z.string()).transform(dropBlank),
-  angles: z.array(z.string()).transform(dropBlank),
-  opportunities: z.array(z.string()).transform(dropBlank),
+  objections: boundedArray(z.string(), ANALYSIS_LIST_LIMIT).transform(dropBlank),
+  proofPoints: boundedArray(z.string(), ANALYSIS_LIST_LIMIT).transform(dropBlank),
+  angles: boundedArray(z.string(), ANALYSIS_LIST_LIMIT).transform(dropBlank),
+  opportunities: boundedArray(z.string(), ANALYSIS_LIST_LIMIT).transform(dropBlank),
 })
 
 function dropBlank(items: string[]): string[] {

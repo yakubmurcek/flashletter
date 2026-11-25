@@ -1,5 +1,11 @@
 import { z } from 'zod'
 import { editedLandingPageAnalysisSchema } from './analysis'
+import { boundedArray } from './bounded-array'
+
+// Caps for arrays a client sends. Far above real use (30 emails at most, the
+// editor sends the last 6 chat turns); they only stop an oversized body.
+const REQUEST_EMAILS_LIMIT = 100
+const REQUEST_MESSAGES_LIMIT = 100
 
 /**
  * Core domain schemas
@@ -93,13 +99,13 @@ export const selectedContextSchema = z.object({
 export const campaignContextSchema = z.object({
   landingPageData: landingPageDataSchema,
   config: campaignConfigSchema,
-  allEmails: z.array(emailSchema),
+  allEmails: boundedArray(emailSchema, REQUEST_EMAILS_LIMIT),
   currentEmailId: z.number(),
 })
 
 // Chat request schema
 export const chatRequestSchema = z.object({
-  messages: z.array(messageSchema),
+  messages: boundedArray(messageSchema, REQUEST_MESSAGES_LIMIT),
   campaignContext: campaignContextSchema.optional(),
   emailContext: emailContextSchema.optional(),
   selectedContext: selectedContextSchema.optional().nullable(),
