@@ -312,7 +312,8 @@ flow runs when `STRIPE_SECRET_KEY_TEST` holds a Stripe test-mode key and stops a
 
 Outage tests (`e2e/outage-*.spec.ts`) switch one service off on purpose and check the user sees a plain
 message and keeps their work: Claude erroring or not answering (the fake fails only requests carrying the
-test's marker, so parallel tests are unaffected), and Stripe refusing the key. The Stripe one needs its
+test's marker, so parallel tests are unaffected), the database cut off from the browser during autosave,
+and Stripe refusing the key. The Stripe one needs its
 own server run, so it runs only with `E2E_STRIPE_OUTAGE=1` and an invalid `STRIPE_SECRET_KEY_TEST`
 (the CI e2e job's "Stripe outage" step).
 

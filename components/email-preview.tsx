@@ -313,13 +313,8 @@ function EmailPreviewComponent({
           <div className="flex flex-shrink-0 items-center gap-3 sm:gap-4">
             <span className="text-xs text-muted-foreground transition-opacity duration-300 flex items-center gap-1.5">
               {!showSaving && !saveFailed && <Check className="w-3 h-3 text-muted-foreground" />}
-              {isSaving
-                ? 'Saving...'
-                : saveFailed
-                  ? 'Not saved'
-                  : showSaving
-                    ? 'Saving...'
-                    : 'Saved'}
+              {/* A failed save stays "Not saved" while it retries, until one works. */}
+              {saveFailed ? 'Not saved' : showSaving ? 'Saving...' : 'Saved'}
             </span>
             <Button
               variant="outline"

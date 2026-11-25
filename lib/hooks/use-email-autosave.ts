@@ -24,10 +24,19 @@ type Snapshot = { subject: string; content: string }
 const emailKey = (campaignId: string | null, id: number) => `${campaignId ?? ''}:${id}`
 
 // Matched by name: tests mock the storage module without its error classes.
-const saveErrorMessage = (error: unknown) =>
+const isUnsavedEmail = (error: unknown) =>
   error instanceof Error && error.name === 'EmailNotSavedError'
+
+const saveErrorMessage = (error: unknown) =>
+  isUnsavedEmail(error)
     ? 'This email was not saved, so your edits to it are not kept. Copy anything you need, then generate the sequence again.'
-    : 'Could not save your last edit. Check your connection; it saves again on your next change.'
+    : 'Your last edit is not saved yet. Keep this tab open: it keeps trying and saves by itself as soon as our database answers.'
+
+// A failed write tries again by itself while the editor is open: sooner at
+// first, then every 30 s, so the banner's "saves by itself" stays true.
+const RETRY_FIRST_MS = 2_000
+const RETRY_MAX_MS = 30_000
+const retryDelay = (attempt: number) => Math.min(RETRY_FIRST_MS * 2 ** attempt, RETRY_MAX_MS)
 
 /**
  * Per-email autosave with versioning that captures *pauses*, not keystrokes.
@@ -56,6 +65,17 @@ export function useEmailAutosave(
   // this hook lifetime. Persists across re-renders without triggering them,
   // and resets naturally if the user navigates away and back.
   const trackedEditsRef = useRef<Set<string>>(new Set())
+  // Failed attempts in a row per email, for the retry backoff.
+  const retryCountRef = useRef<Map<number, number>>(new Map())
+  // A write flushed on unmount must not retry later: its text is frozen and
+  // would overwrite what a newer editor saved since.
+  const mountedRef = useRef(true)
+  useEffect(() => {
+    mountedRef.current = true
+    return () => {
+      mountedRef.current = false
+    }
+  }, [])
   // Writes started but not finished. `isSaving` covers these and the ones
   // still waiting out the debounce, so the UI never says "Saved" early.
   const inFlightRef = useRef(0)
@@ -108,6 +128,8 @@ export function useEmailAutosave(
       emailsRef.current = emailsRef.current.map((e) => (e.id === id ? { ...e, ...updates } : e))
 
       if (!currentCampaignId) return
+      // A new edit restarts the retry backoff from its shortest wait.
+      retryCountRef.current.delete(id)
 
       // Reset any pending debounce for this email — only the latest paused
       // state for a given email gets persisted/versioned.
@@ -154,6 +176,7 @@ export function useEmailAutosave(
             content: currentEmail.content,
             preview: currentEmail.preview,
           })
+          retryCountRef.current.delete(id)
           setLastSaved(new Date())
           if (isCurrentCampaign()) setSaveError(null)
 
@@ -168,8 +191,22 @@ export function useEmailAutosave(
           }
         } catch (error) {
           console.error('Failed to save email to database:', error)
-          // No retry here: the next edit writes again, so a failure can't loop.
-          if (isCurrentCampaign()) setSaveError(saveErrorMessage(error))
+          if (isCurrentCampaign()) {
+            setSaveError(saveErrorMessage(error))
+            // Keep the edit pending and try again with
+            // backoff, unless a newer edit already queued its own write. An
+            // email with no database row can never save, so it never retries.
+            const attempt = retryCountRef.current.get(id) ?? 0
+            if (!isUnsavedEmail(error) && !saveTimerRef.current.has(id) && mountedRef.current) {
+              retryCountRef.current.set(id, attempt + 1)
+              saveTimerRef.current.set(
+                id,
+                setTimeout(() => void write(), retryDelay(attempt)),
+              )
+              pendingWriteRef.current.set(id, write)
+              setPendingCount(pendingWriteRef.current.size)
+            }
+          }
         } finally {
           inFlightRef.current -= 1
           setInFlight(inFlightRef.current)

@@ -367,7 +367,10 @@ describe('useEmailAutosave', () => {
 
   it('swallows DB errors and resets isSaving', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-    updateEmailDbMock.mockRejectedValue(new Error('db err'))
+    // An email with no row: nothing to retry, so the hook settles.
+    updateEmailDbMock.mockRejectedValue(
+      Object.assign(new Error('db err'), { name: 'EmailNotSavedError' }),
+    )
     const updateEmail = vi.fn()
     const emails = [makeEmail(1)]
     const { result } = renderHook(() => useEmailAutosave(emails, 'camp', updateEmail))
@@ -477,11 +480,80 @@ describe('useEmailAutosave', () => {
       const { result } = renderHook(() => useEmailAutosave([makeEmail(1)], 'camp', vi.fn()))
 
       await editAndFlush(result, 'First')
-      expect(result.current.saveError).toMatch(/could not save/i)
+      expect(result.current.saveError).toMatch(/not saved yet/i)
 
       await editAndFlush(result, 'Second')
       expect(result.current.saveError).toBeNull()
       expect(result.current.lastSaved).not.toBeNull()
+      errSpy.mockRestore()
+    })
+
+    // Bug: a write lost to a dropped connection waited for the user's next
+    // keystroke; if they stopped typing, the edit was gone on reload.
+    it('retries a write the connection dropped, by itself, until it saves', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock
+        .mockRejectedValueOnce(new Error('Failed to fetch'))
+        .mockRejectedValueOnce(new Error('Failed to fetch'))
+      const emails = [makeEmail(1)]
+      const { result } = renderHook(() => useEmailAutosave(emails, 'camp', vi.fn()))
+
+      await editAndFlush(result, 'Kept')
+      expect(result.current.saveError).toMatch(/not saved yet/i)
+      expect(result.current.isSaving).toBe(true)
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1_950) // 2 s after the failed write: retry, fails
+      })
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(2)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(3_999) // backoff doubled: not yet
+      })
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(2)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1)
+      })
+
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(3)
+      expect(updateEmailDbMock).toHaveBeenLastCalledWith(
+        'camp',
+        1,
+        expect.objectContaining({ subject: 'Kept' }),
+      )
+      expect(result.current.saveError).toBeNull()
+      expect(result.current.isSaving).toBe(false)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60_000)
+      })
+      expect(updateEmailDbMock).toHaveBeenCalledTimes(3)
+      errSpy.mockRestore()
+    })
+
+    it('keeps retrying every 30 s while the editor is open, and stops once it closes', async () => {
+      const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+      updateEmailDbMock.mockRejectedValue(new Error('Failed to fetch'))
+      const { result, unmount } = renderHook(() =>
+        useEmailAutosave([makeEmail(1)], 'camp', vi.fn()),
+      )
+
+      await editAndFlush(result, 'Offline')
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(60 * 60_000)
+      })
+      // 2 + 4 + 8 + 16 s, then every 30 s for the rest of the hour.
+      expect(updateEmailDbMock.mock.calls.length).toBeGreaterThan(100)
+      expect(result.current.saveError).toMatch(/not saved yet/i)
+
+      // Bug: a retry left running after unmount wrote its frozen text over
+      // whatever a newer editor had saved since.
+      const beforeUnmount = updateEmailDbMock.mock.calls.length
+      unmount()
+      // Unmounting writes the pending edit once, right away.
+      expect(updateEmailDbMock.mock.calls.length).toBe(beforeUnmount + 1)
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(10 * 60_000)
+      })
+      expect(updateEmailDbMock.mock.calls.length).toBe(beforeUnmount + 1)
       errSpy.mockRestore()
     })
 
