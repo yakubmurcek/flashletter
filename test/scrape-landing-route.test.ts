@@ -231,6 +231,19 @@ describe('POST /api/scrape-landing', () => {
     )
   })
 
+  it('logs the URL as data when the automatic dynamic scrape fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    shouldUseDynamicScrapingMock.mockReturnValue(true)
+    scrapeWithPlaywrightMock.mockRejectedValue(new Error('Browser crashed'))
+    await POST(buildRequest({ url: 'https://example.com/%s' }) as never)
+    for (const [format] of warn.mock.calls) expect(String(format)).not.toContain('example.com')
+    expect(warn).toHaveBeenCalledWith(
+      'Dynamic scraping failed for %s, falling back to static:',
+      'https://example.com/%s',
+      expect.any(Error),
+    )
+  })
+
   it('returns 400 when fetch fails with bad status', async () => {
     vi.spyOn(global, 'fetch').mockResolvedValue(
       new Response('', { status: 500, statusText: 'Internal Server Error' }),
