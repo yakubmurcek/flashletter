@@ -1,6 +1,6 @@
 @import 'tailwindcss';
-@plugin '@tailwindcss/typography';
 @import 'tw-animate-css';
+@plugin '@tailwindcss/typography';
 
 /* Light-only app: keep custom dark variant so any leftover `dark:` classes are dormant
    instead of firing on prefers-color-scheme. The .dark class is never applied. */
@@ -251,14 +251,17 @@
   animation: pulse-glow 2.4s infinite;
 }
 
-/* Reduced motion — kill everything that moves */
+/* Reduced motion — kill everything that moves. No !important needed: these rules
+   are unlayered and come after the classes they override, so they already beat
+   them and every Tailwind (layered) utility, and with `animation: none` no
+   keyframe value applies. */
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-in-up,
   .animate-bounce-slow,
   .animate-pulse-glow {
-    animation: none !important;
-    opacity: 1 !important;
-    transform: none !important;
+    animation: none;
+    opacity: 1;
+    transform: none;
   }
 
   .fade-in-section {

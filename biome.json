@@ -95,16 +95,6 @@
       }
     },
     {
-      "includes": ["app/globals.css"],
-      "linter": {
-        "rules": {
-          "complexity": {
-            "noImportantStyles": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["lib/services/campaign.service.ts"],
       "linter": {
         "rules": {
@@ -129,16 +119,6 @@
       }
     },
     {
-      "includes": ["app/globals.css"],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "noInvalidPositionAtImportRule": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": [
         "components/ai-chat/message-list.tsx",
         "components/email-preview-content.tsx",
@@ -150,16 +130,6 @@
         "rules": {
           "correctness": {
             "useExhaustiveDependencies": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["app/layout.tsx"],
-      "linter": {
-        "rules": {
-          "security": {
-            "noDangerouslySetInnerHtml": "off"
           }
         }
       }
