@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { must } from './_helpers/must'
 import { render, fireEvent, act, waitFor } from '@testing-library/react'
 import { useState } from 'react'
 import type { Email } from '@/lib/types'
@@ -94,7 +95,7 @@ describe('EmailPreview: an AI edit to one field', () => {
 
     fireEvent.change(subject, { target: { value: 'New sharper subject' } })
     act(() => vi.advanceTimersByTime(400))
-    act(() => api.setEmail!((e) => ({ ...e, content: 'Shorter AI rewrite.' })))
+    act(() => must(api.setEmail)((e) => ({ ...e, content: 'Shorter AI rewrite.' })))
 
     expect(subject.value).toBe('New sharper subject')
     expect(body.value).toBe('Shorter AI rewrite.')
@@ -112,7 +113,7 @@ describe('EmailPreview: an AI edit to one field', () => {
 
     fireEvent.change(body, { target: { value: 'Original paragraph. Last words.' } })
     act(() => vi.advanceTimersByTime(300))
-    act(() => api.setEmail!((e) => ({ ...e, subject: 'AI subject' })))
+    act(() => must(api.setEmail)((e) => ({ ...e, subject: 'AI subject' })))
 
     expect(subject.value).toBe('AI subject')
     expect(body.value).toBe('Original paragraph. Last words.')
@@ -136,7 +137,7 @@ describe('EmailPreview + chat edit guard', () => {
     act(() => vi.advanceTimersByTime(200))
     let applied = true
     act(() => {
-      applied = api.applyChatEdits!(1, { content: 'Shorter AI rewrite.' }, basis)
+      applied = must(api.applyChatEdits)(1, { content: 'Shorter AI rewrite.' }, basis)
     })
 
     expect(applied).toBe(false)
@@ -152,7 +153,7 @@ describe('EmailPreview + chat edit guard', () => {
     const { api, body } = setup()
     let applied = false
     act(() => {
-      applied = api.applyChatEdits!(1, { content: 'Shorter AI rewrite.' }, basis)
+      applied = must(api.applyChatEdits)(1, { content: 'Shorter AI rewrite.' }, basis)
     })
     expect(applied).toBe(true)
     expect(body.value).toBe('Shorter AI rewrite.')
@@ -203,7 +204,9 @@ describe('EmailPreview copy', () => {
         onUpdate={() => {}}
       />,
     )
-    await waitFor(() => expect(view.getByText('Copy HTML').closest('button')!.disabled).toBe(false))
+    await waitFor(() =>
+      expect(must(view.getByText('Copy HTML').closest('button')).disabled).toBe(false),
+    )
     fireEvent.click(view.getByText('Copy HTML'))
     await waitFor(() => expect(view.getByText('Copied')).toBeTruthy())
 
@@ -226,7 +229,9 @@ describe('EmailPreview copy', () => {
         onUpdate={() => {}}
       />,
     )
-    await waitFor(() => expect(view.getByText('Copy HTML').closest('button')!.disabled).toBe(false))
+    await waitFor(() =>
+      expect(must(view.getByText('Copy HTML').closest('button')).disabled).toBe(false),
+    )
     fireEvent.click(view.getByText('Copy HTML'))
     await waitFor(() => expect(view.getByText('Copied')).toBeTruthy())
     expect(await blobText(items[0]['text/html'])).toBe('<p>Original paragraph.</p>')
@@ -240,7 +245,9 @@ describe('EmailPreview copy', () => {
         onUpdate={() => {}}
       />,
     )
-    await waitFor(() => expect(view.getByText('Copy HTML').closest('button')!.disabled).toBe(false))
+    await waitFor(() =>
+      expect(must(view.getByText('Copy HTML').closest('button')).disabled).toBe(false),
+    )
     fireEvent.click(view.getByText('Copy HTML'))
     await waitFor(() => expect(view.getByText('Copied')).toBeTruthy())
     expect(writeText).toHaveBeenCalledWith(
@@ -264,7 +271,9 @@ describe('EmailPreview copy', () => {
         onUpdate={() => {}}
       />,
     )
-    await waitFor(() => expect(view.getByText('Copy HTML').closest('button')!.disabled).toBe(false))
+    await waitFor(() =>
+      expect(must(view.getByText('Copy HTML').closest('button')).disabled).toBe(false),
+    )
     fireEvent.click(view.getByText('Copy HTML'))
     await waitFor(() => expect(view.getByText('Copy failed')).toBeTruthy())
     expect(view.queryByText('Copied')).toBeNull()

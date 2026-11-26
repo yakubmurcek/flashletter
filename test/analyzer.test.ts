@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { must } from './_helpers/must'
 
 const generateStructuredMock = vi.fn()
 
@@ -30,11 +31,11 @@ interface GenerateCall {
 }
 
 function lastCall(): GenerateCall {
-  return generateStructuredMock.mock.calls.at(-1)![0] as GenerateCall
+  return must(generateStructuredMock.mock.calls.at(-1))[0] as GenerateCall
 }
 
 function userInput(): string {
-  return lastCall().messages.find((m) => m.role === 'user')!.content
+  return must(lastCall().messages.find((m) => m.role === 'user')).content
 }
 
 describe('analyzeLandingPage', () => {

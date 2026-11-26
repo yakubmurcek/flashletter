@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { must } from './_helpers/must'
 import { render, waitFor, act } from '@testing-library/react'
 import type { Editor } from '@tiptap/react'
 import { RichTextEditor } from '@/components/editor/rich-text-editor'
@@ -51,7 +52,7 @@ describe('RichTextEditor external content changes', () => {
     await waitFor(() => expect(getEditor()).not.toBeNull())
 
     act(() => {
-      getEditor()!.commands.insertContent('Quick note. ')
+      must(getEditor()).commands.insertContent('Quick note. ')
     })
 
     expect(onChange).toHaveBeenCalledTimes(1)
@@ -67,7 +68,7 @@ describe('RichTextEditor external content changes', () => {
     swapTo(DAY_2)
     await waitFor(() => expect(container.textContent).toContain('Book a demo'))
     act(() => {
-      getEditor()!.commands.undo()
+      must(getEditor()).commands.undo()
     })
 
     expect(container.textContent).toContain('Create your first project')
@@ -86,7 +87,7 @@ describe('RichTextEditor while focused', () => {
   it('shows an outside (AI) change that arrives while focused, without reporting it', async () => {
     const { container, onChange, swapTo, getEditor } = setup()
     await waitFor(() => expect(getEditor()).not.toBeNull())
-    const editor = getEditor()!
+    const editor = must(getEditor())
     focus(editor)
     act(() => {
       editor.commands.setTextSelection(5)
@@ -105,7 +106,7 @@ describe('RichTextEditor while focused', () => {
   it('saves the next keystroke on top of the AI text, not the stale text', async () => {
     const { onChange, swapTo, getEditor } = setup()
     await waitFor(() => expect(getEditor()).not.toBeNull())
-    const editor = getEditor()!
+    const editor = must(getEditor())
     focus(editor)
 
     swapTo(DAY_2)
@@ -125,7 +126,7 @@ describe('RichTextEditor while focused', () => {
   it('does not re-apply its own echoed markdown while the user types', async () => {
     const { onChange, swapTo, getEditor } = setup()
     await waitFor(() => expect(getEditor()).not.toBeNull())
-    const editor = getEditor()!
+    const editor = must(getEditor())
     focus(editor)
 
     act(() => {

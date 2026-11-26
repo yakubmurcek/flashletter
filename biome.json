@@ -59,9 +59,7 @@
         "app/global-error.tsx",
         "components/email-list.tsx",
         "components/text-selection-popup.tsx",
-        "components/ui/faq.tsx",
-        "test/account-checkout-banner.test.tsx",
-        "test/email-preview-autosave.test.tsx"
+        "components/ui/faq.tsx"
       ],
       "linter": {
         "rules": {
@@ -168,21 +166,7 @@
       "includes": [
         "components/editor/editor-header.tsx",
         "lib/supabase/middleware.ts",
-        "lib/supabase/server.ts",
-        "test/ai.test.ts",
-        "test/analyzer.test.ts",
-        "test/auth-callback-route.test.ts",
-        "test/chat-route.test.ts",
-        "test/create-page.test.tsx",
-        "test/email-preview-ai-edit.test.tsx",
-        "test/email-preview-autosave.test.tsx",
-        "test/generate-emails-route.test.ts",
-        "test/generate-emails-stream-route.test.ts",
-        "test/rich-text-editor.test.tsx",
-        "test/scrape-landing-stream-route.test.ts",
-        "test/use-ai-chat-stale-edit.test.tsx",
-        "test/util-storage.test.ts",
-        "test/util-version-storage.test.ts"
+        "lib/supabase/server.ts"
       ],
       "linter": {
         "rules": {
@@ -209,12 +193,7 @@
       }
     },
     {
-      "includes": [
-        "lib/services/campaign.service.ts",
-        "lib/utils/markdown-renderer.tsx",
-        "test/generate-emails-stream-route.test.ts",
-        "test/scrape-landing-stream-route.test.ts"
-      ],
+      "includes": ["lib/services/campaign.service.ts", "lib/utils/markdown-renderer.tsx"],
       "linter": {
         "rules": {
           "suspicious": {

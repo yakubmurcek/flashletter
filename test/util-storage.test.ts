@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest'
+import { must } from './_helpers/must'
 import { storage } from '@/lib/utils/storage'
 import type { StorageData } from '@/lib/utils/storage'
 
@@ -42,7 +43,7 @@ describe('storage', () => {
 
       const stored = sessionStorage.getItem('campaign-data')
       expect(stored).toBeDefined()
-      expect(JSON.parse(stored!)).toEqual(data)
+      expect(JSON.parse(must(stored))).toEqual(data)
     })
 
     it('merges with existing data', () => {

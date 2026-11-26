@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { must } from './_helpers/must'
 import Anthropic from '@anthropic-ai/sdk'
 
 const captureExceptionMock = vi.fn()
@@ -90,8 +91,7 @@ async function readStreamEvents(response: Response): Promise<StreamEvent[]> {
     const { value, done } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    let idx: number
-    while ((idx = buffer.indexOf('\n')) !== -1) {
+    for (let idx = buffer.indexOf('\n'); idx !== -1; idx = buffer.indexOf('\n')) {
       const line = buffer.slice(0, idx).trim()
       buffer = buffer.slice(idx + 1)
       if (line) events.push(JSON.parse(line))
@@ -414,7 +414,7 @@ describe('POST /api/generate-emails/stream', () => {
   it('writes a 30-email sequence in parallel batches', async () => {
     const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
     generateStructuredMock.mockImplementation(async ({ messages }) => {
-      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const m = must(/Days? (\d+)(?: through (\d+))?/.exec(messages[0].content))
       const from = Number(m[1])
       const to = Number(m[2] ?? m[1])
       return { emails: Array.from({ length: to - from + 1 }, (_, i) => email(from + i)) }
@@ -442,7 +442,7 @@ describe('POST /api/generate-emails/stream', () => {
   it('keeps the finished batches when a later one fails', async () => {
     const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
     generateStructuredMock.mockImplementation(async ({ messages }) => {
-      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const m = must(/Days? (\d+)(?: through (\d+))?/.exec(messages[0].content))
       const from = Number(m[1])
       const to = Number(m[2] ?? m[1])
       if (from === 12) throw new Error('Overloaded')
@@ -467,7 +467,7 @@ describe('POST /api/generate-emails/stream', () => {
   it('does not shift later days when an earlier batch stays short', async () => {
     const email = (d: number) => ({ day: d, subject: `S${d}`, preview: `P${d}`, content: `C${d}` })
     generateStructuredMock.mockImplementation(async ({ messages }) => {
-      const m = /Days? (\d+)(?: through (\d+))?/.exec(messages[0].content)!
+      const m = must(/Days? (\d+)(?: through (\d+))?/.exec(messages[0].content))
       const from = Number(m[1])
       const to = Number(m[2] ?? m[1])
       // Days 2..11 never include Day 11, even when asked again.
@@ -650,7 +650,7 @@ describe('POST /api/generate-emails/stream', () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const response = await POST(withCampaign(3))
-    const reader = response.body!.getReader()
+    const reader = must(response.body).getReader()
     await reader.read() // start
     await reader.cancel()
     finishDay1({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
@@ -667,22 +667,25 @@ describe('POST /api/generate-emails/stream', () => {
   const cancelAfterDay1 = async (
     finishRest: (resolve: (v: unknown) => void, reject: (e: unknown) => void) => void,
   ) => {
-    let settleRest: { resolve: (v: unknown) => void; reject: (e: unknown) => void } | null = null
+    const settleRest: {
+      current?: { resolve: (v: unknown) => void; reject: (e: unknown) => void }
+    } = {}
     generateStructuredMock
       .mockResolvedValueOnce({ emails: [{ day: 1, subject: 'S1', preview: 'P1', content: 'C1' }] })
       .mockReturnValueOnce(
         new Promise((resolve, reject) => {
-          settleRest = { resolve, reject }
+          settleRest.current = { resolve, reject }
         }),
       )
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     const response = await POST(withCampaign(3))
-    const reader = response.body!.getReader()
+    const reader = must(response.body).getReader()
     await reader.read() // start
     await reader.read() // Day 1
     await reader.cancel()
-    finishRest(settleRest!.resolve, settleRest!.reject)
+    const { resolve, reject } = must(settleRest.current, 'the pending Days 2..N call')
+    finishRest(resolve, reject)
     await new Promise((resolve) => setTimeout(resolve, 10))
     errSpy.mockRestore()
   }

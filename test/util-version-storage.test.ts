@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { must } from './_helpers/must'
 import { installLocalStoragePolyfill } from './_helpers/storage-polyfill'
 import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email } from '@/lib/types'
@@ -95,7 +96,7 @@ describe('versionStorage', () => {
       const stored = localStorage.getItem('email-versions-1')
 
       expect(stored).toBeDefined()
-      const parsed = JSON.parse(stored!)
+      const parsed = JSON.parse(must(stored))
       expect(Array.isArray(parsed)).toBe(true)
       expect(parsed[0].id).toBe(version.id)
     })

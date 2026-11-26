@@ -1,5 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { must } from './_helpers/must'
 import { z } from 'zod'
 
 const streamMock = vi.fn()
@@ -50,7 +51,7 @@ const baseRequest = {
 }
 
 function lastRequest(): Record<string, unknown> {
-  return streamMock.mock.calls.at(-1)![0] as Record<string, unknown>
+  return must(streamMock.mock.calls.at(-1))[0] as Record<string, unknown>
 }
 
 function rateLimitError(headers: Record<string, string> = {}) {
