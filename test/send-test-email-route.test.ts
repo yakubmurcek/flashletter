@@ -62,6 +62,7 @@ vi.mock('resend', () => ({
 }))
 
 import { POST } from '@/app/api/send-test-email/route'
+import { at } from './_helpers/at'
 
 const VALID_CAMPAIGN_ID = '11111111-1111-1111-1111-111111111111'
 
@@ -207,7 +208,7 @@ describe('POST /api/send-test-email', () => {
 
     expect(res.status).toBe(200)
     expect(resendSendMock).toHaveBeenCalledTimes(1)
-    const sendArgs = resendSendMock.mock.calls[0][0]
+    const sendArgs = at(resendSendMock.mock.calls, 0)[0]
     expect(sendArgs.to).toBe('real@user.com')
     expect(sendArgs.from).toBe('test@flashletter.app')
     expect(sendArgs.subject).toBe('[Test] Welcome')

@@ -26,8 +26,12 @@ export function useCampaignConfig(validCampaignId: string | null) {
 
   const { isGenerating, error: generationError, warning } = useEmailGeneration()
 
-  const [tone, setTone] = useState<string>(CAMPAIGN_TONES[0].value)
-  const [campaignType, setCampaignType] = useState<string>(CAMPAIGN_TYPES[0].value)
+  const [tone, setTone] = useState<string>(
+    CAMPAIGN_TONES[0]?.value ?? SMART_DEFAULT_CAMPAIGN_CONFIG.tone,
+  )
+  const [campaignType, setCampaignType] = useState<string>(
+    CAMPAIGN_TYPES[0]?.value ?? SMART_DEFAULT_CAMPAIGN_CONFIG.campaignType,
+  )
   // Same default as the hero flow, so it fits every plan's email limit.
   const [days, setDays] = useState<number[]>([SMART_DEFAULT_CAMPAIGN_CONFIG.days])
   const [campaignLoaded, setCampaignLoaded] = useState(false)
@@ -57,7 +61,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
 
   // Never offer more emails than the plan can generate (the server answers 402).
   useEffect(() => {
-    setDays((prev) => (prev[0] > maxEmails ? [maxEmails] : prev))
+    setDays((prev) => ((prev[0] ?? 0) > maxEmails ? [maxEmails] : prev))
   }, [maxEmails])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +75,7 @@ export function useCampaignConfig(validCampaignId: string | null) {
       const config: CampaignConfig = {
         tone,
         campaignType,
-        days: days[0],
+        days: days[0] ?? SMART_DEFAULT_CAMPAIGN_CONFIG.days,
       }
 
       // Same path as the hero flow: save the settings and let the editor stream

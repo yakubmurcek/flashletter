@@ -16,7 +16,7 @@ export class EmailVersionStorageService {
   ): Promise<EmailVersion> {
     // Get previous versions to check for duplicates and generate summary
     const versions = await this.getVersions(emailUuid)
-    const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
+    const previousVersion = versions[versions.length - 1] ?? null
 
     // Check if this version is identical to the previous one
     if (
@@ -145,8 +145,9 @@ export class EmailVersionStorageService {
 
     // Aggregate counts
     data?.forEach((row: { email_id: string }) => {
-      if (counts[row.email_id] !== undefined) {
-        counts[row.email_id]++
+      const count = counts[row.email_id]
+      if (count !== undefined) {
+        counts[row.email_id] = count + 1
       }
     })
 

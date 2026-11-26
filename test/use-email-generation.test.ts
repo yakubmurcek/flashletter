@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useEmailGeneration } from '@/lib/hooks/use-email-generation'
 import { CampaignService } from '@/lib/services/campaign.service'
+import { at } from './_helpers/at'
 
 const config = { tone: 'friendly', campaignType: 'nurture', days: 3 }
 const successResponse = {
@@ -64,7 +65,7 @@ describe('useEmailGeneration', () => {
       )
     })
 
-    const [, , , , , analysisArg] = spy.mock.calls[0]
+    const [, , , , , analysisArg] = at(spy.mock.calls, 0)
     expect(analysisArg).toEqual(analysis)
   })
 

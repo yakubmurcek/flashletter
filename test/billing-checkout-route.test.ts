@@ -27,6 +27,7 @@ vi.mock('@/lib/billing/stripe', () => ({
 }))
 
 import { POST } from '@/app/api/billing/checkout/route'
+import { at } from './_helpers/at'
 
 const USER_ID = '11111111-1111-1111-1111-111111111111'
 
@@ -64,7 +65,7 @@ describe('POST /api/billing/checkout', () => {
     const res = await POST(request({ interval: 'year' }))
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ url: 'https://checkout.stripe.com/c/1' })
-    const args = createSession.mock.calls[0][0]
+    const args = at(createSession.mock.calls, 0)[0]
     expect(args.mode).toBe('subscription')
     expect(args.customer).toBe('cus_123')
     expect(args.client_reference_id).toBe(USER_ID)
@@ -90,7 +91,7 @@ describe('POST /api/billing/checkout', () => {
     })
     const res = await POST(request({ interval: 'month' }))
     expect(await res.json()).toEqual({ url: 'https://invoice.stripe.com/i/1' })
-    expect(listSubs.mock.calls[0][0]).toMatchObject({ customer: 'cus_123', status: 'incomplete' })
+    expect(listSubs.mock.calls[0]?.[0]).toMatchObject({ customer: 'cus_123', status: 'incomplete' })
     expect(createSession).not.toHaveBeenCalled()
   })
 

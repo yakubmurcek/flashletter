@@ -153,7 +153,9 @@ export function CampaignConfigPanel({
               max={Math.min(CAMPAIGN_DURATION.MAX, maxEmails)}
               step={1}
               value={[days]}
-              onValueChange={(v) => setDays(v[0])}
+              onValueChange={([value]) => {
+                if (value !== undefined) setDays(value)
+              }}
               disabled={isStreaming}
             />
             {plan !== 'pro' && plan !== null && (

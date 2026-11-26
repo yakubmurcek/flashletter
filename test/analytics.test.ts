@@ -45,6 +45,7 @@ import {
   CONSENT_STORAGE_KEY,
   _resetAnalyticsForTests,
 } from '@/lib/analytics'
+import { at } from './_helpers/at'
 
 function storeConsent(analytics: boolean) {
   window.localStorage.setItem(
@@ -88,7 +89,7 @@ describe('lib/analytics', () => {
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       initPostHog()
       expect(initMock).toHaveBeenCalledTimes(1)
-      const [key, options] = initMock.mock.calls[0]
+      const [key, options] = at(initMock.mock.calls, 0)
       expect(key).toBe('phc_test')
       expect(options.api_host).toBe('https://us.i.posthog.com')
     })
@@ -97,7 +98,7 @@ describe('lib/analytics', () => {
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       process.env.NEXT_PUBLIC_POSTHOG_HOST = 'https://eu.i.posthog.com'
       initPostHog()
-      expect(initMock.mock.calls[0][1].api_host).toBe('https://eu.i.posthog.com')
+      expect(at(initMock.mock.calls, 0)[1].api_host).toBe('https://eu.i.posthog.com')
     })
 
     it('is idempotent — calling twice still only initializes once', () => {
@@ -110,7 +111,7 @@ describe('lib/analytics', () => {
     it('opts out of posthog exception capture so it does not duplicate Sentry', () => {
       process.env.NEXT_PUBLIC_POSTHOG_KEY = 'phc_test'
       initPostHog()
-      expect(initMock.mock.calls[0][1].capture_exceptions).toBe(false)
+      expect(at(initMock.mock.calls, 0)[1].capture_exceptions).toBe(false)
     })
   })
 
@@ -121,7 +122,7 @@ describe('lib/analytics', () => {
 
     it('starts opted out with in-memory persistence when there is no stored consent', () => {
       initPostHog()
-      const options = initMock.mock.calls[0][1]
+      const options = at(initMock.mock.calls, 0)[1]
       expect(options.opt_out_capturing_by_default).toBe(true)
       expect(options.persistence).toBe('memory')
       expect(optInMock).not.toHaveBeenCalled()
@@ -131,7 +132,7 @@ describe('lib/analytics', () => {
     it('stays opted out when the visitor declined analytics earlier', () => {
       storeConsent(false)
       initPostHog()
-      expect(initMock.mock.calls[0][1].persistence).toBe('memory')
+      expect(at(initMock.mock.calls, 0)[1].persistence).toBe('memory')
       expect(optInMock).not.toHaveBeenCalled()
     })
 
@@ -145,7 +146,7 @@ describe('lib/analytics', () => {
     it('opts in with browser persistence when stored consent allows analytics', () => {
       storeConsent(true)
       initPostHog()
-      expect(initMock.mock.calls[0][1].persistence).toBe('localStorage+cookie')
+      expect(at(initMock.mock.calls, 0)[1].persistence).toBe('localStorage+cookie')
       expect(optInMock).toHaveBeenCalledTimes(1)
     })
 
@@ -153,7 +154,7 @@ describe('lib/analytics', () => {
       window.localStorage.setItem(CONSENT_STORAGE_KEY, '{not json')
       expect(readConsent()).toBeNull()
       initPostHog()
-      expect(initMock.mock.calls[0][1].persistence).toBe('memory')
+      expect(at(initMock.mock.calls, 0)[1].persistence).toBe('memory')
     })
 
     it('accepting switches persistence to the browser and opts in', () => {
@@ -329,7 +330,7 @@ describe('lib/analytics', () => {
 
       const signupCalls = captureMock.mock.calls.filter((c) => c[0] === 'signup_completed')
       expect(signupCalls).toHaveLength(1)
-      expect(signupCalls[0][1]).toEqual({ method: 'direct' })
+      expect(signupCalls[0]?.[1]).toEqual({ method: 'direct' })
     })
   })
 

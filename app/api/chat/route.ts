@@ -76,8 +76,8 @@ export async function POST(req: NextRequest) {
         content: clip(m.content, CHAT_MESSAGE_LIMIT),
       }))
     // The conversation must start and end on a user turn (no assistant prefill).
-    while (history.length && history[0].role !== 'user') history.shift()
-    while (history.length && history[history.length - 1].role !== 'user') history.pop()
+    while (history.length && history[0]?.role !== 'user') history.shift()
+    while (history.length && history.at(-1)?.role !== 'user') history.pop()
     if (!history.length) {
       return NextResponse.json({ error: 'No user message' }, { status: 400 })
     }

@@ -32,6 +32,7 @@ vi.mock('next/dynamic', async () => {
 
 import { EmailPreview } from '@/components/email-preview'
 import { useChatEditGuard } from '@/lib/hooks/use-ai-chat'
+import { at } from './_helpers/at'
 
 const START: Email = {
   id: 1,
@@ -160,7 +161,8 @@ describe('EmailPreview + chat edit guard', () => {
 })
 
 /** Reads a Blob the way a paste target would. */
-function blobText(b: Blob): Promise<string> {
+function blobText(b: Blob | undefined): Promise<string> {
+  if (!b) return Promise.reject(new Error('Nothing was copied for that type'))
   return new Promise((resolve, reject) => {
     const r = new FileReader()
     r.onload = () => resolve(String(r.result))
@@ -208,9 +210,9 @@ describe('EmailPreview copy', () => {
     await waitFor(() => expect(view.getByText('Copied')).toBeTruthy())
 
     expect(write).toHaveBeenCalledTimes(1)
-    expect(Object.keys(items[0]).sort()).toEqual(['text/html', 'text/plain'])
-    const html = await blobText(items[0]['text/html'])
-    const plain = await blobText(items[0]['text/plain'])
+    expect(Object.keys(at(items, 0)).sort()).toEqual(['text/html', 'text/plain'])
+    const html = await blobText(at(items, 0)['text/html'])
+    const plain = await blobText(at(items, 0)['text/plain'])
     expect(html).toBe(
       '<div style="display:none;max-height:0;overflow:hidden">Tips &amp; &lt;tricks&gt;</div>' +
         '<p>Original paragraph.</p>',
@@ -229,7 +231,7 @@ describe('EmailPreview copy', () => {
     await waitFor(() => expect(view.getByText('Copy HTML').closest('button')!.disabled).toBe(false))
     fireEvent.click(view.getByText('Copy HTML'))
     await waitFor(() => expect(view.getByText('Copied')).toBeTruthy())
-    expect(await blobText(items[0]['text/html'])).toBe('<p>Original paragraph.</p>')
+    expect(await blobText(at(items, 0)['text/html'])).toBe('<p>Original paragraph.</p>')
   })
 
   it('falls back to plain text where rich copy is not supported', async () => {

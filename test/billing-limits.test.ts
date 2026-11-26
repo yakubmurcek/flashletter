@@ -91,7 +91,9 @@ function campaignsTable(rows: Row[]) {
           return chain
         },
         lte: async (_col: string, value: string) => {
-          const data = rows.filter((r) => r.created_at >= filters.gte && r.created_at <= value)
+          const data = rows.filter(
+            (r) => r.created_at >= (filters.gte ?? '') && r.created_at <= value,
+          )
           return { data, count: data.length }
         },
         single: async () => ({ data: rows.find((r) => r.id === filters.id) ?? null }),

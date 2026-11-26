@@ -71,6 +71,7 @@ vi.mock('@/app/api/generate-emails/prompts', () => ({
 // Import after all vi.mock calls
 import { POST } from '@/app/api/generate-emails/stream/route'
 import { aiEmailsResponseSchema } from '@/lib'
+import { at } from './_helpers/at'
 
 interface StreamEvent {
   type: 'start' | 'email' | 'complete' | 'error'
@@ -314,8 +315,8 @@ describe('POST /api/generate-emails/stream', () => {
     const events = await readStreamEvents(response)
 
     expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
-    expect(events[1].email?.day).toBe(1)
-    expect(events[2].message).toBe('AI response was cut off before it finished')
+    expect(events[1]?.email?.day).toBe(1)
+    expect(events[2]?.message).toBe('AI response was cut off before it finished')
   })
 
   it('generates Day 1 first, then the remaining days, with the email schema', async () => {
@@ -334,12 +335,12 @@ describe('POST /api/generate-emails/stream', () => {
           schema: unknown
         },
     )
-    expect(first.system).toBe('First email instructions')
-    expect(first.schema).toBe(aiEmailsResponseSchema)
-    expect(first.messages).toEqual([{ role: 'user', content: 'Generate Day 1 only.' }])
-    expect(second.system).toBe('Remaining emails instructions')
-    expect(second.schema).toBe(aiEmailsResponseSchema)
-    expect(second.messages).toEqual([{ role: 'user', content: 'Generate Days 2 through 2.' }])
+    expect(first?.system).toBe('First email instructions')
+    expect(first?.schema).toBe(aiEmailsResponseSchema)
+    expect(first?.messages).toEqual([{ role: 'user', content: 'Generate Day 1 only.' }])
+    expect(second?.system).toBe('Remaining emails instructions')
+    expect(second?.schema).toBe(aiEmailsResponseSchema)
+    expect(second?.messages).toEqual([{ role: 'user', content: 'Generate Days 2 through 2.' }])
   })
 
   it('numbers phase 2 days by position and caps them at config.days', async () => {
@@ -384,7 +385,7 @@ describe('POST /api/generate-emails/stream', () => {
     )
     const events = await readStreamEvents(response)
 
-    expect(generateStructuredMock.mock.calls[2][0].messages).toEqual([
+    expect(generateStructuredMock.mock.calls[2]?.[0].messages).toEqual([
       { role: 'user', content: 'Generate Days 3 through 4.' },
     ])
     expect(events.filter((e) => e.type === 'email').map((e) => e.email?.day)).toEqual([1, 2, 3, 4])
@@ -569,7 +570,7 @@ describe('POST /api/generate-emails/stream', () => {
     const events = await readStreamEvents(await POST(withCampaign(3)))
 
     expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
-    expect(events[1].email?.uuid).toBe(uuidForDay(1))
+    expect(at(events, 1).email?.uuid).toBe(uuidForDay(1))
     expect(upsertEmailsMock).toHaveBeenCalledTimes(1)
     // The database now matches the screen: the new Day 1 and nothing else.
     expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 1)
@@ -595,7 +596,7 @@ describe('POST /api/generate-emails/stream', () => {
     const events = await readStreamEvents(await POST(withCampaign(3)))
 
     expect(events.map((e) => e.type)).toEqual(['start', 'email', 'error'])
-    expect(events[1].email?.uuid).toBeNull()
+    expect(at(events, 1).email?.uuid).toBeNull()
     expect(deleteEmailsAfterDayMock).not.toHaveBeenCalled()
     errSpy.mockRestore()
   })
@@ -610,7 +611,7 @@ describe('POST /api/generate-emails/stream', () => {
     const events = await readStreamEvents(await POST(withCampaign()))
     const completeEvent = events.find((e) => e.type === 'complete')
 
-    expect(upsertEmailsMock.mock.calls[1][1].map((e: { day: number }) => e.day)).toEqual([1, 2])
+    expect(at(upsertEmailsMock.mock.calls, 1)[1].map((e: { day: number }) => e.day)).toEqual([1, 2])
     expect(completeEvent?.emails?.map((e) => e.uuid)).toEqual([uuidForDay(1), uuidForDay(2)])
     expect(completeEvent?.warning).toBeUndefined()
     errSpy.mockRestore()
@@ -698,7 +699,7 @@ describe('POST /api/generate-emails/stream', () => {
     )
 
     expect(upsertEmailsMock).toHaveBeenCalledTimes(2)
-    expect(upsertEmailsMock.mock.calls[1][1].map((e: { day: number }) => e.day)).toEqual([2, 3])
+    expect(at(upsertEmailsMock.mock.calls, 1)[1].map((e: { day: number }) => e.day)).toEqual([2, 3])
     expect(deleteEmailsAfterDayMock).toHaveBeenCalledWith(VALID_CAMPAIGN_ID, 3)
   })
 

@@ -12,15 +12,15 @@ interface ErrorBoundaryState {
 }
 
 export class AIChatErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  state: ErrorBoundaryState = { hasError: false }
+  override state: ErrorBoundaryState = { hasError: false }
 
   static getDerivedStateFromError() {
     return { hasError: true }
   }
 
-  componentDidCatch() {}
+  override componentDidCatch() {}
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       return (
         <div className="p-4">

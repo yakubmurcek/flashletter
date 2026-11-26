@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { GET } from '@/app/api/keep-alive/route'
+import { at } from './_helpers/at'
 
 const fetchMock = vi.fn()
 
@@ -27,7 +28,7 @@ describe('GET /api/keep-alive', () => {
     const res = await GET(request())
     expect(res.status).toBe(200)
     expect(await res.json()).toEqual({ ok: true })
-    const [url, init] = fetchMock.mock.calls[0]
+    const [url, init] = at(fetchMock.mock.calls, 0)
     expect(url).toBe('https://proj.supabase.co/rest/v1/campaigns?select=id&limit=1')
     expect(init.headers).toEqual({ apikey: 'anon-key', Authorization: 'Bearer anon-key' })
   })

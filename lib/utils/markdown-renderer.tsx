@@ -27,7 +27,7 @@ export function processInlineFormattingForPreview(
           key={`bold-${key}`}
           className="font-semibold"
         >
-          {processInlineFormattingForPreview(match[1], `${key}-`)}
+          {processInlineFormattingForPreview(match[1] ?? '', `${key}-`)}
         </strong>,
       )
     } else {
@@ -39,7 +39,7 @@ export function processInlineFormattingForPreview(
           rel="noopener noreferrer"
           className="text-primary underline hover:text-primary/80 transition-colors"
         >
-          {processInlineFormattingForPreview(match[2], `${key}-`)}
+          {processInlineFormattingForPreview(match[2] ?? '', `${key}-`)}
         </a>,
       )
     }

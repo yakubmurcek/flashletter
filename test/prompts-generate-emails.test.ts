@@ -456,3 +456,13 @@ describe('language rule', () => {
     expect(p).toContain('Tým Fakturoid')
   })
 })
+
+describe('prompt lookups ignore built-in object keys', () => {
+  it.each(['constructor', 'toString', 'valueOf', 'hasOwnProperty'])(
+    'treats %s like an unknown type and tone',
+    (key) => {
+      expect(getCampaignStructure(key, 7)).toBe(getCampaignStructure('nurture', 7))
+      expect(getToneGuidelines(key)).toBe(getToneGuidelines('friendly'))
+    },
+  )
+})

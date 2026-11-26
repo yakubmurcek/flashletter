@@ -38,6 +38,7 @@ vi.mock('@/components/campaign/scrape-progress-overlay', () => ({
 }))
 
 import CreatePage from '@/app/create/page'
+import { at } from './_helpers/at'
 
 function ndjson(lines: unknown[], status = 200): Response {
   return new Response(`${lines.map((l) => JSON.stringify(l)).join('\n')}\n`, {
@@ -61,7 +62,7 @@ async function expectRetryWorks(fetchMock: MockInstance<typeof fetch>) {
   fetchMock.mockResolvedValue(ndjson([{ type: 'error', message: 'still down' }]))
   await submit('https://second.example.com')
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
-  const body = JSON.parse(String((fetchMock.mock.calls[1][1] as RequestInit).body))
+  const body = JSON.parse(String((at(fetchMock.mock.calls, 1)[1] as RequestInit).body))
   expect(body.url).toBe('https://second.example.com')
   await waitFor(() => expect(submitButton().disabled).toBe(false))
 }

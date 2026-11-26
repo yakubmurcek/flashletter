@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, waitFor, act } from '@testing-library/react'
 import type { Editor } from '@tiptap/react'
 import { RichTextEditor } from '@/components/editor/rich-text-editor'
+import { at } from './_helpers/at'
 
 // Generated emails often bold the CTA link and put the sign-off under a
 // one-line closing; neither survives tiptap-markdown's round trip verbatim.
@@ -55,7 +56,7 @@ describe('RichTextEditor external content changes', () => {
     })
 
     expect(onChange).toHaveBeenCalledTimes(1)
-    expect(onChange.mock.calls[0][0]).toContain('Quick note.')
+    expect(at(onChange.mock.calls, 0)[0]).toContain('Quick note.')
   })
 
   // An AI edit arrives as an outside change; Cmd+Z must still take it back,
@@ -115,8 +116,8 @@ describe('RichTextEditor while focused', () => {
     })
 
     expect(onChange).toHaveBeenCalledTimes(1)
-    expect(onChange.mock.calls[0][0]).toContain('Book a demo')
-    expect(onChange.mock.calls[0][0]).not.toContain('Create your first project')
+    expect(at(onChange.mock.calls, 0)[0]).toContain('Book a demo')
+    expect(at(onChange.mock.calls, 0)[0]).not.toContain('Create your first project')
   })
 
   // tiptap-markdown does not round-trip `**[CTA](url)**` verbatim, so the
@@ -133,7 +134,7 @@ describe('RichTextEditor while focused', () => {
       editor.commands.insertContent('X')
     })
     expect(onChange).toHaveBeenCalledTimes(1)
-    const emitted = onChange.mock.calls[0][0] as string
+    const emitted = at(onChange.mock.calls, 0)[0] as string
     expect(emitted).not.toBe(DAY_1) // the round trip really is unstable
     const docBefore = editor.getJSON()
     const selBefore = editor.state.selection.from

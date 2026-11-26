@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CampaignService, type GenerateEmailsStreamEvent } from '@/lib/services/campaign.service'
 import type { CampaignConfig, Email } from '@/lib/types'
+import { at } from './_helpers/at'
 
 function makeStreamResponse(chunks: string[], status = 200): Response {
   const encoder = new TextEncoder()
@@ -79,8 +80,8 @@ describe('CampaignService.generateEmailsStream', () => {
     expect(received.map((e) => e.type)).toEqual(['start', 'email', 'email', 'email', 'complete'])
     expect(result).toHaveLength(3)
     // Final array should be the persisted version (with UUIDs from the complete event).
-    expect(result[0].uuid).toBe(email1.uuid)
-    expect(result[2].uuid).toBe(email3.uuid)
+    expect(result[0]?.uuid).toBe(email1.uuid)
+    expect(result[2]?.uuid).toBe(email3.uuid)
   })
 
   it('emits email events in day order', async () => {
@@ -264,7 +265,7 @@ describe('CampaignService.generateEmailsStream', () => {
       },
     )
 
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = at(fetchMock.mock.calls, 0)
     expect(init?.method).toBe('POST')
     const body = JSON.parse(init?.body as string)
     expect(body.landingUrl).toBe('https://example.com/x')
@@ -283,7 +284,7 @@ describe('CampaignService.generateEmailsStream', () => {
 
     await CampaignService.generateEmailsStream('https://example.com/x', 'page', config, () => {})
 
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = at(fetchMock.mock.calls, 0)
     const body = JSON.parse(init?.body as string)
     expect(body.campaignId).toBeUndefined()
   })
@@ -323,7 +324,7 @@ describe('CampaignService.generateEmailsStream', () => {
       signal: ctrl.signal,
     })
 
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = at(fetchMock.mock.calls, 0)
     expect(init?.signal).toBe(ctrl.signal)
   })
 })

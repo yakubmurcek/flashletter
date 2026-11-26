@@ -69,6 +69,7 @@ export function verifyUnsubscribeToken(token: string): string | null {
   const parts = token.split('.')
   if (parts.length !== 2) return null
   const [encodedEmail, encodedSig] = parts
+  if (encodedEmail === undefined || encodedSig === undefined) return null
   const email = base64UrlDecodeToString(encodedEmail)
   if (!email) return null
 

@@ -12,7 +12,7 @@ describe('generateDiff', () => {
     expect(result.stats.unchanged).toBe(1)
     expect(result.stats.added).toBe(0)
     expect(result.stats.removed).toBe(0)
-    expect(result.lines[0].type).toBe('unchanged')
+    expect(result.lines[0]?.type).toBe('unchanged')
   })
 
   it('detects added lines', () => {

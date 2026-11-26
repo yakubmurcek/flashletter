@@ -94,7 +94,7 @@ describe('Account page after Stripe Checkout', () => {
     expect(trackerMock).toHaveBeenCalledTimes(1)
     expect(trackerMock).toHaveBeenCalledWith({ sessionId: 'cs_1', interval: 'year' })
     // Plan is re-read fresh right after a confirmed payment.
-    expect(summaryMock.mock.calls[0][1]).toEqual({ fresh: true })
+    expect(summaryMock.mock.calls[0]?.[1]).toEqual({ fresh: true })
   })
 
   it('processing: no Welcome to Pro, a processing note instead, no analytics event', async () => {

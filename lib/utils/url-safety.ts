@@ -34,6 +34,7 @@ function isPrivateIPv4(ip: string): boolean {
     return true
   }
   const [a, b] = parts
+  if (a === undefined || b === undefined) return true
   if (a === 0) return true // 0.0.0.0/8
   if (a === 10) return true // 10.0.0.0/8
   if (a === 127) return true // 127.0.0.0/8 loopback
@@ -53,6 +54,7 @@ function ipv6Groups(ip: string): number[] | null {
   const dotted = s.match(/^(.*:)(\d+)\.(\d+)\.(\d+)\.(\d+)$/)
   if (dotted) {
     const [a, b, c, d] = dotted.slice(2).map(Number)
+    if (a === undefined || b === undefined || c === undefined || d === undefined) return null
     s = `${dotted[1]}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`
   }
   const halves = s.split('::')
@@ -69,19 +71,22 @@ function ipv6Groups(ip: string): number[] | null {
 function isPrivateIPv6(ip: string): boolean {
   const g = ipv6Groups(ip)
   if (!g) return true // Unparseable → treat as unsafe
+  const [g0, g1, g2, , , g5, g6, g7] = g
+  if (g0 === undefined || g1 === undefined || g2 === undefined) return true
+  if (g5 === undefined || g6 === undefined || g7 === undefined) return true
   const v4 = (hi: number, lo: number) => `${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`
   const zeros = (from: number, to: number) => g.slice(from, to).every((x) => x === 0)
 
   // ::/128, ::1 and the deprecated IPv4-compatible ::a.b.c.d (:: and ::1 land in 0.0.0.0/8)
-  if (zeros(0, 6)) return isPrivateIPv4(v4(g[6], g[7]))
+  if (zeros(0, 6)) return isPrivateIPv4(v4(g6, g7))
   // ::ffff:0:0/96 IPv4-mapped — Node and WHATWG print it as ::ffff:7f00:1
-  if (zeros(0, 5) && g[5] === 0xffff) return isPrivateIPv4(v4(g[6], g[7]))
+  if (zeros(0, 5) && g5 === 0xffff) return isPrivateIPv4(v4(g6, g7))
   // 64:ff9b::/96 NAT64 and 2002::/16 6to4 both carry an IPv4 address
-  if (g[0] === 0x64 && g[1] === 0xff9b && zeros(2, 6)) return isPrivateIPv4(v4(g[6], g[7]))
-  if (g[0] === 0x2002) return isPrivateIPv4(v4(g[1], g[2]))
-  if ((g[0] & 0xffc0) === 0xfe80) return true // fe80::/10 link-local
-  if ((g[0] & 0xfe00) === 0xfc00) return true // fc00::/7 unique local
-  if ((g[0] & 0xff00) === 0xff00) return true // ff00::/8 multicast
+  if (g0 === 0x64 && g1 === 0xff9b && zeros(2, 6)) return isPrivateIPv4(v4(g6, g7))
+  if (g0 === 0x2002) return isPrivateIPv4(v4(g1, g2))
+  if ((g0 & 0xffc0) === 0xfe80) return true // fe80::/10 link-local
+  if ((g0 & 0xfe00) === 0xfc00) return true // fc00::/7 unique local
+  if ((g0 & 0xff00) === 0xff00) return true // ff00::/8 multicast
   return false
 }
 

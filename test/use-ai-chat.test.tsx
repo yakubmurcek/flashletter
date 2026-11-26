@@ -11,8 +11,8 @@ describe('useAIChat', () => {
     const { result } = renderHook(() =>
       useAIChat({ campaignContext: undefined, emailContext: undefined }),
     )
-    expect(result.current.messages[0].role).toBe('assistant')
-    expect(result.current.messages[0].content.length).toBeGreaterThan(10)
+    expect(result.current.messages[0]?.role).toBe('assistant')
+    expect(result.current.messages[0]?.content.length).toBeGreaterThan(10)
   })
 
   it('sets input and handles quick action selection', () => {

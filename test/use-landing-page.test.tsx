@@ -250,6 +250,6 @@ describe('useLandingPage', () => {
       void result.current.analyzeLandingPage('https://example.com/b')
     })
     await waitFor(() => expect(abortedSignals.length).toBe(2))
-    expect(abortedSignals[0].aborted).toBe(true)
+    expect(abortedSignals[0]?.aborted).toBe(true)
   })
 })

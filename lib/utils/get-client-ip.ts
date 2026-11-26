@@ -32,7 +32,8 @@ export function getClientIp(req: NextRequest): string {
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
-    if (parts.length > 0) return parts[parts.length - 1]
+    const last = parts.at(-1)
+    if (last) return last
   }
 
   return 'anonymous'

@@ -13,6 +13,7 @@ vi.mock('next/dynamic', () => ({
 }))
 
 import { EmailPreview } from '@/components/email-preview'
+import { at } from './_helpers/at'
 
 const EMAILS: Email[] = [
   { id: 1, day: 1, subject: 'Day one', preview: '', content: 'Body one' },
@@ -44,7 +45,7 @@ describe('EmailPreview autosave', () => {
   it('says Not saved when the last save failed', () => {
     const { getByText, queryByText } = render(
       <EmailPreview
-        email={EMAILS[0]}
+        email={at(EMAILS, 0)}
         onUpdate={() => {}}
         saveFailed
       />,
