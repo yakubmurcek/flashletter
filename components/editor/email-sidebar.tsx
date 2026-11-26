@@ -93,13 +93,13 @@ export function MobileEmailTabs({
           Day {email.day}
         </button>
       ))}
-      {Array.from({ length: pendingCount }, (_, i) => (
+      {Array.from({ length: pendingCount }, (_, i) => sorted.length + i + 1).map((day) => (
         <span
-          key={`pending-${i}`}
+          key={`pending-${day}`}
           className="flex flex-shrink-0 items-center gap-1.5 rounded-full border border-dashed border-border px-3 py-1.5 text-sm text-muted-foreground"
         >
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          Day {sorted.length + i + 1}
+          Day {day}
         </span>
       ))}
     </nav>
