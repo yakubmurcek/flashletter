@@ -68,6 +68,7 @@ export function useEmailAutosave(
   // its result must not show up on the next campaign.
   const currentCampaignIdRef = useRef(currentCampaignId)
   currentCampaignIdRef.current = currentCampaignId
+  // biome-ignore lint/correctness/useExhaustiveDependencies: currentCampaignId is the trigger: another campaign starts with no save error.
   useEffect(() => {
     setSaveError(null)
   }, [currentCampaignId])
@@ -238,6 +239,7 @@ export function useEmailAutosave(
   // debounce window: write now, don't drop it. This cleanup runs before the
   // emails ref takes the next campaign's list, so the write reads its own
   // campaign's text.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: currentCampaignId is the trigger: switching campaigns runs the cleanup that flushes pending writes.
   useEffect(() => {
     const timers = saveTimerRef.current
     const writes = pendingWriteRef.current

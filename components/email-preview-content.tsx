@@ -27,6 +27,7 @@ interface EmailPreviewContentProps {
 function SubjectField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const ref = useRef<HTMLTextAreaElement>(null)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: value is the trigger: re-measure the textarea height whenever the subject text changes.
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return

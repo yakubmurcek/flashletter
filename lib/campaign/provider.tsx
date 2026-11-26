@@ -164,7 +164,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
       setCampaignName(campaign.name ?? derivedName)
       return campaign.id
     },
-    [supabase, campaignService, landingPageData, setCampaignName],
+    [supabase, campaignService, landingPageData],
   )
 
   const loadCampaign = useCallback(
@@ -357,7 +357,7 @@ export function CampaignProvider({ children }: { children: ReactNode }) {
     setLandingPageDataState(null)
     setConfigState(null)
     setGeneratedEmailsState([])
-  }, [debouncedSaveLandingPage, debouncedSaveConfig, setCampaignName])
+  }, [debouncedSaveLandingPage, debouncedSaveConfig])
 
   const dataContextValue = useMemo(
     () => ({

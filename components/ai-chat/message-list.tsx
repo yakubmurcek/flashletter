@@ -16,6 +16,7 @@ interface AIChatMessageListProps {
 function MessageListBase({ messages, isLoading }: AIChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: messages and isLoading are the triggers: scroll to the end when a message or the typing indicator appears.
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
