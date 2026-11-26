@@ -7,6 +7,6 @@
   "ignoreIssues": {
     // Vendored shadcn/ui kit: each file keeps the library's full API so a new screen can use
     // any part (e.g. DialogClose) without re-generating the component.
-    "components/ui/**": ["exports", "types"]
-  }
+    "components/ui/**": ["exports", "types"],
+  },
 }

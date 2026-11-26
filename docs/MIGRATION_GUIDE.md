@@ -191,7 +191,8 @@ import { ProgressIndicator } from '@/components/campaign/progress-indicator'
 import { FormCard } from '@/components/campaign/form-card'
 
 // For hooks:
-import { useLandingPage, useEmailGeneration, useUrlState } from '@/lib/hooks'
+import { useLandingPage } from '@/lib/hooks/use-landing-page'
+import { useUrlState } from '@/lib/hooks/use-url-state'
 
 // For services:
 import { CampaignService } from '@/lib/services/campaign.service'
