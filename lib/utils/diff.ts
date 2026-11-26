@@ -241,3 +241,6 @@ export function extractChangeSummary(
 
   return `${changes.join(' and ')} changed`
 }
+
+// Throwaway: an export nobody imports, to prove the knip gate fails.
+export const PLANTED_UNUSED_EXPORT = 1
