@@ -34,12 +34,18 @@ test("a user opens their campaign's emails in the editor", async ({ page }) => {
 
 test("a user cannot open someone else's campaign by its link", async ({ page }) => {
   await signIn(page, ALICE.email)
-  // The page streams behind a loading screen, so the HTTP status is already 200
-  // when notFound() runs; what the user sees is the proof.
-  await page.goto(`/campaigns/${BOB_CAMPAIGN_ID}`)
+  const response = await page.goto(`/campaigns/${BOB_CAMPAIGN_ID}`)
+  expect(response?.status()).toBe(404)
   await expect(page.getByText('Page not found')).toBeVisible()
   await expect(page).not.toHaveURL(/\/create\/editor/)
   await expect(page.getByText('Bob onboarding')).toHaveCount(0)
+})
+
+test('a campaign link that does not exist answers 404', async ({ page }) => {
+  await signIn(page, ALICE.email)
+  const response = await page.goto('/campaigns/00000000-0000-0000-0000-000000000000')
+  expect(response?.status()).toBe(404)
+  await expect(page.getByText('Page not found')).toBeVisible()
 })
 
 test('a signed-out visitor is sent to sign in before seeing campaigns', async ({ page }) => {
