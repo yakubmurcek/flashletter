@@ -116,12 +116,12 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
                     return (
                       <div
                         key={index}
-                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center hover:bg-muted transition-colors"
+                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center"
                       >
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-2"
+                          className="w-full gap-2"
                           aria-expanded={isExpanded}
                           onClick={() => toggleSection(index)}
                         >

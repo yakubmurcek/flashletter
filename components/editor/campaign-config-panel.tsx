@@ -161,12 +161,7 @@ export function CampaignConfigPanel({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span
-                id="campaign-config-length"
-                className="text-xs font-medium text-muted-foreground"
-              >
-                Length
-              </span>
+              <span className="text-xs font-medium text-muted-foreground">Length</span>
               <span className="text-sm font-medium tabular">{days} emails</span>
             </div>
             <Slider
