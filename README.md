@@ -339,6 +339,18 @@ Two linters, both blocking in CI (`format · lint · typecheck`):
   Biome's own version of the rule missed un-awaited Supabase queries (tested on Biome 2.6.6).
   Ends with `.catch(...)` or is marked `void` when the called function reports its own errors.
 
+### Copy-paste and test coverage
+
+```bash
+pnpm dupes          # jscpd: duplicated code in app/, components/, lib/, middleware.ts
+pnpm test:coverage  # Vitest with v8 coverage, prints a summary
+```
+
+Both run in CI's `format · lint · typecheck` job. `pnpm dupes` fails when duplication goes over the
+`threshold` in `.jscpd.json`, set to the value on 2026-11-27 (2.19%, 36 clones). When duplication
+drops, lower the threshold; never raise it. Coverage is reported, not enforced (2026-11-27: 52.9% of
+lines, 80.4% of branches).
+
 ### Quality baseline (2026-11-25)
 
 Biome found older code breaking 17 rules in 63 file entries. Those files are listed per rule in
