@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { CampaignService } from '@/lib/services/campaign.service'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
+import { at } from './_helpers/at'
 
 function makeStreamResponse(chunks: string[], status = 200): Response {
   const encoder = new TextEncoder()
@@ -223,7 +224,7 @@ describe('CampaignService.scrapeLandingPageStream', () => {
       )
     await CampaignService.scrapeLandingPageStream('https://example.com/xyz', () => {})
 
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = at(fetchMock.mock.calls, 0)
     expect(init?.method).toBe('POST')
     const body = JSON.parse(init?.body as string)
     expect(body.url).toBe('https://example.com/xyz')

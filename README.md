@@ -339,6 +339,11 @@ Two linters, both blocking in CI (`format · lint · typecheck`):
   Biome's own version of the rule missed un-awaited Supabase queries (tested on Biome 2.6.6).
   Ends with `.catch(...)` or is marked `void` when the called function reports its own errors.
 
+Types (`pnpm tsc --noEmit`, the `typecheck` step) run `strict` plus `noUncheckedIndexedAccess`,
+`noImplicitOverride` and `noFallthroughCasesInSwitch`: a list or map read may be `undefined` and
+must be handled (a fallback, a guard, or in tests `at()` from `test/_helpers/at.ts`), not silenced
+with `!`.
+
 ### Quality baseline (2026-11-25)
 
 Biome found older code breaking 17 rules in 63 file entries. Those files are listed per rule in

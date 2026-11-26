@@ -18,6 +18,7 @@ vi.mock('@/lib/supabase/client', () => ({
 }))
 
 import { SendTestDialog } from '@/components/editor/send-test-dialog'
+import { at } from './_helpers/at'
 
 const VALID_CAMPAIGN_ID = '11111111-1111-1111-1111-111111111111'
 
@@ -69,7 +70,7 @@ describe('<SendTestDialog />', () => {
     fireEvent.click(screen.getByRole('button', { name: /send test/i }))
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
-    const [, init] = fetchMock.mock.calls[0]
+    const [, init] = at(fetchMock.mock.calls, 0)
     const body = JSON.parse(init.body)
     expect(body).toEqual({ campaignId: VALID_CAMPAIGN_ID, emailDay: 1 })
     // Defense in depth: even if a future caller passes recipientEmail, the

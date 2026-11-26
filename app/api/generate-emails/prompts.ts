@@ -90,8 +90,10 @@ export function getCampaignStructure(type: string, days: number): string {
       ),
   } satisfies Record<string, () => string>
 
-  const build: (() => string) | undefined = structures[type as keyof typeof structures]
-  return (build ?? structures.nurture)()
+  const build = Object.hasOwn(structures, type)
+    ? structures[type as keyof typeof structures]
+    : structures.nurture
+  return build()
 }
 
 export function getToneGuidelines(tone: string): string {
@@ -104,8 +106,7 @@ export function getToneGuidelines(tone: string): string {
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
   } satisfies Record<string, string>
 
-  const guideline: string | undefined = tones[tone as keyof typeof tones]
-  return guideline || tones.friendly
+  return Object.hasOwn(tones, tone) ? tones[tone as keyof typeof tones] : tones.friendly
 }
 
 function formatList(items: string[] | undefined, prefix: string, emptyNote: string): string {

@@ -47,8 +47,9 @@ export function getSubjectForDay(day: number, type: string): string {
     ],
   } satisfies Record<string, string[]>
 
-  const forType: string[] | undefined = subjects[type as keyof typeof subjects]
-  const typeSubjects = forType ?? subjects.nurture
+  const typeSubjects: string[] = Object.hasOwn(subjects, type)
+    ? subjects[type as keyof typeof subjects]
+    : subjects.nurture
   return typeSubjects[Math.min(day - 1, typeSubjects.length - 1)] ?? `Day ${day}`
 }
 
