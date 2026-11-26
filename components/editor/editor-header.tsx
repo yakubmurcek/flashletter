@@ -94,9 +94,9 @@ export function EditorHeader({
             </Button>
             {!FEATURE_FLAGS.ENABLE_TEST_SEND ? null : canSendTest ? (
               <SendTestDialog
-                campaignId={campaignId!}
-                emailDay={selectedEmailDay!}
-                emailSubject={selectedEmailSubject!}
+                campaignId={campaignId}
+                emailDay={selectedEmailDay}
+                emailSubject={selectedEmailSubject}
                 trigger={
                   <Button
                     size="sm"

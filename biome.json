@@ -105,30 +105,6 @@
       }
     },
     {
-      "includes": ["lib/services/campaign.service.ts"],
-      "linter": {
-        "rules": {
-          "complexity": {
-            "noStaticOnlyClass": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": [
-        "lib/utils/email-links.ts",
-        "lib/utils/playwright-scraper.ts",
-        "lib/utils/scraper.ts"
-      ],
-      "linter": {
-        "rules": {
-          "complexity": {
-            "useOptionalChain": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["app/globals.css"],
       "linter": {
         "rules": {
@@ -166,9 +142,6 @@
     },
     {
       "includes": [
-        "components/editor/editor-header.tsx",
-        "lib/supabase/middleware.ts",
-        "lib/supabase/server.ts",
         "test/ai.test.ts",
         "test/analyzer.test.ts",
         "test/auth-callback-route.test.ts",
@@ -210,7 +183,6 @@
     },
     {
       "includes": [
-        "lib/services/campaign.service.ts",
         "lib/utils/markdown-renderer.tsx",
         "test/generate-emails-stream-route.test.ts",
         "test/scrape-landing-stream-route.test.ts"
@@ -219,16 +191,6 @@
         "rules": {
           "suspicious": {
             "noAssignInExpressions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["lib/hooks/use-ai-chat.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "noConfusingVoidType": "off"
           }
         }
       }
@@ -250,16 +212,6 @@
         "rules": {
           "suspicious": {
             "noExplicitAny": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["lib/supabase/middleware.ts", "lib/supabase/server.ts"],
-      "linter": {
-        "rules": {
-          "suspicious": {
-            "useIterableCallbackReturn": "off"
           }
         }
       }

@@ -52,8 +52,8 @@ export class RateLimitedError extends Error {
   }
 }
 
-export class CampaignService {
-  static async scrapeLandingPage(url: string): Promise<LandingPageData> {
+export const CampaignService = {
+  async scrapeLandingPage(url: string): Promise<LandingPageData> {
     const response = await fetch('/api/scrape-landing', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -89,9 +89,9 @@ export class CampaignService {
       content,
       metadata: normalizedMetadata,
     }
-  }
+  },
 
-  static async scrapeLandingPageStream(
+  async scrapeLandingPageStream(
     url: string,
     onEvent: (event: ScrapeStreamEvent) => void,
     signal?: AbortSignal,
@@ -124,8 +124,11 @@ export class CampaignService {
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        let newlineIndex: number
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+        for (
+          let newlineIndex = buffer.indexOf('\n');
+          newlineIndex !== -1;
+          newlineIndex = buffer.indexOf('\n')
+        ) {
           const line = buffer.slice(0, newlineIndex).trim()
           buffer = buffer.slice(newlineIndex + 1)
           if (!line) continue
@@ -179,9 +182,9 @@ export class CampaignService {
       throw new Error(SCRAPE_BROKEN_MESSAGE)
     }
     return completed
-  }
+  },
 
-  static async generateEmails(
+  async generateEmails(
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
@@ -222,9 +225,9 @@ export class CampaignService {
       warning: parsed.warning,
       usage: parsed.usage,
     }
-  }
+  },
 
-  static async generateEmailsStream(
+  async generateEmailsStream(
     landingUrl: string,
     landingContent: string,
     config: CampaignConfig,
@@ -272,8 +275,11 @@ export class CampaignService {
         if (done) break
 
         buffer += decoder.decode(value, { stream: true })
-        let newlineIndex: number
-        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+        for (
+          let newlineIndex = buffer.indexOf('\n');
+          newlineIndex !== -1;
+          newlineIndex = buffer.indexOf('\n')
+        ) {
           const line = buffer.slice(0, newlineIndex).trim()
           buffer = buffer.slice(newlineIndex + 1)
           if (!line) continue
@@ -311,5 +317,5 @@ export class CampaignService {
       throw new Error('Stream closed before completion')
     }
     return completedEmails
-  }
+  },
 }
