@@ -32,7 +32,8 @@ updates:
         update-types:
           - version-update:semver-major
 
-  # GitHub Actions versions in workflow files.
+  # GitHub Actions in workflow files. Each is pinned to a commit SHA with its version in a
+  # comment (a tag can be moved to other code; a SHA cannot); Dependabot bumps both together.
   - package-ecosystem: github-actions
     directory: /
     schedule:
