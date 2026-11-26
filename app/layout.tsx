@@ -100,6 +100,7 @@ export default function RootLayout({
       <head>
         <script
           type="application/ld+json"
+          // biome-ignore lint/security/noDangerouslySetInnerHtml: JSON-LD has to be raw script text (Next.js docs pattern); safeJsonLd escapes `<` so the data cannot close the tag.
           dangerouslySetInnerHTML={{
             __html: safeJsonLd({
               '@context': 'https://schema.org',
