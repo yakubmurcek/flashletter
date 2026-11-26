@@ -239,8 +239,6 @@
         "test/middleware.test.ts",
         "test/use-anonymous-limit.test.tsx",
         "test/use-campaign-config.test.tsx",
-        "test/use-campaign-loader.test.tsx",
-        "test/use-url-state.test.tsx",
         "test/util-error-handling.test.ts",
         "test/util-storage.test.ts",
         "test/util-validation.test.ts",
