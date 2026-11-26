@@ -17,6 +17,16 @@ describe('withContentKeys', () => {
     expect(after.map((k) => k.key)).toEqual(before.slice(1).map((k) => k.key))
   })
 
+  it('never repeats a key, even when an item looks like a numbered repeat', () => {
+    for (const items of [
+      ['a#2', 'a', 'a'],
+      ['a', 'a', 'a#2'],
+    ]) {
+      const keys = withContentKeys(items).map((k) => k.key)
+      expect(new Set(keys).size).toBe(keys.length)
+    }
+  })
+
   it('returns an empty list for no items', () => {
     expect(withContentKeys([])).toEqual([])
   })
