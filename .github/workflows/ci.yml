@@ -46,14 +46,27 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Dead code: unused files, exports, types and dependencies (config and reasons for every
+      # exception in knip.jsonc). Any new finding fails the job.
+      - name: Unused code
+        run: pnpm knip
+
       - name: Typecheck
         run: pnpm tsc --noEmit
+
+      # Copy-paste: fails when duplicated code exceeds the threshold in .jscpd.json
+      # (today's value). Lower the threshold when duplication goes down, never raise it.
+      # Runs even when an earlier step failed, so one run reports every problem.
+      - name: Duplicate code
+        if: ${{ !cancelled() }}
+        run: pnpm dupes
 
       # Tests still run inside this job — a failure here fails the whole job
       # and blocks the merge via branch protection. The display name above
       # omits "· test" only to keep the check label short; tests still gate.
+      # Coverage is printed, not enforced yet.
       - name: Test
-        run: pnpm test
+        run: pnpm test:coverage
 
   database:
     # Builds an empty database from supabase/migrations + the fake seed data and

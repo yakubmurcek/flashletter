@@ -1,0 +1,12 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  // Run by hand once per Stripe mode (README "Billing"), not imported by the app.
+  "entry": ["scripts/stripe-setup.mjs"],
+  // Only a JSDoc type hint in postcss.config.mjs; postcss installs it itself.
+  "ignoreDependencies": ["postcss-load-config"],
+  "ignoreIssues": {
+    // Vendored shadcn/ui kit: each file keeps the library's full API so a new screen can use
+    // any part (e.g. DialogClose) without re-generating the component.
+    "components/ui/**": ["exports", "types"],
+  },
+}

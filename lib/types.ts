@@ -4,15 +4,7 @@
  */
 
 // Re-export types from schemas (schema-generated for validation)
-export type {
-  Email,
-  CampaignConfig,
-  LandingPageData,
-  SelectedContext,
-  Campaign,
-  CampaignWithEmails,
-  CampaignContext,
-} from './schemas'
+export type { Email, CampaignConfig, LandingPageData, SelectedContext } from './schemas'
 
 export type { GenerateEmailsResponse } from './schemas/api'
 

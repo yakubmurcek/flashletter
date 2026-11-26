@@ -1,0 +1,5 @@
+{
+  "path": ["app", "components", "lib", "middleware.ts"],
+  "threshold": 2.27,
+  "reporters": ["console"]
+}

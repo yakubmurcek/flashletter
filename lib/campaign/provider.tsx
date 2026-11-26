@@ -55,7 +55,7 @@ function extractTitleFromContent(html?: string | null): string | null {
 }
 
 /** "Cal.com | Scheduling Software for…" → "Cal.com": page titles carry SEO tails. */
-export function shortenPageTitle(title: string): string {
+function shortenPageTitle(title: string): string {
   const head = title.split(/\s+[|\u2013\u2014-]\s+|\s*[|:]\s+/)[0]?.trim()
   return head && head.length >= 3 ? head : title.trim()
 }

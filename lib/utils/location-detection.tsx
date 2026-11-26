@@ -36,7 +36,7 @@ interface RegionContextValue {
  * Detect user region using IP geolocation via API
  * Privacy-friendly - uses Vercel's built-in geolocation
  */
-export async function detectRegionFromIP(): Promise<LocationInfo> {
+async function detectRegionFromIP(): Promise<LocationInfo> {
   try {
     const response = await fetch('/api/detect-region', {
       method: 'GET',
@@ -118,7 +118,7 @@ function createLocationInfo(countryCode: string | null): LocationInfo {
 /**
  * Save user's chosen region to localStorage
  */
-export function saveUserRegion(region: 'US' | 'OTHER'): void {
+function saveUserRegion(region: 'US' | 'OTHER'): void {
   try {
     localStorage.setItem('user-privacy-region', region)
   } catch (error) {

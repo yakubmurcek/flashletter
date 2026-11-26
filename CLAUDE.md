@@ -13,7 +13,8 @@ polish, or exhaustive coverage. Bias decisions accordingly.
 - **One branch, `main`, always production** (trunk-based since 2026-11-25; `dev` is retired).
   Work happens on short branches (`feat/...`, `fix/...`) merged into `main` by PR.
 - **Enforced by the ruleset on `main`** (Settings → Rules), not by habit: no direct pushes or force
-  pushes, squash-only, and every required check green: `format · lint · typecheck` (tests inside),
+  pushes, squash-only, and every required check green: `format · lint · typecheck` (tests with coverage,
+  the knip unused-code and jscpd copy-paste gates inside),
   `database · migrations match schema`, `e2e · main flows`, `PR title` (`type(scope): summary`) and `PR size`
   (400 changed lines, lockfile and generated schema excluded; the `big-ok` label overrides).
 - **Pre-commit:** Husky + lint-staged: Biome lint and Prettier on staged files.

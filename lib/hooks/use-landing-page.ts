@@ -11,7 +11,7 @@ import {
   getCleanDomain,
 } from '../types/scrape-progress'
 
-export type AnalyzeStatus = 'success' | 'failure' | 'aborted' | null
+type AnalyzeStatus = 'success' | 'failure' | 'aborted' | null
 
 interface UseLandingPageReturn {
   isAnalyzing: boolean

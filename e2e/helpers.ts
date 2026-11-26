@@ -1,7 +1,7 @@
 import { expect, type Page } from '@playwright/test'
 
 /** Password of every fake user in supabase/seed.sql. */
-export const PASSWORD = 'password123'
+const PASSWORD = 'password123'
 
 export async function signIn(page: Page, email: string) {
   await page.goto('/login')

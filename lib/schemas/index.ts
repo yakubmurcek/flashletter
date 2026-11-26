@@ -71,26 +71,26 @@ export const campaignWithEmailsSchema = campaignSchema.extend({
  */
 
 // Message schema
-export const messageSchema = z.object({
+const messageSchema = z.object({
   role: z.enum(['user', 'assistant', 'system']),
   content: z.string(),
 })
 
 // Email context schema for chat
-export const emailContextSchema = z.object({
+const emailContextSchema = z.object({
   subject: z.string().optional(),
   content: z.string().optional(),
   campaignType: z.string().optional(),
 })
 
 // Selected text context schema
-export const selectedContextSchema = z.object({
+const selectedContextSchema = z.object({
   text: z.string(),
   action: z.string(),
 })
 
 // Campaign context schema for chat
-export const campaignContextSchema = z.object({
+const campaignContextSchema = z.object({
   landingPageData: landingPageDataSchema,
   config: campaignConfigSchema,
   allEmails: z.array(emailSchema),
@@ -130,12 +130,6 @@ export const aiEmailsResponseSchema = z.object({
   emails: z.array(aiEmailOutputSchema).min(1),
 })
 
-// Backward-compatible alias for any callers that already validate full-shape
-// emails (includes id + uuid). Prefer `aiEmailsResponseSchema` for new code.
-export const emailsResponseSchema = z.object({
-  emails: z.array(emailSchema).min(1),
-})
-
 /**
  * Exported types
  */
@@ -143,16 +137,8 @@ export const emailsResponseSchema = z.object({
 export type Email = z.infer<typeof emailSchema>
 export type CampaignConfig = z.infer<typeof campaignConfigSchema>
 export type LandingPageData = z.infer<typeof landingPageDataSchema>
-export type { LandingPageAnalysis } from './analysis'
-export { landingPageAnalysisSchema } from './analysis'
 export type Campaign = z.infer<typeof campaignSchema>
 export type CampaignWithEmails = z.infer<typeof campaignWithEmailsSchema>
-export type Message = z.infer<typeof messageSchema>
 export type EmailContext = z.infer<typeof emailContextSchema>
 export type SelectedContext = z.infer<typeof selectedContextSchema>
 export type CampaignContext = z.infer<typeof campaignContextSchema>
-export type ChatRequest = z.infer<typeof chatRequestSchema>
-export type EmailEdit = z.infer<typeof emailEditSchema>
-export type EmailsResponse = z.infer<typeof emailsResponseSchema>
-export type AiEmailOutput = z.infer<typeof aiEmailOutputSchema>
-export type AiEmailsResponse = z.infer<typeof aiEmailsResponseSchema>

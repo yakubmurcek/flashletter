@@ -16,7 +16,6 @@ import * as redisClientModule from '@/lib/utils/redis-client'
 // a stub returning undefined, which breaks every function that delegates to it.
 vi.mock('@/lib/utils/redis-client', () => ({
   getRedisClient: vi.fn(),
-  isRedisAvailable: vi.fn(() => true),
   withRedisFallback: vi.fn(async <T>(op: (client: unknown) => Promise<T>, fallback: T) => {
     const client = (
       vi.mocked(redisClientModule.getRedisClient) as unknown as () => unknown | undefined

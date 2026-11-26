@@ -35,9 +35,9 @@ All schemas are now defined in one place:
 - ✅ `chatRequestSchema` - Chat API request
 - ✅ `emailEditSchema` - Email edit response
 
-#### OpenAI Schemas (`lib/schemas/index.ts`)
+#### AI Schemas (`lib/schemas/index.ts`)
 
-- ✅ `emailsResponseSchema` - Email generation response
+- ✅ `aiEmailsResponseSchema` - Email generation response from Claude
 
 #### API Schemas (`lib/schemas/api.ts`)
 
@@ -100,17 +100,12 @@ import { generateEmailsRequestSchema } from '@/lib'
 const validated = generateEmailsRequestSchema.parse(body)
 ```
 
-### Use with OpenAI
+### Validate the AI response
 
 ```typescript
-import { zodTextFormat } from 'openai/helpers/zod'
-import { emailsResponseSchema } from '@/lib'
+import { aiEmailsResponseSchema } from '@/lib'
 
-const response = await openai.responses.parse({
-  text: {
-    format: zodTextFormat(emailsResponseSchema, 'emails'),
-  },
-})
+const { emails } = aiEmailsResponseSchema.parse(JSON.parse(text))
 ```
 
 ## Verification

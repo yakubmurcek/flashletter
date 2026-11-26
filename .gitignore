@@ -7,6 +7,9 @@
 /.next/
 /out/
 
+# test coverage reports
+/coverage
+
 # production
 /build
 

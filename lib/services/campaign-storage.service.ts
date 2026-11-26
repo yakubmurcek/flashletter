@@ -61,7 +61,7 @@ type CampaignUpdateData = CampaignInsertData & {
  * database (e.g. generation failed before saving it). Callers match on
  * `name`, so mocks of this module don't need to export the class.
  */
-export class EmailNotSavedError extends Error {
+class EmailNotSavedError extends Error {
   constructor(day: number) {
     super(`Day ${day} is not saved yet, so this edit was not kept.`)
     this.name = 'EmailNotSavedError'
