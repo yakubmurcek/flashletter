@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
+import { mockReturnPartial } from './_helpers/partial'
 import { useUrlState } from '@/lib/hooks/use-url-state'
 
 vi.mock('next/navigation', () => ({
@@ -19,15 +20,15 @@ describe('useUrlState', () => {
   })
 
   it('returns null for missing campaign ID', () => {
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -40,15 +41,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('campaign=camp-123'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -61,15 +62,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('campaign=camp@123!'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -82,15 +83,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('campaign='),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -98,15 +99,15 @@ describe('useUrlState', () => {
   })
 
   it('returns null for missing email ID', () => {
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -119,15 +120,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('email=5'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -140,15 +141,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('email=0'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -161,15 +162,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('email=101'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -182,15 +183,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('email=five'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -198,15 +199,15 @@ describe('useUrlState', () => {
   })
 
   it('getEmailIdWithFallback returns fallback when email ID missing', () => {
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -219,15 +220,15 @@ describe('useUrlState', () => {
       return null
     })
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: mockGet,
       toString: vi.fn().mockReturnValue('email=7'),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -237,15 +238,15 @@ describe('useUrlState', () => {
   it('setParam updates URL', () => {
     const mockPush = vi.fn()
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: mockPush,
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -259,16 +260,16 @@ describe('useUrlState', () => {
   it('deleteParam removes URL parameter', () => {
     const mockReplace = vi.fn()
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue('campaign=camp-123'),
       entries: vi.fn().mockReturnValue([['campaign', 'camp-123']]),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: mockReplace,
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -283,15 +284,15 @@ describe('useUrlState', () => {
     const mockPush = vi.fn()
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: mockPush,
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -307,15 +308,15 @@ describe('useUrlState', () => {
     const mockPush = vi.fn()
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: mockPush,
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -330,7 +331,7 @@ describe('useUrlState', () => {
   it('cleanupParams removes non-specified params', () => {
     const mockReplace = vi.fn()
 
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue('campaign=camp-123&email=5&other=value'),
       entries: vi.fn().mockReturnValue([
@@ -338,12 +339,12 @@ describe('useUrlState', () => {
         ['email', '5'],
         ['other', 'value'],
       ]),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: mockReplace,
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 
@@ -355,15 +356,15 @@ describe('useUrlState', () => {
   })
 
   it('exports validation functions', () => {
-    vi.mocked(useSearchParams).mockReturnValue({
+    mockReturnPartial(useSearchParams, {
       get: vi.fn().mockReturnValue(null),
       toString: vi.fn().mockReturnValue(''),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useUrlState())
 

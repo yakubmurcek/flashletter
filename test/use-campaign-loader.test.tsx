@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
+import { mockReturnPartial } from './_helpers/partial'
 import { useCampaignLoader } from '@/lib/hooks/use-campaign-loader'
 
 vi.mock('next/navigation', () => ({
@@ -29,7 +30,7 @@ describe('useCampaignLoader', () => {
   })
 
   it('initializes with idle state', () => {
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: null,
       landingPageData: null,
       config: null,
@@ -37,17 +38,17 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: null,
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
       replace: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignLoader())
 
@@ -57,7 +58,7 @@ describe('useCampaignLoader', () => {
   })
 
   it('exposes loadCampaign method', () => {
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: null,
       landingPageData: null,
       config: null,
@@ -65,16 +66,16 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: null,
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignLoader())
 
@@ -84,7 +85,7 @@ describe('useCampaignLoader', () => {
   it('loads campaign from URL on mount', async () => {
     const mockLoadCampaign = vi.fn().mockResolvedValue(undefined)
 
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: 'Test Campaign',
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
@@ -92,16 +93,16 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: 'camp-123',
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue('camp-123'),
       cleanupParams: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignLoader())
 
@@ -117,7 +118,7 @@ describe('useCampaignLoader', () => {
 
     const mockPush = vi.fn()
 
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: null,
       landingPageData: null,
       config: null,
@@ -125,20 +126,20 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: null,
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: mockPush,
-    } as any)
+    })
 
     const mockCleanupParams = vi.fn()
     // Use null URL id so the secondary useEffect can't keep flipping the
     // state back to 'loading' (it watches `campaignIdFromUrl !== loadedId`,
     // and a failed load leaves loadedCampaignId at null forever).
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: mockCleanupParams,
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignLoader())
 
@@ -162,7 +163,7 @@ describe('useCampaignLoader', () => {
       emails: [{ id: 1, uuid: 'email-1', day: 1, subject: 'Day 1', preview: 'p', content: 'c' }],
     }
 
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: campaignData.name,
       landingPageData: campaignData.landingPageData,
       config: campaignData.config,
@@ -170,16 +171,16 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: 'camp-123',
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignLoader())
 
@@ -196,7 +197,7 @@ describe('useCampaignLoader', () => {
 
     // Set up initial mocks (loading state) BEFORE rendering — vi.mocked() on
     // a hook captures the implementation at render time, not at call time.
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: null,
       landingPageData: null,
       config: null,
@@ -204,22 +205,22 @@ describe('useCampaignLoader', () => {
       isLoading: true,
       currentCampaignId: null,
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useUrlState).mockReturnValue({
+    mockReturnPartial(useUrlState, {
       getCampaignId: vi.fn().mockReturnValue(null),
       cleanupParams: vi.fn(),
-    } as any)
+    })
 
     const { result, rerender } = renderHook(() => useCampaignLoader())
     expect(result.current.loadingState).toBe('loading')
 
     // Swap context to loaded state and re-render the same hook instance.
-    vi.mocked(useCampaign).mockReturnValue({
+    mockReturnPartial(useCampaign, {
       campaignName: 'Test',
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       config: { tone: 'friendly', campaignType: 'nurture', days: 3 },
@@ -227,7 +228,7 @@ describe('useCampaignLoader', () => {
       isLoading: false,
       currentCampaignId: 'camp-123',
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
     rerender()
 
