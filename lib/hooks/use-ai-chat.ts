@@ -40,7 +40,7 @@ export interface EmailBasis {
  * Applies an AI edit. With a `basis`, the receiver may refuse (return false)
  * when the email no longer matches it; without one, it applies regardless.
  */
-export type ApplyEmailEdits = (edits: EmailEdits, basis?: EmailBasis) => boolean | void
+export type ApplyEmailEdits = (edits: EmailEdits, basis?: EmailBasis) => boolean | undefined
 
 function basisOf(email: { subject?: string; content?: string }): EmailBasis {
   return { subject: email.subject ?? '', content: email.content ?? '' }

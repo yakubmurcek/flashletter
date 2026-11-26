@@ -169,7 +169,7 @@ export async function scrapeWithPlaywright(
       }
     }
 
-    if (!response || !response.ok()) {
+    if (!response?.ok()) {
       throw new Error(`Failed to load page: ${response?.status()} ${response?.statusText()}`)
     }
 

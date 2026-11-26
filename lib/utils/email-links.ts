@@ -26,7 +26,7 @@ interface ParsedLink {
 }
 
 export function fixEmailLinks(markdown: string, landingUrl?: string): string {
-  if (!markdown || !markdown.includes('](')) return markdown
+  if (!markdown?.includes('](')) return markdown
 
   const base = parseBase(landingUrl)
   let out = ''

@@ -555,7 +555,7 @@ function truncateHtmlByTextLength(html: string, cutoff: number, appendEllipsis: 
 
 function buildOpenTag(element: cheerio.Cheerio<AnyNode>): string {
   const node = element.get(0)
-  if (!node || node.type !== 'tag') {
+  if (node?.type !== 'tag') {
     return ''
   }
 
