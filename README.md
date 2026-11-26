@@ -348,7 +348,8 @@ pnpm test:coverage  # Vitest with v8 coverage, prints a summary
 
 Both run in CI's `format · lint · typecheck` job. `pnpm dupes` fails when duplication goes over the
 `threshold` in `.jscpd.json`, set to the value on 2026-11-27 (2.19%, 36 clones). When duplication
-drops, lower the threshold; never raise it. Coverage is reported, not enforced (2026-11-27: 52.9% of
+drops, lower the threshold; never raise it. The threshold is a share of all lines, so deleting
+unduplicated code can also push it over: then remove a clone or two in the same PR. Coverage is reported, not enforced (2026-11-27: 52.9% of
 lines, 80.4% of branches).
 
 ### Quality baseline (2026-11-25)
