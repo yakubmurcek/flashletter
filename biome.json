@@ -145,7 +145,6 @@
     {
       "includes": [
         "components/campaign/analysis-card.tsx",
-        "components/diff-viewer.tsx",
         "components/editor/email-sidebar.tsx",
         "components/ui/slider.tsx",
         "lib/utils/markdown-renderer.tsx"
