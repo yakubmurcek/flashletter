@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 // Old files allowed to break a Biome rule (README "Quality baseline"). The lists only
 // shrink: lower this number when you fix a file, never raise it.
-const MAX_BASELINE_ENTRIES = 63
+const MAX_BASELINE_ENTRIES = 58
 
 const root = join(__dirname, '..')
 const config = JSON.parse(readFileSync(join(root, 'biome.json'), 'utf8')) as {

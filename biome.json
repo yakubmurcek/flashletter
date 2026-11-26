@@ -193,13 +193,7 @@
       }
     },
     {
-      "includes": [
-        "components/campaign/analysis-card.tsx",
-        "components/diff-viewer.tsx",
-        "components/editor/email-sidebar.tsx",
-        "components/ui/slider.tsx",
-        "lib/utils/markdown-renderer.tsx"
-      ],
+      "includes": ["components/diff-viewer.tsx"],
       "linter": {
         "rules": {
           "suspicious": {
@@ -211,7 +205,6 @@
     {
       "includes": [
         "lib/services/campaign.service.ts",
-        "lib/utils/markdown-renderer.tsx",
         "test/generate-emails-stream-route.test.ts",
         "test/scrape-landing-stream-route.test.ts"
       ],

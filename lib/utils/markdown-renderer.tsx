@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { withContentKeys } from '@/lib/utils/content-keys'
 
 export function processInlineFormattingForPreview(
   text: string,
@@ -13,9 +14,8 @@ export function processInlineFormattingForPreview(
   // [\s\S] lets bold span a newline if one survives into the chunk.
   const inlineRegex = /\*\*([\s\S]*?)\*\*|\[([^\]]+)\]\(([^)]+)\)/g
 
-  let match: RegExpExecArray | null
   let idx = 0
-  while ((match = inlineRegex.exec(text)) !== null) {
+  for (const match of text.matchAll(inlineRegex)) {
     if (match.index > lastIndex) {
       parts.push(text.slice(lastIndex, match.index))
     }
@@ -69,10 +69,10 @@ export function renderMarkdown(text: string) {
     if (currentBlockLines.length === 0) return
 
     if (currentBlockType === 'list') {
-      const listItems = currentBlockLines.map((line, idx) => {
+      const listItems = withContentKeys(currentBlockLines).map(({ key, item: line }) => {
         // Remove list marker
         const content = line.replace(/^[-•*]\s+/, '')
-        return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
+        return <li key={key}>{processInlineFormattingForPreview(content)}</li>
       })
       elements.push(
         <ul
@@ -83,9 +83,9 @@ export function renderMarkdown(text: string) {
         </ul>,
       )
     } else if (currentBlockType === 'ordered-list') {
-      const listItems = currentBlockLines.map((line, idx) => {
+      const listItems = withContentKeys(currentBlockLines).map(({ key, item: line }) => {
         const content = line.replace(/^\d{1,2}[.)]\s+/, '')
-        return <li key={idx}>{processInlineFormattingForPreview(content)}</li>
+        return <li key={key}>{processInlineFormattingForPreview(content)}</li>
       })
       elements.push(
         <ol
@@ -115,13 +115,15 @@ export function renderMarkdown(text: string) {
     currentBlockType = null
   }
 
-  lines.forEach((line, index) => {
+  // Keys are line numbers: the text is parsed afresh on every render, so a
+  // block's position in the document is its identity.
+  for (const [index, line] of lines.entries()) {
     const trimmed = line.trim()
 
     // Empty lines trigger a block flush/reset
     if (!trimmed) {
       flushBlock(index)
-      return
+      continue
     }
 
     // Headings
@@ -135,7 +137,7 @@ export function renderMarkdown(text: string) {
           {trimmed.slice(2)}
         </h1>,
       )
-      return
+      continue
     }
     if (trimmed.startsWith('## ')) {
       flushBlock(index)
@@ -147,7 +149,7 @@ export function renderMarkdown(text: string) {
           {trimmed.slice(3)}
         </h2>,
       )
-      return
+      continue
     }
     if (trimmed.startsWith('### ')) {
       flushBlock(index)
@@ -159,7 +161,7 @@ export function renderMarkdown(text: string) {
           {trimmed.slice(4)}
         </h3>,
       )
-      return
+      continue
     }
 
     // List Items
@@ -188,7 +190,7 @@ export function renderMarkdown(text: string) {
       }
       currentBlockLines.push(trimmed)
     }
-  })
+  }
 
   // Flush any remaining content
   flushBlock(lines.length)

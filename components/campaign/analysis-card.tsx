@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Pencil, Check } from 'lucide-react'
 import type { LandingPageAnalysis } from '@/lib/schemas/analysis'
+import { withContentKeys } from '@/lib/utils/content-keys'
 
 interface AnalysisCardProps {
   analysis: LandingPageAnalysis
@@ -91,9 +92,9 @@ function ListField({
         <p className="text-sm text-muted-foreground italic">{emptyMessage}</p>
       ) : (
         <ul className="flex flex-wrap gap-1.5">
-          {items.map((item, index) => (
+          {withContentKeys(items).map(({ key, item }) => (
             <li
-              key={`${label}-${index}`}
+              key={key}
               className="text-xs px-2.5 py-1 rounded-full bg-primary/8 border border-primary/15 text-foreground/80"
             >
               {item}
