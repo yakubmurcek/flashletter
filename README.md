@@ -349,6 +349,19 @@ knip finds unused files, exports, types and dependencies. It runs in CI's `forma
 job and fails on any finding (2026-11-27: zero). An export kept on purpose goes into `knip.jsonc`
 with a comment saying why; today that is only the vendored shadcn kit in `components/ui/`.
 
+### Copy-paste and test coverage
+
+```bash
+pnpm dupes          # jscpd: duplicated code in app/, components/, lib/, middleware.ts
+pnpm test:coverage  # Vitest with v8 coverage, prints a summary
+```
+
+Both run in CI's `format · lint · typecheck` job. `pnpm dupes` fails when duplication goes over the
+`threshold` in `.jscpd.json`, set to the value on 2026-11-27 after the knip cleanup (2.26%, 37 clones). When duplication
+drops, lower the threshold; never raise it. The threshold is a share of all lines, so deleting
+unduplicated code can also push it over: then remove a clone or two in the same PR. Coverage is reported, not enforced (2026-11-27: 53.7% of
+lines, 80.4% of branches).
+
 ### Quality baseline (2026-11-25)
 
 Biome found older code breaking 17 rules in 63 file entries. Those files are listed per rule in
