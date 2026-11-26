@@ -31,7 +31,9 @@ vi.mock('@/components/layouts/app-shell', () => ({
 }))
 vi.mock('@/components/auth/sign-out-button', () => ({ SignOutButton: () => null }))
 vi.mock('@/components/billing/upgrade-button', () => ({
-  UpgradeButton: ({ children }: { children: ReactNode }) => <button>{children}</button>,
+  UpgradeButton: ({ children }: { children: ReactNode }) => (
+    <button type="button">{children}</button>
+  ),
 }))
 vi.mock('@/components/billing/portal-button', () => ({ PortalButton: () => null }))
 vi.mock('@/components/billing/resume-checkout', () => ({ ResumeCheckout: () => null }))

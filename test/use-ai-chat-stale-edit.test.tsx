@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { must } from './_helpers/must'
 import { renderHook, act } from '@testing-library/react'
 import { useAIChat, useChatEditGuard, type EmailEdits } from '@/lib/hooks/use-ai-chat'
 import type { FullCampaignContext, Email } from '@/lib/types'
@@ -57,7 +58,7 @@ describe('useAIChat edit that lands after the email changed', () => {
       subject: ORIGINAL.subject,
       content: ORIGINAL.content,
     })
-    const last = result.current.messages.at(-1)!
+    const last = must(result.current.messages.at(-1))
     expect(last.appliedEdit).toBe(true)
     expect(last.proposedEdit).toBeUndefined()
   })
@@ -76,16 +77,16 @@ describe('useAIChat edit that lands after the email changed', () => {
     await land()
 
     expect(onApplyEdits).not.toHaveBeenCalled()
-    const last = result.current.messages.at(-1)!
+    const last = must(result.current.messages.at(-1))
     expect(last.appliedEdit).toBe(false)
     expect(last.proposedEdit).toEqual(AI_EDITS)
     expect(last.applyProposedEdit).toBeTypeOf('function')
 
-    const apply = last.applyProposedEdit!
+    const apply = must(last.applyProposedEdit)
     act(() => apply())
     expect(onApplyEdits).toHaveBeenCalledTimes(1)
     expect(onApplyEdits).toHaveBeenCalledWith(AI_EDITS)
-    const after = result.current.messages.at(-1)!
+    const after = must(result.current.messages.at(-1))
     expect(after.appliedEdit).toBe(true)
     expect(after.applyProposedEdit).toBeUndefined()
 
@@ -100,7 +101,7 @@ describe('useAIChat edit that lands after the email changed', () => {
     await land()
 
     expect(onApplyEdits).toHaveBeenCalledTimes(1)
-    const last = result.current.messages.at(-1)!
+    const last = must(result.current.messages.at(-1))
     expect(last.appliedEdit).toBe(false)
     expect(last.proposedEdit).toEqual(AI_EDITS)
   })
@@ -123,7 +124,7 @@ describe('useAIChat edit that lands after the email changed', () => {
       subject: ORIGINAL.subject,
       content: ORIGINAL.content,
     })
-    expect(result.current.messages.at(-1)!.appliedEdit).toBe(true)
+    expect(must(result.current.messages.at(-1)).appliedEdit).toBe(true)
   })
 })
 

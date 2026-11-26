@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { must } from './_helpers/must'
 import type { ScrapeStreamEvent } from '@/lib/types/scrape-progress'
 
 // Mock heavy dependencies before importing the route
@@ -71,8 +72,7 @@ async function readStreamEvents(response: Response): Promise<ScrapeStreamEvent[]
     const { value, done } = await reader.read()
     if (done) break
     buffer += decoder.decode(value, { stream: true })
-    let idx: number
-    while ((idx = buffer.indexOf('\n')) !== -1) {
+    for (let idx = buffer.indexOf('\n'); idx !== -1; idx = buffer.indexOf('\n')) {
       const line = buffer.slice(0, idx).trim()
       buffer = buffer.slice(idx + 1)
       if (line) events.push(JSON.parse(line) as ScrapeStreamEvent)
@@ -234,10 +234,12 @@ describe('POST /api/scrape-landing/stream', () => {
     expect(stages).not.toContain('fetching')
     expect(stages).toEqual(['connecting', 'extracting', 'analyzing', 'synthesizing'])
 
-    const extractingEvent = events.find(
-      (e): e is Extract<ScrapeStreamEvent, { type: 'stage' }> =>
-        e.type === 'stage' && e.stageId === 'extracting',
-    )!
+    const extractingEvent = must(
+      events.find(
+        (e): e is Extract<ScrapeStreamEvent, { type: 'stage' }> =>
+          e.type === 'stage' && e.stageId === 'extracting',
+      ),
+    )
     expect(extractingEvent.context?.cached).toBe(true)
 
     expect(global.fetch).not.toHaveBeenCalled()

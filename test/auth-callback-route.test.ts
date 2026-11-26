@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import { must } from './_helpers/must'
 
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn(), captureMessage: vi.fn() }))
 
@@ -15,7 +16,7 @@ async function redirectFor(redirectTo: string) {
   url.searchParams.set('code', 'abc')
   url.searchParams.set('redirectTo', redirectTo)
   const res = await GET(new Request(url))
-  return new URL(res.headers.get('location')!)
+  return new URL(must(res.headers.get('location')))
 }
 
 describe('GET /auth/callback redirectTo', () => {

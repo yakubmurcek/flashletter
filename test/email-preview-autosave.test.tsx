@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
+import { must } from './_helpers/must'
 import { render, fireEvent, act } from '@testing-library/react'
 import { useState } from 'react'
 import type { Email } from '@/lib/types'
@@ -22,10 +23,15 @@ const EMAILS: Email[] = [
 /** Renders the preview the way the editor page does. */
 function EditorHarness({ onSave }: { onSave: (id: number, updates: Partial<Email>) => void }) {
   const [selectedId, setSelectedId] = useState(1)
-  const email = EMAILS.find((e) => e.id === selectedId)!
+  const email = must(EMAILS.find((e) => e.id === selectedId))
   return (
     <>
-      <button onClick={() => setSelectedId(2)}>Open day 2</button>
+      <button
+        type="button"
+        onClick={() => setSelectedId(2)}
+      >
+        Open day 2
+      </button>
       <EmailPreview
         key={email.id}
         email={email}

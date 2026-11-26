@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { must } from './_helpers/must'
 import Anthropic from '@anthropic-ai/sdk'
 
 const captureExceptionMock = vi.fn()
@@ -84,7 +85,7 @@ interface GenerateCall {
 }
 
 function lastCall(): GenerateCall {
-  return generateStructuredMock.mock.calls.at(-1)![0] as GenerateCall
+  return must(generateStructuredMock.mock.calls.at(-1))[0] as GenerateCall
 }
 
 function rateLimitError() {

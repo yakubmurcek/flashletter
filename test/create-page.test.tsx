@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest'
+import { must } from './_helpers/must'
 import { render, screen, cleanup, fireEvent, waitFor } from '@testing-library/react'
 import type { ReactNode } from 'react'
 
@@ -51,7 +52,7 @@ const submitButton = () => screen.getByRole('button') as HTMLButtonElement
 
 async function submit(url: string) {
   fireEvent.change(urlInput(), { target: { value: url } })
-  fireEvent.submit(urlInput().closest('form')!)
+  fireEvent.submit(must(urlInput().closest('form')))
 }
 
 async function expectRetryWorks(fetchMock: MockInstance<typeof fetch>) {
