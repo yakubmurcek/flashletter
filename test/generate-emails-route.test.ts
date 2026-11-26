@@ -241,9 +241,9 @@ describe('POST /api/generate-emails', () => {
     expect(call.system).toBe('Build instructions')
     expect(call.schema).toBe(aiEmailsResponseSchema)
     expect(call.messages).toHaveLength(1)
-    expect(call.messages[0].role).toBe('user')
-    expect(call.messages[0].content).toContain('3 emails')
-    expect(call.messages[0].content).toContain('nurture')
+    expect(call.messages[0]?.role).toBe('user')
+    expect(call.messages[0]?.content).toContain('3 emails')
+    expect(call.messages[0]?.content).toContain('nurture')
   })
 
   it('happy path: generates and saves emails with campaignId', async () => {
@@ -352,7 +352,7 @@ describe('POST /api/generate-emails', () => {
     ])
 
     await POST(buildRequest({ ...validRequestBody, campaignId: VALID_CAMPAIGN_ID }) as never)
-    expect(saveEmailsMock.mock.calls[0][1][0].content).toBe(
+    expect(saveEmailsMock.mock.calls[0]?.[1][0].content).toBe(
       '[Sign up](https://example.com/register)',
     )
   })

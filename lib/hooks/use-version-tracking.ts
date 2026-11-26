@@ -39,11 +39,7 @@ export function useVersionTracking(emails: Email[]): VersionTrackingReturn {
 
           // Map the UUID-based counts back to the email IDs
           for (const email of emails) {
-            if (email.uuid && batchCounts[email.uuid] !== undefined) {
-              counts[email.id] = batchCounts[email.uuid]
-            } else {
-              counts[email.id] = 0
-            }
+            counts[email.id] = (email.uuid && batchCounts[email.uuid]) || 0
           }
         } catch (error) {
           console.error('Failed to load version counts in batch:', error)

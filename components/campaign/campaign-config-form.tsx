@@ -63,7 +63,7 @@ export function CampaignConfigForm({
       <ConfigPreviewCard
         tone={tone}
         campaignType={campaignType}
-        emailCount={days[0]}
+        emailCount={days[0] ?? 0}
       />
 
       {error && <ErrorMessage message={error} />}

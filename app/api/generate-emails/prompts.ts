@@ -37,7 +37,7 @@ function plan(days: number, opening: string, middle: string[], closing?: string)
 }
 
 export function getCampaignStructure(type: string, days: number): string {
-  const structures: Record<string, () => string> = {
+  const structures = {
     nurture: () =>
       plan(
         days,
@@ -88,22 +88,24 @@ export function getCampaignStructure(type: string, days: number): string {
         ],
         'Last call: one clear reason to come back now',
       ),
-  }
+  } satisfies Record<string, () => string>
 
-  return (structures[type] ?? structures.nurture)()
+  const build: (() => string) | undefined = structures[type as keyof typeof structures]
+  return (build ?? structures.nurture)()
 }
 
 export function getToneGuidelines(tone: string): string {
-  const tones: Record<string, string> = {
+  const tones = {
     professional: 'Formal language, clear and direct, industry expertise, authoritative',
     formal:
       'Strictly business, precise and serious: complete sentences, no slang, no exclamation points, measured claims',
     friendly: 'Conversational, warm, approachable, use "you" and "we", casual but respectful',
     enthusiastic: 'Energetic, exciting, use exclamation points (moderately), positive language',
     casual: 'Relaxed, informal, conversational, relatable, down-to-earth',
-  }
+  } satisfies Record<string, string>
 
-  return tones[tone] || tones.friendly
+  const guideline: string | undefined = tones[tone as keyof typeof tones]
+  return guideline || tones.friendly
 }
 
 function formatList(items: string[] | undefined, prefix: string, emptyNote: string): string {

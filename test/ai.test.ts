@@ -135,12 +135,13 @@ describe('generateStructured', () => {
     }
     expect(json.type).toBe('object')
     expect(json.additionalProperties).toBe(false)
-    expect(json.properties.nested.additionalProperties).toBe(false)
+    expect(json.properties.nested?.additionalProperties).toBe(false)
     expect(Object.keys(json.properties)).toEqual(['name', 'tags', 'nested'])
     expect(json.$schema).toBeUndefined()
     // Constraints structured outputs can't enforce are moved out of the schema;
     // the zod parse still enforces them (see the empty-name test below).
-    expect(json.properties.name.minLength).toBeUndefined()
+    expect(json.properties.name).toBeDefined()
+    expect(json.properties.name?.minLength).toBeUndefined()
   })
 
   it('reuses the converted JSON schema for the same zod schema', async () => {
@@ -150,7 +151,8 @@ describe('generateStructured', () => {
     const [first, second] = streamMock.mock.calls.map(
       (call) => (call[0] as { output_config: { format: { schema: unknown } } }).output_config,
     )
-    expect(second.format.schema).toBe(first.format.schema)
+    expect(second?.format.schema).toBeDefined()
+    expect(second?.format.schema).toBe(first?.format.schema)
   })
 
   it('throws on a refusal stop_reason without parsing the content', async () => {

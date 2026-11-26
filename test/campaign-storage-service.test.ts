@@ -193,7 +193,7 @@ describe('CampaignStorageService', () => {
       const result = await service.listCampaigns(USER_ID)
 
       expect(result).toHaveLength(2)
-      expect(result[0].id).toBe(CAMPAIGN_ID)
+      expect(result[0]?.id).toBe(CAMPAIGN_ID)
     })
 
     it('throws error on list failure', async () => {
@@ -273,8 +273,8 @@ describe('CampaignStorageService', () => {
       const result = await service.saveEmails(CAMPAIGN_ID, emails)
 
       expect(result).toHaveLength(2)
-      expect(result[0].day).toBe(1)
-      expect(result[1].day).toBe(2)
+      expect(result[0]?.day).toBe(1)
+      expect(result[1]?.day).toBe(2)
     })
   })
 

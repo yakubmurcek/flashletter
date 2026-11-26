@@ -43,6 +43,7 @@ import {
 } from '@/lib/services/campaign.service'
 import { useEmailStreaming } from '@/lib/hooks/use-email-streaming'
 import { PlanLimitError } from '@/lib/billing/errors'
+import { at } from './_helpers/at'
 
 const landingPageData: LandingPageData = {
   url: 'https://example.com',
@@ -239,7 +240,7 @@ describe('useEmailStreaming', () => {
     // funnel and double-count time-to-first-email downstream.
     const fired = trackMock.mock.calls.filter((c) => c[0] === 'first_email_streamed')
     expect(fired).toHaveLength(1)
-    expect(fired[0][1]).toEqual({ campaignId: 'once-camp' })
+    expect(fired[0]?.[1]).toEqual({ campaignId: 'once-camp' })
   })
 
   it('first_email_streamed re-arms for a different campaign', async () => {
@@ -381,7 +382,7 @@ describe('useEmailStreaming', () => {
       await result.current.generateEmailsStream(dataWithAnalysis, config, 'camp-7')
     })
 
-    const [url, content, cfg, , options] = spy.mock.calls[0]
+    const [url, content, cfg, , options] = at(spy.mock.calls, 0)
     expect(url).toBe('https://example.com')
     expect(content).toBe('page content')
     expect(cfg).toEqual(config)

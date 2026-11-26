@@ -55,11 +55,10 @@ describe('getSubjectForDay', () => {
     expect(result.length).toBeGreaterThan(0)
   })
 
-  it('returns undefined for negative day (out-of-range index)', () => {
-    // Source uses Math.min(day - 1, typeSubjects.length - 1); day=-1 yields -2,
-    // which indexes off the array → undefined. Documented quirk.
-    const result = getSubjectForDay(-1, 'nurture')
-    expect(result).toBeUndefined()
+  it('falls back to a plain day label for a day before the first (out-of-range index)', () => {
+    // Math.min(day - 1, typeSubjects.length - 1) is -2 for day -1, which indexes
+    // off the array; the function still returns a string, as its type says.
+    expect(getSubjectForDay(-1, 'nurture')).toBe('Day -1')
   })
 })
 

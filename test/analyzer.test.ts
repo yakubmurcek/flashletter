@@ -76,7 +76,7 @@ describe('analyzeLandingPage', () => {
     await analyzeLandingPage({ url: 'https://example.com', content: 'c', metadata: {} })
     const { messages } = lastCall()
     expect(messages).toHaveLength(1)
-    expect(messages[0].role).toBe('user')
+    expect(messages[0]?.role).toBe('user')
   })
 
   it('sends URL + title in the user input', async () => {

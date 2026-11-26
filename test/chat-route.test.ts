@@ -60,6 +60,7 @@ vi.mock('@/app/api/chat/prompt-builder', () => ({
 import { POST } from '@/app/api/chat/route'
 import { chatOutputSchema } from '@/app/api/chat/response-handler'
 import { CHAT_HISTORY_LIMIT, CHAT_MAX_BODY_BYTES, CHAT_MESSAGE_LIMIT } from '@/app/api/chat/limits'
+import { at } from './_helpers/at'
 
 function buildRequest(body: unknown): Request {
   return new Request('http://localhost/api/chat', {
@@ -391,7 +392,7 @@ describe('POST /api/chat', () => {
           allEmails,
           currentEmailId: 1,
         },
-        emailContext: { subject: allEmails[0].subject, content: long, campaignType: 'welcome' },
+        emailContext: { subject: at(allEmails, 0).subject, content: long, campaignType: 'welcome' },
         selectedContext: { text: long.slice(0, 2000), action: 'Make this shorter' },
       }
     }
@@ -442,12 +443,12 @@ describe('POST /api/chat', () => {
       const sent = lastCall().messages
       expect(sent.length).toBeLessThanOrEqual(CHAT_HISTORY_LIMIT)
       expect(sent.at(-1)).toEqual({ role: 'user', content: 'message 40' })
-      expect(sent[0].role).toBe('user')
+      expect(sent[0]?.role).toBe('user')
     })
 
     it('truncates a single very long message', async () => {
       await post({ messages: [{ role: 'user', content: 'y'.repeat(100_000) }] })
-      const [only] = lastCall().messages
+      const only = at(lastCall().messages, 0)
       expect(only.content.length).toBeLessThanOrEqual(CHAT_MESSAGE_LIMIT + 20)
       expect(only.content.startsWith('y'.repeat(1000))).toBe(true)
     })

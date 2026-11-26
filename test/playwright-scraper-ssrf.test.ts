@@ -10,6 +10,7 @@ vi.mock('node:dns/promises', () => ({ lookup: lookupMock }))
 vi.mock('playwright-core', () => ({ chromium: { launch: launchMock } }))
 
 import { createSafeRouteHandler, scrapeWithPlaywright } from '@/lib/utils/playwright-scraper'
+import { at } from './_helpers/at'
 
 const DNS: Record<string, string> = {
   'public.example': '93.184.216.34',
@@ -123,8 +124,8 @@ describe('scrapeWithPlaywright SSRF guard', () => {
     })
     const result = await scrapeWithPlaywright('https://public.example/')
     expect(page.route).toHaveBeenCalledWith('**/*', expect.any(Function))
-    expect(page.route.mock.invocationCallOrder[0]).toBeLessThan(
-      page.goto.mock.invocationCallOrder[0],
+    expect(at(page.route.mock.invocationCallOrder, 0)).toBeLessThan(
+      at(page.goto.mock.invocationCallOrder, 0),
     )
     expect(browser.newPage).toHaveBeenCalledWith(
       expect.objectContaining({ serviceWorkers: 'block' }),

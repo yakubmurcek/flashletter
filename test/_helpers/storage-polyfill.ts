@@ -13,7 +13,7 @@ export function installLocalStoragePolyfill() {
   const ls = new Proxy(
     {
       getItem(key: string): string | null {
-        return Object.hasOwn(store, key) ? store[key] : null
+        return store[key] ?? null
       },
       setItem(key: string, value: string): void {
         store[key] = String(value)

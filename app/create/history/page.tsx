@@ -165,9 +165,9 @@ function HistoryPageContent() {
 
   const effectiveSelectedId = selectedVersionId ?? timeline[timeline.length - 1]?.id ?? null
   const selectedIndex = timeline.findIndex((v) => v.id === effectiveSelectedId)
-  const selectedVersion = selectedIndex >= 0 ? timeline[selectedIndex] : null
+  const selectedVersion = timeline[selectedIndex] ?? null
 
-  const previousVersion = selectedIndex > 0 ? timeline[selectedIndex - 1] : null
+  const previousVersion = selectedIndex > 0 ? (timeline[selectedIndex - 1] ?? null) : null
 
   const handleRestoreVersion = (version: EmailVersion) => {
     setVersionToRestore(version)

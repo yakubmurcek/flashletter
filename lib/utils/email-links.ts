@@ -161,7 +161,7 @@ function parseLinkAt(src: string, start: number): ParsedLink | null {
     const destStart = j
     let parens = 0
     for (; j < src.length; j++) {
-      const ch = src[j]
+      const ch = src[j] ?? ''
       if (ch === '\\') {
         j++
         continue

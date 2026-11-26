@@ -32,6 +32,7 @@ vi.mock('@/lib/analytics', () => ({
 
 import { useEmailAutosave } from '@/lib/hooks/use-email-autosave'
 import { EMAIL_SAVE_DEBOUNCE_MS } from '@/lib/constants/app'
+import { at } from './_helpers/at'
 
 const makeEmail = (id: number, uuid: string | null = `uuid-${id}`): Email =>
   ({
@@ -219,7 +220,7 @@ describe('useEmailAutosave', () => {
     await act(async () => {
       await result.current.saveEmail(1, { subject: 'A' })
     })
-    rerender({ list: [{ ...emails[0], subject: 'A' } as Email, emails[1]] })
+    rerender({ list: [{ ...at(emails, 0), subject: 'A' }, at(emails, 1)] })
     await act(async () => {
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
     })
@@ -228,7 +229,7 @@ describe('useEmailAutosave', () => {
     await act(async () => {
       await result.current.saveEmail(1, { subject: 'B' })
     })
-    rerender({ list: [{ ...emails[0], subject: 'B' } as Email, emails[1]] })
+    rerender({ list: [{ ...at(emails, 0), subject: 'B' }, at(emails, 1)] })
     await act(async () => {
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 50)
     })
@@ -296,7 +297,7 @@ describe('useEmailAutosave', () => {
       unmount()
     })
     expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
-    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'X' }))
+    expect(updateEmailDbMock.mock.calls[0]?.[2]).toEqual(expect.objectContaining({ subject: 'X' }))
   })
 
   // The preview flushes its own pending edit while the page unmounts; that
@@ -313,7 +314,9 @@ describe('useEmailAutosave', () => {
       await vi.advanceTimersByTimeAsync(EMAIL_SAVE_DEBOUNCE_MS + 100)
     })
     expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
-    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(expect.objectContaining({ subject: 'Late' }))
+    expect(updateEmailDbMock.mock.calls[0]?.[2]).toEqual(
+      expect.objectContaining({ subject: 'Late' }),
+    )
   })
 
   // "Saved" showed while the edit still waited out the debounce.
@@ -345,7 +348,7 @@ describe('useEmailAutosave', () => {
       window.dispatchEvent(new Event('pagehide'))
     })
     expect(updateEmailDbMock).toHaveBeenCalledTimes(1)
-    expect(updateEmailDbMock.mock.calls[0][2]).toEqual(
+    expect(updateEmailDbMock.mock.calls[0]?.[2]).toEqual(
       expect.objectContaining({ subject: 'Closing' }),
     )
   })

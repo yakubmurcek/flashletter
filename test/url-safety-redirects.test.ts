@@ -44,7 +44,7 @@ describe('safeFetch redirects', () => {
   it('follows redirects manually so every hop can be checked', async () => {
     fetchMock.mockResolvedValueOnce(new Response('ok'))
     await safeFetch('https://public.example/')
-    expect(fetchMock.mock.calls[0][1]).toMatchObject({ redirect: 'manual' })
+    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({ redirect: 'manual' })
   })
 
   it('refuses a redirect to the cloud metadata IP without requesting it', async () => {

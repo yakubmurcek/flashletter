@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { MarkdownRenderer } from '@/lib/utils/markdown-renderer'
+import { at } from './_helpers/at'
 
 function renderHtml(content: string) {
   const { container } = render(<MarkdownRenderer content={content} />)
@@ -20,8 +21,8 @@ describe('MarkdownRenderer inline formatting', () => {
     const el = renderHtml('**[Start your trial](https://example.com)** today')
     const links = el.querySelectorAll('a')
     expect(links).toHaveLength(1)
-    expect(links[0].getAttribute('href')).toBe('https://example.com')
-    expect(links[0].closest('strong')).not.toBeNull()
+    expect(links[0]?.getAttribute('href')).toBe('https://example.com')
+    expect(at(links, 0).closest('strong')).not.toBeNull()
     expect(el.textContent).toBe('Start your trial today')
   })
 
@@ -29,7 +30,7 @@ describe('MarkdownRenderer inline formatting', () => {
     const el = renderHtml('[**Start your trial**](https://example.com) today')
     const links = el.querySelectorAll('a')
     expect(links).toHaveLength(1)
-    expect(links[0].querySelector('strong')?.textContent).toBe('Start your trial')
+    expect(links[0]?.querySelector('strong')?.textContent).toBe('Start your trial')
     expect(el.textContent).toBe('Start your trial today')
   })
 

@@ -216,12 +216,13 @@ export async function POST(req: NextRequest) {
         // appending them after a gap would shift every email a day early.
         // Whatever is missing is reported through the short warning.
         const rest: Email[] = []
-        for (let b = 0; b < settled.length; b++) {
-          const result = settled[b]
+        for (const [b, result] of settled.entries()) {
+          const range = ranges[b]
+          if (!range) break
           if (result.status === 'rejected') {
             Sentry.captureException(result.reason, {
               tags: { error_type: 'generate_batch', api_route: '/api/generate-emails/stream' },
-              extra: { from: ranges[b].from, to: ranges[b].to },
+              extra: { from: range.from, to: range.to },
             })
             // Nothing after Day 1 came back: fail like before.
             if (rest.length === 0) throw result.reason
@@ -238,7 +239,7 @@ export async function POST(req: NextRequest) {
               content: fixEmailLinks(raw.content || '', landingUrl),
             })
           }
-          if (result.value.length < ranges[b].to - ranges[b].from + 1) break
+          if (result.value.length < range.to - range.from + 1) break
         }
 
         const shortWarning =

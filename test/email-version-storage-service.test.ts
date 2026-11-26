@@ -198,8 +198,8 @@ describe('EmailVersionStorageService', () => {
       const result = await service.getVersions('email-uuid')
 
       expect(result).toHaveLength(2)
-      expect(result[0].id).toBe('ver-1')
-      expect(result[1].id).toBe('ver-2')
+      expect(result[0]?.id).toBe('ver-1')
+      expect(result[1]?.id).toBe('ver-2')
     })
   })
 

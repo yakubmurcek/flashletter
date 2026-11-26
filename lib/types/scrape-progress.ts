@@ -47,7 +47,7 @@ export interface ProgressState {
  * Real stages matching events emitted by POST /api/scrape-landing/stream.
  * Each stage corresponds to actual work on the server — no simulated timers.
  */
-export const SCRAPE_PROGRESS_STAGES: ProgressStage[] = [
+export const SCRAPE_PROGRESS_STAGES: [ProgressStage, ...ProgressStage[]] = [
   {
     id: 'connecting',
     messageTemplate: 'Connecting to {domain}…',

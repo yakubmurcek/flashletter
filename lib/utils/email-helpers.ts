@@ -1,5 +1,5 @@
 export function getSubjectForDay(day: number, type: string): string {
-  const subjects: Record<string, string[]> = {
+  const subjects = {
     nurture: [
       'Welcome to our community',
       "Here's what you need to know",
@@ -45,10 +45,11 @@ export function getSubjectForDay(day: number, type: string): string {
       'One last chance',
       "We'd love your feedback",
     ],
-  }
+  } satisfies Record<string, string[]>
 
-  const typeSubjects = subjects[type] || subjects.nurture
-  return typeSubjects[Math.min(day - 1, typeSubjects.length - 1)]
+  const forType: string[] | undefined = subjects[type as keyof typeof subjects]
+  const typeSubjects = forType ?? subjects.nurture
+  return typeSubjects[Math.min(day - 1, typeSubjects.length - 1)] ?? `Day ${day}`
 }
 
 export function getPreviewForDay(day: number, type: string): string {

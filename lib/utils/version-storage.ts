@@ -22,7 +22,7 @@ export const versionStorage = {
     }
 
     const versions = this.getVersions(emailId)
-    const previousVersion = versions.length > 0 ? versions[versions.length - 1] : null
+    const previousVersion = versions[versions.length - 1] ?? null
 
     if (
       previousVersion &&

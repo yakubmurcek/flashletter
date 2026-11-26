@@ -43,7 +43,7 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
     const newLine = newLines[newIdx]
 
     // Both lines exist
-    if (oldIdx < oldLines.length && newIdx < newLines.length) {
+    if (oldLine !== undefined && newLine !== undefined) {
       if (oldLine === newLine) {
         // Unchanged
         diffLines.push({
@@ -101,7 +101,7 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
           newIdx++
         }
       }
-    } else if (oldIdx < oldLines.length) {
+    } else if (oldLine !== undefined) {
       // Only old line exists (removed)
       diffLines.push({
         type: 'removed',
@@ -111,7 +111,7 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
       })
       stats.removed++
       oldIdx++
-    } else {
+    } else if (newLine !== undefined) {
       // Only new line exists (added)
       diffLines.push({
         type: 'added',
@@ -121,6 +121,8 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
       })
       stats.added++
       newIdx++
+    } else {
+      break
     }
   }
 
@@ -141,9 +143,7 @@ export function collapseUnchangedLines(
   const result: (DiffLine | { type: 'collapsed'; count: number })[] = []
   let unchangedBuffer: DiffLine[] = []
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]
-
+  for (const line of lines) {
     if (line.type === 'unchanged') {
       unchangedBuffer.push(line)
     } else {

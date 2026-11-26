@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { installLocalStoragePolyfill } from './_helpers/storage-polyfill'
 import { versionStorage } from '@/lib/utils/version-storage'
 import type { Email } from '@/lib/types'
+import { at } from './_helpers/at'
 
 describe('versionStorage', () => {
   const mockEmail: Email = {
@@ -132,8 +133,8 @@ describe('versionStorage', () => {
       const versions1 = versionStorage.getVersions(1)
       const versions2 = versionStorage.getVersions(1)
 
-      versions1[0].subject = 'Modified'
-      expect(versions2[0].subject).toBe('Test Subject')
+      at(versions1, 0).subject = 'Modified'
+      expect(versions2[0]?.subject).toBe('Test Subject')
     })
 
     it('returns empty array for missing window', () => {
@@ -188,7 +189,7 @@ describe('versionStorage', () => {
 
       const versions = versionStorage.getVersions(1)
       expect(versions.length).toBe(1)
-      expect(versions[0].id).toBe(v2.id)
+      expect(versions[0]?.id).toBe(v2.id)
       spy.mockRestore()
     })
 

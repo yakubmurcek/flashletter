@@ -132,8 +132,8 @@ describe('checkUserAndIpRateLimit', () => {
     }
     expect(results.map((r) => r.success)).toEqual([true, true, true, false])
     // The 429 headers describe the limit that actually blocked.
-    expect(results[3].limit).toBe(3)
-    expect(results[3].remaining).toBe(0)
+    expect(results[3]?.limit).toBe(3)
+    expect(results[3]?.remaining).toBe(0)
   })
 
   it('keeps separate IPs on separate budgets', async () => {

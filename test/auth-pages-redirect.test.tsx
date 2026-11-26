@@ -16,6 +16,7 @@ vi.mock('@/components/auth/upgrade-prompt', () => ({
 
 import SignupPage from '@/app/(auth)/signup/page'
 import LoginPage from '@/app/(auth)/login/page'
+import { at } from './_helpers/at'
 
 const params = (p: Record<string, string>) => Promise.resolve(p)
 
@@ -82,6 +83,6 @@ describe('guest /signup passes the callback error through', () => {
   it('passes no error when there is none', async () => {
     serverUser = { id: 'anon', is_anonymous: true }
     render(await SignupPage({ searchParams: params({}) }))
-    expect(upgradePromptProps.mock.calls[0][0].initialError ?? null).toBeNull()
+    expect(at(upgradePromptProps.mock.calls, 0)[0].initialError ?? null).toBeNull()
   })
 })

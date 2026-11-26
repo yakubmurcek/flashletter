@@ -96,7 +96,10 @@ export async function POST(request: NextRequest) {
     )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 })
+      return NextResponse.json(
+        { error: error.errors[0]?.message ?? 'Invalid input' },
+        { status: 400 },
+      )
     }
 
     console.error('Waitlist API error:', error)

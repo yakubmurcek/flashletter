@@ -63,14 +63,15 @@ export function markdownToHtml(text: string): string {
     const bullet = /^[-*•] (.+)$/.exec(line)
     const numbered = /^\d+[.)] (.+)$/.exec(line)
     if (bullet) {
-      addItem('ul', bullet[1])
+      addItem('ul', bullet[1] ?? '')
     } else if (numbered) {
-      addItem('ol', numbered[1])
+      addItem('ol', numbered[1] ?? '')
     } else {
       flushList()
       if (heading) {
-        const level = heading[1].length
-        blocks.push(`${HEADING_OPEN[level]}${renderInline(heading[2])}</h${level}>`)
+        const [, hashes = '', text = ''] = heading
+        const level = hashes.length
+        blocks.push(`${HEADING_OPEN[level]}${renderInline(text)}</h${level}>`)
       } else {
         blocks.push(`${PARAGRAPH_OPEN}${renderInline(line)}</p>`)
       }
