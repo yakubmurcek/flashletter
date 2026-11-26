@@ -98,13 +98,21 @@ export function CampaignConfigPanel({
       {isOpen && (
         <div className="px-6 pb-5 pt-1 space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Tone</label>
+            <label
+              htmlFor="campaign-config-tone"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              Tone
+            </label>
             <Select
               value={tone}
               onValueChange={setTone}
               disabled={isStreaming}
             >
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger
+                id="campaign-config-tone"
+                className="h-9 text-sm"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -121,13 +129,21 @@ export function CampaignConfigPanel({
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">Type</label>
+            <label
+              htmlFor="campaign-config-type"
+              className="text-xs font-medium text-muted-foreground"
+            >
+              Type
+            </label>
             <Select
               value={campaignType}
               onValueChange={setType}
               disabled={isStreaming}
             >
-              <SelectTrigger className="h-9 text-sm">
+              <SelectTrigger
+                id="campaign-config-type"
+                className="h-9 text-sm"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -145,7 +161,7 @@ export function CampaignConfigPanel({
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label className="text-xs font-medium text-muted-foreground">Length</label>
+              <span className="text-xs font-medium text-muted-foreground">Length</span>
               <span className="text-sm font-medium tabular">{days} emails</span>
             </div>
             <Slider

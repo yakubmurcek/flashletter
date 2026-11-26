@@ -134,6 +134,14 @@ export function generateDiff(oldText: string, newText: string): DiffResult {
  * Collapse consecutive unchanged lines for better readability
  * Keeps context lines (3 before and after changes)
  */
+/**
+ * A stable React key for a diff line: its old and new line numbers. Every line
+ * has at least one, and no two lines of one diff share the pair.
+ */
+export function diffLineKey(line: DiffLine): string {
+  return `${line.oldLineNumber ?? ''}:${line.newLineNumber ?? ''}`
+}
+
 export function collapseUnchangedLines(
   lines: DiffLine[],
   contextLines: number = 3,

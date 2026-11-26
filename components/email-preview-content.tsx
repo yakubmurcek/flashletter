@@ -73,7 +73,10 @@ function EmailPreviewContentComponent({
   onEditorCreated,
 }: EmailPreviewContentProps) {
   return (
-    <div
+    // A text selection made with the mouse opens the AI edit popup; the
+    // section is the email draft, not a control, so it takes no keyboard role.
+    <section
+      aria-label="Email draft"
       className="flex-1 overflow-y-auto bg-muted/50"
       onMouseUp={onMouseUp}
     >
@@ -96,7 +99,7 @@ function EmailPreviewContentComponent({
           />
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 

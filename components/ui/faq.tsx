@@ -25,6 +25,7 @@ function FAQItemComponent({ item, isOpen, onToggle }: FAQItemProps) {
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden group">
       <button
+        type="button"
         onClick={onToggle}
         className="w-full font-medium cursor-pointer select-none hover:text-primary transition-colors duration-200 flex items-center justify-between text-left p-5 hover:bg-muted/50"
         aria-expanded={isOpen}

@@ -72,6 +72,7 @@ export function TextSelectionPopup({
           const Icon = action.icon
           return (
             <button
+              type="button"
               key={action.label}
               onClick={() => handleActionClick(action.label)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md hover:bg-muted transition-colors text-foreground hover:text-foreground cursor-pointer"

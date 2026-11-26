@@ -35,61 +35,11 @@
   },
   "overrides": [
     {
-      "includes": ["components/editor/campaign-config-panel.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noLabelWithoutControl": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["components/diff-viewer.tsx", "components/email-preview-content.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "noStaticElementInteractions": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": [
-        "app/global-error.tsx",
-        "components/email-list.tsx",
-        "components/text-selection-popup.tsx",
-        "components/ui/faq.tsx",
-        "test/account-checkout-banner.test.tsx",
-        "test/email-preview-autosave.test.tsx"
-      ],
+      "includes": ["test/account-checkout-banner.test.tsx", "test/email-preview-autosave.test.tsx"],
       "linter": {
         "rules": {
           "a11y": {
             "useButtonType": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": ["components/diff-viewer.tsx"],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useKeyWithClickEvents": "off"
-          }
-        }
-      }
-    },
-    {
-      "includes": [
-        "components/cookie-consent-banner.tsx",
-        "components/sections/pricing-section.tsx"
-      ],
-      "linter": {
-        "rules": {
-          "a11y": {
-            "useSemanticElements": "off"
           }
         }
       }
@@ -195,7 +145,6 @@
     {
       "includes": [
         "components/campaign/analysis-card.tsx",
-        "components/diff-viewer.tsx",
         "components/editor/email-sidebar.tsx",
         "components/ui/slider.tsx",
         "lib/utils/markdown-renderer.tsx"

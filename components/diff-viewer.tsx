@@ -10,6 +10,7 @@ import {
   collapseUnchangedLines,
   formatDiffStats,
   type DiffLine,
+  diffLineKey,
 } from '@/lib/utils/diff'
 import type { EmailVersion } from '@/lib/types'
 import { cn } from '@/lib/utils'
@@ -115,14 +116,16 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
                     const isExpanded = expandedSections.has(index)
                     return (
                       <div
+                        // biome-ignore lint/suspicious/noArrayIndexKey: a collapsed row's identity is its position; expandedSections is keyed by the same index.
                         key={index}
-                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center cursor-pointer hover:bg-muted transition-colors"
-                        onClick={() => toggleSection(index)}
+                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center"
                       >
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="gap-2"
+                          className="w-full gap-2"
+                          aria-expanded={isExpanded}
+                          onClick={() => toggleSection(index)}
                         >
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4" />
@@ -165,7 +168,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
 
                   return (
                     <div
-                      key={index}
+                      key={diffLineKey(line)}
                       className={cn(
                         'flex items-start border-b border-border last:border-b-0',
                         bgColor,
@@ -193,7 +196,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
                   </div>
                   {collapsedLines
                     .filter((item) => !('type' in item && item.type === 'collapsed'))
-                    .map((item, index) => {
+                    .map((item) => {
                       const line = item as DiffLine
                       if (line.type === 'added') return null
 
@@ -201,7 +204,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
 
                       return (
                         <div
-                          key={index}
+                          key={diffLineKey(line)}
                           className={cn('flex items-start border-b border-border', bgColor)}
                         >
                           <div className="w-12 flex-shrink-0 text-right pr-4 py-2 text-muted-foreground text-xs">
@@ -220,7 +223,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
                   </div>
                   {collapsedLines
                     .filter((item) => !('type' in item && item.type === 'collapsed'))
-                    .map((item, index) => {
+                    .map((item) => {
                       const line = item as DiffLine
                       if (line.type === 'removed') return null
 
@@ -228,7 +231,7 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
 
                       return (
                         <div
-                          key={index}
+                          key={diffLineKey(line)}
                           className={cn('flex items-start border-b border-border', bgColor)}
                         >
                           <div className="w-12 flex-shrink-0 text-right pr-4 py-2 text-muted-foreground text-xs">

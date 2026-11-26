@@ -32,8 +32,7 @@ export function CookieConsentBanner({ className = '' }: CookieConsentBannerProps
   if (!isVisible) return null
 
   return (
-    <div
-      role="region"
+    <section
       aria-label="Cookie choice"
       className={`fixed bottom-0 left-0 right-0 z-50 p-4 ${className}`}
     >
@@ -73,6 +72,6 @@ export function CookieConsentBanner({ className = '' }: CookieConsentBannerProps
           </div>
         </CardContent>
       </Card>
-    </div>
+    </section>
   )
 }

@@ -4,6 +4,7 @@ import {
   collapseUnchangedLines,
   formatDiffStats,
   extractChangeSummary,
+  diffLineKey,
 } from '@/lib/utils/diff'
 
 describe('generateDiff', () => {
@@ -213,5 +214,13 @@ describe('extractChangeSummary', () => {
       { subject: 'S', content: 'modified\nline2' },
     )
     expect(result).toContain('1 line')
+  })
+})
+
+describe('diffLineKey', () => {
+  it('gives every line of a diff its own key', () => {
+    const { lines } = generateDiff('a\nb\nc\nd', 'a\nx\nc\nd\ne')
+    const keys = lines.map(diffLineKey)
+    expect(new Set(keys).size).toBe(keys.length)
   })
 })
