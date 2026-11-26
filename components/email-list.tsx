@@ -27,6 +27,7 @@ function EmailListComponent({ emails, selectedId, onSelect, pendingCount = 0 }: 
     <div className="px-4 pt-4 pb-6 space-y-2">
       {sortedEmails.map((email) => (
         <button
+          type="button"
           key={email.id}
           onClick={() => onSelect(email.id)}
           className={cn(

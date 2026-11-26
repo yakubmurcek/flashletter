@@ -116,13 +116,14 @@ export function DiffViewer({ oldVersion, newVersion, viewMode = 'unified' }: Dif
                     return (
                       <div
                         key={index}
-                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center cursor-pointer hover:bg-muted transition-colors"
-                        onClick={() => toggleSection(index)}
+                        className="bg-muted/50 border-y border-border py-2 px-4 flex items-center justify-center hover:bg-muted transition-colors"
                       >
                         <Button
                           variant="ghost"
                           size="sm"
                           className="gap-2"
+                          aria-expanded={isExpanded}
+                          onClick={() => toggleSection(index)}
                         >
                           {isExpanded ? (
                             <ChevronUp className="w-4 h-4" />

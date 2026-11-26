@@ -88,21 +88,25 @@ export function PricingSection({
           className="inline-flex rounded-full border border-border bg-muted/40 p-1 text-sm"
         >
           {(['month', 'year'] as const).map((value) => (
-            <button
+            <label
               key={value}
-              type="button"
-              role="radio"
-              aria-checked={interval === value}
-              onClick={() => setInterval(value)}
               className={cn(
-                'rounded-full px-4 py-1.5 font-medium transition-colors',
+                'relative cursor-pointer rounded-full px-4 py-1.5 font-medium transition-colors has-[:focus-visible]:ring-[3px] has-[:focus-visible]:ring-ring/50',
                 interval === value
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground',
               )}
             >
+              <input
+                type="radio"
+                name="billing-interval"
+                value={value}
+                checked={interval === value}
+                onChange={() => setInterval(value)}
+                className="sr-only"
+              />
               {value === 'month' ? 'Monthly' : `Yearly · ${monthsFree} months free`}
-            </button>
+            </label>
           ))}
         </div>
       </div>
