@@ -339,6 +339,16 @@ Two linters, both blocking in CI (`format · lint · typecheck`):
   Biome's own version of the rule missed un-awaited Supabase queries (tested on Biome 2.6.6).
   Ends with `.catch(...)` or is marked `void` when the called function reports its own errors.
 
+### Unused code
+
+```bash
+pnpm knip
+```
+
+knip finds unused files, exports, types and dependencies. It runs in CI's `format · lint · typecheck`
+job and fails on any finding (2026-11-27: zero). An export kept on purpose goes into `knip.jsonc`
+with a comment saying why; today that is only the vendored shadcn kit in `components/ui/`.
+
 ### Quality baseline (2026-11-25)
 
 Biome found older code breaking 17 rules in 63 file entries. Those files are listed per rule in

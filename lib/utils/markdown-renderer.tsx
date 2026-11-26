@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export function processInlineFormattingForPreview(
+function processInlineFormattingForPreview(
   text: string,
   keyPrefix = '',
 ): string | (string | React.ReactElement)[] {
@@ -54,7 +54,7 @@ export function processInlineFormattingForPreview(
   return parts.length > 0 ? parts : text
 }
 
-export function renderMarkdown(text: string) {
+function renderMarkdown(text: string) {
   if (!text) return null
 
   // Split by newline to handle content line-by-line

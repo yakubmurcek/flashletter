@@ -46,6 +46,11 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Dead code: unused files, exports, types and dependencies (config and reasons for every
+      # exception in knip.jsonc). Any new finding fails the job.
+      - name: Unused code
+        run: pnpm knip
+
       - name: Typecheck
         run: pnpm tsc --noEmit
 

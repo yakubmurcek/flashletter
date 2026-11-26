@@ -45,7 +45,7 @@ export const scrapeLandingRequestSchema = z.object({
 })
 
 // Enhanced metadata schema
-export const enhancedMetadataSchema = z.object({
+const enhancedMetadataSchema = z.object({
   title: z.string().optional(),
   description: z.string().optional(),
   keywords: z.array(z.string()).optional(),
@@ -70,7 +70,7 @@ export const enhancedMetadataSchema = z.object({
 })
 
 // Scrape stats schema
-export const scrapeStatsSchema = z.object({
+const scrapeStatsSchema = z.object({
   wordCount: z.number(),
   extractionMethod: z.enum(['static', 'dynamic']),
   cached: z.boolean(),
@@ -108,11 +108,6 @@ export const sendTestEmailResponseSchema = z.object({
  * Exported types
  */
 
-export type GenerateEmailsRequest = z.infer<typeof generateEmailsRequestSchema>
-export type ScrapeLandingRequest = z.infer<typeof scrapeLandingRequestSchema>
 export type ScrapeLandingResponse = z.infer<typeof scrapeLandingResponseSchema>
-export type EnhancedMetadata = z.infer<typeof enhancedMetadataSchema>
-export type ScrapeStats = z.infer<typeof scrapeStatsSchema>
 export type GenerateEmailsResponse = z.infer<typeof generateEmailsResponseSchema>
-export type SendTestEmailRequest = z.infer<typeof sendTestEmailRequestSchema>
 export type SendTestEmailResponse = z.infer<typeof sendTestEmailResponseSchema>

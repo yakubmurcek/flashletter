@@ -16,9 +16,7 @@ import * as prompts from './prompts'
 // SELECTED TEXT CONTEXT
 // ============================================================================
 
-export function buildSelectedTextContext(
-  selectedContext: SelectedContext | null | undefined,
-): string {
+function buildSelectedTextContext(selectedContext: SelectedContext | null | undefined): string {
   if (!selectedContext) return ''
 
   const isDiscussOnly = selectedContext.action === 'Ask AI about this'
@@ -85,7 +83,7 @@ Content (first ${EMAIL_CONTENT_PREVIEW_LIMIT} chars): ${contentPreview}
     .join('\n')
 }
 
-export function buildCampaignContextSection(campaignContext: CampaignContext | undefined): string {
+function buildCampaignContextSection(campaignContext: CampaignContext | undefined): string {
   if (!campaignContext) return ''
 
   const { landingPageData, config, allEmails, currentEmailId } = campaignContext
@@ -131,7 +129,7 @@ ${clip(currentEmail?.content, CHAT_EMAIL_CONTENT_LIMIT)}
 // LEGACY EMAIL CONTEXT
 // ============================================================================
 
-export function buildLegacyEmailContext(
+function buildLegacyEmailContext(
   campaignContext: CampaignContext | undefined,
   emailContext: EmailContext | undefined,
 ): string {

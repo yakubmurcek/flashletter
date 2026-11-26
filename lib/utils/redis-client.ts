@@ -6,7 +6,6 @@ import { Redis } from '@upstash/redis'
  */
 
 let redis: Redis | undefined
-let redisAvailable = false
 
 // Initialize Redis client if credentials are available
 // Same env fallback as rate-limit.ts (Vercel Marketplace injects KV_REST_API_*).
@@ -15,7 +14,6 @@ const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_A
 
 if (redisUrl && redisToken) {
   redis = new Redis({ url: redisUrl, token: redisToken })
-  redisAvailable = true
 }
 
 /**
@@ -24,14 +22,6 @@ if (redisUrl && redisToken) {
  */
 export function getRedisClient(): Redis | undefined {
   return redis
-}
-
-/**
- * Check if Redis is available
- * @returns true if Redis is configured and available
- */
-export function isRedisAvailable(): boolean {
-  return redisAvailable
 }
 
 /**

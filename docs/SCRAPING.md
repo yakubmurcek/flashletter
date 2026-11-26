@@ -129,7 +129,6 @@ SCRAPER_USER_AGENT=Mozilla/5.0 (compatible; NewsletterGenerator/1.0)
 LANDING_PAGE_CONTENT_LIMIT = 10000 // Max content length
 SCRAPE_CACHE_TTL = 86400 // Cache TTL (24 hours)
 PLAYWRIGHT_TIMEOUT = 10000 // Dynamic scraping timeout
-MIN_CONTENT_LENGTH = 50 // Min words for meaningful content
 ```
 
 ## When Dynamic Scraping is Used
@@ -197,14 +196,6 @@ You can force dynamic scraping by setting `useDynamic: true` in the request.
 // Get cache statistics
 const stats = await getCacheStats()
 // Returns: { totalKeys, scrapeKeys, memoryUsage }
-```
-
-### Browser Information
-
-```typescript
-// Get Playwright browser info
-const info = await getBrowserInfo()
-// Returns: { userAgent, viewport, chromiumVersion }
 ```
 
 ### Logging

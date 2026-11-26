@@ -73,5 +73,3 @@ export const editedLandingPageAnalysisSchema = z.object({
 function dropBlank(items: string[]): string[] {
   return items.map((item) => item.trim()).filter(Boolean)
 }
-
-export const landingPageAnalysisOptionalSchema = landingPageAnalysisSchema.partial()

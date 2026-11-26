@@ -9,8 +9,6 @@ export const EMAIL_SAVE_DEBOUNCE_MS = 1000
 // Scraping constants
 export const SCRAPE_CACHE_TTL = 60 * 60 * 24 // 24 hours in seconds
 export const PLAYWRIGHT_TIMEOUT = 15000 // 15 seconds in milliseconds
-export const MIN_CONTENT_LENGTH = 50 // Minimum words to consider content meaningful
-export const MAX_CACHE_ENTRIES = 1000 // Maximum number of cache entries
 
 // Feature flags configuration
 export const FEATURE_FLAGS = {
@@ -47,5 +45,3 @@ export const LANDING_PAGE_CONFIG = {
 } as const
 
 // Type definitions for better TypeScript support
-export type FeatureFlag = keyof typeof FEATURE_FLAGS
-export type LandingPageVariant = 'waitlist' | 'full-product'
