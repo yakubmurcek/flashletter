@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { middleware, config as middlewareConfig } from '@/middleware'
-import { NextRequest } from 'next/server'
+import { NextRequest, type NextResponse } from 'next/server'
 
 // Mock the supabase middleware
 vi.mock('@/lib/supabase/middleware')
@@ -13,7 +13,7 @@ describe('middleware', () => {
   it('calls updateSession with the request', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
     const mockResponse = { status: 200 }
-    vi.mocked(updateSession).mockResolvedValue(mockResponse as any)
+    vi.mocked(updateSession).mockResolvedValue(mockResponse as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/test')
 
@@ -26,7 +26,7 @@ describe('middleware', () => {
   it('returns response from updateSession', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
     const mockResponse = { status: 200, body: 'Updated session' }
-    vi.mocked(updateSession).mockResolvedValue(mockResponse as any)
+    vi.mocked(updateSession).mockResolvedValue(mockResponse as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000')
 
@@ -37,7 +37,7 @@ describe('middleware', () => {
 
   it('handles protected routes', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/create')
 
@@ -48,7 +48,7 @@ describe('middleware', () => {
 
   it('handles campaign routes', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/campaigns')
 
@@ -59,7 +59,7 @@ describe('middleware', () => {
 
   it('handles API routes', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/api/campaigns')
 
@@ -70,7 +70,7 @@ describe('middleware', () => {
 
   it('handles public routes', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/login')
 
@@ -91,7 +91,7 @@ describe('middleware', () => {
 
   it('handles different HTTP methods', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH']
 
@@ -128,7 +128,7 @@ describe('middleware', () => {
 
   it('handles URL with query parameters', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/campaigns?page=2&sort=date')
 
@@ -139,7 +139,7 @@ describe('middleware', () => {
 
   it('handles URL with hash', async () => {
     const { updateSession } = await import('@/lib/supabase/middleware')
-    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as any)
+    vi.mocked(updateSession).mockResolvedValue({ status: 200 } as unknown as NextResponse)
 
     const mockRequest = new NextRequest('http://localhost:3000/create#section')
 

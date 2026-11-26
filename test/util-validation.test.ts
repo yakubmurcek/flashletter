@@ -190,8 +190,8 @@ describe('isValidString', () => {
   })
 
   it('rejects null/undefined', () => {
-    expect(isValidString(null as any)).toBe(false)
-    expect(isValidString(undefined as any)).toBe(false)
+    expect(isValidString(null as unknown as string)).toBe(false)
+    expect(isValidString(undefined as unknown as string)).toBe(false)
   })
 
   it('trims whitespace before validation', () => {

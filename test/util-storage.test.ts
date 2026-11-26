@@ -25,13 +25,13 @@ describe('storage', () => {
     it('handles missing window gracefully', () => {
       const originalWindow = globalThis.window
       // Temporarily remove window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       const result = storage.get()
       expect(result).toEqual({})
 
       // Restore window
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 
@@ -73,12 +73,12 @@ describe('storage', () => {
 
     it('handles missing window gracefully', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         storage.set({ generatedEmails: [] })
       }).not.toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 
@@ -94,12 +94,12 @@ describe('storage', () => {
 
     it('handles missing window gracefully', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         storage.clear()
       }).not.toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 
