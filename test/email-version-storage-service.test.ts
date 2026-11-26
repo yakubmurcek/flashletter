@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach, type Mock } from 'vitest'
 import { EmailVersionStorageService } from '@/lib/services/email-version-storage.service'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
@@ -8,13 +8,13 @@ vi.mock('@/lib/utils/diff', () => ({
 
 describe('EmailVersionStorageService', () => {
   let service: EmailVersionStorageService
-  let mockSupabase: any
+  let mockSupabase: { from: Mock }
 
   beforeEach(() => {
     mockSupabase = {
       from: vi.fn(),
     }
-    service = new EmailVersionStorageService(mockSupabase as SupabaseClient)
+    service = new EmailVersionStorageService(mockSupabase as unknown as SupabaseClient)
     vi.clearAllMocks()
   })
 

@@ -20,12 +20,12 @@ describe('versionStorage', () => {
   describe('saveVersion', () => {
     it('throws error when window is undefined', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         versionStorage.saveVersion(1, mockEmail)
       }).toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
 
     it('creates first version for an email', () => {
@@ -105,7 +105,7 @@ describe('versionStorage', () => {
         versionStorage.saveVersion(1, {
           subject: null,
           content: 'test',
-        } as any)
+        } as unknown as Email)
       }).toThrow()
     })
   })
@@ -138,11 +138,11 @@ describe('versionStorage', () => {
 
     it('returns empty array for missing window', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       const versions = versionStorage.getVersions(1)
       expect(versions).toEqual([])
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
 
     it('handles corrupted localStorage data', () => {
@@ -201,12 +201,12 @@ describe('versionStorage', () => {
 
     it('ignores missing window', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         versionStorage.deleteVersion(1, 'id')
       }).not.toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 
@@ -244,12 +244,12 @@ describe('versionStorage', () => {
 
     it('ignores missing window', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         versionStorage.clearVersions(1)
       }).not.toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 
@@ -266,12 +266,12 @@ describe('versionStorage', () => {
 
     it('ignores missing window', () => {
       const originalWindow = globalThis.window
-      ;(globalThis as any).window = undefined
+      ;(globalThis as { window?: unknown }).window = undefined
 
       expect(() => {
         versionStorage.clearAllVersions()
       }).not.toThrow()
-      ;(globalThis as any).window = originalWindow
+      ;(globalThis as { window?: unknown }).window = originalWindow
     })
   })
 

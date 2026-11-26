@@ -37,7 +37,7 @@ describe('logError', () => {
     const error = new Error('test')
     const context: ErrorContext = { operation: 'op' }
     logError(error, context)
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call).toHaveProperty('timestamp')
   })
 
@@ -45,7 +45,7 @@ describe('logError', () => {
     const error = new Error('test')
     const context: ErrorContext = { operation: 'myOp' }
     logError(error, context)
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.operation).toBe('myOp')
   })
 
@@ -54,7 +54,7 @@ describe('logError', () => {
     const customTime = '2024-01-01T00:00:00Z'
     const context: ErrorContext = { operation: 'op', timestamp: customTime }
     logError(error, context)
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.timestamp).toBe(customTime)
   })
 
@@ -65,7 +65,7 @@ describe('logError', () => {
       additionalData: { userId: '123', campaignId: '456' },
     }
     logError(error, context)
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.additionalData).toEqual({ userId: '123', campaignId: '456' })
   })
 
@@ -73,7 +73,7 @@ describe('logError', () => {
     const error = new Error('test error')
     const context: ErrorContext = { operation: 'op' }
     logError(error, context)
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.stack).toBeDefined()
   })
 })
@@ -255,14 +255,14 @@ describe('handleComponentError', () => {
   it('includes component in logged context', () => {
     const error = new Error('test')
     handleComponentError(error, 'MyComponent', 'operation')
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.component).toBe('MyComponent')
   })
 
   it('includes additional data if provided', () => {
     const error = new Error('test')
     handleComponentError(error, 'Editor', 'save', { emailId: 5 })
-    const call = (console.error as any).mock.calls[0][1]
+    const call = vi.mocked(console.error).mock.calls[0][1]
     expect(call.additionalData).toEqual({ emailId: 5 })
   })
 

@@ -15,6 +15,8 @@ vi.mock('@/lib/supabase/client', () => ({
 // Import after mocks
 import { createClient } from '@/lib/supabase/client'
 
+type SupabaseBrowserClient = ReturnType<typeof createClient>
+
 describe('useAnonymousLimit', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -29,7 +31,7 @@ describe('useAnonymousLimit', () => {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
       from: vi.fn(),
     }
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -41,7 +43,7 @@ describe('useAnonymousLimit', () => {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) },
       from: vi.fn(),
     }
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -64,7 +66,7 @@ describe('useAnonymousLimit', () => {
       auth: { getUser: vi.fn().mockResolvedValue({ data: { user: authenticatedUser } }) },
       from: vi.fn(),
     }
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -95,7 +97,7 @@ describe('useAnonymousLimit', () => {
       eq: vi.fn().mockResolvedValue({ count: 0, error: null }),
     }))
 
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -120,7 +122,7 @@ describe('useAnonymousLimit', () => {
       })),
     }
 
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -145,7 +147,7 @@ describe('useAnonymousLimit', () => {
       })),
     }
 
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 
@@ -170,7 +172,7 @@ describe('useAnonymousLimit', () => {
       })),
     }
 
-    vi.mocked(createClient).mockReturnValue(mockClient as any)
+    vi.mocked(createClient).mockReturnValue(mockClient as unknown as SupabaseBrowserClient)
 
     const { result } = renderHook(() => useAnonymousLimit())
 

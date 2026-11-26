@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act, waitFor } from '@testing-library/react'
+import { mockReturnPartial } from './_helpers/partial'
 import { useCampaignConfig } from '@/lib/hooks/use-campaign-config'
 
 vi.mock('next/navigation', () => ({
@@ -29,29 +30,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('initializes with default config values', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -62,29 +63,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('exposes config setters', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -94,29 +95,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('updates tone state', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -128,29 +129,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('returns isReady=false when no landing page data', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -158,29 +159,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('returns isReady=true when landing page data present', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -190,29 +191,29 @@ describe('useCampaignConfig', () => {
   it('loads campaign when validCampaignId provided', async () => {
     const mockLoadCampaign = vi.fn().mockResolvedValue(undefined)
 
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: 'camp-123',
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: mockLoadCampaign,
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     renderHook(() => useCampaignConfig('camp-123'))
 
@@ -224,29 +225,29 @@ describe('useCampaignConfig', () => {
   it('redirects to /create when no landing page data on mount', async () => {
     const mockPush = vi.fn()
 
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: null,
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: mockPush,
-    } as any)
+    })
 
     renderHook(() => useCampaignConfig(null))
 
@@ -256,29 +257,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('exposes error and warning from useEmailGeneration', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: 'Generation error',
       warning: 'Generation warning',
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
@@ -287,29 +288,29 @@ describe('useCampaignConfig', () => {
   })
 
   it('exposes handleSubmit method', () => {
-    vi.mocked(useCampaignData).mockReturnValue({
+    mockReturnPartial(useCampaignData, {
       landingPageData: { url: 'https://example.com', content: '<p>hi</p>', metadata: {} },
       isLoading: false,
       currentCampaignId: null,
-    } as any)
+    })
 
-    vi.mocked(useCampaignActions).mockReturnValue({
+    mockReturnPartial(useCampaignActions, {
       setConfig: vi.fn(),
       setGeneratedEmails: vi.fn(),
       updateCampaignConfig: vi.fn(),
       loadCampaign: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useEmailGeneration).mockReturnValue({
+    mockReturnPartial(useEmailGeneration, {
       isGenerating: false,
       error: null,
       warning: null,
       generateEmails: vi.fn(),
-    } as any)
+    })
 
-    vi.mocked(useRouter).mockReturnValue({
+    mockReturnPartial(useRouter, {
       push: vi.fn(),
-    } as any)
+    })
 
     const { result } = renderHook(() => useCampaignConfig(null))
 
