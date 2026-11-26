@@ -89,7 +89,6 @@ export function useCampaignLoader(): CampaignLoaderReturn {
     campaignIdFromUrl,
     loadedCampaignId,
     error,
-    campaignName,
     landingPageData,
     config,
     generatedEmails.length,

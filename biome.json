@@ -139,22 +139,6 @@
       }
     },
     {
-      "includes": [
-        "components/ai-chat/message-list.tsx",
-        "components/email-preview-content.tsx",
-        "lib/campaign/provider.tsx",
-        "lib/hooks/use-campaign-loader.ts",
-        "lib/hooks/use-email-autosave.ts"
-      ],
-      "linter": {
-        "rules": {
-          "correctness": {
-            "useExhaustiveDependencies": "off"
-          }
-        }
-      }
-    },
-    {
       "includes": ["app/layout.tsx"],
       "linter": {
         "rules": {
