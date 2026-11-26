@@ -49,9 +49,6 @@ jobs:
       - name: Typecheck
         run: pnpm tsc --noEmit
 
-      # Tests still run inside this job — a failure here fails the whole job
-      # and blocks the merge via branch protection. The display name above
-      # omits "· test" only to keep the check label short; tests still gate.
       # Copy-paste: fails when duplicated code exceeds the threshold in .jscpd.json
       # (today's value). Lower the threshold when duplication goes down, never raise it.
       # Runs even when an earlier step failed, so one run reports every problem.
@@ -59,6 +56,9 @@ jobs:
         if: ${{ !cancelled() }}
         run: pnpm dupes
 
+      # Tests still run inside this job — a failure here fails the whole job
+      # and blocks the merge via branch protection. The display name above
+      # omits "· test" only to keep the check label short; tests still gate.
       # Coverage is printed, not enforced yet.
       - name: Test
         run: pnpm test:coverage
