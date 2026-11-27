@@ -9,7 +9,8 @@
 drop trigger if exists trigger_assign_waitlist_order on public.waitlist;
 drop function if exists public.assign_waitlist_order();
 
-create sequence public.waitlist_order_seq as integer owned by public.waitlist."order";
+-- if not exists: the hand-run fix this replaces may already have created it on live.
+create sequence if not exists public.waitlist_order_seq as integer owned by public.waitlist."order";
 -- Continue after the highest position already handed out, so live rows keep theirs and the
 -- first signup after this migration cannot collide with them.
 select setval(

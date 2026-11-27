@@ -41,8 +41,9 @@ In Vercel → project → Environment Variables (Production):
 
 In the Supabase SQL editor (project → SQL → new query):
 
-- Nothing: the waitlist order fix now lives in
-  `supabase/migrations/20261126235617_waitlist_order_sequence.sql`.
+- Nothing to paste: the waitlist order fix is now the migration
+  `supabase/migrations/20261126235617_waitlist_order_sequence.sql`, applied to live like
+  every other file in `supabase/migrations`.
 
 ### After merging #31
 
