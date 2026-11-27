@@ -54,7 +54,7 @@ through `generateStructured()` in `lib/ai.ts`; see that file.
 - `email-helpers.ts` - Email-related helper functions
 - `error-handling.ts` - Error handling utilities
 - `markdown.ts` - Markdown processing utilities
-- `redis-client.ts` - The one Upstash Redis client (rate limits, scrape cache, billing plan cache)
+- `redis-client.ts` - The one Upstash Redis client (rate limits, scrape cache, billing usage counters and Stripe caches)
 - `storage.ts` - Storage utilities
 - `validation.ts` - Validation helpers
 - `version-storage.ts` - Version control utilities
@@ -69,5 +69,7 @@ UPSTASH_REDIS_REST_URL=your_redis_url
 UPSTASH_REDIS_REST_TOKEN=your_redis_token
 ```
 
-If not set, rate limits fall back to in-memory counters per server instance and the scrape
-cache is skipped.
+If not set, rate limits fall back to in-memory counters per server instance, the scrape
+cache is skipped, and billing loses its Redis parts: the monthly AI-rewrite cap is not enforced,
+the monthly campaign count falls back to counting database rows, and the Stripe customer,
+summary and last-plan caches are off (see `lib/billing/limits.ts`, `lib/billing/stripe.ts`).
