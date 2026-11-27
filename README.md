@@ -70,7 +70,8 @@ Put the printed `API_URL` and `PUBLISHABLE_KEY` into `.env.local` as `NEXT_PUBLI
 **Changing the database:** add a migration (`pnpm exec supabase migration new <what>`, or edit the local
 database and run `pnpm exec supabase db diff -f <what>`), run `pnpm db:reset`, then `pnpm db:schema` to
 refresh `supabase/schemas/public.sql`, the whole schema in one readable file. CI rebuilds the database
-from the migrations and fails when that file disagrees. Every migration must keep the running app
+from the migrations and fails when that file disagrees, then runs `pnpm db:test` (two waitlist signups at
+the same moment must both be kept). Every migration must keep the running app
 working (add a column, ship the code that uses it, drop the old one later), because a deploy can be
 rolled back but a migration cannot.
 

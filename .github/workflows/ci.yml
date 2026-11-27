@@ -82,6 +82,9 @@ jobs:
       - name: Schema file matches the migrations
         run: pnpm db:check
 
+      - name: Two signups at the same moment both join the waitlist
+        run: pnpm db:test
+
   e2e:
     # The main user flows in a real browser (desktop and phone), against a
     # production build and the local database with fake users. A dead button

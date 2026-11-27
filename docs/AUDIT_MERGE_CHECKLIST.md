@@ -41,9 +41,8 @@ In Vercel → project → Environment Variables (Production):
 
 In the Supabase SQL editor (project → SQL → new query):
 
-- Paste and run the contents of
-  `migrations/replace_waitlist_order_trigger_with_sequence.sql`.
-  Idempotent — safe to re-run if the deploy script gets nervous.
+- Nothing: the waitlist order fix now lives in
+  `supabase/migrations/20261126235617_waitlist_order_sequence.sql`.
 
 ### After merging #31
 
