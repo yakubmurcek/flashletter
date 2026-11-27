@@ -13,24 +13,6 @@
 --
 
 --
--- Name: assign_waitlist_order(); Type: FUNCTION; Schema: public; Owner: -
---
-
-CREATE FUNCTION public.assign_waitlist_order() RETURNS trigger
-    LANGUAGE plpgsql
-    AS $$
-BEGIN
-  -- Only assign order if it's null (new insert)
-  IF NEW."order" IS NULL THEN
-    -- Get the next order number atomically
-    SELECT COALESCE(MAX("order"), 0) + 1 INTO NEW."order"
-    FROM waitlist;
-  END IF;
-  RETURN NEW;
-END;
-$$;
-
---
 -- Name: campaigns_keep_created_at(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -188,6 +170,9 @@ begin
 exception
   when unique_violation then
     select * into v_row from public.waitlist where email = v_email;
+    if not found then
+      raise;
+    end if;
     return json_build_object('id', v_row.id, 'already_joined', true);
 end
 $$;
@@ -281,6 +266,30 @@ CREATE TABLE public.guest_claims (
 CREATE TABLE public.waitlist_admins (
     email text NOT NULL
 );
+
+--
+-- Name: waitlist_order_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.waitlist_order_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+--
+-- Name: waitlist_order_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.waitlist_order_seq OWNED BY public.waitlist."order";
+
+--
+-- Name: waitlist order; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.waitlist ALTER COLUMN "order" SET DEFAULT nextval('public.waitlist_order_seq'::regclass);
 
 --
 -- Name: campaign_collaborators campaign_collaborators_campaign_id_user_id_key; Type: CONSTRAINT; Schema: public; Owner: -
@@ -417,12 +426,6 @@ CREATE INDEX idx_waitlist_status ON public.waitlist USING btree (status);
 --
 
 CREATE TRIGGER campaigns_keep_created_at BEFORE INSERT OR UPDATE ON public.campaigns FOR EACH ROW EXECUTE FUNCTION public.campaigns_keep_created_at();
-
---
--- Name: waitlist trigger_assign_waitlist_order; Type: TRIGGER; Schema: public; Owner: -
---
-
-CREATE TRIGGER trigger_assign_waitlist_order BEFORE INSERT ON public.waitlist FOR EACH ROW EXECUTE FUNCTION public.assign_waitlist_order();
 
 --
 -- Name: campaigns update_campaigns_updated_at; Type: TRIGGER; Schema: public; Owner: -
@@ -644,14 +647,6 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT USAGE ON SCHEMA public TO service_role;
 
 --
--- Name: FUNCTION assign_waitlist_order(); Type: ACL; Schema: public; Owner: -
---
-
-GRANT ALL ON FUNCTION public.assign_waitlist_order() TO anon;
-GRANT ALL ON FUNCTION public.assign_waitlist_order() TO authenticated;
-GRANT ALL ON FUNCTION public.assign_waitlist_order() TO service_role;
-
---
 -- Name: FUNCTION campaigns_keep_created_at(); Type: ACL; Schema: public; Owner: -
 --
 
@@ -761,6 +756,12 @@ GRANT ALL ON TABLE public.guest_claims TO service_role;
 --
 
 GRANT ALL ON TABLE public.waitlist_admins TO service_role;
+
+--
+-- Name: SEQUENCE waitlist_order_seq; Type: ACL; Schema: public; Owner: -
+--
+
+GRANT ALL ON SEQUENCE public.waitlist_order_seq TO service_role;
 
 --
 -- Name: DEFAULT PRIVILEGES FOR SEQUENCES; Type: DEFAULT ACL; Schema: public; Owner: -

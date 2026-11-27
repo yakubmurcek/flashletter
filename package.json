@@ -18,6 +18,7 @@
     "db:reset": "supabase db reset",
     "db:schema": "scripts/db-schema.sh",
     "db:check": "scripts/db-schema.sh --check",
+    "db:test": "scripts/db-test-waitlist-race.sh",
     "test:e2e": "playwright test"
   },
   "dependencies": {
