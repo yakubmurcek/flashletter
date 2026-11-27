@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs'
 import type { SupabaseClient, User } from '@supabase/supabase-js'
-import { getRedis } from '@/lib/utils/rate-limit'
+import { getRedisClient } from '@/lib/utils/redis-client'
 import { PLAN_LIMITS, currentPeriodStart, type PlanId } from './plans'
 import type { LimitKind } from './errors'
 import { getSubscriptionSummary, isBillingEnabled, lastKnownPlan } from './stripe'
@@ -105,7 +105,7 @@ async function countCampaignsSeen(
   createdAt: string,
   rows: { id: string; created_at: string }[],
 ): Promise<number | null> {
-  const redis = getRedis()
+  const redis = getRedisClient()
   const score = Date.parse(createdAt)
   if (!redis || Number.isNaN(score)) return null
 
@@ -129,7 +129,7 @@ async function countCampaignsSeen(
  * the Redis set also remembers deleted ones, so take whichever is higher.
  */
 export async function campaignsUsedThisMonth(userId: string, rowCount: number): Promise<number> {
-  const redis = getRedis()
+  const redis = getRedisClient()
   if (!redis) return rowCount
   try {
     return Math.max(rowCount, await redis.zcard(campaignSetKey(userId)))
@@ -158,7 +158,7 @@ function rewriteKey(userId: string) {
 export async function consumeAiRewrite(userId: string, plan: PlanId): Promise<LimitDenial | null> {
   const max = PLAN_LIMITS[plan].aiRewritesPerMonth
   if (!Number.isFinite(max)) return null
-  const redis = getRedis()
+  const redis = getRedisClient()
   if (!redis) return null
 
   const key = rewriteKey(userId)
@@ -178,7 +178,7 @@ export async function consumeAiRewrite(userId: string, plan: PlanId): Promise<Li
 /** Gives back a rewrite counted by consumeAiRewrite when the AI call failed. */
 export async function refundAiRewrite(userId: string, plan: PlanId): Promise<void> {
   if (!Number.isFinite(PLAN_LIMITS[plan].aiRewritesPerMonth)) return
-  const redis = getRedis()
+  const redis = getRedisClient()
   if (!redis) return
 
   const key = rewriteKey(userId)

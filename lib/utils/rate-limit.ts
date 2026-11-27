@@ -1,24 +1,11 @@
 import { Ratelimit } from '@upstash/ratelimit'
-import { Redis } from '@upstash/redis'
+import { getRedisClient } from './redis-client'
 
-// Initialize Redis client for rate limiting
-// Uses Upstash Redis if credentials are provided, otherwise falls back
-// to in-memory rate limiting
-let redis: Redis | undefined
+// Uses the shared Upstash client when Redis is configured, otherwise falls
+// back to in-memory rate limiting.
+const redis = getRedisClient()
 
-/** Shared Upstash client, or undefined when Redis is not configured. */
-export function getRedis(): Redis | undefined {
-  return redis
-}
-
-// The Upstash integration on the Vercel Marketplace injects KV_REST_API_*;
-// a manually created Upstash database uses UPSTASH_REDIS_REST_*.
-const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
-const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
-
-if (redisUrl && redisToken) {
-  redis = new Redis({ url: redisUrl, token: redisToken })
-} else {
+if (!redis) {
   console.warn(
     '[rate-limit] Redis not configured — using in-memory limits per server instance. ' +
       'Set UPSTASH_REDIS_REST_URL/_TOKEN (or connect Upstash on Vercel) for shared limits.',

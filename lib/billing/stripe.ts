@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { getRedis } from '@/lib/utils/rate-limit'
+import { getRedisClient } from '@/lib/utils/redis-client'
 import type { BillingInterval } from './plans'
 
 /**
@@ -48,13 +48,13 @@ const lastPlanKey = (userId: string) => `flashletter:billing:last-plan:${userId}
 const LAST_PLAN_TTL_SECONDS = 40 * 24 * 60 * 60
 
 export async function rememberPlan(userId: string, plan: 'pro' | 'free') {
-  await getRedis()
+  await getRedisClient()
     ?.set(lastPlanKey(userId), plan, { ex: LAST_PLAN_TTL_SECONDS })
     .catch(() => undefined)
 }
 
 export async function lastKnownPlan(userId: string): Promise<'pro' | 'free' | null> {
-  const plan = await getRedis()
+  const plan = await getRedisClient()
     ?.get<string>(lastPlanKey(userId))
     .catch(() => null)
   return plan === 'pro' || plan === 'free' ? plan : null
@@ -75,7 +75,7 @@ const ownedBy = (userId: string) => (c: Stripe.Customer | Stripe.DeletedCustomer
 
 export async function findCustomerId(user: BillingUser): Promise<string | null> {
   assertUuid(user.id)
-  const redis = getRedis()
+  const redis = getRedisClient()
   const cached = await redis?.get<string>(customerKey(user.id)).catch(() => null)
   if (cached) return cached
 
@@ -108,7 +108,7 @@ export async function getOrCreateCustomer(user: BillingUser): Promise<string> {
     // match the exact parameters or Stripe rejects it.
     { idempotencyKey: `customer-${userId}-${email ?? ''}` },
   )
-  await getRedis()
+  await getRedisClient()
     ?.set(customerKey(userId), customer.id)
     .catch(() => undefined)
   return customer.id
@@ -140,7 +140,7 @@ export async function getSubscriptionSummary(
 ): Promise<SubscriptionSummary> {
   const userId = user.id
   if (!isBillingEnabled()) return NONE
-  const redis = getRedis()
+  const redis = getRedisClient()
   if (!fresh) {
     const cached = await redis?.get<SubscriptionSummary>(summaryKey(userId)).catch(() => null)
     if (cached) return cached
@@ -168,7 +168,7 @@ export async function getSubscriptionSummary(
 }
 
 export async function clearSubscriptionCache(userId: string) {
-  await getRedis()
+  await getRedisClient()
     ?.del(summaryKey(userId))
     .catch(() => undefined)
 }

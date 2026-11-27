@@ -54,17 +54,20 @@ through `generateStructured()` in `lib/ai.ts`; see that file.
 - `email-helpers.ts` - Email-related helper functions
 - `error-handling.ts` - Error handling utilities
 - `markdown.ts` - Markdown processing utilities
+- `redis-client.ts` - The one Upstash Redis client (rate limits, scrape cache, billing plan cache)
 - `storage.ts` - Storage utilities
 - `validation.ts` - Validation helpers
 - `version-storage.ts` - Version control utilities
 
 ## Environment Setup
 
-For rate limiting to work, configure these environment variables:
+`redis-client.ts` builds the Redis client from these environment variables (or the
+`KV_REST_API_URL`/`KV_REST_API_TOKEN` pair the Vercel Marketplace integration injects):
 
 ```env
 UPSTASH_REDIS_REST_URL=your_redis_url
 UPSTASH_REDIS_REST_TOKEN=your_redis_token
 ```
 
-If not set, rate limiting will be disabled (useful for development).
+If not set, rate limits fall back to in-memory counters per server instance and the scrape
+cache is skipped.

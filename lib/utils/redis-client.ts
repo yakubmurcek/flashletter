@@ -1,14 +1,14 @@
 import { Redis } from '@upstash/redis'
 
 /**
- * Shared Redis client for caching and other operations
- * Reuses the same Redis instance as rate limiting for efficiency
+ * The app's only Upstash Redis client: rate limits, the scrape cache and the
+ * billing plan cache all use it. Undefined when Redis is not configured.
  */
 
 let redis: Redis | undefined
 
-// Initialize Redis client if credentials are available
-// Same env fallback as rate-limit.ts (Vercel Marketplace injects KV_REST_API_*).
+// The Upstash integration on the Vercel Marketplace injects KV_REST_API_*;
+// a manually created Upstash database uses UPSTASH_REDIS_REST_*.
 const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL
 const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN
 
