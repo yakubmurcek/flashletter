@@ -5,8 +5,8 @@ vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }))
 const redisStore = new Map<string, unknown>()
 const zsets = new Map<string, Map<string, number>>()
 let redisAvailable = true
-vi.mock('@/lib/utils/rate-limit', () => ({
-  getRedis: () =>
+vi.mock('@/lib/utils/redis-client', () => ({
+  getRedisClient: () =>
     redisAvailable
       ? {
           get: async (key: string) => redisStore.get(key) ?? null,

@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const list = vi.fn()
 const redisStore = new Map<string, unknown>()
-vi.mock('@/lib/utils/rate-limit', () => ({
-  getRedis: () => ({
+vi.mock('@/lib/utils/redis-client', () => ({
+  getRedisClient: () => ({
     get: async (key: string) => redisStore.get(key) ?? null,
     set: async (key: string, value: unknown) => {
       redisStore.set(key, value)
